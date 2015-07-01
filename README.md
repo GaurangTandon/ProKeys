@@ -1,2 +1,3 @@
-# ProKeys
-super productive extension for Chrome and Opera
+## STILL CONFIGURING THIS REPO:
+don't fiddle!
+
