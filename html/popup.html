@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ProKeys extension - define snippets, do auto-math, and much more!</title>
+	<meta charset="utf-8"/>
+	<link href="../css/reset.css" rel="stylesheet">
+	<link href="../css/popup.css" rel="stylesheet">
+	<script src="../js/popup.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>	
+	<img src="../imgs/main_logo.png" id="appLogo" alt="ProKeys main logo">
+	
+	<div id="headArea">
+		<button class="button" aria-label="Settings or Help" title="Settings or Help" tabIndex=10>Settings/Help</button> <!--Opens option.html in new window-->
+		<button class="button" aria-label="Create new Snippet" title="Create new Snippet" tabIndex=20>Create new Snip</button>
+		<button class="button" aria-label="Search for snippets" title="Search for snippets" tabIndex=30>Search for snips</button>		
+		<input type="text" aria-label="Search" title="Search" placeholder="Type at least 3 characters">
+		
+		<p class="storageBytes"><span class="currentBytes"></span> bytes used out of <a href="https://developer.chrome.com/extensions/storage#properties"><span class="bytesAvailable"></span> bytes</a>; <span class="snippet_amount"></span> snippets currently</p>
+	</div>
+	
+	<div class="flip-container">
+		<div class="flipper">
+			<div id="snips">
+			</div>
+			<div class="createSnipArea">
+				<input id="sVal" placeholder="Snippet name (Abbreviation - case-sensitive)" tabIndex=-1>
+				<p>25 characters left</p>
+				<textarea id="lVal" placeholder="Snippet body (to which the snippet name expands)" tabIndex=-1></textarea>
+				<p>1000 characters left</p>
+				<p>Tip: Placeholders can only contain alphabets, numbers and underscore and are enclosed between `%`s. Example: "%boss_name%"<br><span class="reload_notice">Note: <b>Reload active webpages</b> to use new snippet.</span></p>
+				<button class="done" tabIndex=-1>Save &#10004;</button>
+				<button class="back" tabIndex=-1>&#8592; Back</button>
+			</div>
+		</div>
+	</div>
+	
+	<div class="new_user_msg">
+		<p>Hello new user! Snippets will appear in this popup box. Other settings will be in the "Settings/Help" page. It is advised you visit the Help page to get started.
+			You can block sites, where you don't want ProKeys to function, in the settings.</p>
+		<button>Got it!</button>
+	</div>
+	
+	<!-- overlay div used for delete confirmation, showing runtimeError notification, exiting edit mode-->
+	<div class="message hidden">
+		
+	</div>
+	
+	<!--used to fade the body when modal is shown-->
+	<div class="fade"></div>
+</body>
+</html>
