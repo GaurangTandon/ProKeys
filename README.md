@@ -1,5 +1,6 @@
 ## [ProKeys](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 **Latest version**: 2.5.1
+**Status**: active (since 04/07/2015), stable build
 
 A completely free Google Chrome extension that lets you be productive in online text-related work with its number of features like:
 
@@ -46,10 +47,10 @@ Contact me - prokeys.feedback@gmail.com - for above related work discussion, if 
 
 ## Change Log
 
-**2.5.1** - Current - 04/06/2015
+**2.5.1** - Current - 04/07/2015
 - fixed a strange issue where on empty snippet was initially shown on install
 
-**2.5.0** - 04/06/2015
+**2.5.0** - 04/07/2015
 - added case-sensitive notice to snippet name
 - Nice notifications for install and update
 - injecting script automatically on install on most webpages
