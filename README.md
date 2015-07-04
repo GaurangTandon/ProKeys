@@ -31,6 +31,19 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 Contact me - prokeys.feedback@gmail.com - for above related work discussion, if you want to.
 
+## [Known Issues](https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing)
+
+## Feature Requests
+
+1. Date Time arithmetic
+
+## Next feature to come:
+
+1. Date Time arithmetic
+2. Clipboard access in snippet body
+3. Update Opera with latest release
+4. Create ProKeys for Firefox, IE, Edge, Safari
+
 ## Change Log
 
 **2.5.1** - Current - 04/06/2015
