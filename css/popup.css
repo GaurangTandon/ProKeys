@@ -1,0 +1,720 @@
+/* I have tried my best to keep the file below good;
+  but I am not a designer so please don't frown while
+    viewing the code :-)
+*/
+
+body,html {
+    width: 500px;
+    height: 492px;
+}
+
+body {
+	box-sizing: border-box;
+    padding: 5px;
+    font-family: Constantia,Arial,sans-serif;
+}
+
+/*rules copied from reset.css
+  used only in popup box*/
+ol, ul, li{
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	list-style-type: none;
+}
+
+#appLogo{
+	width: 100%;
+}
+
+#headArea {
+    width: 95%;
+    height: 60px;
+    padding: 5px 10px 0 10px;
+}
+
+input[aria-label=Search] {
+    height: 23px;
+    width: 69%;
+    font-size: 15px;
+    padding: 2px 2px 3px 30px;
+    outline: 0;
+    background: #fff url(../imgs/search_icon.png) left center no-repeat;
+    position: absolute;
+	top: 93px;
+    left: 58.5%;
+    transition: .5s ease;
+    opacity: 0;
+    visibility: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    margin: 5px 10px;
+    border: 0;
+    border-bottom: 1px solid #000;
+}
+
+input[aria-label=Search]:focus {
+    border-bottom: 1px solid #5580f0;
+}
+
+input.shown[aria-label=Search] {
+    -webkit-animation: show .5s;
+    -webkit-animation-fill-mode: forwards;
+	animation: show .5s;
+	animation-fill-mode: forwards;
+}
+
+#headArea .storageBytes{
+	height: 19px;
+	font-size: 15px;
+	padding-top: 4px;
+	font-style: italic;
+	margin: 0;
+}
+
+@-webkit-keyframes show {
+    to {
+        left: 2%;
+        visibility: visible;
+        opacity: 1;
+        -webkit-user-select: all;
+		user-select: all;
+    }
+}
+
+.button {
+    background: #5580f0;
+    color: #fff;
+    border: 2px solid #5580f0;
+    font-size: 15px;
+    -webkit-transition: .5s ease;
+    transition: .5s ease;
+    padding: 5px;
+    margin: 4px;
+    visibility: visible;
+    opacity: 1;
+    width: 31%;
+}
+
+.button:hover, .button:focus {
+    cursor: pointer;
+    background: #fff;
+    color: #5580f0;
+}
+
+.button[aria-label="Search for snippets"] {
+    float: right;
+    z-index: 2;
+}
+
+.button.shortened[aria-label="Search for snippets"] {
+    -webkit-animation: shorten .5s;
+    -webkit-animation-fill-mode: forwards;
+	animation: shorten .5s;
+	animation-fill-mode: forwards;
+}
+
+@-webkit-keyframes shorten {
+    to {
+        left: 415px;
+        width: 75px;
+    }
+}
+
+.button.hidden {
+    -webkit-animation: hideButton .25s;
+    -webkit-animation-fill-mode: forwards;
+	animation: hideButton .25s;
+	animation-fill-mode: forwards;
+}
+
+@-webkit-keyframes hideButton {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+#snips {
+    overflow-x: hidden;
+	height: 320px;
+    padding: 5px 10px;
+	
+	z-index: 2;
+    width: 96%;
+	
+	-webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: -7px;
+}
+
+#snips::-webkit-scrollbar {
+    width: 7px;
+}
+
+#snips::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5.5px rgba(0,0,0,.3);
+    -webkit-border-radius: 7px;
+    border-radius: 7px;
+	box-shadow: inset 0 0 5.5px rgba(0,0,0,.3);
+}
+
+#snips::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 7px;
+    border-radius: 7px;
+    background: rgba(255,0,0,.8);
+    -webkit-box-shadow: inset 0 0 3px rgba(0,0,0,.5);
+	box-shadow: inset 0 0 3px rgba(0,0,0,.5);
+}
+
+ul {
+    height: 100%;
+}
+
+.snip {
+    padding: 5px;
+    position: relative;
+    max-height: 450px;
+    border-bottom: 1px solid grey;
+    word-wrap: break-word;
+    list-style: none;
+}
+
+/*class set on li.snip when user makes a new snippet*/
+/*we need to highlight that snippet*/
+.snip.highlighting{
+	background: gold;
+	/*slowly fade away the gold background*/
+	-webkit-animation: fadeBackground 3s;
+	animation: fadeBackground 3s;
+	-webkit-animation-fill-mode: forwards;
+	animation-fill-mode: forwards;
+}
+
+@-webkit-keyframes fadeBackground{
+	to{
+		background: white;
+	}
+}
+
+.snip button, .snip div {
+    margin: 5px;
+    font-family: Arial;
+}
+
+.snip .short {
+    display: block;
+    margin: 5px;
+	font-size: 17px;
+	height: 25px;
+}
+
+.snip .long {
+    display: none;
+    width: 100%;
+    margin: 15px 5px;
+	font-size: 14px;
+	word-wrap: break-word;
+	max-height: 180px;
+}
+
+.snip.shown .short{
+	font-weight: bold;
+}
+
+.snip.shown .long{
+	display: block;
+	max-height: 600px;
+}
+
+.snip.shown button{
+	display: inline;
+}
+
+.snip.shown .dropdown{
+	-webkit-transform: rotate(180deg);
+	transform: rotate(180deg);
+	display: inline;
+}
+
+.editSnName{
+	width: 220px;
+}
+
+.editSnBody, .editSnName {
+    font-size: 14px;
+    resize: none;
+    margin: 5px; padding: 5px;
+    font-family: Verdana, Arial, monospace;
+}
+
+.editSnBody {
+    width: 440px;
+	font-size: 13px;
+	height: 180px;
+}
+
+.timestamp {
+	display: none;
+    color: #999;
+    font-family: Arial!important;
+    font-size: 13px;
+}
+
+.snip.shown > .timestamp{
+	display: block;
+}
+
+.snip .buttons {
+    float: right;
+    position: absolute;
+    top: 0px;
+    right: 5px;
+}
+
+.snip button {
+    margin: 0 3px 5px;
+    padding: 5px;
+    background: #3a8db4;
+    color: #fff;
+    outline: 0;
+	display: none;
+}
+
+.snip .dropdown{
+	margin: 0 3px 5px;
+	-webkit-transition: 0.5s ease;
+	transition: 0.5s ease;
+	-webkit-transform: rotate(0deg);
+	transform: rotate(0deg);
+}
+
+.snip .buttons button:hover {
+    cursor: pointer;
+}
+
+.snip .buttons button:focus {
+	border: 1px solid #101010;
+	background: #3f8ff4;
+}
+
+.createSnipArea {
+    min-height: 150px;
+    max-height: 600px;
+    margin: 5px;
+    padding: 5px;
+	
+	-webkit-transform: rotateY(180deg);
+    transform: rotateY(180deg);
+    width: 96%;
+    height: 100%;
+	
+	-webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+	left: 4;
+}
+
+.flip-container {
+    -webkit-perspective: 1000px;
+    perspective: 1000px;
+    height: 320px;
+	width: 100%;
+}
+
+.flip-container.flipped .flipper {
+    -webkit-transform: translateX(-100%) rotateY(-180deg);
+    transform: translateX(-100%) rotateY(-180deg);
+}
+
+.flipper {
+    width: 100%;
+    height: 100%;
+    -webkit-transition: .6s;
+    -webkit-transform-style: preserve-3d;
+    -webkit-transform-origin: right center;
+    transform-origin: right center;
+    transform-style: preserve-3d;
+    transition: .6s;
+}
+
+#lVal, #sVal {
+    display: block;
+    font-family: Verdana;
+    font-size: 15px;
+    padding: 5px;
+    width: 100%;
+    margin: auto;
+    margin-top: 15px;
+}
+
+#sVal {
+    margin: 0 0 20px 0;
+	height: 10px;
+}
+
+#lVal {
+    min-height: 60px;
+	font-size: 14px;
+    resize: none;
+	height: 10px;
+}
+
+#lVal:focus, #sVal:focus{
+	border: 2px solid rgb(131, 219, 231);
+}
+
+#lVal.active{
+	height: 180px;
+}
+
+#sVal.active{
+	height: 20px;
+}
+
+.createSnipArea .back {
+    background: #4677B3;
+    color: #fff;
+    padding: 3px 15px;
+    display: inline-block;
+    float: left;
+    margin-top: 20px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
+.createSnipArea .done {
+    background: rgb(81, 163, 81);
+    color: #fff;
+    padding: 3px 15px;
+    font-family: Verdana;
+    display: inline-block;
+    float: right;
+    margin-right: 10px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.createSnipArea .back:hover, .createSnipArea .done:hover{
+    cursor: pointer;
+}
+
+.createSnipArea .reload_notice{
+	font-size: 15px;
+}
+
+input + p, textarea + p {
+    font-size: 13px;
+    display: block;
+    margin-left: 15px;
+    margin-bottom: 20px;
+    color: #4b4b4b;
+    font-family: Arial;
+}
+
+#sVal + p {
+    margin-top: -10px;
+}
+
+#lVal + p {
+    margin-top: 5px;
+}
+
+#lVal + p + p{
+	font-size: 13px;
+    display: block;
+    margin-left: 15px;
+    color: #4b4b4b;
+    font-family: Arial;
+}
+
+.new_user_msg {
+    width: 94%;
+    height: 136px;
+    font-size: 20px;
+    color: #588336;
+    padding: 10px;
+    text-align: center;
+    display: none;
+	border: 1px solid #588336;
+	margin-top: -78px;
+}
+
+.new_user_msg p {
+    margin-bottom: 10px;
+}
+
+.new_user_msg button {
+    height: 30px;
+	width: 100px;
+	font-size: 20px;
+	background: white;
+	outline: 0;
+	border: 1px solid #588336;
+	cursor: pointer;
+	transition: 0.5s ease;
+	color: #588336;
+}
+
+.new_user_msg button:hover{
+	border: none;
+	background: #588336;
+	color: white;
+}
+
+.display_msg_to_user {
+    display: block;
+    color: #588336;
+    font-size: 30px;
+    margin-top: 60px;
+}
+
+.display_msg_to_user a {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.message{
+	width: 90%;
+	min-height: 50px;
+	max-height: 300px;
+	font-size: 30px;
+	font-family: Arial;
+	color: #588336;
+	padding: 10px;
+	position: absolute;
+	top: 99px;
+	left: 16px;
+	border:1px solid black;
+	background: white;
+	z-index: 100;
+}
+
+.message.shown{
+	display: block;
+}
+
+.message button{
+	width: 40%;
+	height: 40px;
+	background: none;
+	border: 1px solid black;
+	margin: 10px 10px 10px 0;
+	cursor: pointer;
+	padding: 5px;
+	font-size: 20px;
+}
+
+body .fade{
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	
+	z-index: 90;	
+	display: none;
+	background-color: black;
+	opacity: 0.7;
+}
+
+body.darkened .fade{
+	display: block;
+}
+
+.message.hidden{
+	display: none;
+}
+
+.red{
+	color: rgb(255, 0, 0) !important;
+}
+
+/*responsiveness for zoom above 125%*/
+/*can't use @media; it measures relative to popup size*/
+.zoom125, .zoom125 body{
+	height: 400px; width: 400px;
+}
+	
+.zoom125 .button{
+	width: 30%;
+	font-size: 13px;
+}
+
+.zoom125 .snip .short{
+	font-size: 14px; height: 14px;
+}
+
+.zoom125 .snip .dropdown{
+	width: 18px;
+}
+
+.zoom125 #headArea .storageBytes, .zoom125 .snip.shown .long, .zoom125 input + p, .zoom125 textarea + p{
+	font-size: 12px;
+}
+
+.zoom125 .snip.shown > .timestamp{
+	font-size: 11px;
+}
+
+.zoom125 .snip.shown button{
+	font-size: 11px;
+	padding: 5px 3px;
+}
+
+.zoom125 .editSnBody{
+	width: 99%; /*1% for scroll bar*/
+	font-size: 12px;
+}
+
+.zoom125 .editSnName{
+	font-size: 13px;
+	width: 190px;
+}
+
+.zoom125 .message{
+	font-size: 21px;
+	padding: 10px 5px;
+}
+
+.zoom125 #snips{
+	height: 310px;
+}
+
+.zoom125 input[aria-label=Search]{
+	font-size: 13px;
+	top: 75px;
+	width: 60%;
+}
+
+.zoom125 .flip-container{
+	min-height: 225px;
+	max-height: 246px;
+}
+
+.zoom125 #sVal{
+	font-size: 13px;
+	height: 16px;
+	margin-top: -10px;
+}
+
+.zoom125 #lVal{
+	height: 160px;
+	font-size: 12px;
+}
+
+.zoom125 #sVal + p, .zoom125 #lVal + p{
+	font-size: 10px;
+	margin-bottom: 10px;
+}
+
+.zoom125 #sVal + p{
+	margin-top: -15px;
+}
+
+.zoom125 #lVal + p + p{
+	font-size: 10px;
+}
+
+.zoom125 .back, .zoom125 .done{
+	font-size: 10px;
+	margin-top: 10px;
+	margin-bottom: 0;
+}
+
+.zoom125 .new_user_msg{
+	height: 100px;
+	font-size: 15px;
+	margin-top: -27px; 
+}
+
+.zoom125 .new_user_msg button{
+	font-size: 10px;
+	height: 20px;
+}
+
+.zoom75, .zoom75 body{
+	width: 800px;
+	height: 792px;
+}
+
+.zoom75 .button{
+	height: 40px;
+	font-size: 20px;
+}
+
+.zoom75 input[aria-label=Search]{
+	top: 151px;
+	width: 76%;
+	font-size: 20px;
+}
+
+.zoom75 .flip-container{
+	margin-top: 15px;
+	height: 560px;
+}
+
+.zoom75 #snips{
+	height: 550px;
+}
+
+.zoom75 .snip{
+	padding: 10px 0;
+}
+
+.zoom75 .short{
+	font-size: 25px;
+}
+
+.zoom75 .dropdown{
+	width: 30px;
+}
+
+.zoom75 .snip button{
+	width: 80px;
+	font-size: 20px;
+	height: 38px;
+}
+
+.zoom75 .snip.shown > .timestamp{
+	font-size: 16px;
+}
+
+.zoom75 .editSnName{
+	font-size: 21px;
+	width: 300px;
+}
+
+.zoom75 #headArea .storageBytes, .zoom75 .long, .zoom75 .editSnBody, .zoom75 .back, .zoom75 .done{
+	font-size: 20px;
+}
+
+.zoom75 #lVal + p + p, .zoom75 input + p, .zoom75 textarea + p{
+	font-size: 18px;
+}
+
+.zoom75 #sVal.active{
+	font-size: 25px;
+	height: 30px;
+}
+
+.zoom75 #lVal.active{
+	font-size: 23px;
+	height: 288px;
+}
+
+.zoom75 .new_user_msg{
+	font-size: 27px;
+	margin-top: -165px;
+	height: 187px;
+}
+
+.zoom75 .new_user_msg button{
+	font-size: 25px;
+}
