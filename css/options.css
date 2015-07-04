@@ -1,0 +1,641 @@
+/* I have tried my best to keep the file below good;
+  but I am not a designer so please don't frown while
+    viewing the code :-)
+*/
+
+html, body{
+	width: 100%;
+	max-height: 1000px;
+	height: 600px;
+	min-height: 500px;
+}
+
+/*reset user agent's default styles*/
+em{
+	font-style: italic;
+}
+h2{
+	font-size: 35px;
+	font-family: Arial;
+}
+h3{
+	font-size: 22px;
+}
+ul{
+	list-style-type: disc;
+}
+ol{
+	list-style-type: decimal;
+}
+
+#sidebar{
+	position: absolute;
+	height: 100%;
+	width: 15%;
+}
+
+#logo {
+	width: 50%;
+	height: 15%;
+	margin: 30px auto 10px auto;
+}
+
+#logo a{
+	display: block;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+}
+
+#logo img{
+	cursor: pointer;
+	width: 100%;
+	height: 100%;
+}
+
+#sidebar > a {
+	width: 100%;
+	text-align: center;
+	font-family: Garamond;
+	font-size: 20px;
+	margin-bottom: 40px;
+	display: inline-block;
+	text-decoration: none;
+	color: #4472b9;
+}
+
+#btnContainer{
+	width: 100%;
+	min-height: 10px;
+	max-height: 400px;
+	text-align: center;
+}
+
+#btnContainer button {
+	width: 80%;
+	padding: 5px;
+	margin: 20px 0;
+	font-size: 30px;
+	font-family: Garamond;
+	color: white;
+	background: #3a8db4;
+	cursor: pointer;
+	border-radius: 10px;
+	outline: none;
+}
+
+.wrapper{
+	width: 85%;
+	min-height: 100%;
+	max-height: 1500px;
+	position: absolute;
+	left: 15%;
+}
+
+#content{
+	text-align: center;
+	display: block;
+	padding: 10px 0 10px 0;
+	width: 100%;
+	float: right;
+}
+
+.verticalLine{
+	border-left: 1px solid black;
+	height: 100%;
+	width: 0px;
+	position: absolute;
+	left: 0;
+	top:0;
+}
+
+#faded{
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: #eee;
+	z-index: -1;
+}
+
+#help, #settings, #about, #backup{
+	width: 75%;
+	min-height: 700px;
+	max-height: 2500px; /*to allow for zoom out*/
+	margin: 0 auto;
+	display: none;
+	padding: 10px;
+	font-size: 20px;
+	z-index: 2;
+	background: white;
+}
+
+#content h1{
+	color: purple;
+	font-size: 40px;
+
+	padding: 5px;
+	margin: 20px 10px;
+}
+
+#content > div{
+	display: none;
+}
+
+#content > .show{
+	display: block;
+	top: 0;
+}
+
+/*blocked sites list item*/
+#settings ul li{
+	font-family: monospace, Arial;
+}
+
+#settings ul li p{
+	display: inline-block;
+}
+
+/*delete button blocked sites list*/
+#settings ul li div {
+	display: inline-block;
+	margin: 5px 20px;
+	font-family: Garamond;
+	cursor: pointer;
+}
+
+#settings .auto_insert {
+	display: inline-block;
+	margin: 10px;
+	padding: 10px;
+}
+
+#settings .auto_insert thead th{
+	font-weight: bold; border:1px solid black;
+}
+
+#settings .auto_insert > tr td{
+	font-family: monospace;
+}
+
+#settings .auto_insert > tr td:nth-child(3):hover{
+	cursor:pointer;
+}
+
+#settings .auto_insert{
+	font-size: 18px;
+}
+
+/*Tip paragraph*/
+#settings span.tip_auto_insert{
+	text-decoration:underline;
+	cursor: pointer;
+}
+
+/*for the list of blocked sites*/
+#settings ul{
+	list-style-type: none;
+}
+
+.change_hotkey{
+	margin-top: 10px;
+	padding: 5px;
+	font-size: 15px;
+}
+
+.siteBlockInput {
+	width: 200px;
+	height: 25px;
+	font-size: 16px;
+	margin: 15px 0 0 0;
+}
+
+.siteBlockInput + button {
+	padding: 5px;
+	margin-left: 10px;
+	font-size: 16px;
+	cursor: pointer;
+}
+
+#storageMode{
+	width: 80%;
+	margin: auto;
+}
+
+#storageMode .container{
+	text-align: left;
+	width: 95%;
+	position: relative;
+}
+
+#storageMode .container div{
+	margin-top: 10px;
+}
+
+#storageMode h3{
+	font-weight: bold;
+	font-size: 20px;	
+	margin-bottom: 5px;
+}
+
+#storageMode .container p{
+	font-size: 18px;
+	margin-left: 10px;
+}
+
+#storageMode .warning{
+	font-size: 15px;
+	margin-top: 10px;
+}
+
+#help section{
+	text-align: left;
+	padding: 10px;
+}
+
+#help h2{
+	font-size: 35px;
+	color: darkorchid;
+	margin: 0 10px 20px;
+}
+
+#help .warning{
+	display: block;
+	margin: 10px auto;
+	width: 90%;	
+	text-align: justify;
+}
+
+#help dt{
+	color: #222;
+	font-size: 25px;
+	font-weight: bold;
+	margin: 10px 0;
+}
+
+#help dt:hover{
+	cursor: pointer;
+}
+
+#help dd{
+	margin-left: 30px;
+	margin-left: 20px;
+}
+
+#help dd.hide{
+	display: none;
+}
+
+#help h3{
+	font-size: 26px;
+	margin-bottom: 15px;
+}
+
+/*the paragraph below "Heads up!"*/
+#help p{
+	margin-bottom: 5px;
+}
+
+#help section h2:nth-child(2){
+	margin-top: 15px;
+}
+
+.tryit{
+	margin: auto;
+	width: 70%;
+	height: 210px;
+	border: 1px solid grey;
+}
+
+.tryit .nav{
+	width: 100%;
+	height: 30px;
+	background: rgb(232, 232, 232);
+}
+
+.tryit .nav p{
+	display: inline-block;
+	height: 100%;
+	max-width: 200px;
+	padding: 5px;
+	cursor: pointer;
+	min-width: 50px;
+	margin: auto 10px;
+	font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.tryit .nav .show{
+	background: white;
+}
+
+.tryit > .show{
+	display: block;
+	height: 180px;
+	width: 100%;
+	padding: 5px;
+	font-size: 18px;
+	box-sizing: border-box;
+	outline: none;
+}
+
+.tryit textarea{
+	resize: none;
+}
+
+.tryit > :not(.nav):not(.show){
+	display: none;
+}
+
+.disclaimer-heading{
+	color: green;
+}
+
+.backup, .restore, .print{
+	min-width: 165px;
+	max-width: 200px;
+	font-size: 22px;
+	background: none;
+	box-shadow: none;
+	border: 1px solid black;
+	cursor: pointer;
+}
+
+#backup > p, #about p{
+	width: 500px;
+	text-align: justify;
+	min-height: 50px;
+	max-height: 450px;
+	margin: auto;
+}
+
+#about p{
+	width: 95%;
+}
+
+/*the dialog boxes for print, and backup*/
+#backup .showers{
+	z-index: 2;
+	position: absolute;
+	width: 50%;
+	top: 10%;
+	left: 25%;
+	display: none;
+	background: white;
+	min-height: 200px;
+	border: 1px solid black;
+	padding: 10px;
+}
+
+#backup .showers.shown{
+	display: block;
+}
+
+#backup .showers .close{
+	cursor: pointer;
+	font-size: 15px;
+	font-family: Helvetica;
+}
+
+#backup .backupShow .text{
+	border: 1px solid black;
+	width: 100%;
+	min-height: 50px;
+	max-height: 425px;
+	white-space: pre;
+	font-family: monospace;
+	text-align: justify;
+	overflow: auto;
+	margin: 10px 0;
+}
+
+#backup .restoreShow textarea{
+	width: 98%;
+	margin: auto;
+	height: 150px;
+	resize: none;
+	overflow: auto;
+	margin: 10px 0;
+}
+
+#backup .restoreShow button:not(.close){
+	font-size: 22px;
+	color: black;
+	border: 1px solid black;
+	background: none;
+	cursor: pointer;
+	margin-bottom: 5px;
+}
+
+a{
+	text-decoration: none;
+	color: #4a6b82;
+}
+
+td{
+	border:1px solid;
+	padding: 5px;
+}
+
+.buttons {
+	min-width: 50%;
+	max-width: 90%;
+	height: 50px;
+	margin: 20px auto;
+}
+
+.g-plus img, .fb-share, .tw-share{
+	width: 40px;
+	height: 40px;
+	cursor: pointer;
+	margin: 10px;
+	display: inline-block;
+}
+
+.tw-share{
+	background: url("../imgs/twitter.png");
+	background-size: cover;
+}
+
+.fb-share{
+	background: url("../imgs/facebook.png");
+	background-size: cover;
+}
+
+#flattr, .buttons a, .backup, .restore, .print{
+	display: inline-block;
+	padding: 10px;
+	margin: auto;
+	margin-top: 20px;
+	border: 1px solid #4a6b82;
+	cursor: pointer;
+	transition: 0.5s ease;
+}
+
+#flattr:hover, .buttons a:hover, .backup:hover, .restore:hover, .print:hover{
+	color: white;
+	background: #4a6b82;
+}
+
+.buttons a {
+	display: block;
+	float: left;
+	margin: 0 10px 0 0;
+	padding: 10px 5px;
+	min-width: 20%;
+	max-width: 33%;
+	border: 1px solid;
+	color: black;
+	text-decoration: none;
+}
+
+.hotkey_display{
+	font-weight: bold;
+}
+
+.hotkey_listener{
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+@media screen and (max-width: 75em){
+	/* move the sidebar to the top as a nav bar START*/
+	.verticalLine{ display: none; } /*remove vertical line*/
+
+	#sidebar{
+		top: 0px;
+		left: 0;
+		width: 100%;
+		height: 8%;
+		margin: 0px;
+		border-right: 0px;
+		border-bottom: 1px solid black;
+	}
+
+	#logo{
+		margin: 0;
+		display: inline-block;
+		height: 90%;
+		width: 4%;
+		position: absolute;
+		left: 5%;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	#sidebar > a{
+		display: none;
+	}
+
+	#sidebar button{
+		width: 20%;
+		float: left;
+		height: 90%;
+		margin: 2px 5px;
+		padding: 0px;
+		position: static;
+		border: 1px solid black;
+		border-radius: 0;
+		font-size: 20px;
+		background: white;
+		color: black;
+		box-shadow: none;
+	}
+
+	button#backupButton{ height: 90%; font-size: 16px; }
+
+	#btnContainer{
+		max-width: 100%;
+		width: 89%;
+		float: right;
+		height: 100%;
+		text-align: start;
+	}
+	/* move the sidebar to the top as a nav bar END*/
+
+	.wrapper{
+		position: absolute;
+		left: 0;
+		top: 8%;
+		width: 100%;
+	}
+
+	#backup .showers{
+		width: 60%;
+		left: 20%;
+		top: 0;
+	}
+
+	/*hide the br after Restore button so that
+	  the Close This Dialog fits inside*/
+	#backup .showers.restoreShow button + br{
+		display: none;
+	}
+
+	#faded{
+		width: 100%;
+	}
+
+	.buttons a{
+		font-size: 15px;
+	}
+	
+	body{
+		padding-bottom: 40px;
+	}
+
+	
+}
+
+/*1600x1200+ begins*/
+@media screen and (min-width: 100em){
+	#sidebar > a{
+		font-size: 30px;
+	}
+
+	#btnContainer button{
+		font-size: 40px;
+	}
+
+	#help, #settings, #about, #backup{
+		font-size: 30px;
+	}
+
+	button, input, .siteBlockInput + button, .siteBlockInput, #backup .showers .close{
+		padding: 5px;
+		font-size: 24px;
+	}
+
+	input[type="radio"], input[type="checkbox"]{
+		height: 20px;
+		width: 20px;
+	}
+
+	.siteBlockInput{
+		width: 300px;
+		height: 33px;
+	}
+
+	kbd{
+		font-size: 22px;
+	}
+
+	#storageMode p{
+		font-size: 22px;
+	}
+
+	#content h1{
+		font-size: 55px;
+	}
+
+	#backup > button{
+		font-size: 26px;
+	}
+
+	.g-plus img, .fb-share, .tw-share{
+		width: 55px;
+		height: 55px;
+	}
+}
