@@ -54,19 +54,19 @@ Contact me - prokeys.feedback@gmail.com - for above related work discussion, if 
 - some code refactoring as well
 - made “date-time-macros sample” snippet more helpful
 
-**2.4.5.1** - 15/April/2015
+**2.4.5.1** - 15/04/2015
 - added support for Evernote beta
 - fixed bytes available link in popup html
 - removed support for password input
 
-**2.4.5** - 13/April/2015
+**2.4.5** - 13/04/2015
 - added support for all <input> elements except email/number (because they don’t support caret manipulation)
 - 
-**2.4.4.1** - 05/April/2015
+**2.4.4.1** - 05/04/2015
 - removed console.log’s, which were left erroneously, and were used for development purpose
 - css changes to popup
 
-**2.4.4** - 04/April/2015
+**2.4.4** - 04/04/2015
 - Facebook Chat, Atlassian (Confluence), Evernote, Mailchimp, Basecamp support added
 
 **2.4.3** - 30/03/2015
@@ -85,26 +85,26 @@ Contact me - prokeys.feedback@gmail.com - for above related work discussion, if 
 - Added option to change hotkey for snippet substitution
 - added flattr button
 
-**2.4.0**
+**2.4.0** - 05/03/2015
 - date and time macros are here!
 - added one sample snippet for date-time macros
 - added You have used 1860 bytes out of 102,400 bytes; 11 snippets currently notice
 
-**2.3.0**
+**2.3.0** - 09/11/2014
 - Support rich text format (bold, italic, underline)
 - options page improvement
 - changed snippet viewing to down arrow in popup window
 - added helpful sample snippets
 
-**2.2.0**
+**2.2.0** - 01/11/2014
 - Fixed the white space collapse problem, by changing the text nodes to span element nodes and completely revamping the functioning of popup.js due to this
 - Reduced the line-height of the snippet body in popup window
 
-**2.1.0**
+**2.1.0** - 01/10/2014
 - mathomania fixes
 - validation format changed
 
-**2.0.0**
+**2.0.0** - 11/09/2014
 - Mathomania (type and do math)
 - Sync storage
 - Options page responsive (for smaller screens)
