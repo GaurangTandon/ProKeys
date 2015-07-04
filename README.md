@@ -59,9 +59,9 @@ Contact me - prokeys.feedback@gmail.com - for above related work discussion, if 
 - fixed bytes available link in popup html
 - removed support for password input
 
-**2.4.5** - 13/04/2015
+**2.4.5** - 13/04/2015  
 - added support for all <input> elements except email/number (because they don’t support caret manipulation)
-- 
+
 **2.4.4.1** - 05/04/2015
 - removed console.log’s, which were left erroneously, and were used for development purpose
 - css changes to popup
