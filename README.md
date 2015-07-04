@@ -2,7 +2,7 @@
 **Latest version**: 2.5.1
 **Status**: active (since 04/07/2015), stable build
 
-A completely free Google Chrome extension that lets you be productive in online text-related work with its number of features like:
+A completely free Google Chrome and Opera extension that lets you be productive in online text-related work with its number of features like:
 
 [More info on all these in Help section inside the app]  
 1. **Snippets** - define custom abbreviations, and retrieve the text associated with them simply by pressing the hotkey (default: Shift+Space). Example: "brb" can expand to "Be right back!"  
