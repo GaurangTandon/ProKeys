@@ -12,11 +12,6 @@
 		Data = {
 			dataVersion: 1,
 			snippets: [
-				{
-					name: "",
-					body: "",
-					timestamp: ""
-				}
 			], 
 			language: "English",
 			visited: false,
