@@ -1,6 +1,6 @@
 ## [ProKeys](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
-**Latest version**: 2.5.1
-**Status**: active (since 04/07/2015), stable build
+**Latest version**: 2.5.2
+**Status**: active (since 05/July/2015), stable build
 
 A completely free Google Chrome and Opera extension that lets you be productive in online text-related work with its number of features like:
 
