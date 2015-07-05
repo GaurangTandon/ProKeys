@@ -7,9 +7,10 @@ A completely free Google Chrome and Opera extension that lets you be productive 
 [More info on all these in Help section inside the app]  
 1. **Snippets** - define custom abbreviations, and retrieve the text associated with them simply by pressing the hotkey (default: Shift+Space). Example: "brb" can expand to "Be right back!"  
 2. **Placeholders** - are fields in the snippet body that can be given dynamic values on using the snippet.  
-3. **Mathomania** - do math without leaving your text editor, and without calculators. Example: "[[ 15% * 600 =]]" gives "90" and "[[ (5+6) * 15^2 =]]" gives "2475".  
+3. **Mathomania** - do math without leaving your text editor, and without calculators. Example: "[[ 15% * 600 =]]" gives "90" and "[[ (5+6) * 15^2 =]]" gives "2475". 
 4. **Auto-Insert** - Quotes ('"') and braces ('(', '[', '{') are auto-completed, and you can specify your custom insert-it-for-me also (like, inserting a '>' on typing of a '<') in the settings.  
-5. **Date/Time Macros** - embed short symbols inside the parentheses of '[[%d()]]' inside a snippet body and it will auto replace the symbol with the current date and time related value. A sample snippet as well as a guide has been provided (in Help section inside the app)  
+5. **Date/Time Macros** - embed short symbols inside the parentheses of '[[%d()]]' inside a snippet body and it will auto replace the symbol with the current date and time related value. A sample snippet as well as a guide has been provided (in Help section inside the app) 
+6. **Date/Time Arithmetic** - use the `+` or `-` sign to move forward or backward in time in date/time macros. Supports both relative as well as independent evaluation.
 6. **Variables** - built-in variables holding dynamic values for "date", "time" and (browser) "version"
 7. **Tab Key**- The tab key can be made to insert 4 spaces, instead of it's default function, thus speeding up work.  
 
@@ -36,14 +37,20 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Next feature to come:
 
-1. Date Time arithmetic (requested feature)
-2. Clipboard access in snippet body
-3. Update Opera with latest release
-4. Create ProKeys for Firefox, IE, Edge, Safari
+1. Clipboard access in snippet body
+2. Update Opera with latest release
+3. Create ProKeys for Firefox, IE, Edge, Safari
 
 ## Change Log
 
-**2.5.1** - Current - 04/07/2015
+**2.5.2** - Current - 05/07/2015
+- support for date and time arithmetic, relative as well as independent
+- organized symbols, variables into a clean table
+- revamped sample snippets shown on first intall
+- introduced TryIt editor in Help page
+
+
+**2.5.1** - 04/07/2015
 - fixed a strange issue where on empty snippet was initially shown on install
 
 **2.5.0** - 04/07/2015
