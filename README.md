@@ -25,22 +25,18 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 1. [Create a new issue](https://github.com/GaurangTandon/ProKeys/issues/new) for bugs, feature requests, and enhancements.
 2. [Write a review](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews) ([anonymous feedback](https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form)), or [get support](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support) with some techincal glitches.
-3. Fork the repo, make changes, and submit pull a request, describing the changes made.
+3. Fork the repo, make changes, and submit a pull request, describing the changes made.
 4. Help me translate ProKeys to your native language.
 5. Share the word about ProKeys with people!
 6. [Flattr ProKeys](https://flattr.com/thing/3a21a326ed09014a80254c2938cd5bee) - buy me a beer!
 
-Contact me - prokeys.feedback@gmail.com - for above related work discussion, if you want to.
+**Contact me** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
 
 ## [Known Issues](https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing)
 
-## Feature Requests
-
-1. Date Time arithmetic
-
 ## Next feature to come:
 
-1. Date Time arithmetic
+1. Date Time arithmetic (requested feature)
 2. Clipboard access in snippet body
 3. Update Opera with latest release
 4. Create ProKeys for Firefox, IE, Edge, Safari
