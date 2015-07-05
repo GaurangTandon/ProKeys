@@ -10,7 +10,7 @@ A completely free Google Chrome and Opera extension that lets you be productive 
 3. **Mathomania** - do math without leaving your text editor, and without calculators. Example: "[[ 15% * 600 =]]" gives "90" and "[[ (5+6) * 15^2 =]]" gives "2475".  
 4. **Auto-Insert** - Quotes ('"') and braces ('(', '[', '{') are auto-completed, and you can specify your custom insert-it-for-me also (like, inserting a '>' on typing of a '<') in the settings.  
 5. **Date/Time Macros** - embed short symbols inside the parentheses of '[[%d()]]' inside a snippet body and it will auto replace the symbol with the current date and time related value. A sample snippet as well as a guide has been provided (in Help section inside the app)  
-6. **Variables** - Type square brackets, `[[`, and inside them, type the variable name, which is built-in. It will automatically be replaced with their current dynamic value.  
+6. **Variables** - built-in variables holding dynamic values for "date", "time" and (browser) "version"
 7. **Tab Key**- The tab key can be made to insert 4 spaces, instead of it's default function, thus speeding up work.  
 
 ## Libraries/Code sources
