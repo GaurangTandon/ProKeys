@@ -42,6 +42,78 @@
 		dialogPoppedUp = false,
 		dlog;
 
+	/* bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32 
+		with some modifications */
+	var $ = function(selector){
+		var elms = document.querySelectorAll(selector);
+
+		// return single element in case only one is found
+		return elms.length > 1 ? elms : elms[0];
+	};
+	 
+	Node.prototype.on = window.on = function (name, fn, useCapture) {
+		this.addEventListener(name, fn, useCapture);
+	};
+	 
+	NodeList.prototype.__proto__ = Array.prototype;
+	 
+	NodeList.prototype.on = NodeList.prototype.addEventListener = function (name, fn) {
+		this.forEach(function (elem) {
+			elem.on(name, fn);
+		});
+	};
+	
+	// inserts the newNode after `this`
+	Element.prototype.insertAfter = function(newNode){
+		this.parentNode.insertBefore(newNode, this.nextSibling);
+	};
+
+	// returns true if element has class; usage: Element.hasClass("class")
+	Element.prototype.hasClass = function(className) {
+		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
+	};
+	
+	Node.prototype.toggleClass = function(cls){
+		if(this.hasClass(cls)) this.classList.remove(cls);
+		else this.classList.add(cls);
+	};
+	
+	// replaces `this` with `newElm`; `newElm` is a string; returns new element
+	Element.prototype.replaceWith = function(newElm, newClass, id, textToReplace){
+		// string newClass, id, textToReplace (optional: to dictate which text should be in replaced element)
+		// string event containing innerHTML of element
+
+		var parent = this.parentNode,
+			// new element ready
+			newElement = document.createElement(newElm);
+
+		if(newClass){
+			newClass = newClass.split(" ");
+			for(var i = 0; newClass[i]; i++)
+				newElement.toggleClass(newClass[i]);
+		}
+
+		if(id) newElement.id = id;
+
+		var mode = newElement.isTextBox() ? "makeHTML" : "makeEntity";
+
+		// if should `replaceText`, get text from old and set it in new; always `formatHTML`
+		if(textToReplace)
+			text(newElement, formatHTML(textToReplace, mode));
+		else 
+			text(newElement, formatHTML(text(this), mode));
+
+		// perform replace function
+		parent.replaceChild(newElement, this);
+
+		// return original element
+		return newElement;
+	};
+	
+	Element.prototype.isTextBox = function(){
+		return this.tagName === "INPUT" || this.tagName === "TEXTAREA";
+	};
+	
 	/////////////////////////
 	// DataBase functions
 	/////////////////////////
@@ -138,7 +210,9 @@
 			// 2) the newest snippet is listed at top
 			setTimeout(function(){
 				// highlight so the user may notice it #ux
-				highlightFirstSnippet();
+				// get first snippet li
+				// add highlighting class to it, which induces -webkit-animation
+				$("#snips ul li")[0].toggleClass("highlighting");
 			}, 500);
 		}
 
@@ -160,20 +234,6 @@
 	//////////////////////
 	// Helper functions
 	//////////////////////
-
-	function highlightFirstSnippet(){
-		// get first li.snip
-		var firstSnippetLI = 
-					document.querySelector("#snips ul li");
-
-		// add highlighting class to it, which induces -webkit-animation
-		firstSnippetLI.classList.add("highlighting");
-
-		// remove after some time
-		setTimeout(function(){
-			firstSnippetLI.classList.remove("highlighting");
-		}, 5000);
-	}
 
 	function escapeRegExp(str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -280,7 +340,7 @@
 		img.src = "../imgs/dropdown.gif";
 		img.setAttribute("alt", "Click to see the full snippet");
 		img.setAttribute("title", "Click to see the full snippet");
-		img.classList.add("dropdown");
+		img.toggleClass("dropdown");
 		img.onclick = onDropDownClick;
 
 		return img;
@@ -301,12 +361,12 @@
 		}
 		// user does not have any snips
 		else if(!Data.snippets[0]){
-			div = document.getElementById("snips");
+			div = $("#snips");
 
 			div.innerHTML = "<p class='display_msg_to_user'>You currently have no snippets.<br>Why not <a class='trigger_create_new'>create a new snippet?</a></p>";
 
-			document.querySelector(".trigger_create_new").onclick = function(){
-				document.querySelector('.button[aria-label="Create new Snippet"]').onclick();
+			$(".trigger_create_new").onclick = function(){
+				$('.button.createSnipBtn').onclick();
 			};
 
 			return;
@@ -315,7 +375,7 @@
 		snip_array = !searchMode ? Data.snippets : snip_array;
 
 		// in the `ul`; we will place snips as `li` elements
-		snipsDiv = document.getElementById("snips");
+		snipsDiv = $("#snips");
 
 		text(snipsDiv, "");
 
@@ -339,7 +399,7 @@
 
 			setTextareaText.call(divShort, snip.name);
 
-			li.appendChild(divShort).classList.add("short");
+			li.appendChild(divShort).toggleClass("short");
 
 			// our `div` long element; with Snip body
 			divLong = document.createElement("div");
@@ -356,23 +416,23 @@
 			// prepare and add dropdown image
 			btnCollection.appendChild(getDropDownElm());
 
-			li.appendChild(btnCollection).classList.add("buttons");
+			li.appendChild(btnCollection).toggleClass("buttons");
 
 			// always append divLong after btnCollection
-			li.appendChild(divLong).classList.add("long");
+			li.appendChild(divLong).toggleClass("long");
 
 			// Time stamp
 			created_on = document.createElement("div");
 
 			// set text to snip's timestamp
 			text(created_on, "Created on " + snip.timestamp);
-			li.appendChild(created_on).classList.add("timestamp");
+			li.appendChild(created_on).toggleClass("timestamp");
 
 			// now append our constructed li into ul
-			ul.appendChild(li).classList.add("snip");
+			ul.appendChild(li).toggleClass("snip");
 
 			if(snip.name === sval_to_show)
-				li.classList.add("shown");
+				li.toggleClass("shown");
 		}
 
 		snipsDiv.appendChild(ul);
@@ -476,7 +536,7 @@
 					// while showing only the recently saved one
 					listSnippets(Data.snippets, sVal);
 				else {// invoke the onkeyup of search box to list snippets again
-					var elm = document.querySelector("input[title='Search']");
+					var elm = $("input[title='Search']");
 					elm.onkeyup({});
 				}
 
@@ -495,18 +555,18 @@
 
 	// used to show dialog div.message
 	function showDialog(){
-		dlog.classList.add("shown");
-		dlog.classList.remove("hidden");
+		dlog.toggleClass("shown");
+		dlog.toggleClass("hidden");
 		dlog.style.top = "150px";
-		document.body.classList.add("darkened");
+		document.body.toggleClass("darkened");
 		dialogPoppedUp = true;
 	}
 
 	function removeDialog(){
-		dlog.classList.remove("shown");
-		dlog.classList.add("hidden");
+		dlog.toggleClass("shown");
+		dlog.toggleClass("hidden");
 		dlog.style.top = "";
-		document.body.classList.remove("darkened");
+		document.body.toggleClass("darkened");
 		dialogPoppedUp = false;
 	}
 
@@ -605,7 +665,7 @@
 
 		// show .snip .long if not shown
 		if(!parentLI.hasClass("shown"))
-			parentLI.classList.add("shown");
+			parentLI.toggleClass("shown");
 
 		/*
 			Current .buttons:
@@ -640,13 +700,13 @@
 
 		// shown currently, hide it!
 		if(snip.hasClass("shown")){
-			snip.classList.remove("shown");
+			snip.toggleClass("shown");
 			this.setAttribute("title", "Click to show the full snippet");
 			this.setAttribute("alt", "Click to show the full snippet");
 		}
 		// not shown? show it!
 		else{
-			snip.classList.add("shown");
+			snip.toggleClass("shown");
 			this.setAttribute("title", "Click to hide the snippet");
 			this.setAttribute("alt", "Click to hide the snippet");
 		}
@@ -660,7 +720,7 @@
 			}else{
 				text(node.nextElementSibling, pass);
 				node.style.border = "2px solid rgb(245, 79, 79)";
-				node.nextElementSibling.classList.add("red");
+				node.nextElementSibling.toggleClass("red");
 			}
 		}
 
@@ -673,13 +733,13 @@
 	function updateStorageAmount(){
 		storage.getBytesInUse(function(bytesInUse){
 			// set current bytes
-			document.querySelector("#headArea .currentBytes").innerHTML = bytesInUse;
+			$("#headArea .currentBytes").innerHTML = bytesInUse;
 			
 			// set number of snippets written
-			document.querySelector("#headArea .snippet_amount").innerHTML = Data.snippets.length;
+			$("#headArea .snippet_amount").innerHTML = Data.snippets.length;
 			
 			// set total bytes available
-			document.querySelector("#headArea .bytesAvailable").innerHTML = 
+			$("#headArea .bytesAvailable").innerHTML = 
 									storage.MAX_ITEMS ? /*sync*/ "102,400" : "5,242,880";
 		});
 	}
@@ -721,63 +781,7 @@
 				.replace(/&nbsp;/g, " ").replace(/<br>/g, "\n");
 	}
 
-	// replaces `this` with `newElm`; `newElm` is a string; returns new element
-	Element.prototype.replaceWith = function(newElm, newClass, id, textToReplace){
-		// string newClass, id, textToReplace (optional: to dictate which text should be in replaced element)
-		// string event containing innerHTML of element
-
-		var parent = this.parentNode,
-			// new element ready
-			newElement = document.createElement(newElm);
-
-		if(newClass){
-			newClass = newClass.split(" ");
-			for(var i = 0; newClass[i]; i++)
-				newElement.classList.add(newClass[i]);
-		}
-
-		if(id) newElement.id = id;
-
-		var mode = newElement.isTextBox() ? "makeHTML" : "makeEntity";
-
-		// if should `replaceText`, get text from old and set it in new; always `formatHTML`
-		if(textToReplace)
-			text(newElement, formatHTML(textToReplace, mode));
-		else 
-			text(newElement, formatHTML(text(this), mode));
-
-		// perform replace function
-		parent.replaceChild(newElement, this);
-
-		// return original element
-		return newElement;
-	};
-	
-	Element.prototype.isTextBox = function(){
-		return this.tagName === "INPUT" || this.tagName === "TEXTAREA";
-	};
-
-	// returns true if element has class; usage: Element.hasClass("class")
-	Element.prototype.hasClass = function(className) {
-		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
-	};
-
-	// vanilla JS equivalent of jQuery $.offset()
-	Element.prototype.offset = function () {
-		var rect = this.getBoundingClientRect();
-
-		return {
-			top: rect.top + document.body.scrollTop,
-			left: rect.left + document.body.scrollLeft
-		};
-	};
-
-	// inserts the newNode after `this`
-	Element.prototype.insertAfter = function(newNode){
-		this.parentNode.insertBefore(newNode, this.nextSibling);
-	};
-
-	function resetBox(box, name){
+	function resetBox(box, isLong){
 		// reset border, outline and dataset, height
 		box.style.outline = "initial";
 		box.style.border = "1px solid rgb(169, 169, 169)";
@@ -785,18 +789,17 @@
 		box.style.height = "";
 
 		// reset `p` element text
-		text(box.nextElementSibling, name === "long" ? 
-									SNIP_BODY_LIMIT + " characters left" :
-									SNIP_NAME_LIMIT + " characters left");
+		text(box.nextElementSibling, (isLong ? SNIP_BODY_LIMIT : SNIP_NAME_LIMIT) +
+									 " characters left");
 
-		// removes classes like "charCountRed", or "charCountYellow"
+		// removes the "red" class if present
 		box.nextElementSibling.className = "";
 
 		// reset text
 		text(box, "");
 
 		// reset the elongated height of the textbox
-		box.classList.remove("active");
+		box.toggleClass("active");
 	}
 
 	// checks the character length of textboxes; assumes
@@ -807,15 +810,12 @@
 		var currLength = text(this).length,
 			diff = Math.abs(currLength - limit),
 			nextSibling = this.nextElementSibling;
-
-		// if length exceeds limit
-		if(currLength > limit){
-			text(nextSibling, "Too long by " + diff + " characters");
-			nextSibling.classList.add("red");
-		}else{
-			text(nextSibling, diff + " characters left");
-			nextSibling.classList.remove("red");
-		}
+		
+		// if currLength exceeds limit
+		var bool = currLength > limit;
+		
+		text(nextSibling, bool ? "Too long by " + diff + " characters" : diff + " characters left");
+		nextSibling.classList[bool ? "add" : "remove"]("red");
 	}
 
 	// changes type of storage: local-sync, sync-local
@@ -851,30 +851,30 @@
 		}
 
 		// needs to be global
-		dlog = document.querySelector(".message");
+		dlog = $(".message");
 
 		// define element variables
-		var searchButton = document.querySelector(".button[title='Search for snippets']"),
-			searchField = document.querySelector("input[aria-label='Search']"),
-			createSnipButton = document.querySelector('.button[aria-label="Create new Snippet"]'),
-			optionsButton = document.querySelector('.button[title="Settings or Help"]'),
+		var searchButton = $(".searchSnipBtn"),
+			searchField = $(".searchField"),
+			createSnipButton = $('.createSnipBtn'),
+			optionsButton = $('.settingsBtn'),
 			// set to true if the .createSnipArea is flipped
 			flipped_mode = false,
-			snipSValBox = document.getElementById("sVal"),
-			snipLValBox = document.getElementById("lVal"),
-			backButton = document.querySelector(".createSnipArea .back"),
-			doneButton = document.querySelector(".createSnipArea .done"),
-			flipContainer = document.querySelector(".flip-container");
+			snipSValBox = $("#sVal"),
+			snipLValBox = $("#lVal"),
+			backButton = $(".createSnipArea .back"),
+			doneButton = $(".createSnipArea .done"),
+			flipContainer = $(".flip-container");
 
-		document.querySelector("#headArea .bytesAvailable").onclick = function(){
+		$("#headArea .bytesAvailable").on("click", function(){
 			window.open("https://developer.chrome.com/extensions/storage#properties");
-		};
+		});
 
 		chrome.storage.onChanged.addListener(function(){
 			updateStorageAmount();
 		});
 
-		window.onresize = function(){
+		window.on("resize", function(){
 			// zoom is in zoom% (100, 125, etc.)
 			var zoom = getPageZoom() * 100,
 				elm = document.documentElement;
@@ -886,30 +886,29 @@
 			}else{
 				elm.className = "";
 			}
-		};
+		});
 
 		updateStorageAmount();
 
-		// text box should auto resize on key up
-		snipLValBox.onkeyup = function(){
-			// now check char length
-			counterChecker.call(snipLValBox, SNIP_BODY_LIMIT);
-		};
+		function addListener(box, lim){
+			box.on("keyup", function(){
+				counterChecker.call(box, lim);
+			});
+		}
+		
+		addListener(snipLValBox, SNIP_BODY_LIMIT);
+		addListener(snipSValBox, SNIP_NAME_LIMIT);
 
-		snipSValBox.onkeyup = function(){
-			counterChecker.call(snipSValBox, SNIP_NAME_LIMIT);
-		};
-
-		optionsButton.onclick = function(){
+		optionsButton.on("click", function(){
 			window.open("options.html");
-		};
+		});
 
-		backButton.onclick = function(){
-			resetBox(snipLValBox, "long", true);
-			resetBox(snipSValBox, "short", true);
+		backButton.on("click", function(){
+			resetBox(snipLValBox, true);
+			resetBox(snipSValBox, false);
 
 			// flip back to the home page
-			flipContainer.classList.remove("flipped");
+			flipContainer.toggleClass("flipped");
 			flipped_mode = false;
 			// set tabIndices
 			snipSValBox.tabIndex = -1;
@@ -918,10 +917,10 @@
 			backButton.tabIndex  = -1;
 
 			return false;
-		};
+		});
 
 		// create snip area
-		doneButton.onclick = function(){
+		doneButton.on("click", function(){
 			var sVal = text(snipSValBox),
 				lVal = text(snipLValBox),
 				vldS = validateSVal(sVal, sVal.length),
@@ -949,11 +948,11 @@
 
 				// reset boxes to remove the green/red formatting
 				// and text that user entered
-				resetBox(snipLValBox, "long", true);
-				resetBox(snipSValBox, "short", true);
+				resetBox(snipLValBox, true);
+				resetBox(snipSValBox, false);
 
 				// flip back to the home page
-				flipContainer.classList.remove("flipped");
+				flipContainer.toggleClass("flipped");
 				flipped_mode = false;
 				// set tabIndices
 				snipSValBox.tabIndex = -1;
@@ -965,53 +964,47 @@
 			}
 
 			showErrors(snipSValBox, snipLValBox, vldS, vldL);
-		};
+		});
+		
+		function searchButtonClick(title, text, searchModeBool){
+			var s = "shown", h = "hidden";
+			
+			this.toggleClass("shortened");
+			text(this, text);
+			this.setAttribute("title", title);
 
-		searchButton.onclick = function(){
-			if(text(this) === "Search for snips"){
-				// button
-				this.classList.add("shortened");
-				text(this, "Done");
-				this.setAttribute("title", "Click when done searching.");
+			searchField.toggleClass(s);
+			createSnipButton.toggleClass(h);
+			optionsButton.toggleClass(h);
 
-				searchField.classList.add("shown");
-				createSnipButton.classList.add("hidden");
-				optionsButton.classList.add("hidden");
+			searchMode = searchModeBool;
+		}
+
+		searchButton.on("click", function(){			
+			if(!this.hasClass("shortened")){
+				searchButtonClick.call(this, "Done", "Click when done searching", true);
 
 				// 1000 => after animation finishes; focus searchField
 				setTimeout(function(){
 					searchField.focus();
 				}, 1000);
-
-				searchMode = true;
 			}else{
-				searchButton.classList.remove("shortened");
-				searchButton
-					.setAttribute("title", "Search for snippets");
-
-				searchField.classList.remove("shown");
-				createSnipButton.classList.remove("hidden");
-				optionsButton.classList.remove("hidden");
-
-				text(searchButton, "Search for snips");
+				searchButtonClick.call(this, "Search for snips", "Search for snips", false);
 				text(searchField, "");
-
 				listSnippets(Data.snippets);
-
-				searchMode = false;
 			}
-		};
+		});
 
-		searchField.onkeyup = function(){
+		searchField.on("keyup", function(){
 			var searchText = text(this),
 				textLen = searchText.length,
-				snips = document.getElementById("snips"),
+				snips = $("#snips"),
 				p = snips.querySelector("#snips p"),
 				snipsLen = Data.snippets.length,
 				displayPara = document.createElement("p"),
 				ul, msg; // green colored message
 
-			displayPara.classList.add("display_msg_to_user");
+			displayPara.toggleClass("display_msg_to_user");
 
 			// if p then remove p as
 			// p might the error message
@@ -1050,7 +1043,7 @@
 				text(displayPara, msg);
 				snips.appendChild(displayPara);
 			}
-		};
+		});
 
 		createSnipButton.onclick = function(){
 			// work only if the #snips is not already flipped
@@ -1058,10 +1051,10 @@
 				flipped_mode = true;
 
 				// add flipped class
-				flipContainer.classList.add("flipped");
+				flipContainer.toggleClass("flipped");
 
-				snipSValBox.classList.add("active");
-				snipLValBox.classList.add("active");
+				snipSValBox.toggleClass("active");
+				snipLValBox.toggleClass("active");
 
 				// set tabIndices
 				snipSValBox.tabIndex = 1;
@@ -1083,30 +1076,23 @@
 
 		// use event delegation for edit, delete, etc. buttons
 		// since they are dynamically added
-		document.onclick = function(){
-			var node = event.target;
+		document.on("click", function(){
+			var node = event.target, func, mapping = {
+				"Edit" : editOnClick,
+				"Delete": deleteOnClick,
+				"Done": doneOnClick,
+				"Cancel": cancelOnClick
+			};
 
 			// check to make sure node is a ".buttons > button"
 			// in #snips li.snip
 			if(node.parentNode && node.parentNode.hasClass &&
-				node.parentNode.hasClass("buttons")){
-				var textNode = text(node);
-
-				var func = 
-				// "Edit" button
-				textNode === "Edit" ? editOnClick :
-				// "Done" button
-				textNode === "Done" ? doneOnClick :
-				// "Delete" button
-				textNode === "Delete" ? deleteOnClick :
-				// "Cancel" button 
-				textNode === "Cancel" ? cancelOnClick :
-				// or nothing
-				undefined;
+				node.parentNode.hasClass("buttons")){				
+				func = mapping[text(node)]
 
 				if(func) func.call(node);
 			}
-		};
+		});
 
         if (!chrome.runtime) {
             // Chrome 20-21
@@ -1122,13 +1108,9 @@
 		// now check if the user is first time user; get that data
 		function check(){
 			// if DB not loaded
-			if(!DB_loaded){
-				// check again after 500ms
-				setTimeout(check, 500);
-				return;
-			}else if(!Data.visited){ // first time user
+			if(!Data.visited){ // first time user
 				// "Got it" button
-				var button = document.querySelector(".new_user_msg button");
+				var button = $(".new_user_msg button");
 				button.parentNode.style.display = "block";
 
 				// if the user clicks the button; he's no more a first time user
@@ -1136,6 +1118,7 @@
 					Data.visited = true;
 					DB_save(function(){
 						this.parentNode.style.display = "none";
+						$("#headArea button:first-child").toggleClass("firstInstall");
 					}.bind(this));
 				};
 
@@ -1143,12 +1126,12 @@
 
 				// create introductory snippets
 				var a = {
-					name: "sample_snippet_read_me",
-					body: "Hello new user!\n\nThis is a sample snippet. A snippet can be activated by typing the snippet name (abbreviation) on any website's textbox and pressing Shift+Space.\n\nThis bit (%abcd%) is a placeholder. It will be auto-highlighted once you activate the snippet. It's useful when you want to insert fields like %first_name% or %email% in your snippet. Use [Tab] to go through each placeholder.\nBe sure to check out the settings page. Press 'Create new Snip' button to create a new snippet.\n\n\nContact me prokeys.feedback@gmail.com for any feedback! Thank you for using ProKeys!",
-					timestamp: "June 26, 2014"
+					name: "sampleSnippet",
+					body: "Hello new user! Thank you for using ProKeys!\n\nThis is a sample snippet. Try using it on any webpage by typing 'sampleSnippet' (snippet name; without quotes), and press the hotkey (default: Shift+Space), and this whole text would come in place of it.",
+					timestamp: "July 05, 2015"
 				}, b = {
-					name: "placeholder_guide",
-					body: "When you use this snippet, %this_text% will be highlighted. Press [Tab] and then %this_text% will be highlighted. Press [Tab] again to highlight %me%.\nThis is useful for fields like %first_name% in snippets.",
+					name: "letter",
+					body: "(Sample snippet to demonstrate the power of ProKeys snippets)\n\nHello %name%,\n\nYour complaint number %complaint% has been noted. We will work at out best pace to get this issue solved for you. If you experience any more problems, please feel free to contact at me@organization.com.\n\nRegards,\n%my_name%,\nDate: [[%d(D-MM-YYYY)]]",
 					timestamp: "June 26, 2014"
 				}, c = {
 					name: "brb",
@@ -1159,13 +1142,15 @@
 					body: "<b>Gaurang Tandon</b>\n<i>Creator Of ProKeys</i>\n<u>prokeys.feedback@gmail.com</u>",
 					timestamp: "June 26, 2014"
 				}, e = {
-					name: "date_time_macros_sample",
-					body: "First of all use this snippet in a website and notice the output of the following line:\n[[%d(hh:m:s h+h Do-MMMM-YYYY D-MMM date time dddd ddd a)]]\n\nAs you could see, these symbols are replaced by their current date and time related data. More info about them is in Help section.",
+					name: "dateArithmetic",
+					body: "Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5 m-5 s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
 					timestamp: "March 05, 2015"
 				};
 
-				Data.snippets.push(a, b, c, d, e);
-
+				Data.snippets.push(a, b, c, d, e);	
+				
+				$("#headArea button:first-child").toggleClass("firstInstall");
+				
 				DB_save(function(){
 					listSnippets();
 				});
