@@ -1,6 +1,6 @@
 ## [ProKeys](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
-**Latest version**: 2.5.2
-**Status**: active (since 05/July/2015), stable build
+**Latest version**: 2.5.3
+**Status**: active (since 06/July/2015), stable build
 
 A completely free Google Chrome and Opera extension that lets you be productive in online text-related work with its number of features like:
 
@@ -43,7 +43,15 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Change Log
 
-**2.5.2** - Current - 05/07/2015
+**2.5.3** - Current -  06/07/2015
+- changes to symbol list order (small to large time duration)
+- super bug fix for mathomania!
+- quick bug fixes
+- refactored popup.js code with bling.js
+- help page is now the default page in options.html
+
+
+**2.5.2** - 05/07/2015
 - support for date and time arithmetic, relative as well as independent
 - organized symbols, variables into a clean table
 - revamped sample snippets shown on first intall
