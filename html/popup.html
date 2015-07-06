@@ -12,10 +12,10 @@
 	<img src="../imgs/main_logo.png" id="appLogo" alt="ProKeys main logo">
 	
 	<div id="headArea">
-		<button class="button" aria-label="Settings or Help" title="Settings or Help" tabIndex=10>Settings/Help</button> <!--Opens option.html in new window-->
-		<button class="button" aria-label="Create new Snippet" title="Create new Snippet" tabIndex=20>Create new Snip</button>
-		<button class="button" aria-label="Search for snippets" title="Search for snippets" tabIndex=30>Search for snips</button>		
-		<input type="text" aria-label="Search" title="Search" placeholder="Type at least 3 characters">
+		<button class="button settingsBtn" aria-label="Settings or Help" title="Settings or Help" tabIndex=10>Settings/Help</button> <!--Opens option.html in new window-->
+		<button class="button createSnipBtn" aria-label="Create new Snippet" title="Create new Snippet" tabIndex=20>Create new Snip</button>
+		<button class="button searchSnipBtn" aria-label="Search for snippets" title="Search for snippets" tabIndex=30>Search for snips</button>		
+		<input type="text" class="searchField" aria-label="Search" title="Search" placeholder="Type at least 3 characters">
 		
 		<p class="storageBytes"><span class="currentBytes"></span> bytes used out of <a href="https://developer.chrome.com/extensions/storage#properties"><span class="bytesAvailable"></span> bytes</a>; <span class="snippet_amount"></span> snippets currently</p>
 	</div>
@@ -37,7 +37,7 @@
 	</div>
 	
 	<div class="new_user_msg">
-		<p>Hello new user! Snippets will appear in this popup box. Other settings will be in the "Settings/Help" page. It is advised you visit the Help page to get started.
+		<p>Hello new user! Snippets will appear in this popup box. Other settings will be in the "Settings/Help" page. It is advised you visit the Help page to get started with the usage of this app.
 			You can block sites, where you don't want ProKeys to function, in the settings.</p>
 		<button>Got it!</button>
 	</div>
