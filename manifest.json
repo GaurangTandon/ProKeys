@@ -3,7 +3,7 @@
 
   "name": "ProKeys",
   "description": "Save time and effort in emails, etc. with ProKeys! Define snippets, do math in browser, auto complete braces, and much more.",
-  "version": "2.5.1",
+  "version": "2.5.3",
   
   "author": "Gaurang Tandon",
   
@@ -39,5 +39,5 @@
   
   "options_page": "html/options.html",
   "offline_enabled": true,
-  "content_security_policy" : "default-src 'none'; style-src 'self'; script-src 'self'; frame-src https://api.flattr.com https://button.flattr.com 'self'"
+  "content_security_policy" : "default-src 'none'; style-src 'self'; script-src 'self' 'unsafe-eval'; frame-src https://api.flattr.com https://button.flattr.com 'self'"
 }
