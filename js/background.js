@@ -18,11 +18,11 @@ chrome.runtime.onInstalled.addListener(function(details){
 	
 	if(details.reason === "install"){
 		title = "ProKeys installed successfully!";
-		text = "Thank you for installing ProKeys!";		
+		text = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect. Check out the popup box at the top-right to get started!";
 	}else if(details.reason === "update"){
 		version = chrome.runtime.getManifest().version;
-		title = "ProKeys updated successfully to " + version;
-		text = "Please reload all active tabs for changes to take effect!";
+		title = "ProKeys updated successfully to v" + version;
+		text = "Please reload active tabs to use new version. Major changes:\nArithmetic support in date/time macros. For more, visit the changelog in \"About\" page.";
 	}
 
 	// either update or install was there
