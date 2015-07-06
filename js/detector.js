@@ -46,49 +46,52 @@
 		tabKeySpace, // boolean whether tab key --> "    "
 		isGmail,
 		SPAN_CLASS = "prokeys-snippet-text",
-		macros = {
-			"\\bhh\\b": function(date){ // 24h
-				return padNumber(date.getHours());
-			},
-			"\\bh\\b": function(date){           // 12h
-				return padNumber(to12Hrs(date.getHours())[0]);
-			},
-			"\\bm\\b": function(date){          // mins
-				return padNumber(date.getMinutes());
-			},
-			"\\bs\\b": function(date){          // secs
+		months = ["January", "February", "March",
+					"April", "May", "June", "July", "August", "September",
+					"October", "November", "December"],
+		macros = [
+			["\\bs([+-]\\d+)?\\b", [function(date){           // secs
 				return padNumber(date.getSeconds());
-			},
-			"\\bDo\\b": function(date){          // date (14th)
-				return formatDate(padNumber(date.getDate()));
-			},
-			"\\bD\\b": function(date){          // date (14)
-				return padNumber(date.getDate());
-			},
-			"\\bYYYY\\b": function(date){          // year (2015)
-				return date.getFullYear();
-			},
-			"\\ba\\b": function(date){             // am or pm
+			}, 1000]],
+			["\\bm([+-]\\d+)?\\b", [function(date){           // minutes
+				return padNumber(date.getMinutes());
+			}, 60000]],
+			["\\bh([+-]\\d+)?\\b", [function(date){           // 12h
+				return padNumber(to12Hrs(date.getHours())[0]);
+			}, 3600000]],
+			["\\bhh([+-]\\d+)?\\b", [function(date){          // 24h
+				return padNumber(date.getHours());
+			}, 3600000]],
+			["\\ba\\b", [function(date){                      // am or pm
 				return to12Hrs(date.getHours())[1];
-			},
-			"\\bMMMM\\b": function(date){          // month (february)
-				return parseMonth(date.getMonth(), "full");
-			},
-			"\\bMMM\\b": function(date){          // month (feb)
-				return parseMonth(date.getMonth(), "half");
-			},
-			"\\bMM\\b": function(date){
-				return padNumber(date.getMonth() + 1);
-			},
-			"\\bdddd\\b": function(date){         // day (sunday)
+			}, 86400000]],			
+			["\\bDo([+-]\\d+)?\\b", [function(date){          // date (14th)
+				return formatDate(padNumber(date.getDate()));
+			}, 86400000]],
+			["\\bD([+-]\\d+)?\\b", [function(date){           // date (14)
+				return padNumber(date.getDate());
+			}, 86400000]],
+			["\\bdddd([+-]\\d+)?\\b", [function(date){        // day (sunday)
 				return parseDay(date.getDay(), "full");
-			},
-			"\\bddd\\b": function(date){          // day (sun)
+			}, 86400000]],
+			["\\bddd([+-]\\d+)?\\b", [function(date){         // day (sun)
 				return parseDay(date.getDay(), "half");
-			},
-			"\\bdate\\b": getFormattedDate,
-			"\\btime\\b": getTimestamp
-		};
+			}, 86400000]],
+			["\\bMMMM([+-]\\d+)?\\b", [function(date){        // month (february)
+				return parseMonth(date.getMonth(), "full");
+			}, 86400000 * 30]],
+			["\\bMMM([+-]\\d+)?\\b", [function(date){         // month (feb)
+				return parseMonth(date.getMonth(), "half");
+			}, 86400000 * 30]],
+			["\\bMM([+-]\\d+)?\\b", [function(date){          // numeric month
+				return padNumber(date.getMonth() + 1);
+			}, 86400000 * 30]],
+			["\\bYYYY([+-]\\d+)?\\b", [function(date){        // year (2015)
+				return date.getFullYear();
+			}, 86400000 * 365]],
+			["\\bdate\\b", [getFormattedDate, 0]],
+			["\\btime\\b", [getTimestamp, 0]]
+		];
 
 
 	///////////////////////
@@ -139,15 +142,15 @@
 	////////////////////////
 	// Helper functions
 	////////////////////////
-	
+
 	function qS(str){
 		return document.querySelector(str);
 	}
-	
+
 	function gID(str){
 		return document.getElementById(str);
 	}
-	
+
 	// returns the proper iframe window (not default window)
 	// in case of the special pages, else the window itself
 	function getProperWindow(window, node){
@@ -161,11 +164,11 @@
 		if(node && node.tagName === "INPUT")
 			// input elements generally do not need iframe window
 			return window;
-				
+
 		for(var i in obj){
 			if((new RegExp(i)).test(loc)) win = qS(obj[i]);
 		}
-		
+
 		// 15/04/2015 - evernote updated their web app
 		// new beta version has 309_ifr and main version has 676_ifr iframe
 		if(/evernote\.com/.test(loc))
@@ -196,10 +199,6 @@
 	// accepts num (0-11); returns month
 	// type means full, or half
 	function parseMonth(month, type){
-		var months = ["January", "February", "March",
-					"April", "May", "June", "July", "August", "September",
-					"October", "November", "December"];
-
 		return type === "full" ? months[month] : months[month].slice(0, 3);
 	}
 
@@ -236,7 +235,7 @@
 		num = parseInt(num, 10);
 		return (num >= 1 && num <= 9 ? "0" : "") + num;
 	}
-	
+
 	// contains all Placeholder related variables
 	var Placeholder = {
 		// from is where the snippet starts; to is where it ends;
@@ -265,7 +264,7 @@
 		var arr = charsToAutoInsertUserList;
 
 		for(var i = 0, len = arr.length; i < len; i++)
-			if(arr[i][0] === firstChar)				
+			if(arr[i][0] === firstChar)
 				return index ? [i, arr[i][1]] : arr[i][1];
 
 		return -1;
@@ -344,23 +343,93 @@
 		}
 	}
 
+	// get number of 31st days starting from
+	// next month until `num` months
+	// subtracting 1/2 for february (account for leap year)
+	function get31stDays(num){
+		var d = new Date(),
+			count = 0,
+			curr = d.getMonth(),
+			year = d.getFullYear(),
+			i = 0,
+			lim = Math.abs(num),
+			isNegative = num < 0,
+			incr = isNegative ? 1 : -1;
+			
+		while(i <= lim){
+			curr += incr;
+			
+			if(curr > 11) {curr = 0; year++;}
+			else if(curr < 0) {curr = 11; year--;}
+
+			switch(months[curr]){
+				case "January":
+				case "March":
+				case "May":
+				case "July":
+				case "August":
+				case "October":
+				case "December":
+					count++; break;
+				case "February":
+					// leap year 29 days; one less than 30 days
+					if(year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0))
+						count--;
+					else count -= 2;
+			}
+			
+			i++;
+		}
+		
+		return isNegative ? -count : count;
+	}
+
 	// formats macros present in snipBody
 	function formatMacros(snipBody){
 
 		// find the %d macro text and call replace function on it
-		snipBody = snipBody.replace(/\[\[\%d\((.*?)\)\]\]/g, function(wholeMatch, text){
-			var date = new Date();
+		// sameTimeFlag: indicates whether all calculations will be dependent (true)
+		// on each other or independent (false) of each other		
+		snipBody = snipBody.replace(/\[\[\%d\((!?)(.*?)\)\]\]/g, function(wholeMatch, sameTimeFlag, text){
+			var reg, regex, elm, date = new Date(),
+				// `text` was earlier modifying itself
+				// due to this, numbers which became shown after
+				// replacement got involved in dateTime arithmetic
+				// to avoid it; we take a `subs`titute
+				subs = text;
 
+			sameTimeFlag = !!sameTimeFlag;
+			
 			// operate on text (it is the one inside brackets of %d)
-			for(var regex in macros){ // macros has regex-function pairs
-				var reg = new RegExp(regex);
+			for(var i = 0, len = macros.length; i < len; i++){ // macros has regex-function pairs
+				regex = macros[i][0];
+				elm = macros[i][1];				
+				reg = new RegExp(regex, "g");
+				
+				text.replace(reg, function(match, $1){
+					var change = 0;
+					
+					// date arithmetic
+					if($1){
+						$1 = parseInt($1, 10);
+						
+						// if it is a month
+						if(/M/.test(regex))
+							change += get31stDays($1) * 86400000;
+						
+						// in milliseonds
+						change += elm[1] * $1;
+					}else
+						regex = regex.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
 
-				text = text.replace(reg, function(){
-					return macros[regex](date);
+					if(sameTimeFlag)
+						date.setTime(date.getTime() + change);
+					
+					subs = subs.replace(new RegExp(regex), elm[0](sameTimeFlag ? date : new Date(Date.now() + change)));
 				});
 			}
 
-			return text;
+			return subs;
 		});
 
 		return snipBody;
@@ -407,7 +476,7 @@
 			isDisqusThread = isParent(node, null, "disqus_thread"),
 			// fragment is a div to be inserted after each span node
 			fragment;
-			
+
 		// make content of the textnode only till start
 		node.textContent = val.substring(0, start - snipName.length);
 
@@ -465,7 +534,7 @@
 
 	function testPlaceholderPresence(node, arr, valueND, snipBody, start, sel, range){
 		var endLength = start + snipBody.length, offset, nd, lastNode;
-		
+
 		if(arr){
 			// offset is the end of snippet in lastNode
 			offset = arr[1];
@@ -475,7 +544,7 @@
 		}else{
 			nd = node;
 		}
-	
+
 		if(/%[A-Z0-9_]+%/i.test(snipBody)){
 			Placeholder.mode = true;
 			Placeholder.fromIndex = start; // this is the org. length w/o snip name
@@ -493,9 +562,9 @@
 				var firstChild = lastNode.firstChild;
 				while(firstChild && firstChild.nodeType !== 3)
 					firstChild = firstChild.firstChild;
-				
+
 				if(firstChild == null)
-					lastNode.firstChild = "";				
+					lastNode.firstChild = "";
 
 				range.setStart(firstChild || lastNode.firstChild, offset);
 				range.setEnd(firstChild || lastNode.firstChild, offset);
@@ -506,7 +575,7 @@
 			}
 		}
 	}
-	
+
 	function insertSpace(node, sel, range){
 		var charToInsert = Data.hotKey[1] || Data.hotKey[0],
 			elm, val, initialString, endString, caretPos;
@@ -538,7 +607,7 @@
 			node.selectionEnd = node.selectionStart = caretPos + 1;
 		}
 	}
-	
+
 	// expands snippets (and their date time macros)
 	function formatSnippets(node){
 		// formatting snippets is impossible in
@@ -594,7 +663,7 @@
 					// start of snippet body
 					// for placeholder.fromIndex
 					start = offset - snipNameLength;
-					
+
 				// format the macros
 				snipBody = formatMacros(snipBody);
 
@@ -605,11 +674,11 @@
 				else
 					// textareas
 					setText(node, beginValue + snipBody + endValue);
-				
+
 				testPlaceholderPresence(node, arr, valueND, snipBody, start, sel, range);
 			}
-		} // for-loop end		
-		
+		} // for-loop end
+
 		// if there was no snip
 		if(!snipped)
 			insertSpace(node, sel, range);
@@ -833,11 +902,11 @@
 	// get caret pos, or rather where it ends
 	function getCaretPosition(node) {
 		var range, preCaretRange, caretOffset;
-		
+
 		if(isContentEditable(node)){
 			range = getProperWindow(window, node).getSelection().getRangeAt(0);
 			preCaretRange = range.cloneRange();
-				
+
 			preCaretRange.selectNodeContents(node);
 			preCaretRange.setEnd(range.endContainer, range.endOffset);
 			caretOffset = preCaretRange.innerText.length;
@@ -899,7 +968,7 @@
 			return false;
 		}
 	}
-	
+
 	function formatVariable(str){
 		if(/date/i.test(str))
 			return getFormattedDate();
@@ -907,10 +976,10 @@
 			return getTimestamp();
 		else if(/version/i.test(str)) 
 			return navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ");
-		
+
 		return null;
 	}
-	
+
 	// gets string containing `[[something=]]`
 	// returns the string having evaluated the something
 	function evaluateDoubleBrackets(wholeValue, start, end){
@@ -927,14 +996,14 @@
 		rValue = orgValue.replace(/[\[\]]/g, "");
 
 		var variable = formatVariable(rValue);
-		
+
 		if(variable) rValue = variable;
 		else{ // no date or time; I can safely remove all non-expected symbols
 			rValue = rValue.replace(/[^\d\^\*\/\.\-\+\%\(\)]/g, "");
 
 			// empty string
 			if(!rValue) rValue = orgValue;
-			else{
+			else{				
 				try{
 					// replace for ^ exponent operators
 					rValue = rValue.replace(/(\d+)\^(\d+)/g, function(wMatch, $1, $2){
@@ -949,19 +1018,19 @@
 
 				// convert to float of 5 point precision and to string
 				rValue = parseFloat(rValue).toFixed(5).toString();
-
+				
 				// remove the extraneous zeros after decimal
 				rValue = rValue.replace(/\.(\d*?)0+$/, ".$1");
-
+				
 				// remove the dot if no digits are there after it
 				rValue = rValue.replace(/\.$/, "");
-
+				
 				if(isNaN(rValue))
 					rValue = orgValue;
 			}
 		}
 
-		// rValye changed
+		// rValue changed
 		if(rValue !== orgValue){
 			// replace the `[[expression]]` with rValue
 			wholeValue = wholeValue.replace(wholeValue.substring(start - 2, end + 2), rValue);
@@ -980,7 +1049,7 @@
 			tgN = node.tagName; // do not use `this` instead of node; `this` can document iframe
 
 		var type = tgN === "INPUT" ? node.getAttribute("type") : "";
-			
+
 		// document iframe
 		if(!tgN || type === "number" || 
 				type === "email" || type === "password") return;
@@ -1003,7 +1072,7 @@
 
 		tgN = node.tagName;
 		var value = getText(node);
-		
+
 		// [Tab] key for tab spacing/placeholder shifting
 		if(keyCode === 9 && !e.shiftKey && !e.ctrlKey){
 			// in Placeholder.mode, tab would specify jumping placeholders;
@@ -1383,7 +1452,7 @@
 
 	function getText(node){
 		if(!node) return;
-		
+
 		switch(node.tagName){
 			case "DIV":
 				// return innerText to avoid div's and replace &nbsp with space
@@ -1500,7 +1569,7 @@
 	}
 
 	// attaches event listeners after window.onload
-	function init(){	
+	function init(){
 		// if DB is not loaded then
 		// try again after 1 second
 		if(!DB_loaded){ setTimeout(init, 1000); return; }
@@ -1508,7 +1577,7 @@
 		var properWindow = getProperWindow(window),
 			onKeyDownFunc = eventAttacher.bind(handleKeyDown),
 			onKeyPressFunc = eventAttacher.bind(handleKeyPress);
-			
+
 		// do not operate on blocked sites
 		if(isBlockedSite(properWindow)) return;
 
