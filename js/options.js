@@ -448,7 +448,7 @@
 	function migrateData(transferData){
 		var COPY = cloneObject(Data); // maintain a copy
 
-		// current storage becomes unused
+		// make current storage unusable
 		Data.snippets = false;
 
 		DB_save(function(){
@@ -547,8 +547,6 @@
 			return false;
 		});
 
-		
-		/* TODO: use when available
 		$(".tryit .nav p").on("click", function(){
 			var ots, s = "show", t = ".tryit "; // otherSibling
 			
@@ -561,7 +559,7 @@
 				this.toggleClass(s);
 				$(t + this.dataset.selector).toggleClass(s);
 			}
-		});*/
+		});
 		
 		/* set up accordion in help page */
 		$("#help section dd").forEach(function(elm){
