@@ -6,6 +6,7 @@
 	<link href="../css/reset.css" rel="stylesheet">
 	<link href="../css/options.css" rel="stylesheet">	
 	<script src="../js/options.js"></script>
+	<script src="../js/detector.js"></script>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
@@ -31,7 +32,7 @@
 		
 		<div id="content">
 			<!--By default shows the settings page-->
-			<div id="settings" class="show">
+			<div id="settings">
 				<h1>Settings</h1>
 				
 				Current hotkey for snippet substitution is: <span class="hotkey_display"></span>
@@ -57,7 +58,7 @@
 				
 				<hr>
 				
-				<p><b>Auto-Insert</b> all these letters, that is, on typing one of the below letter (say `(`), automatically insert its counter part (`)`)
+				<p><b>Auto-Insert</b> all these letters, that is, on typing one of the below letter (say `(`), automatically insert its counter part (`)`), and place the caret (cursor) in between
 				<span class="tip_auto_insert">Tip</span></p>
 				<table class="auto_insert">
 				<thead><tr><th>Character</th><th>Counterpart</th></tr></thead>
@@ -78,13 +79,13 @@
 				<input type="text" placeholder="Type address here" class="siteBlockInput">
 				<button>Block site</button>
 			</div>
-			<div id="help">
+			<div id="help" class="show">
 				<h1>Help</h1>
 				
 				<section>
 					<p class="warning"><em><strong>Heads up!</strong> "Using a snippet" means performing snippet substitution in a web page with an already created snippet. "Creating a snippet" means creating a new snippet in the popup box.</em></p>
-					<p>Click the question you want to know about.</p>
-					<!--
+					<p>Click the question you want to know about. Try the features as you learn them in this editor.</p>
+					
 					<div class="tryit">
 						<div class="nav">
 							<p class="show" data-selector="textarea">Textarea</p>
@@ -95,14 +96,15 @@
 But multiline text is still supported.</textarea>
 						<div class="editor" contenteditable=true>This is a contenteditable or editable div. These editors are generally found in your email client like Gmail, Outlook, etc.<br><br><i>This editor supports </i><b>HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.</div>
 					</div>
-					-->
+					
 					<h2>Info</h2>					
 					<dl>
 						<dt>What are snippets (snips)?</dt>
 						<dd><p>Snippets are pairs of an abbreviation and a long text. Typing the abbreviation, pressing the hotkey (default: Shift+Space), replaces it with the long text.</p>
 							<p><b>Example:</b> Snippet with snippet name - "brb". The snippet name is the abbreviation. It is <b>case-sensitive</b>, so "brb", "BRB", and "bRb" are all different.
 							Typing "brb" and pressing the hotkey, would replace it with the snippet body, which here is "be right back".
-							Snippets can be created in the popup box.</p></dd>
+							Snippets can be created in the popup box.</p>
+							<p><b>Try this in editor:</b> in the editor above, use any of the sample snippets that have been provided to you in the popup box.</p></dd>
 						
 						<dt>Can a deleted snippet be restored?</dt>
 						<dd>No, unfortunately, snippets once deleted cannot be restored. Therefore, it is recommended you take a backup regularly.</dd>
@@ -110,6 +112,7 @@ But multiline text is still supported.</textarea>
 						<dt>What are Placeholders?</dt>
 						<dd><p>Placeholders are fields in the snippet body which are populated with dynamic values provided by you on using the snippet. A placeholder has the format `%text%` such that the text can only contain alphabets, digits and the underscore symbol.</p>
 							<p><b>Example:</b> snippet "wishBDay", which you can use to wish your friends Happy Birthday! Since the name of the friend keeps changing, so you can add a placeholder to the snippet body, as "%name%"(without quotes). It would be auto-highlighted whenever you use the snippet and you can type your friend's name into it.</p>
+							<p><b>Try this in editor:</b> in the editor above, use the "letter" sample snippet to see placeholders in action.</p>
 							<p><b>Usage</b> of a placeholder:
 							<ol>
 								<li>Insert placeholders into the snippet body while creating or editing a snippet. Then, use this snippet.</li>
@@ -122,43 +125,123 @@ But multiline text is still supported.</textarea>
 						
 						<dt>What is Mathomania?</dt>
 						<dd><p>Often, mathematical calculations require you to leave your current work and use the calculator. But, using Mathomania, you can do calculations within the text editor itself.</p>
-							<p><b>Supported operations</b> are: addition, subtraction, multiplication, division, exponentiation (of integer constants only), and percentage (using % symbol). You can group expressions using parentheses too.</p>
+							<p><b>Supported operations</b> are: addition, subtraction, multiplication, division, exponentiation (like: 2^3; of integer constants only), and percentage (using % symbol). You can group expressions using parentheses too.</p>
 							<p><b>Usage:</b>
 							<ol>
-								<li>Type `[[`, the other `]]` pair of braces would auto-complete.</li>
+								<li>Press square bracket key twice, the other `]]` pair of braces would auto-complete.</li>
 								<li>Type the math expression to be evalated inside the braces.</li>
-								<li>Press `=` key and the result of evaluation would replace the `[[...=]]`!</li>
-							</ol></p></dd>
+								<li>Press `=` (equals) key and the result of evaluation would replace the `[[...=]]`!</li>
+							</ol>
+							</p>
+							<p><b>Try this in editor:</b>Type some expression like: "[[5^3=]]"</p>
+						</dd>
 						
 						<dt>What are Date/Time macros?</dt>
 						<dd><p>Date-Time macros can be used to insert current date and time related data.</p>
-							<h3>Using Date-Time macros</h3>
+							<strong>Usage</strong>
 							<p>They are to be placed inside a snippet body while <em><strong>creating</strong> the snippet</em>.
 							<ol>
-								<li>Place `[[%d()]]` inside the snippet body.</li>
-								<li>Place one or more of the symbols inside the parentheses, from the symbol list, without those quotes.</li>
+								<li>Place "[[%d()]]" (without quotes) inside the snippet body.</li>
+								<li>Place one or more of the symbols inside the parentheses, from the symbol list.</li>
 								<li>When you use the snippet, this entire string of `[[%d(...)]]` would be replaced by the current value of the symbols it contains.</li>
 							</ol>
 							
-							<h3>Symbol list</h3>
-							<ul>
-								<li>'D' - date (14)</li>
-								<li>'Do' - date (14th)</li>
-								<li>'MMMM' - month (March)</li>
-								<li>'MMM' - month (Mar)</li>
-								<li>'MM' - numeric month (03)</li>
-								<li>'YYYY' - year</li>
-								<li>'hh' - hour (24hour)</li>
-								<li>'h' - hour (12hour)</li>
-								<li>'m' - minutes</li>
-								<li>'s' - seconds</li>
-								<li>'dddd' - day (Sunday)</li>
-								<li>'ddd' - day (Sun)</li>
-								<li>'a' - am/pm</li>
-								<li>'date' - produces current date (March 05, 2015)</li>
-								<li>'time' - produces current time (01:29:55)</li>								
-							</ul></p>
+							<strong>Symbol list</strong>
+							<table>
+								<tr>
+									<td>Symbol to insert</td>
+									<td>Remarks</td>
+									<td>Sample output</td>
+								</tr>
+								<tr>
+									<td>s</td>
+									<td>seconds</td>
+									<td>40</td>
+								</tr>
+								<tr>
+									<td>m</td>
+									<td>minutes</td>
+									<td>56</td>
+								</tr>
+								<tr>
+									<td>h</td>
+									<td>hour (in 12 hour format)</td>
+									<td>11</td>
+								</tr>
+								<tr>
+									<td>hh</td>
+									<td>hour (in 24 hour format)</td>
+									<td>23</td>
+								</tr>
+								<tr>
+									<td>a</td>
+									<td>am or pm, as per time</td>
+									<td>am</td>
+								</tr>
+								<tr>
+									<td>Do</td>
+									<td>date</td>
+									<td>14th</td>
+								</tr>
+								<tr>
+									<td>D</td>
+									<td>date</td>
+									<td>14</td>
+								</tr>								
+								<tr>
+									<td>dddd</td>
+									<td>day of the week</td>
+									<td>Sunday</td>
+								</tr>
+								<tr>
+									<td>ddd</td>
+									<td>day of the week (short name)</td>
+									<td>Sun</td>
+								</tr>								
+								<tr>
+									<td>MMMM</td>
+									<td>full month name</td>
+									<td>March</td>
+								</tr>
+								<tr>
+									<td>MMM</td>
+									<td>short month name</td>
+									<td>Mar</td>
+								</tr>
+								<tr>
+									<td>MM</td>
+									<td>numeric month</td>
+									<td>03</td>
+								</tr>
+								<tr>
+									<td>YYYY</td>
+									<td>year</td>
+									<td>2015</td>
+								</tr>								
+								<tr>
+									<td>date</td>
+									<td>complete current date</td>
+									<td>March 05, 2015</td>
+								</tr>
+								<tr>
+									<td>time</td>
+									<td>complete current time (24hour format)</td>
+									<td>01:29:55</td>
+								</tr>
+							</table></p>
 						</dd>
+						<dt>What is Date/Time arithmetic?</dt>
+						<dd><p>Date and Time arithmetic lets you move forward or backward in time in the Date/Time macros. It is of <b>two types:</b></p>
+							<p><b>1. Relative: </b>All the macro symbols inside a parentheses perform calculations relative to the same date, and have a single shared copy of the date. So, calculations on one symbol change that same shared copy, and could affect result of another symbol. Like, on forwarding a date by 10 days (using <span class="code">[[%d(D+10)]]</span>), if the date is caused to move into another month, then <i>that changed month</i> would be used as the current month for any calculation on any month symbol further inside the parentheses. Similar rules apply for changing minutes (causing the hour to change), etc.<br>
+								To indicate relative calculation, add a <span class="code">!</span> at the start, like this: <span class="code">[[%d(! D+5 M-5 ....)]]</span></p>
+							<p><b>2. Independent (Default): </b>All the macro symbols while performing calculations are independent of one another. So, if forwarding a date by 10 days (using <span class="code">[[D+10]]</span>), causes the date to move into another month, still, <i>that changed month</i><b><i> would not be used as the current month</i></b> for any calculation on any symbol further inside the parentheses. All the symbols would have their <i>own separate copy</i> of the date.</p>
+							<p><b>Usage: </b>After a date/time macro symbol, you have to place a "+" or "-" sign (indicating whether to move forward or backward respectively), followed by a number, which would indicate the amount by which to move forward or backward. No white space or any other character should be used between the symbol, sign, and number. So, <span class="code">[[%d(Do+5 M-10)]]</span> is valid, while <span class="code">[[%d(Do - 5 M- 10)]]</span> is invalid.
+							<p><B>Evaluation</b> of these symbols is from left to right, and the symbol that appears first (at the top) in the symbols list, is evaluated first.</p></p>
+							<p><b>Example: </b>Consider this date/time macro: <span class="code">[[%d(YYYY:MM:D)]]</span>. If you want to move 10 days forward and 5 months backward,
+							 you could write: <span class="code">[[%d(YYYY:MM-5:D+10)]]</span> This was independent calculation. If you it to be relative, use <span class="code">[[%d(!YYYY:MM-5:D+10)]]</span> (with that <span class="code">!</span>)</p>
+							 <p><b>Try this in editor: </b>In the editor above, use the "dateArithmetic" sample snippet to see magic of date and time arithmetic.</p>
+							 <p><b>Limitation</b>: The "date" and "time" symbols do not support date and time arithmetic (for now; I might fix this in future).</p>
+							 </dd>
 						<dt>What are Variables?</dt>
 						<dd><p>Variables are used to insert dynamic values at any time while typing. They are inbuilt and cannot be created by you. Of course, I would love a recommendation from you for a new variable! (email: prokeys.feedback@gmail.com)</p>
 							<p><b>Usage:</b>
@@ -166,13 +249,31 @@ But multiline text is still supported.</textarea>
 								<li>Type `[[`, the other pair of braces `]]` would auto-complete.</li>
 								<li>Type the variable name inside them, and press `=`.</li>
 								<li>This entire `[[...=]]` would be replaced by the dynamic values of these variables.</li></ol></p>
-							<p>The following Variables (case-insensitive) are supported (use without quotes):
-							<ol>
-								<li>'date' - current date (March 05, 2015)</li>
-								<li>'time' - current time (01:29:55)</li>
-								<li>'version' - current browser version (Chrome 43.0.2357.130)</li>
-							</ol>
+							<p>The following Variables (case-insensitive) are supported:
+							<table>
+								<tr>
+									<td>Variable name</td>
+									<td>Value it holds</td>
+									<td>Sample output</td>
+								</tr>
+								<tr>
+									<td>date</td>
+									<td>current, complete date</td>
+									<td>March 05, 2015</td>
+								</tr>
+								<tr>
+									<td>time</td>
+									<td>current, complete time</td>
+									<td>01:29:55</td>
+								</tr>
+								<tr>
+									<td>version</td>
+									<td>current browser version</td>
+									<td>Chrome 43.0.2357.130</td>
+								</tr>
+							</table>
 							</p>
+							<p><b>Try this in editor:</b> Use any of the three variables (usage as specified above)</p>
 						</dd>
 						<dt>How are Variables different from Snippets?</dt>
 						<dd>Variables are more useful when you need to retrieve system-related dynamic values. Like the version of the browser, which would need to be manually entered into a snippet. A Variable would get it automatically.</dd>
@@ -196,8 +297,10 @@ But multiline text is still supported.</textarea>
 			<div id="about">
 				<h1>About</h1>
 				Made by <a href="https://plus.google.com/u/0/110764286121755681313/posts">Gaurang Tandon</a><br>
-				Version: 2.5.1<br>
+				Version: 2.5.3<br>
 				&copy; 2015 Copyright Reserved<br><br>
+				
+				Check out the <a href="https://github.com/GaurangTandon/ProKeys">change log and source code on GitHub!</a><br><br>
 				Contact me for feedback: <strong>prokeys.feedback@gmail.com</strong><br>
 				Please check <a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known bugs list</a> before reporting a bug
 				<hr>
