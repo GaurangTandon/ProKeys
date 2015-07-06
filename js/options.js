@@ -8,11 +8,6 @@
 		Data = {
 			dataVersion: 1,
 			snippets: [
-				/*{
-					name: "post_edit",
-					body: "*Edited By Gaurang Tandon to fix [code formatting](http://www.codecademy.com/forum_questions/509b9e7c3feca80200001d40#response-509bc71d6d816a0200003251)*",
-					timestamp: "May 30, 2014"
-				}*/
 			],
 			language: "English",
 			visited: false,
