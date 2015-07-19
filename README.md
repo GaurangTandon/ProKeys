@@ -1,6 +1,6 @@
 ## [ProKeys](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 **Latest version**: 2.5.3
-**Status**: active (since 06/July/2015), stable build
+**Status**: active, stable build
 
 A completely free Google Chrome and Opera extension that lets you be productive in online text-related work with its number of features like:
 
@@ -37,9 +37,10 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Next feature to come:
 
-1. Clipboard access in snippet body
-2. Update Opera with latest release
-3. Create ProKeys for Firefox, IE, Edge, Safari
+1. Snippets/settings access in context menus
+2. Clipboard access in snippet body
+3. Update Opera with latest release
+4. Create ProKeys for Firefox, IE, Edge, Safari
 
 ## Change Log
 
