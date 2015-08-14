@@ -1,5 +1,5 @@
 ## [ProKeys](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
-**Latest version**: 2.5.3
+**Latest version**: 2.5.4
 **Status**: active, stable build
 
 A completely free Google Chrome and Opera extension that lets you be productive in online text-related work with its number of features like:
@@ -44,11 +44,11 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Change Log
 
-**2.5.4** - upcoming
+**2.5.4** - Current -  14/08/2015
 - changes in links to the tryit editor in Help section
 - fix super ugly bug of "Search" button in popup
 
-**2.5.3** - Current -  06/07/2015
+**2.5.3** - 06/07/2015
 - changes to symbol list order (small to large time duration)
 - super bug fix for mathomania!
 - quick bug fixes
