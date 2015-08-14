@@ -44,13 +44,17 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Change Log
 
+**2.5.4** - upcoming
+- changes in links to the tryit editor in Help section
+- fix super ugly bug of "Search" button in popup
+
 **2.5.3** - Current -  06/07/2015
 - changes to symbol list order (small to large time duration)
 - super bug fix for mathomania!
 - quick bug fixes
 - refactored popup.js code with bling.js
 - help page is now the default page in options.html
-
+- 
 
 **2.5.2** - 05/07/2015
 - support for date and time arithmetic, relative as well as independent
@@ -79,11 +83,13 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - removed minimum char limits on snip body and name. Increased body max limit to 2000 characters.
 - some code refactoring as well
 - made “date-time-macros sample” snippet more helpful
+- updated Opera 1.2.0 release
 
 **2.4.5.1** - 15/04/2015
 - added support for Evernote beta
 - fixed bytes available link in popup html
 - removed support for password input
+- updated Opera 1.1.0 release
 
 **2.4.5** - 13/04/2015  
 - added support for all <input> elements except email/number (because they don’t support caret manipulation)
@@ -106,6 +112,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - fixed silly bugs
 - fixed site blocker not working for gmail
 - compressed manifest.json
+- Opera 1.0.0 release
 
 **2.4.1** - 11/03/2015
 - Added option to change hotkey for snippet substitution
