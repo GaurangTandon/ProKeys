@@ -54,7 +54,6 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - quick bug fixes
 - refactored popup.js code with bling.js
 - help page is now the default page in options.html
-- 
 
 **2.5.2** - 05/07/2015
 - support for date and time arithmetic, relative as well as independent
