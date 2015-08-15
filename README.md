@@ -45,6 +45,11 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Change Log
 
+**2.6.0** - upcoming
+- shorter image names
+- minified images - saving nearly 10 KB :)
+- new screenshots, video release
+
 **2.5.4** - Current -  14/08/2015
 - changes in links to the tryit editor in Help section
 - fix super ugly bug of "Search" button in popup
