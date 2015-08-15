@@ -3,7 +3,7 @@
 **Latest version**: 2.5.4
 **Status**: active, stable build
 
-ProKeys is a completely free, Google Chrome and Opera extension that lets you be productive in online text-related work with its number of features like:
+ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn) and [Opera](https://addons.opera.com/en/extensions/details/prokeys/?display=en) extension that lets you be productive in online text-related work with its number of features like:
 
 [More info on all these in Help section inside the app]  
 1. **Snippets** - define custom abbreviations, and retrieve the text associated with them simply by pressing the hotkey (default: Shift+Space). Example: "brb" can expand to "Be right back!"  
