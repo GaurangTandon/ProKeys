@@ -22,7 +22,7 @@ chrome.runtime.onInstalled.addListener(function(details){
 	}else if(details.reason === "update"){
 		version = chrome.runtime.getManifest().version;
 		title = "ProKeys updated successfully to v" + version;
-		text = "Please reload active tabs to use new version. Major changes:\nArithmetic support in date/time macros. For more, visit the changelog in \"About\" page.";
+		text = "Please reload active tabs to use new version.\nThis version implements bug fixes and other updates";
 	}
 
 	// either update or install was there

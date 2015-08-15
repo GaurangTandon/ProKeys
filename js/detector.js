@@ -1556,9 +1556,8 @@
         return node.className.search('(\\s|^)' + className + '(\\s|$)') != -1 ? true : false;
    }
 
-	// attaches event to document
-	// receives `this` as the function to call
-	// on event
+	// attaches event to document receives
+	// `this` as the function to call on event
 	function eventAttacher(event){
 		var node = event.target;
 

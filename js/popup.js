@@ -966,11 +966,11 @@
 			showErrors(snipSValBox, snipLValBox, vldS, vldL);
 		});
 		
-		function searchButtonClick(title, text, searchModeBool){
+		function searchButtonClick(title, textToSet, searchModeBool){
 			var s = "shown", h = "hidden";
 			
 			this.toggleClass("shortened");
-			text(this, text);
+			text(this, textToSet);
 			this.setAttribute("title", title);
 
 			searchField.toggleClass(s);
@@ -982,7 +982,7 @@
 
 		searchButton.on("click", function(){			
 			if(!this.hasClass("shortened")){
-				searchButtonClick.call(this, "Done", "Click when done searching", true);
+				searchButtonClick.call(this, "Click when done searching", "Done", true);
 
 				// 1000 => after animation finishes; focus searchField
 				setTimeout(function(){
