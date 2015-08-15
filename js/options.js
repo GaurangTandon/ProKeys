@@ -2,7 +2,7 @@
 	"use strict";
 
 	window.onload = init;
-
+	
 	var storage = chrome.storage.local,
 		DataName = "UserSnippets",
 		Data = {
@@ -542,8 +542,8 @@
 			return false;
 		});
 
-		$(".tryit .nav p").on("click", function(){
-			var ots, s = "show", t = ".tryit "; // otherSibling
+		$("#tryit .nav p").on("click", function(){
+			var ots, s = "show", t = "#tryit "; // otherSibling
 			
 			if(!this.hasClass("show")){
 				// hide current
@@ -570,6 +570,10 @@
 		function showHideDIVs(newID){
 			$("#content > .show").toggleClass("show");
 			$("#content > #" + newID).toggleClass("show");
+			// the page shifts down a little
+			// for the exact location of the div;
+			// so move it back to the top
+			document.body.scrollTop = 0;
 		}
 		
 		$("#btnContainer button").on("click", function(){
@@ -687,15 +691,10 @@
 
 		var url = window.location.href;
 
-		if(/#\w+$/.test(url))
+		if(/#\w+$/.test(url) && (!/tryit|symbolsList/.test(url)))
 			// get the id and show divs based on that
 			showHideDIVs(url.match(/#(\w+)$/)[1]);
-
-
-		// set scroll to zero because somehow it scrolls below
-		//?
-		document.body.scrollTop = 0;
-
+		
 		// boolean parameter transferData: dictates if one should transfer data or not
 		function storageRadioBtnClick(str, transferData){
 			var bool = false,
@@ -822,95 +821,84 @@
 			alert("Use this text to print snippets");
 		};
 
-		function resetHotkeyListenerData(){
-			// counts keypress of keys other than ctrl/shift/alt/meta
-			hotkeyListener.dataset.letter_counter = "0";
+		// prevent exposure of locals
+		(function(){
 			// stores hotkey combo
-			hotkeyListener.dataset.key1 = "";
-			hotkeyListener.dataset.key2 = "";
-		}
+			var	combo,
+				// determines if keyCode is valid
+				// non-control character
+				valid;
+			
+			// the combo refreshes with every key down
+			// so we don't need keyCount to keep track of
+			// number of keys pressed
+			hotkeyListener.on("keydown", function(event){
+				var arr = [], keycode = event.keyCode;
 
-		resetHotkeyListenerData();
+				// first element should be the modifiers
+				if(event.shiftKey) arr.push("shiftKey");
+				else if(event.ctrlKey) arr.push("ctrlKey");
+				else if(event.altKey) arr.push("altKey");
+				else if(event.metaKey) arr.push("metaKey");
+			  
+				// below code from 
+				// http://stackoverflow.com/questions/12467240/determine-if-javascript-e-keycode-is-a-printable-non-control-character
+				// http://stackoverflow.com/users/1585400/shmiddty
+			  
+				// determine if key is non-control key
+				valid = 
+					(keycode > 47 && keycode < 58)   || // number keys
+					keycode == 32 || keycode == 13   || // spacebar & return key(s)
+					(keycode > 64 && keycode < 91)   || // letter keys
+					(keycode > 95 && keycode < 112)  || // numpad keys
+					(keycode > 185 && keycode < 193) || // ;=,-./` (in order)
+					(keycode > 218 && keycode < 223);   // [\]' (in order)
+			  
+				if(valid)
+					// then push the key also
+					arr.push(keycode);
 
-		// does not catch shift/ctrl/alt
-		hotkeyListener.onkeypress = function(){
-			// increase by one
-			this.dataset.letter_counter = parseInt(this.dataset.letter_counter, 10) + 1;
-		};
+				// set the keys
+				combo = arr.slice(0);
+			});
 
-		hotkeyListener.onkeydown = function(event){
-			var arr = [];
+			hotkeyListener.on("keyup", function(){
+				var len = combo.length,
+					nonMetaKeyIndex = len === 2 ? 1 : 0;
+								
+				if(valid){
+					Data.hotKey = combo.slice(0);
 
-			// first element should be the modifiers
-			if(event.shiftKey) arr.push("shiftKey");
-			else if(event.ctrlKey) arr.push("ctrlKey");
-			else if(event.altKey) arr.push("altKey");
-			else if(event.metaKey) arr.push("metaKey");
-          
-			// then push the key also
-			arr.push(event.keyCode);
+					DB_save(function(){
+						location.href = "#settings";
+						location.reload();
+					});
+				}else{
+					alert("Setting new hotkey failed!");
+					alert("It was missing a key other than ctrl/alt/shift/meta key. Or, it was a key-combo reserved by the Operating System. \
+							Or you may try refreshing the page. ");
+				}
 
-			// set the keys
-			this.dataset.key1 = arr[0];
-			this.dataset.key2 = arr[1];
-		};
-
-		hotkeyListener.onkeyup = function(){
-			var keyCombo = [this.dataset.key1, this.dataset.key2 === "undefined" ? void 0 : this.dataset.key2],
-				nonMetaKeyIndex = keyCombo[1] ? 1 : 0;
-
-			// dataset.nonmetakey was string; change it to integer and store
-			try{
-				keyCombo[nonMetaKeyIndex] = parseInt(keyCombo[nonMetaKeyIndex], 10);
-			}catch(e){
-				// nothing can be done
-			}
-
-			var bool_a = parseInt(this.dataset.letter_counter, 10) === 1,
-				bool_b = (keyCombo.length === 2 || keyCombo.length === 1),
-				bool_c = (typeof keyCombo[nonMetaKeyIndex] !== "string"),
-				bool_d = keyCombo[nonMetaKeyIndex] === 13 ||  // key2 can be enter key or
-							/./.test(String.fromCharCode(keyCombo[nonMetaKeyIndex])); // key2 must be some letter, symbol, digit
-
-			if(bool_a && bool_b && bool_c && bool_d){
-				Data.hotKey = keyCombo.slice(0);
-
-				DB_save(function(){
-					// display current hotkey combo
-					$(".hotkey_display").innerHTML = getCurrentHotkey();
-
-					hotkeyListener.blur();
-				});
-			}else{
-				alert("Setting new hotkey failed!");
-				if(!bool_a)
-					alert("Hotkey combo was missing a key other than ctrl/shift/alt/meta key. Or, it was a key-combo reserved by operating system. Or, you may try refreshing the page.");
-				else if(!bool_b)
-					alert("Hotkey combo length is greater than 2, or is zero.");
-				else if(!bool_c)
-					alert("Please press the shift/ctrl/alt key you want to use first, and then the second key.");
-				else if(!bool_d)
-					alert("Unable to detect the second key.");
-			}
-
-			changeHotkeyBtn.disabled = false;
-			changeHotkeyBtn.innerHTML = "Change hotkey";
-		};
-
-		changeHotkeyBtn.onclick = function(){
-			this.disabled = true; // first diable the button
-			this.innerHTML = "Press new hotkeys";
-
-			resetHotkeyListenerData();
-
-			hotkeyListener.focus();
-
-			// after 10 seconds, automatically reset the button to default
-			setTimeout(function(){
 				changeHotkeyBtn.disabled = false;
 				changeHotkeyBtn.innerHTML = "Change hotkey";
-			}, 10000);
-		};
+			});
+
+			changeHotkeyBtn.on("click", function(){
+				this.disabled = true; // first disable the button
+				this.innerHTML = "Press new hotkeys";
+
+				combo = ["", ""];
+				valid = false;
+				
+				hotkeyListener.focus();
+
+				// after five seconds, automatically reset the button to default
+				setTimeout(function(){
+					changeHotkeyBtn.disabled = false;
+					changeHotkeyBtn.innerHTML = "Change hotkey";
+				}, 5000);
+			});
+		})();
 	}
 
 	DB_load(function(){
