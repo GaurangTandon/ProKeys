@@ -40,8 +40,9 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 1. Snippets/settings access in context menus
 2. Clipboard access in snippet body
-3. Update Opera with latest release
-4. Create ProKeys for Firefox, IE, Edge, Safari
+3. Get started with gaurangtandon.github.io/prokeys. Use http://dns.js.org/ for hosting. Use: https://github.com/Khan/tota11y
+4. Update Opera with latest release
+5. Create ProKeys for Firefox, IE, Edge, Safari
 
 ## Change Log
 
