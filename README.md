@@ -59,6 +59,8 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - minified images - saving nearly 10 KB :)
 - new Google Plus logo in About page
 - Fix for [excessive CPU usage issue](https://github.com/GaurangTandon/ProKeys/issues/3)
+- disabled ProKeys for input boxes using ReactJS (they possess `reactid ` in `dataset`)
+- refactored detector.js code and others with ESLint
 
 **2.5.4** - Current -  14/08/2015
 - changes in links to the tryit editor in Help section
