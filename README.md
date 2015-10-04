@@ -46,10 +46,19 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Change Log
 
+**2.6.2** - upcoming
+- settings access in context menu
+
+**2.6.1** - upcoming
+-  highlight snippet on save, edit to indicate save
+-  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
+-  fix for GitHub, JSFiddle, and other sites which use their own editor (which interferes with ProKeys)
+
 **2.6.0** - upcoming
 - shorter image names
 - minified images - saving nearly 10 KB :)
-- new screenshots, video release
+- new Google Plus logo in About page
+- Fix for [excessive CPU usage issue](https://github.com/GaurangTandon/ProKeys/issues/3)
 
 **2.5.4** - Current -  14/08/2015
 - changes in links to the tryit editor in Help section
