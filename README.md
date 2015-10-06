@@ -53,9 +53,9 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 -  highlight snippet on save, edit to indicate save
 -  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
 -  support for http://ckeditor.com/demo (if possible)
--  fix for GitHub, JSFiddle, and other sites which use their own editor (which interferes with ProKeys)
 
 **2.6.0** - upcoming
+- remove case-sensitivity for snippet names!
 - shorter image names
 - minified images - saving nearly 10 KB :)
 - new Google Plus logo in About page
@@ -63,6 +63,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - disabled ProKeys for input boxes using ReactJS (they possess `reactid ` in `dataset`)
 - refactored detector.js code and others with ESLint
 - fix for bug when pressing hotkey while having some text selected
+- fix for GitHub, JSFiddle, and other sites which use their own editor (which interferes with ProKeys)
 
 **2.5.4** - Current -  14/08/2015
 - changes in links to the tryit editor in Help section
