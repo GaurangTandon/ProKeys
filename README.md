@@ -50,12 +50,12 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - settings access in context menu // (show modal in settings page on context menu click)
 
 **2.6.1** - upcoming
+- remove case-sensitivity for snippet names!
 -  highlight snippet on save, edit to indicate save
 -  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
 -  support for http://ckeditor.com/demo // (if possible)
 
 **2.6.0** - upcoming
-- remove case-sensitivity for snippet names!
 - shorter image names
 - minified images - saving nearly 10 KB :)
 - new Google Plus logo in About page
