@@ -52,6 +52,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 **2.6.1** - upcoming
 -  highlight snippet on save, edit to indicate save
 -  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
+-  support for http://ckeditor.com/demo (if possible)
 -  fix for GitHub, JSFiddle, and other sites which use their own editor (which interferes with ProKeys)
 
 **2.6.0** - upcoming
