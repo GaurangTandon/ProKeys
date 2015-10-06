@@ -55,7 +55,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 -  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
 -  support for http://ckeditor.com/demo // (if possible)
 
-**2.6.0** - upcoming
+**2.6.0** - Current - 06/10/2015
 - shorter image names
 - minified images - saving nearly 10 KB :)
 - new Google Plus logo in About page
@@ -65,7 +65,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - fix for bug when pressing hotkey while having some text selected
 - fix for GitHub, JSFiddle, and other sites which use their own editor (CodeMirror, ace, etc. which interferes with ProKeys)
 
-**2.5.4** - Current -  14/08/2015
+**2.5.4** - 14/08/2015
 - changes in links to the tryit editor in Help section
 - fix super ugly bug of "Search" button in popup
 
