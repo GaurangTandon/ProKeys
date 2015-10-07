@@ -3,12 +3,12 @@
 
   "name": "ProKeys",
   "description": "Save time and effort in emails, etc. with ProKeys! Define snippets, do math in browser, auto complete braces, and much more.",
-  "version": "2.5.4",
+  "version": "2.6.0",
   
   "author": "Gaurang Tandon",
   
   "browser_action": {
-    "default_icon": "imgs/logo128.png",
+    "default_icon": "imgs/r.png",
     "default_popup": "html/popup.html"
   },
   
@@ -18,10 +18,10 @@
   },  
   
   "content_scripts": [{
-	"js" : ["js/detector.js"],
+	"js" : ["js/pre.js", "js/detector.js"],
 	"matches": ["<all_urls>"],
-	"all_frames": true,
-	"run_at": "document_end"
+	"run_at": "document_start",
+	"all_frames": true
   }],
   
   "permissions": [
@@ -32,9 +32,9 @@
   ],
   
   "icons":{
-	"16" : "imgs/logo16.png",
-	"48" : "imgs/logo48.png",
-	"128" : "imgs/logo128.png"
+	"16" : "imgs/p.png",
+	"48" : "imgs/q.png",
+	"128" : "imgs/r.png"
   },
   
   "options_page": "html/options.html",

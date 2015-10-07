@@ -22,46 +22,6 @@
 			hotKey: ["shiftKey", 32] // added in 2.4.1 
 		};
 
-	/* bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32 
-		with some modifications */ 
-	var $ = function(selector){
-		var elms = document.querySelectorAll(selector);
-
-		// return single element in case only one is found
-		return elms.length > 1 ? elms : elms[0];
-	};
-	 
-	Node.prototype.on = window.on = function (name, fn, useCapture) {
-	  this.addEventListener(name, fn, useCapture);
-	};
-	 
-	NodeList.prototype.__proto__ = Array.prototype;
-	 
-	NodeList.prototype.on = NodeList.prototype.addEventListener = function (name, fn) {
-	  this.forEach(function (elem, i) {
-		elem.on(name, fn);
-	  });
-	};
-
-	Node.prototype.hasClass = function(className){
-		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
-	};
-	
-	Node.prototype.toggleClass = function(cls){
-		if(this.hasClass(cls)) this.classList.remove(cls);
-		else this.classList.add(cls);
-	};
-	
-	// inserts the newNode after `this`
-	Element.prototype.insertAfter = function(newNode){
-		this.parentNode.insertBefore(newNode, this.nextSibling);
-	};
-
-	// returns true if element has class; usage: Element.hasClass("class")
-	Element.prototype.hasClass = function(className) {
-		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
-	};
-	
 	function DB_setValue(name, value, callback) {
 		var obj = {};
 		obj[name] = value;
@@ -89,40 +49,12 @@
 		});
 	}
 
-	function isEmpty(obj) {
-		for(var prop in obj) {
-			if(obj.hasOwnProperty(prop))
-				return false;
-		}
-		return true;
-	}
-
 	function checkRuntimeError(){
 		if(chrome.runtime.lastError){
 			alert("An error occurred! Please press [F12], copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!");
 			console.log(chrome.runtime.lastError);
 			return true;
 		}
-	}
-
-	function cloneObject(obj) {
-		var clone = {}, elm;
-
-		for(var i in obj) {
-			elm = obj[i];
-			clone[i] = Object.prototype.toString.call(elm) == "[object Object]" ? 
-				cloneObject(elm) : elm;
-		}
-		return clone;
-	}
-
-	// replaces string's `<` with `&gt' or reverse; so to render html as text and not html
-	// in snip names and bodies
-	function formatHTML(string, mode){
-		if(mode == "gt-to->")
-			return string.replace(/&gt;/g, ">").replace(/&lt;/g, "<");
-		else
-			return string.replace(/>/g, "&gt;").replace(/</g, "&lt;");
 	}
 
 	// returns whether site is blocked by user
@@ -137,10 +69,6 @@
 		}
 
 		return false;
-	}
-
-	function escapeRegExp(str) {
-		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
 
 	function listBlockedSites(){
@@ -250,14 +178,14 @@
 		table.appendChild(tr);
 	}
 
-	function isTimestampValid(inp, snipName){
+	function isTimestampValid(inp){
 		inp = inp.split(/[, ]+/g);
 
 		var m = inp[0],
 			d = parseInt(inp[1] || "0", 10),
 			y = parseInt(inp[2] || "0", 10);
 
-		if(d < 0 || y < 0) return "Invalid data or year for snippet " + snipName; 
+		if(d < 0 || y < 0) return false; 
 
 		switch(m){
 			case "January":
@@ -276,14 +204,35 @@
 			case "February":
 				return d <= 29;
 			default:
-				return "Invalid Month entry in snippet " + snipName;
+				return false;
 		}
+		
+		return true;
 	}
 
+	// allowDuplicates -> used in options.js[areSnippetsValid]
+	function validateSVal(sVal){
+		var len = sVal.length;
+		
+		return len <= SNIP_NAME_LIMIT && len !== 0 &&
+			!/^%.+%$|\n|\s+/.test(sVal)	&&
+			![][sVal];
+	}
+
+	function validateLVal(lVal){
+		var len = lVal.length;
+		return len <= SNIP_BODY_LIMIT && len !== 0;
+	}
+	
 	// validates snippet array received from user
 	// during restore
 	function areSnippetsValid(snippets){
-		var props = ["name", "body", "timestamp"];
+		var props = ["name", "body", "timestamp"],
+			kVal, checkFunc, checks = {
+				"body": validateLVal,
+				"name": validateSVal,
+				"timestamp": isTimestampValid
+			};
 
 		for(var i = 0, len = snippets.length, obj, counter; i < len; i++){
 			obj = snippets[i]; // obj is the current object
@@ -297,21 +246,15 @@
 
 			// check whether this item has all required properties
 			for(var k in obj){
-				// if unknown property or not of string type
-				if(props.indexOf(k) === -1 || typeof obj[k] !== "string") return "Unknown property " + k + " in " + (i + 1) + "th snippet";
+				// if invalid property or not of string type
+				if(props.indexOf(k) === -1 || typeof obj[k] !== "string") return "Invalid property " + k + " in " + (i + 1) + "th snippet";
 				else counter += 1;
 
-				// validate "sVal" and "lVal"
-				var kLen = obj[k].length, tspV; // timestamp validation result
-
-				if(k === "body" && (kLen > 2000 || kLen === 0)) return "Invalid body string length in " + (i + 1) + "th snippet";
-				else if(k === "name" && ((kLen === 0 || kLen > 25) ||
-						/[\n ]/.test(obj[k]) ||
-						[][obj[k]]) )
-					return "Invalid name property value in " + (i + 1) + "th snippet";
-				else if(k === "timestamp"){
-					tspV = isTimestampValid(obj[k], obj.name);
-					if(typeof tspV === "string") return tspV;
+				kVal = obj[k]; // timestamp validation result
+				checkFunc = checks[k];
+				
+				if(checkFunc && checkFunc(kVal) !== true){
+					return "Invalid value for property " + k + " in " + (i + 1) + "th snippet";
 				}
 			}
 
@@ -369,7 +312,7 @@
 			// the list of the correct items
 			correctProps = ["blockedSites", "charsToAutoInsertUserList", "dataVersion",
 					"language", "snippets", "tabKey", "visited", "hotKey"],
-					msg = "Data had invalid property: ";
+			msg = "Data had invalid property: ";
 
 		for(var prop in data){
 			if(correctProps.indexOf(prop) > -1){
@@ -381,18 +324,18 @@
 					case "snippets":
 					case "hotKey":
 						if(Object.prototype.toString.call(data[prop]) !== "[object Array]")
-							return false;
+							return "Property " + prop + " not set to an array";
 						break;
 					case "language":
-						if(data[prop] !== "English") return false;
-							break;
+						if(data[prop] !== "English") return "'language' property not set to 'English'";
+						break;
 					case "dataVersion":
-						if(data[prop] !== 1) return false;
-							break;
+						if(data[prop] !== 1) return "'dataVersion' property not set to 1";
+						break;
 					case "tabKey":
 					case "visited":
-						if(typeof data[prop] !== "boolean") return false;
-							break;
+						if(typeof data[prop] !== "boolean") return prop + " property did not have a true/false value";
+						break;
 					default: // possibly wrong property
 						return msg + prop;
 				}
@@ -514,7 +457,7 @@
 
 		// has a `www` at start
 		if( /^www\./.test(value) ) {alert("Do not include `www` at the start."); return; }
-		if ( /^https?:\/\//g.test(value) ) {alert("Do not include `http://` or `https://` at the start"); return;}
+		if( /^https?:\/\//g.test(value) ) {alert("Do not include `http://` or `https://` at the start"); return;}
 
 		// reset its value
 		this.value = "";
@@ -522,8 +465,11 @@
 		Data.blockedSites.push(value);
 
 		DB_save(function(){
-			if(!checkRuntimeError())
-				alert("Blocked!");
+			if(!checkRuntimeError()){
+				alert("Blocked " + value);
+				chrome.extension.getBackgroundPage()
+					.addRemoveBlockedSite(value, true);
+			}
 		});
 
 		listBlockedSites();
@@ -538,7 +484,7 @@
 
 		// gplus button handler
 		$(".g-plus").on("click", function(){
-			window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
+			window.open(this.href, "", "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600");
 			return false;
 		});
 
@@ -591,6 +537,8 @@
 
 				Data.blockedSites.splice(index, 1);
 
+				//chrome.extension.getBackgroundPage().addRemoveBlockedSite(domain, false);
+				
 				DB_save(checkRuntimeError);
 
 				listBlockedSites();
@@ -607,7 +555,7 @@
 			}
 			// Remove button
 			else if(tagName === "TD" && node.innerHTML === "Remove"){
-				var firstChar = formatHTML(node.previousElementSibling.previousElementSibling.innerHTML, "gt-to->");
+				var firstChar = formatHTML(node.previousElementSibling.previousElementSibling.innerHTML, "makeHTML");
 
 				// retrieve along with index (at second position in returned array)
 				index = searchAutoInsertChars(firstChar, true);
@@ -725,7 +673,7 @@
 		
 		// Select Text button
 		$("#backup .backupShow button").on("click", function(){
-				var sel = window.getSelection(),
+			var sel = window.getSelection(),
 				range = document.createRange();
 
 			range.selectNodeContents($("#backup .backupShow .text"));
@@ -840,11 +788,11 @@
 				else if(event.ctrlKey) arr.push("ctrlKey");
 				else if(event.altKey) arr.push("altKey");
 				else if(event.metaKey) arr.push("metaKey");
-			  
+
 				// below code from 
 				// http://stackoverflow.com/questions/12467240/determine-if-javascript-e-keycode-is-a-printable-non-control-character
 				// http://stackoverflow.com/users/1585400/shmiddty
-			  
+
 				// determine if key is non-control key
 				valid = 
 					(keycode > 47 && keycode < 58)   || // number keys
@@ -853,7 +801,7 @@
 					(keycode > 95 && keycode < 112)  || // numpad keys
 					(keycode > 185 && keycode < 193) || // ;=,-./` (in order)
 					(keycode > 218 && keycode < 223);   // [\]' (in order)
-			  
+
 				if(valid)
 					// then push the key also
 					arr.push(keycode);
@@ -862,10 +810,7 @@
 				combo = arr.slice(0);
 			});
 
-			hotkeyListener.on("keyup", function(){
-				var len = combo.length,
-					nonMetaKeyIndex = len === 2 ? 1 : 0;
-								
+			hotkeyListener.on("keyup", function(){								
 				if(valid){
 					Data.hotKey = combo.slice(0);
 
@@ -918,12 +863,12 @@
 	});
 	
 	var local = "<b>Local</b> - storage only on one's own PC. More storage space than sync",
-		localT = '<label for="local"><input type="radio" id="local" data-name="local"/><b>Local</b></label> - storage only on one\'s own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.',
-		sync1 = '<label for="sync"><input type="radio" id="sync" data-name="sync"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage',
-		sync2 = '<label for="sync2"><input type="radio" id="sync2" data-name="sync"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.',
-		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage."
+		localT = "<label for=\"local\"><input type=\"radio\" id=\"local\" data-name=\"local\"/><b>Local</b></label> - storage only on one's own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.",
+		sync1 = "<label for=\"sync\"><input type=\"radio\" id=\"sync\" data-name=\"sync\"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage",
+		sync2 = "<label for=\"sync2\"><input type=\"radio\" id=\"sync2\" data-name=\"sync\"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.",
+		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
-	function setEssentialItemsOnDBLoad(){
+	function setEssentialItemsOnDBLoad(){		
 		// on load; set checkbox state to user preference
 		$("#tabKey").checked = Data.tabKey;
 

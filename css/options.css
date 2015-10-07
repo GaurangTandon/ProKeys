@@ -489,12 +489,12 @@ td{
 }
 
 .tw-share{
-	background: url("../imgs/twitter.png");
+	background: url("../imgs/t.png");
 	background-size: cover;
 }
 
 .fb-share{
-	background: url("../imgs/facebook.png");
+	background: url("../imgs/f.png");
 	background-size: cover;
 }
 
