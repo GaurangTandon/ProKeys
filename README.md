@@ -1,7 +1,7 @@
 [![logo of prokeys](http://s27.postimg.org/7z02emgg3/main_logo.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
-**Latest version**: 2.5.4
-**Status**: active, stable build
+**Latest version**: 2.6.0
+**Status**: active, stable build (last update 07/Oct/15)
 
 ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn) and [Opera](https://addons.opera.com/en/extensions/details/prokeys/?display=en) extension that lets you be productive in online text-related work with its number of features like:
 
@@ -54,6 +54,10 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 -  highlight snippet on save, edit to indicate save
 -  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
 -  support for http://ckeditor.com/demo // (if possible)
+
+**2.6.0.1** - upcoming
+- upload zip of compressed files (reduce size to around 42KB :) )
+- refactored popup.js
 
 **2.6.0** - Current - 06/10/2015
 - shorter image names
