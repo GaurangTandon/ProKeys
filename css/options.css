@@ -283,19 +283,6 @@ ol{
 	display: none;
 }
 
-#help dd a{
-	color: #1143BB;
-}
-
-#help dd a[data-target="#tryit"]{
-	display: inline-block;
-    min-width: 150px;
-    max-width: 350px;
-    margin: 10px 0;
-    color: #1143BB;
-	cursor: pointer;	
-}
-
 #help h3{
 	font-size: 26px;
 	margin-bottom: 15px;
@@ -332,39 +319,35 @@ ol{
 	font-size: 15px;
 }
 
-#tryit{
+.tryit{
 	margin: auto;
 	width: 70%;
 	height: 210px;
 	border: 1px solid grey;
 }
 
-#tryit .nav{
+.tryit .nav{
 	width: 100%;
 	height: 30px;
 	background: rgb(232, 232, 232);
 }
 
-#tryit .nav span{
-	padding-left: 10px;	
-}
-
-#tryit .nav p{
+.tryit .nav p{
 	display: inline-block;
 	height: 100%;
 	max-width: 200px;
 	padding: 5px;
 	cursor: pointer;
 	min-width: 50px;
-	margin: auto 0 auto 5px;
+	margin: auto 10px;
 	font-family: 'Segoe UI', Tahoma, sans-serif;
 }
 
-#tryit .nav .show{
+.tryit .nav .show{
 	background: white;
 }
 
-#tryit > .show{
+.tryit > .show{
 	display: block;
 	height: 180px;
 	width: 100%;
@@ -375,11 +358,11 @@ ol{
 	overflow-y: auto;
 }
 
-#tryit textarea{
+.tryit textarea{
 	resize: none;
 }
 
-#tryit > :not(.nav):not(.show){
+.tryit > :not(.nav):not(.show){
 	display: none;
 }
 
@@ -489,12 +472,12 @@ td{
 }
 
 .tw-share{
-	background: url("../imgs/t.png");
+	background: url("../imgs/twitter.png");
 	background-size: cover;
 }
 
 .fb-share{
-	background: url("../imgs/f.png");
+	background: url("../imgs/facebook.png");
 	background-size: cover;
 }
 

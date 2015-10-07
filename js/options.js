@@ -2,7 +2,7 @@
 	"use strict";
 
 	window.onload = init;
-	
+
 	var storage = chrome.storage.local,
 		DataName = "UserSnippets",
 		Data = {
@@ -22,6 +22,46 @@
 			hotKey: ["shiftKey", 32] // added in 2.4.1 
 		};
 
+	/* bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32 
+		with some modifications */ 
+	var $ = function(selector){
+		var elms = document.querySelectorAll(selector);
+
+		// return single element in case only one is found
+		return elms.length > 1 ? elms : elms[0];
+	};
+	 
+	Node.prototype.on = window.on = function (name, fn, useCapture) {
+	  this.addEventListener(name, fn, useCapture);
+	};
+	 
+	NodeList.prototype.__proto__ = Array.prototype;
+	 
+	NodeList.prototype.on = NodeList.prototype.addEventListener = function (name, fn) {
+	  this.forEach(function (elem, i) {
+		elem.on(name, fn);
+	  });
+	};
+
+	Node.prototype.hasClass = function(className){
+		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
+	};
+	
+	Node.prototype.toggleClass = function(cls){
+		if(this.hasClass(cls)) this.classList.remove(cls);
+		else this.classList.add(cls);
+	};
+	
+	// inserts the newNode after `this`
+	Element.prototype.insertAfter = function(newNode){
+		this.parentNode.insertBefore(newNode, this.nextSibling);
+	};
+
+	// returns true if element has class; usage: Element.hasClass("class")
+	Element.prototype.hasClass = function(className) {
+		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
+	};
+	
 	function DB_setValue(name, value, callback) {
 		var obj = {};
 		obj[name] = value;
@@ -49,12 +89,40 @@
 		});
 	}
 
+	function isEmpty(obj) {
+		for(var prop in obj) {
+			if(obj.hasOwnProperty(prop))
+				return false;
+		}
+		return true;
+	}
+
 	function checkRuntimeError(){
 		if(chrome.runtime.lastError){
 			alert("An error occurred! Please press [F12], copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!");
 			console.log(chrome.runtime.lastError);
 			return true;
 		}
+	}
+
+	function cloneObject(obj) {
+		var clone = {}, elm;
+
+		for(var i in obj) {
+			elm = obj[i];
+			clone[i] = Object.prototype.toString.call(elm) == "[object Object]" ? 
+				cloneObject(elm) : elm;
+		}
+		return clone;
+	}
+
+	// replaces string's `<` with `&gt' or reverse; so to render html as text and not html
+	// in snip names and bodies
+	function formatHTML(string, mode){
+		if(mode == "gt-to->")
+			return string.replace(/&gt;/g, ">").replace(/&lt;/g, "<");
+		else
+			return string.replace(/>/g, "&gt;").replace(/</g, "&lt;");
 	}
 
 	// returns whether site is blocked by user
@@ -69,6 +137,10 @@
 		}
 
 		return false;
+	}
+
+	function escapeRegExp(str) {
+		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	}
 
 	function listBlockedSites(){
@@ -178,14 +250,14 @@
 		table.appendChild(tr);
 	}
 
-	function isTimestampValid(inp){
+	function isTimestampValid(inp, snipName){
 		inp = inp.split(/[, ]+/g);
 
 		var m = inp[0],
 			d = parseInt(inp[1] || "0", 10),
 			y = parseInt(inp[2] || "0", 10);
 
-		if(d < 0 || y < 0) return false; 
+		if(d < 0 || y < 0) return "Invalid data or year for snippet " + snipName; 
 
 		switch(m){
 			case "January":
@@ -204,35 +276,14 @@
 			case "February":
 				return d <= 29;
 			default:
-				return false;
+				return "Invalid Month entry in snippet " + snipName;
 		}
-		
-		return true;
 	}
 
-	// allowDuplicates -> used in options.js[areSnippetsValid]
-	function validateSVal(sVal){
-		var len = sVal.length;
-		
-		return len <= SNIP_NAME_LIMIT && len !== 0 &&
-			!/^%.+%$|\n|\s+/.test(sVal)	&&
-			![][sVal];
-	}
-
-	function validateLVal(lVal){
-		var len = lVal.length;
-		return len <= SNIP_BODY_LIMIT && len !== 0;
-	}
-	
 	// validates snippet array received from user
 	// during restore
 	function areSnippetsValid(snippets){
-		var props = ["name", "body", "timestamp"],
-			kVal, checkFunc, checks = {
-				"body": validateLVal,
-				"name": validateSVal,
-				"timestamp": isTimestampValid
-			};
+		var props = ["name", "body", "timestamp"];
 
 		for(var i = 0, len = snippets.length, obj, counter; i < len; i++){
 			obj = snippets[i]; // obj is the current object
@@ -246,15 +297,21 @@
 
 			// check whether this item has all required properties
 			for(var k in obj){
-				// if invalid property or not of string type
-				if(props.indexOf(k) === -1 || typeof obj[k] !== "string") return "Invalid property " + k + " in " + (i + 1) + "th snippet";
+				// if unknown property or not of string type
+				if(props.indexOf(k) === -1 || typeof obj[k] !== "string") return "Unknown property " + k + " in " + (i + 1) + "th snippet";
 				else counter += 1;
 
-				kVal = obj[k]; // timestamp validation result
-				checkFunc = checks[k];
-				
-				if(checkFunc && checkFunc(kVal) !== true){
-					return "Invalid value for property " + k + " in " + (i + 1) + "th snippet";
+				// validate "sVal" and "lVal"
+				var kLen = obj[k].length, tspV; // timestamp validation result
+
+				if(k === "body" && (kLen > 2000 || kLen === 0)) return "Invalid body string length in " + (i + 1) + "th snippet";
+				else if(k === "name" && ((kLen === 0 || kLen > 25) ||
+						/[\n ]/.test(obj[k]) ||
+						[][obj[k]]) )
+					return "Invalid name property value in " + (i + 1) + "th snippet";
+				else if(k === "timestamp"){
+					tspV = isTimestampValid(obj[k], obj.name);
+					if(typeof tspV === "string") return tspV;
 				}
 			}
 
@@ -312,7 +369,7 @@
 			// the list of the correct items
 			correctProps = ["blockedSites", "charsToAutoInsertUserList", "dataVersion",
 					"language", "snippets", "tabKey", "visited", "hotKey"],
-			msg = "Data had invalid property: ";
+					msg = "Data had invalid property: ";
 
 		for(var prop in data){
 			if(correctProps.indexOf(prop) > -1){
@@ -324,18 +381,18 @@
 					case "snippets":
 					case "hotKey":
 						if(Object.prototype.toString.call(data[prop]) !== "[object Array]")
-							return "Property " + prop + " not set to an array";
+							return false;
 						break;
 					case "language":
-						if(data[prop] !== "English") return "'language' property not set to 'English'";
-						break;
+						if(data[prop] !== "English") return false;
+							break;
 					case "dataVersion":
-						if(data[prop] !== 1) return "'dataVersion' property not set to 1";
-						break;
+						if(data[prop] !== 1) return false;
+							break;
 					case "tabKey":
 					case "visited":
-						if(typeof data[prop] !== "boolean") return prop + " property did not have a true/false value";
-						break;
+						if(typeof data[prop] !== "boolean") return false;
+							break;
 					default: // possibly wrong property
 						return msg + prop;
 				}
@@ -457,7 +514,7 @@
 
 		// has a `www` at start
 		if( /^www\./.test(value) ) {alert("Do not include `www` at the start."); return; }
-		if( /^https?:\/\//g.test(value) ) {alert("Do not include `http://` or `https://` at the start"); return;}
+		if ( /^https?:\/\//g.test(value) ) {alert("Do not include `http://` or `https://` at the start"); return;}
 
 		// reset its value
 		this.value = "";
@@ -465,11 +522,8 @@
 		Data.blockedSites.push(value);
 
 		DB_save(function(){
-			if(!checkRuntimeError()){
-				alert("Blocked " + value);
-				chrome.extension.getBackgroundPage()
-					.addRemoveBlockedSite(value, true);
-			}
+			if(!checkRuntimeError())
+				alert("Blocked!");
 		});
 
 		listBlockedSites();
@@ -484,12 +538,12 @@
 
 		// gplus button handler
 		$(".g-plus").on("click", function(){
-			window.open(this.href, "", "menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600");
+			window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
 			return false;
 		});
 
-		$("#tryit .nav p").on("click", function(){
-			var ots, s = "show", t = "#tryit "; // otherSibling
+		$(".tryit .nav p").on("click", function(){
+			var ots, s = "show", t = ".tryit "; // otherSibling
 			
 			if(!this.hasClass("show")){
 				// hide current
@@ -516,10 +570,6 @@
 		function showHideDIVs(newID){
 			$("#content > .show").toggleClass("show");
 			$("#content > #" + newID).toggleClass("show");
-			// the page shifts down a little
-			// for the exact location of the div;
-			// so move it back to the top
-			document.body.scrollTop = 0;
 		}
 		
 		$("#btnContainer button").on("click", function(){
@@ -537,8 +587,6 @@
 
 				Data.blockedSites.splice(index, 1);
 
-				//chrome.extension.getBackgroundPage().addRemoveBlockedSite(domain, false);
-				
 				DB_save(checkRuntimeError);
 
 				listBlockedSites();
@@ -555,7 +603,7 @@
 			}
 			// Remove button
 			else if(tagName === "TD" && node.innerHTML === "Remove"){
-				var firstChar = formatHTML(node.previousElementSibling.previousElementSibling.innerHTML, "makeHTML");
+				var firstChar = formatHTML(node.previousElementSibling.previousElementSibling.innerHTML, "gt-to->");
 
 				// retrieve along with index (at second position in returned array)
 				index = searchAutoInsertChars(firstChar, true);
@@ -639,10 +687,15 @@
 
 		var url = window.location.href;
 
-		if(/#\w+$/.test(url) && (!/tryit|symbolsList/.test(url)))
+		if(/#\w+$/.test(url))
 			// get the id and show divs based on that
 			showHideDIVs(url.match(/#(\w+)$/)[1]);
-		
+
+
+		// set scroll to zero because somehow it scrolls below
+		//?
+		document.body.scrollTop = 0;
+
 		// boolean parameter transferData: dictates if one should transfer data or not
 		function storageRadioBtnClick(str, transferData){
 			var bool = false,
@@ -673,7 +726,7 @@
 		
 		// Select Text button
 		$("#backup .backupShow button").on("click", function(){
-			var sel = window.getSelection(),
+				var sel = window.getSelection(),
 				range = document.createRange();
 
 			range.selectNodeContents($("#backup .backupShow .text"));
@@ -769,104 +822,95 @@
 			alert("Use this text to print snippets");
 		};
 
-		// prevent exposure of locals
-		(function(){
+		function resetHotkeyListenerData(){
+			// counts keypress of keys other than ctrl/shift/alt/meta
+			hotkeyListener.dataset.letter_counter = "0";
 			// stores hotkey combo
-			var	combo,
-				// determines if keyCode is valid
-				// non-control character
-				valid;
-			
-			// the combo refreshes with every key down
-			// so we don't need keyCount to keep track of
-			// number of keys pressed
-			hotkeyListener.on("keydown", function(event){
-				var arr = [], keycode = event.keyCode;
+			hotkeyListener.dataset.key1 = "";
+			hotkeyListener.dataset.key2 = "";
+		}
 
-				// first element should be the modifiers
-				if(event.shiftKey) arr.push("shiftKey");
-				else if(event.ctrlKey) arr.push("ctrlKey");
-				else if(event.altKey) arr.push("altKey");
-				else if(event.metaKey) arr.push("metaKey");
-<<<<<<< HEAD
+		resetHotkeyListenerData();
 
-				// below code from 
-				// http://stackoverflow.com/questions/12467240/determine-if-javascript-e-keycode-is-a-printable-non-control-character
-				// http://stackoverflow.com/users/1585400/shmiddty
+		// does not catch shift/ctrl/alt
+		hotkeyListener.onkeypress = function(){
+			// increase by one
+			this.dataset.letter_counter = parseInt(this.dataset.letter_counter, 10) + 1;
+		};
 
-=======
-			  
-				// below code from 
-				// http://stackoverflow.com/questions/12467240/determine-if-javascript-e-keycode-is-a-printable-non-control-character
-				// http://stackoverflow.com/users/1585400/shmiddty
-			  
->>>>>>> origin/master
-				// determine if key is non-control key
-				valid = 
-					(keycode > 47 && keycode < 58)   || // number keys
-					keycode == 32 || keycode == 13   || // spacebar & return key(s)
-					(keycode > 64 && keycode < 91)   || // letter keys
-					(keycode > 95 && keycode < 112)  || // numpad keys
-					(keycode > 185 && keycode < 193) || // ;=,-./` (in order)
-					(keycode > 218 && keycode < 223);   // [\]' (in order)
-<<<<<<< HEAD
+		hotkeyListener.onkeydown = function(event){
+			var arr = [];
 
-=======
-			  
->>>>>>> origin/master
-				if(valid)
-					// then push the key also
-					arr.push(keycode);
+			// first element should be the modifiers
+			if(event.shiftKey) arr.push("shiftKey");
+			else if(event.ctrlKey) arr.push("ctrlKey");
+			else if(event.altKey) arr.push("altKey");
+			else if(event.metaKey) arr.push("metaKey");
+          
+			// then push the key also
+			arr.push(event.keyCode);
 
-				// set the keys
-				combo = arr.slice(0);
-			});
-<<<<<<< HEAD
+			// set the keys
+			this.dataset.key1 = arr[0];
+			this.dataset.key2 = arr[1];
+		};
 
-			hotkeyListener.on("keyup", function(){								
-				if(valid){
-					Data.hotKey = combo.slice(0);
+		hotkeyListener.onkeyup = function(){
+			var keyCombo = [this.dataset.key1, this.dataset.key2 === "undefined" ? void 0 : this.dataset.key2],
+				nonMetaKeyIndex = keyCombo[1] ? 1 : 0;
 
-=======
+			// dataset.nonmetakey was string; change it to integer and store
+			try{
+				keyCombo[nonMetaKeyIndex] = parseInt(keyCombo[nonMetaKeyIndex], 10);
+			}catch(e){
+				// nothing can be done
+			}
 
-			hotkeyListener.on("keyup", function(){
-				var len = combo.length,
-					nonMetaKeyIndex = len === 2 ? 1 : 0;
-								
-				if(valid){
-					Data.hotKey = combo.slice(0);
+			var bool_a = parseInt(this.dataset.letter_counter, 10) === 1,
+				bool_b = (keyCombo.length === 2 || keyCombo.length === 1),
+				bool_c = (typeof keyCombo[nonMetaKeyIndex] !== "string"),
+				bool_d = keyCombo[nonMetaKeyIndex] === 13 ||  // key2 can be enter key or
+							/./.test(String.fromCharCode(keyCombo[nonMetaKeyIndex])); // key2 must be some letter, symbol, digit
 
->>>>>>> origin/master
-					DB_save(function(){
-						location.href = "#settings";
-						location.reload();
-					});
-				}else{
-					alert("Setting new hotkey failed!");
-					alert("It was missing a key other than ctrl/alt/shift/meta key. Or, it was a key-combo reserved by the Operating System. \
-							Or you may try refreshing the page. ");
-				}
+			if(bool_a && bool_b && bool_c && bool_d){
+				Data.hotKey = keyCombo.slice(0);
 
+				DB_save(function(){
+					// display current hotkey combo
+					$(".hotkey_display").innerHTML = getCurrentHotkey();
+
+					hotkeyListener.blur();
+				});
+			}else{
+				alert("Setting new hotkey failed!");
+				if(!bool_a)
+					alert("Hotkey combo was missing a key other than ctrl/shift/alt/meta key. Or, it was a key-combo reserved by operating system. Or, you may try refreshing the page.");
+				else if(!bool_b)
+					alert("Hotkey combo length is greater than 2, or is zero.");
+				else if(!bool_c)
+					alert("Please press the shift/ctrl/alt key you want to use first, and then the second key.");
+				else if(!bool_d)
+					alert("Unable to detect the second key.");
+			}
+
+			changeHotkeyBtn.disabled = false;
+			changeHotkeyBtn.innerHTML = "Change hotkey";
+		};
+
+		changeHotkeyBtn.onclick = function(){
+			this.disabled = true; // first diable the button
+			this.innerHTML = "Press new hotkeys";
+
+			resetHotkeyListenerData();
+
+			hotkeyListener.focus();
+
+			// after 10 seconds, automatically reset the button to default
+			setTimeout(function(){
 				changeHotkeyBtn.disabled = false;
 				changeHotkeyBtn.innerHTML = "Change hotkey";
-			});
-
-			changeHotkeyBtn.on("click", function(){
-				this.disabled = true; // first disable the button
-				this.innerHTML = "Press new hotkeys";
-
-				combo = ["", ""];
-				valid = false;
-				
-				hotkeyListener.focus();
-
-				// after five seconds, automatically reset the button to default
-				setTimeout(function(){
-					changeHotkeyBtn.disabled = false;
-					changeHotkeyBtn.innerHTML = "Change hotkey";
-				}, 5000);
-			});
-		})();
+			}, 10000);
+		};
 	}
 
 	DB_load(function(){
@@ -886,12 +930,12 @@
 	});
 	
 	var local = "<b>Local</b> - storage only on one's own PC. More storage space than sync",
-		localT = "<label for=\"local\"><input type=\"radio\" id=\"local\" data-name=\"local\"/><b>Local</b></label> - storage only on one's own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.",
-		sync1 = "<label for=\"sync\"><input type=\"radio\" id=\"sync\" data-name=\"sync\"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage",
-		sync2 = "<label for=\"sync2\"><input type=\"radio\" id=\"sync2\" data-name=\"sync\"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.",
-		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
+		localT = '<label for="local"><input type="radio" id="local" data-name="local"/><b>Local</b></label> - storage only on one\'s own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.',
+		sync1 = '<label for="sync"><input type="radio" id="sync" data-name="sync"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage',
+		sync2 = '<label for="sync2"><input type="radio" id="sync2" data-name="sync"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.',
+		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage."
 
-	function setEssentialItemsOnDBLoad(){		
+	function setEssentialItemsOnDBLoad(){
 		// on load; set checkbox state to user preference
 		$("#tabKey").checked = Data.tabKey;
 

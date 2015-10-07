@@ -1,9 +1,8 @@
-[![logo of prokeys](http://s27.postimg.org/7z02emgg3/main_logo.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
-
+## [ProKeys](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 **Latest version**: 2.5.4
 **Status**: active, stable build
 
-ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn) and [Opera](https://addons.opera.com/en/extensions/details/prokeys/?display=en) extension that lets you be productive in online text-related work with its number of features like:
+A completely free Google Chrome and Opera extension that lets you be productive in online text-related work with its number of features like:
 
 [More info on all these in Help section inside the app]  
 1. **Snippets** - define custom abbreviations, and retrieve the text associated with them simply by pressing the hotkey (default: Shift+Space). Example: "brb" can expand to "Be right back!"  
@@ -30,7 +29,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 3. Fork the repo, make changes, and submit a pull request, describing the changes made.
 4. Help me translate ProKeys to your native language.
 5. Share the word about ProKeys with people!
-6. [Flattr ProKeys](https://flattr.com/thing/3a21a326ed09014a80254c2938cd5bee) - buy me a ~~beer~~ coffee!
+6. [Flattr ProKeys](https://flattr.com/thing/3a21a326ed09014a80254c2938cd5bee) - buy me a beer!
 
 **Contact me** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
 
@@ -40,32 +39,12 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 1. Snippets/settings access in context menus
 2. Clipboard access in snippet body
-3. Get started with gaurangtandon.github.io/prokeys. Use http://dns.js.org/ for hosting. Use: https://github.com/Khan/tota11y
-4. Update Opera with latest release
-5. Create ProKeys for Firefox, IE, Edge, Safari
+3. Update Opera with latest release
+4. Create ProKeys for Firefox, IE, Edge, Safari
 
 ## Change Log
 
-**2.6.2** - upcoming
-- settings access in context menu // (show modal in settings page on context menu click)
-
-**2.6.1** - upcoming
-- remove case-sensitivity for snippet names!
--  highlight snippet on save, edit to indicate save
--  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
--  support for http://ckeditor.com/demo // (if possible)
-
-**2.6.0** - Current - 06/10/2015
-- shorter image names
-- minified images - saving nearly 10 KB :)
-- new Google Plus logo in About page
-- fix for [excessive CPU usage issue](https://github.com/GaurangTandon/ProKeys/issues/3)
-- disabled ProKeys for input boxes using ReactJS (they possess `reactid ` in `dataset`)
-- refactored detector.js code and others with ESLint
-- fix for bug when pressing hotkey while having some text selected
-- fix for GitHub, JSFiddle, and other sites which use their own editor (CodeMirror, ace, etc. which interferes with ProKeys)
-
-**2.5.4** - 14/08/2015
+**2.5.4** - Current -  14/08/2015
 - changes in links to the tryit editor in Help section
 - fix super ugly bug of "Search" button in popup
 
