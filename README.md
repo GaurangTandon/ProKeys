@@ -60,6 +60,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - refactored popup.js
 - fix for snippets+other features not working in Gmail subject line/to field
 - fix for placeholder feature not working with element nodes (like <b>%Order</b>)
+- debounced both handleKeyPress/Down
 
 **2.6.0** - Current - 06/10/2015
 - shorter image names
