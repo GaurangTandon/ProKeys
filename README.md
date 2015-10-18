@@ -58,6 +58,8 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 **2.6.0.1** - upcoming
 - upload zip of compressed files (reduce size to around 42KB :) )
 - refactored popup.js
+- fix for snippets+other features not working in Gmail subject line/to field
+- fix for placeholder feature not working with element nodes (like <b>%Order</b>)
 
 **2.6.0** - Current - 06/10/2015
 - shorter image names
@@ -85,7 +87,6 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 - organized symbols, variables into a clean table
 - revamped sample snippets shown on first intall
 - introduced TryIt editor in Help page
-
 
 **2.5.1** - 04/07/2015
 - fixed a strange issue where on empty snippet was initially shown on install
