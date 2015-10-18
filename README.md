@@ -55,14 +55,14 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 -  fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
 -  support for http://ckeditor.com/demo // (if possible)
 
-**2.6.0.1** - upcoming
+**2.6.0.1** - 18/10/2015
 - upload zip of compressed files (reduce size to around 42KB :) )
 - refactored popup.js
 - fix for snippets+other features not working in Gmail subject line/to field
 - fix for placeholder feature not working with element nodes (like <b>%Order</b>)
 - debounced both handleKeyPress/Down
 
-**2.6.0** - Current - 06/10/2015
+**2.6.0** - 06/10/2015
 - shorter image names
 - minified images - saving nearly 10 KB :)
 - new Google Plus logo in About page
