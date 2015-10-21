@@ -5,7 +5,10 @@
 - remove case-sensitivity for snippet names!
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) 
 
-**2.6.1** - upcoming
+**2.6.2** - upcoming
+- fix for multiline bold elements not working
+
+**2.6.1** - 21/10/2015
 - (green) highlight snippet on save, edit to indicate save
 - fix for nested placeholder elements
 
