@@ -44,4 +44,4 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 4. Update Opera with latest release
 5. Create ProKeys for Firefox, IE, Edge, Safari
 
-## [Change Log](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)
+## [Change Log](https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md)
