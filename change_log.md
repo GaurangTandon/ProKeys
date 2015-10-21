@@ -13,7 +13,7 @@
 - upload zip of compressed files (reduce size to around 42KB :) )
 - refactored popup.js
 - fix for snippets+other features not working in Gmail subject line/to field
-- fix for placeholder feature not working with element nodes (like <b>%Order</b>)
+- fix for placeholder feature not working with element nodes (like `<b>%Order%</b>`)
 - debounced both handleKeyPress/Down
 
 **2.6.0** - 06/10/2015
