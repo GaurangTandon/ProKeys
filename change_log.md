@@ -6,7 +6,7 @@
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) 
 
 **2.6.1** - upcoming
-- highlight snippet on save, edit to indicate save
+- (green) highlight snippet on save, edit to indicate save
 - fix for nested placeholder elements
 
 **2.6.0.1** - 18/10/2015
