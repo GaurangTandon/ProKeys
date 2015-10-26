@@ -19,10 +19,11 @@
 		</div>		
 		<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn">ProKeys</a>
 		<div id="btnContainer">
-			<button id="settingButton" data-name="settings">Settings</button>
-			<button id="helpButton" data-name="help">Help</button>
-			<button id="backupButton" data-name="backup">Backup and Print</button>
-			<button id="aboutButton" data-name="about">About</button>
+			<!-- actually it's divID but HTML won't allow upcase names here :(-->
+			<button id="settingButton" data-divid="settings">Settings</button>
+			<button id="helpButton" data-divid="help">Help</button>
+			<button id="backupButton" data-divid="backup">Backup and Print</button>
+			<button id="aboutButton" data-divid="about">About</button>
 		</div>
 	</div>
 	
@@ -45,6 +46,7 @@
 				<div id="storageMode">
 					<p><b>Storage Mode settings</b></p>
 					<div class="container">
+						<!-- values set dynamically by options.js-->
 						<div class="current">
 							<h3>Current data storage mode:</h3>
 							<p></p>
@@ -296,48 +298,6 @@ But multiline text is still supported.</textarea>
 					</dl>
 				</section>
 			</div>
-			<div id="about">
-				<h1>About</h1>
-				Made by <a href="https://plus.google.com/u/0/110764286121755681313/posts">Gaurang Tandon</a><br>
-				Version: 2.6.0<br>
-				&copy; 2015 Copyright Reserved<br><br>
-				
-				Check out the <a href="https://github.com/GaurangTandon/ProKeys">change log and source code on GitHub!</a><br><br>
-				Contact me for feedback: <strong>prokeys.feedback@gmail.com</strong><br>
-				Please check <a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known bugs list</a> before reporting a bug
-				<hr>
-				Please support me. Thank you :-)
-				<br>
-				
-				<!-- FB button-->
-				<a class="fb-share" href="http://www.facebook.com/sharer.php?u=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn&t=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%20https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" target="_blank"></a>
-				
-				<!-- Twitter button-->
-				<a target="_blank" class='tw-share' href="http://twitter.com/intent/tweet?text=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%23chrome-extension%20%23chrome&url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn"></a>
-				
-				<!-- G+ button-->
-				<a href="https://plus.google.com/share?url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" class="g-plus"><img src="../imgs/g.png" alt="Share on Google+"/></a>
-	  
-				<br>
-				<div class="buttons">
-					<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews" target="_blank">Leave a Review</a>
-					<a href="https://chrome.google.com/webstore/support/ekfnbpgmmeahnnlpjibofkobpdkifapn#feature" target="_blank">Request a feature</a>
-					<a href="https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form" target="_blank">Anonymous Feedback</a>
-				</div>
-			
-				<!--
-				<hr>
-				Please support me! Thank you so much! (You might see (No Title) instead of "ProKeys" in the name box; that's because ProKeys has got no Flattrs yet)<br>
-				<a id="flattr" href="https://flattr.com/thing/3a21a326ed09014a80254c2938cd5bee" alt="Flattr link">Flattr ProKeys</a>
-				-->
-				
-				<hr>
-				<span class="disclaimer-heading">DISCLAIMER:</span><br> <p>Every effort has been made to avoid bugs in this extension. In spite of this, some bugs might have crept in. Any mistake, error or
-				discrepancy noted may be brought to my notice (email: prokeys.feedback@gmail.com) and I shall try my best to remove it. It is notified that I will not be responsible 
-				for any loss to any one due to misuse/bugs of this application of any kind in any manner. This extension, does not, in any manner, store any user's extension's settings and his/her snippets,
-				anywhere but the user's own PC (apart from Sync storage which then gets synced across user's signed in Chrome browsers on different machines).</p>
-				<hr>
-			</div>
 			<div id="backup">
 				<h1>Backup, Restore and Print</h1>
 				
@@ -377,6 +337,49 @@ But multiline text is still supported.</textarea>
 					
 					<button class="close">Close This Dialog</button>
 				</div>
+			</div>
+			<div id="about">
+				<h1>About</h1>
+				Made by <a href="https://plus.google.com/u/0/110764286121755681313/posts">Gaurang Tandon</a><br>
+				Version: 2.6.2<br>
+				&copy; 2015 Copyright Reserved<br><br>
+				
+				Check out the <a href="https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md">change log</a> and <a href="https://github.com/GaurangTandon/ProKeys">source code on GitHub!</a><br><br>
+				Contact me for feedback: <strong>prokeys.feedback@gmail.com</strong><br>
+				Please check <a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known bugs list</a> before reporting a bug
+				<hr>
+				Please support me. Thank you :-)
+				<br>
+				
+				<!-- FB button-->
+				<a class="fb-share" href="http://www.facebook.com/sharer.php?u=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn&t=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%20https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" target="_blank"></a>
+				
+				<!-- Twitter button-->
+				<a target="_blank" class='tw-share' href="http://twitter.com/intent/tweet?text=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%23chrome-extension%20%23chrome&url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn"></a>
+				
+				<!-- G+ button-->
+				<a href="https://plus.google.com/share?url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" class="g-plus"><img src="../imgs/g.png" alt="Share on Google+"/></a>
+	  
+				<br>
+				<div class="buttons">
+					<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews" target="_blank">Leave a Review</a>
+					<a href="https://chrome.google.com/webstore/support/ekfnbpgmmeahnnlpjibofkobpdkifapn#feature" target="_blank">Request a feature</a>
+					<a href="https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form" target="_blank">Anonymous Feedback</a>
+				</div>
+			
+				<!--
+				<hr>
+				Please support me! Thank you so much! (You might see (No Title) instead of "ProKeys" in the name box; that's because ProKeys has got no Flattrs yet)<br>
+				<a id="flattr" href="https://flattr.com/thing/3a21a326ed09014a80254c2938cd5bee" alt="Flattr link">Flattr ProKeys</a>
+				-->
+				
+				<hr>
+				<span class="disclaimer-heading">DISCLAIMER:</span><br> <p>Every effort has been made to avoid bugs in this extension. In spite of this, some bugs might have crept in. Any mistake, error or
+				discrepancy noted may be brought to my notice (email: prokeys.feedback@gmail.com) and I shall try my best to remove it. It is notified that I will not be responsible 
+				for any loss to any one due to misuse/bugs of this application of any kind in any manner. This extension, does not, in any manner, store any user's extension's settings and his/her snippets,
+				anywhere but the user's own PC (apart from Sync storage which then gets synced across user's signed in Chrome browsers on different machines). No user snippets, settings, browser history, or whatever,
+				is sent to any external server anywhere by this application.</p>
+				<hr>
 			</div>
 		</div>
 	</main>

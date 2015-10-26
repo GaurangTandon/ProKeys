@@ -72,87 +72,84 @@
 	}
 
 	function listBlockedSites(){
-		var ul = $("#settings ul");
+		var ul = $("#settings ul"),
+			li, pElm, delDiv;
 
 		// if atleast one blocked site
-		if(Data.blockedSites[0]) ul.innerHTML = "";
+		if(Data.blockedSites[0]) ul.html("");
 		else{
-			ul.innerHTML = "<li>None Currently</li>";
+			ul.html("<li>None Currently</li>");
 
 			return; // exit
 		}
 
 		for(var i = 0, len = Data.blockedSites.length; i < len; i++){
-			var li = document.createElement("li");
+			li = document.createElement("li");
 
-			var pElm = document.createElement("p");
-			pElm.innerHTML = Data.blockedSites[i];
-			li.appendChild(pElm);
+			pElm = document.createElement("p");
+			li.appendChild(pElm.html(Data.blockedSites[i]));
 
-			var delDiv = document.createElement("div");
-			delDiv.innerHTML = "Unblock";
-			li.appendChild(delDiv);
+			delDiv = document.createElement("div");
+			li.appendChild(delDiv.html("Unblock"));
 
 			ul.appendChild(li);
 		}
 	}
 
+	function createTableRow(textArr){
+		var tr = document.createElement("tr");
+		
+		for(var i = 0, len = textArr.length; i < len; i++)
+			tr.appendChild(document.createElement("td").html(textArr[i]));
+		
+		return tr;
+	}
+	
 	// inserts in the table the chars to be auto-inserted
 	function listAutoInsertChars(){
 		var arr = Data.charsToAutoInsertUserList,
 			table = $("#settings table"),
 			// used to generate table in loop
-			thead, tr, td1, td2, td3, input_box;
+			thead, tr, inputBox;
 
 		// clear the table initially
-		table.innerHTML = "";
+		table.html("");
 
-		for(var i = 0, len = arr.length; i < len; i++){
-			tr = document.createElement("tr");
-			td1 = document.createElement("td");
-			td2 = document.createElement("td");
-			td3 = document.createElement("td");
-
-			tr.appendChild(td1).innerHTML = arr[i][0];
-			tr.appendChild(td2).innerHTML = arr[i][1];
-			tr.appendChild(td3).innerHTML = "Remove";
-
-			table.appendChild(tr);
-		}
+		for(var i = 0, len = arr.length; i < len; i++)
+			// create <tr> with <td>s having text as in current array and Remove
+			table.appendChild(createTableRow(arr[i].concat("Remove")));
+		
 
 		if(len === 0)
-			table.innerHTML = "None currently. Add new:";
+			table.html("None currently. Add new:");
 		else{ // insert character-counter pair <thead> elements
 			thead = document.createElement("thead");
 			tr = document.createElement("tr");
 
-			tr.appendChild(document.createElement("th")).innerHTML = "Character";
-			tr.appendChild(document.createElement("th")).innerHTML = "Counterpart";
+			tr.appendChild(document.createElement("th").html("Character"));
+			tr.appendChild(document.createElement("th").html("Counterpart"));
 
 			thead.appendChild(tr);
 
 			table.insertBefore(thead, table.firstChild);
 		}
 
-		input_box = table.lastChild.firstChild;
+		inputBox = table.lastChild.firstChild;
 
 		// if there is no input box present or there is no auto-insert char
-		if( !(input_box && /input/.test(input_box.innerHTML)) || len === 0)
+		if( !(inputBox && /input/.test(inputBox.html()) || len === 0) )
 			appendInputBoxesInTable(table);
 	}
 
-	function searchAutoInsertChars(firstChar, index){
-		var arr = Data.charsToAutoInsertUserList;
+	function searchAutoInsertChars(firstChar, shouldReturnIndex){
+		var arr = Data.charsToAutoInsertUserList,
+			counterpart;
 
 		for(var i = 0, len = arr.length; i < len; i++){
-			if(arr[i][0] === firstChar){
-
-				// if index; return index along with counterpart
-				if(index){
-					return [i, arr[i][1]];
-				}else{ //return only counterpart
-					return arr[i][1];
-				}
+			counterpart = arr[i][0];
+			
+			if(counterpart === firstChar){
+				return shouldReturnIndex ? [i, counterpart] : counterpart;
 			}
 		}
 
@@ -160,22 +157,11 @@
 	}
 
 	function appendInputBoxesInTable(table){
-		// now create a last input field also
-		var tr = document.createElement("tr");
+		var textList = ["<input type='text' placeholder='Type new character' class='auto-insert-char input'>",
+						"<input type='text' placeholder='Type its counterpart' class='auto-insert-char input'>",
+						"<input type='button' value='Save' class='auto-insert-char button'>"];
 
-		var td1 = document.createElement("td"),
-			td2 = document.createElement("td"),
-			td3 = document.createElement("td");
-
-		td1.innerHTML = "<input type='text' placeholder='Type new character' class='auto-insert-char input'>";
-		td2.innerHTML = "<input type='text' placeholder='Type its counterpart' class='auto-insert-char input'>";
-		td3.innerHTML = "<input type='button' value='Save' class='auto-insert-char button'>";
-
-		tr.appendChild(td1);
-		tr.appendChild(td2);
-		tr.appendChild(td3);
-
-		table.appendChild(tr);
+		table.appendChild(createTableRow(textList));
 	}
 
 	function isTimestampValid(inp){
@@ -375,11 +361,16 @@
 		return true;
 	}
 
+	// get type of current storage as string
+	function getCurrentStorageType(){
+		// property MAX_ITEMS is present only in sync
+		return storage.MAX_ITEMS ? "sync" : "local";
+	}
+	
 	// changes type of storage: local-sync, sync-local
 	function changeStorageType(){
-		// property MAX_ITEMS is present only in sync
-
-		storage = storage.MAX_ITEMS ? chrome.storage.local : chrome.storage.sync;
+		storage = getCurrentStorageType() === "sync" ?
+				chrome.storage.local : chrome.storage.sync;
 	}
 
 	// transfer data from one storage to another
@@ -467,16 +458,25 @@
 		DB_save(function(){
 			if(!checkRuntimeError()){
 				alert("Blocked " + value);
-				chrome.extension.getBackgroundPage()
-					.addRemoveBlockedSite(value, true);
+				/*chrome.extension.getBackgroundPage()
+					.addRemoveBlockedSite(value, true);*/
 			}
 		});
 
 		listBlockedSites();
 	}
 
+	function selectTextIn(elm){
+		var sel = window.getSelection(),
+			range = document.createRange();
+
+		range.selectNodeContents(elm);
+		sel.removeAllRanges();
+		sel.addRange(range);
+	}
+	
 	function init(){
-		var backUpHiddenDiv = $("#backup .backupShow"),
+		var backUpDiv = $("#backup .backupShow"),
 			restoreDiv = $("#backup .restoreShow"),
 			restoreTextarea = $("#backup .restoreShow textarea"),
 			changeHotkeyBtn = $(".change_hotkey"),
@@ -488,50 +488,66 @@
 			return false;
 		});
 
+		// the tryit editor in Help section
 		$("#tryit .nav p").on("click", function(){
-			var ots, s = "show", t = "#tryit "; // otherSibling
+			var ots, // the currently shown nav elm
+				s = "show", t = "#tryit ";
 			
+			// only toggle if not already shown
 			if(!this.hasClass("show")){
-				// hide current
+				// hide the currently shown nav elm
 				ots = $(t + ".nav ." + s);
-				ots.toggleClass(s);
+				ots.removeClass(s);
+				// and its corresponding editor
 				$(t + ots.dataset.selector).toggleClass(s);
 				
-				this.toggleClass(s);
+				// show nav elm which was clicked
+				this.addClass(s);
+				// along with its corresponding editor
 				$(t + this.dataset.selector).toggleClass(s);
 			}
 		});
 		
 		/* set up accordion in help page */
-		$("#help section dd").forEach(function(elm){
-			elm.classList.add("hide");
-		});
-
+		// heading
 		$("#help section dt").on("click", function(){
 			this.nextElementSibling.toggleClass("hide");
+		});
+		
+		// corresponding content
+		$("#help section dd").forEach(function(elm){
+			elm.addClass("hide");
 		});
 
 		// used when buttons in navbar are clicked
 		// or when the url contains an id of a div
-		function showHideDIVs(newID){
-			$("#content > .show").toggleClass("show");
-			$("#content > #" + newID).toggleClass("show");
+		function showHideDIVs(elmSelector){
+			var sel = "#content > ";
+			
+			$(sel + ".show").removeClass("show");
+			$(sel + elmSelector).addClass("show");
 			// the page shifts down a little
 			// for the exact location of the div;
 			// so move it back to the top
 			document.body.scrollTop = 0;
 		}
 		
+		// the left hand side nav buttons
+		// Help, Settings, Backup&Restore, About
 		$("#btnContainer button").on("click", function(){
-			showHideDIVs(this.dataset.name);
+			showHideDIVs("#" + this.dataset.divid);
 		});
 
 		document.on("click", function(event){
-			var node = event.target, index, tagName = node.tagName, domain;
-
+			var node = event.target,
+				tagName = node.tagName,
+				value = node.html(),
+				domain, index,
+				firstCharElm, firstChar;
+				
 			// blocked sites Unblock button
-			if(node.innerHTML === "Unblock"){
-				domain = node.previousElementSibling.innerHTML;
+			if(value === "Unblock"){
+				domain = node.previousElementSibling.html();
 
 				index = Data.blockedSites.indexOf(domain);
 
@@ -543,43 +559,30 @@
 
 				listBlockedSites();
 			}
-			// tabbed layout inactive div
-			else if(tagName === "DIV" && node.hasClass("tab") &&
-							node.hasClass("inactive")){
-				node.classList.remove("inactive");
-				node.classList.add("active");
-			}else if(tagName === "DIV" && node.hasClass("tab") &&
-							node.hasClass("active")){
-				node.classList.add("inactive");
-				node.classList.remove("active");
-			}
-			// Remove button
-			else if(tagName === "TD" && node.innerHTML === "Remove"){
-				var firstChar = formatHTML(node.previousElementSibling.previousElementSibling.innerHTML, "makeHTML");
+			// Remove button for auto-insert character list
+			else if(tagName === "TD" && value === "Remove"){
+				firstCharElm = node.previousElementSibling.previousElementSibling;
+				firstChar = formatTextForNodeDisplay(firstCharElm, firstCharElm.html(), "makeHTML");
 
 				// retrieve along with index (at second position in returned array)
-				index = searchAutoInsertChars(firstChar, true);
+				index = searchAutoInsertChars(firstChar, true)[0];
+				
+				Data.charsToAutoInsertUserList.splice(index, 1);
 
-				if(index !== undefined){
-
-					Data.charsToAutoInsertUserList.splice(index[0], 1);
-
-					DB_save(function(){
-						alert("Removed");
-						listAutoInsertChars();
-					});
-				}
+				DB_save(function(){
+					alert("Removed pair having '" + firstChar + "'");
+					listAutoInsertChars();
+				});
+				
 			}
 			// newAutoInsertChar
-			else if(tagName === "INPUT" && node.value === "Save"){
+			else if(tagName === "INPUT" && value === "Save"){
 				// get elements
 				var newAutoInsertChar = document.querySelectorAll("#settings table .auto-insert-char"),
 					elmChar1 = newAutoInsertChar[0],
-					elmChar2 = newAutoInsertChar[1];
-
-				var text1 = elmChar1.value;
-
-				var str = "Please type atleast/only one character in ";
+					elmChar2 = newAutoInsertChar[1],
+					text1 = elmChar1.value,
+					str = "Please type atleast/only one character in ";
 
 				if(text1.length !== 1){
 					alert(str + "first field.");
@@ -603,7 +606,7 @@
 				Data.charsToAutoInsertUserList.push([text1, text2]);
 
 				DB_save(function(){
-					alert("Saved!");
+					alert("Saved auto-insert pair - " + text1 + " " + text2);
 					listAutoInsertChars();
 				});
 			}
@@ -622,6 +625,7 @@
 			});
 		});
 
+		// siteBlockInput field
 		$("#settings .siteBlockInput").on("keyup", function(event){
 			if(event.keyCode === 13)
 				blockSite.call(this);
@@ -641,69 +645,54 @@
 
 		if(/#\w+$/.test(url) && (!/tryit|symbolsList/.test(url)))
 			// get the id and show divs based on that
-			showHideDIVs(url.match(/#(\w+)$/)[1]);
+			showHideDIVs("#" + url.match(/#(\w+)$/)[1]);
 		
 		// boolean parameter transferData: dictates if one should transfer data or not
 		function storageRadioBtnClick(str, transferData){
-			var bool = false,
-				storageBool = (storage.MAX_ITEMS ? "sync" : "local") === str; 
-
-			// if storage is already local
-			if(storageBool){
-				alert("Storage type is already " + str);
-				bool = true;
-			}
-			else if(!confirm("Migrate data to " + str + " storage? It is VERY NECESSARY to take a BACKUP before proceeding.")){
-				bool = true; this.checked = false; }
-
-			if(bool) return;
+			if(!confirm("Migrate data to " + str + " storage? It is VERY NECESSARY to take a BACKUP before proceeding.")){
+				this.checked = false; return; }
 			
 			migrateData(transferData);
 
 			alert("Done! Data migrated to " + str + " storage successfully!");
 		}
 
-		// event delegation
+		// event delegation since radio buttons are
+		// dynamically added
 		$("#storageMode").on("click", function(){
-			var c = $("#storageMode input:checked");
-			if(c)
+			var input = this.querySelector("input:checked");
+			
+			// make sure radio btn is clicked and is checked
+			if(input)
 				storageRadioBtnClick.call
-					(this, c.dataset.name, c.id === "sync2" ? false : true);
+					(input, input.dataset.storagetoset, input.id !== "sync2");
 		});
 		
-		// Select Text button
-		$("#backup .backupShow button").on("click", function(){
-			var sel = window.getSelection(),
-				range = document.createRange();
-
-			range.selectNodeContents($("#backup .backupShow .text"));
-			sel.removeAllRanges();
-			sel.addRange(range);
+		// Select Text button in backup dialog
+		$("#backup .backupShow .selectText").on("click", function(){
+			selectTextIn(this.previousElementSibling);
 		});
 
 		// Close Dialog button
 		$("#backup .backupShow .close").on("click", function(){
-			backUpHiddenDiv.toggleClass("shown");
+			backUpDiv.removeClass("shown");
 		});
 
+		// backup button
 		$("#backup .backup").on("click", function(){
-			backUpHiddenDiv.toggleClass("shown");
+			backUpDiv.addClass("shown");
 
-			var textDiv = backUpHiddenDiv.querySelector(".text");
+			var textDiv = backUpDiv.querySelector(".text");
 
 			textDiv.innerText = 
 				JSON.stringify(Data, undefined, 2);
 
-			var sel = window.getSelection(),
-				range = document.createRange();
-
-			range.selectNodeContents(textDiv);
-			sel.removeAllRanges();
-			sel.addRange(range);
+			selectTextIn(textDiv);
 		});
 
+		// restore button
 		$("#backup .restore").on("click", function(){
-			restoreDiv.toggleClass("shown");
+			restoreDiv.addClass("shown");
 
 			restoreTextarea.value = "";
 			restoreTextarea.focus();
@@ -711,14 +700,14 @@
 
 		// Close Dialog button
 		restoreDiv.querySelector(".close").on("click", function(){
-			restoreDiv.toggleClass("shown");
+			restoreDiv.removeClass("shown");
 		});
 
 		// The button to initiate "Restore" process
 		restoreDiv.querySelector("button").on("click", function(){
 			var text = restoreTextarea.value,
 				data,
-				isDataValid;
+				dataValidaton;
 
 			// first validate values
 			try{
@@ -731,15 +720,16 @@
 			try{
 				// make sure it has only those fields
 				// which should be present
-				isDataValid = validateRestoreData(data);
+				dataValidaton = validateRestoreData(data);
 			}catch(e){
 				console.log(e);
 				alert("Oops! An error occurred. Press Ctrl/Cmd + Shift + J to view the error. Please mail it to me at prokeys.feedback@gmail.com so that I can fix it.");
 				return;
 			}
 
-			if(typeof isDataValid === "string"){
-				alert(isDataValid); return;
+			// an error message was got
+			if(typeof dataValidaton === "string"){
+				alert(dataValidaton); return;
 			}
 
 			Data = cloneObject(data);
@@ -751,26 +741,26 @@
 			});
 		});
 
-		$("#backup .print").onclick = function(){
-			backUpHiddenDiv.classList.add("shown");
-			backUpHiddenDiv.classList.remove("hidden");
+		$("#backup .print").on("click", function(){
+			backUpDiv.addClass("shown");
 
-			var textDiv = backUpHiddenDiv.querySelector(".text");
+			var textDiv = backUpDiv.querySelector(".text");
 
 			textDiv.innerText = getSnippetPrintData();
 
-			var sel = window.getSelection(),
-				range = document.createRange();
-
-			range.selectNodeContents(textDiv);
-			sel.removeAllRanges();
-			sel.addRange(range);
+			selectTextIn(textDiv);			
 
 			alert("Use this text to print snippets");
-		};
+		});
 
 		// prevent exposure of locals
 		(function(){
+			// resets hotkey btn to normal state
+			function resetHotkeyBtn(){
+				changeHotkeyBtn.html("Change hotkey")
+					.disabled = false;
+			}
+			
 			// stores hotkey combo
 			var	combo,
 				// determines if keyCode is valid
@@ -824,13 +814,12 @@
 							Or you may try refreshing the page. ");
 				}
 
-				changeHotkeyBtn.disabled = false;
-				changeHotkeyBtn.innerHTML = "Change hotkey";
+				resetHotkeyBtn();
 			});
 
 			changeHotkeyBtn.on("click", function(){
-				this.disabled = true; // first disable the button
-				this.innerHTML = "Press new hotkeys";
+				this.html("Press new hotkeys")
+					.disabled = true; // disable the button
 
 				combo = ["", ""];
 				valid = false;
@@ -838,10 +827,7 @@
 				hotkeyListener.focus();
 
 				// after five seconds, automatically reset the button to default
-				setTimeout(function(){
-					changeHotkeyBtn.disabled = false;
-					changeHotkeyBtn.innerHTML = "Change hotkey";
-				}, 5000);
+				setTimeout(resetHotkeyBtn, 5000);
 			});
 		})();
 	}
@@ -858,14 +844,13 @@
 			changeStorageType();
 
 			DB_load(setEssentialItemsOnDBLoad);
-		}else
-			setEssentialItemsOnDBLoad();
+		}else setEssentialItemsOnDBLoad();
 	});
 	
 	var local = "<b>Local</b> - storage only on one's own PC. More storage space than sync",
-		localT = "<label for=\"local\"><input type=\"radio\" id=\"local\" data-name=\"local\"/><b>Local</b></label> - storage only on one's own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.",
-		sync1 = "<label for=\"sync\"><input type=\"radio\" id=\"sync\" data-name=\"sync\"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage",
-		sync2 = "<label for=\"sync2\"><input type=\"radio\" id=\"sync2\" data-name=\"sync\"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.",
+		localT = "<label for=\"local\"><input type=\"radio\" id=\"local\" data-storagetoset=\"local\"/><b>Local</b></label> - storage only on one's own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.",
+		sync1 = "<label for=\"sync\"><input type=\"radio\" id=\"sync\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage",
+		sync2 = "<label for=\"sync2\"><input type=\"radio\" id=\"sync2\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.",
 		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
 	function setEssentialItemsOnDBLoad(){		
@@ -878,19 +863,17 @@
 		// list auto-insert chars
 		listAutoInsertChars();
 
-		var storageType = storage.MAX_ITEMS ? "sync" : "local",
-			cT, tT; // store text for each div
-
-		if(storageType === "local"){
-			cT = local;	tT = sync1 + "<br>" + sync2;
-		}else{
-			cT = sync;	tT = localT;
-		}
+		// store text for each div
+		var	textMap = {
+				"local": [local, sync1 + "<br>" + sync2],
+				"sync": [sync, localT]
+			},
+			currArr = textMap[getCurrentStorageType()];
 		
-		$("#storageMode .current p").innerHTML = cT;
-		$("#storageMode .transfer p").innerHTML = tT;
+		$("#storageMode .current p").html(currArr[0]);
+		$("#storageMode .transfer p").html(currArr[1]);
 
 		// display current hotkey combo
-		$(".hotkey_display").innerHTML = getCurrentHotkey();
+		$(".hotkey_display").html(getCurrentHotkey());
 	}
 })();

@@ -38,9 +38,15 @@
 		searchMode = false,
 		// true if DB has been loaded
 		DB_loaded = false,
-		// dialog is the div.message
+		// dialog is the div.dlog
 		dialogPoppedUp = false,
-		dlog;
+		dlog,
+		btnFuncMap = {
+			"Edit" : editOnClick,
+			"Delete": deleteOnClick,
+			"Save": saveOnClick,
+			"Cancel": cancelOnClick
+		};
 
 	/////////////////////////
 	// DataBase functions
@@ -89,23 +95,17 @@
 		});
 	}
 
-	function isEmpty(obj) {
-		for(var prop in obj) {
-			if(obj.hasOwnProperty(prop))
-				return false;
-		}
-		return true;
-	}
-
 	function checkRuntimeError(){
 		if(chrome.runtime.lastError){
-			showDialog();
-			setText(dlog, "An error occurred! Please right-click on the \"Ok\" button below, select \"Inspect Element\" from the context menu, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me improve my extension and resolve your issue. Thanks!");
-			var btn = document.createElement("button");
-			btn.innerHTML = "Ok";
-			btn.onclick = removeDialog;
-			dlog.appendChild(btn);
 			console.log(chrome.runtime.lastError);
+			showDialog();
+			dlog.html("An error occurred! Please right-click on the \"Ok\" button below, select \"Inspect Element\" from the context menu, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me improve my extension and resolve your issue. Thanks!");
+			
+			var btn = document.createElement("button");
+			btn.html("Ok")
+				.on("click", removeDialog);
+				
+			dlog.appendChild(btn);			
 		}
 	}
 
@@ -131,17 +131,7 @@
 			snip.body = body;
 			snip.timestamp = getFormattedDate();
 
-			Data.snippets.unshift(getSnippetCopy(snip));
-
-			// highlight first snippet after 3 seconds
-			// so that: 1) listSnippets is complete
-			// 2) the newest snippet is listed at top
-			setTimeout(function(){
-				// highlight so the user may notice it #ux
-				// get first snippet li
-				// add highlighting class to it, which induces -webkit-animation
-				$("#snips ul li")[0].toggleClass("highlighting");
-			}, 500);
+			Data.snippets.unshift(getSnippetCopy(snip));			
 		}
 
 		return snip;
@@ -193,41 +183,11 @@
 
 	function validateLVal(len){
 		if(len > SNIP_BODY_LIMIT)
-			return "Length of snip body cannot exceed " + SNIP_BODY_LIMIT+ " (" + (len - SNIP_NAME_LIMIT) + " excess characters present)";
+			return "Length of snip body cannot exceed " + SNIP_BODY_LIMIT+ " (" + (len - SNIP_BODY_LIMIT) + " excess characters present)";
 
 		if(len === 0) return "Empty snippet body field";
 
 		return true;
-	}
-
-	// checks if textarea exceeds number of chars; and sets its text and dataset.full accordingly
-	function setTextareaText(string, length){
-		var bool, mode;
-
-		bool = length ? string.length > length : false;
-
-		this.dataset.full = string;
-
-		// for element nodes, it is make entity for others it is makeHTML
-		mode = this.isTextBox() ? "makeHTML" : "makeEntity";
-
-		setText(this, formatHTML(string, mode));
-
-		return bool;
-	}
-
-	// reutnrs date for using in timestamp
-	function getFormattedDate(){
-		var m_names = ["January", "February", "March", 
-					"April", "May", "June", "July", "August", "September", 
-					"October", "November", "December"];
-
-		var d = new Date(),
-			date = parseInt(d.getDate(), 10);
-
-		if(date <= 9) date = "0" + date;
-
-		return m_names[d.getMonth()] + " " + date + ", " + d.getFullYear();
 	}
 
 	// returns an array of matched snip objects; or unique snip object
@@ -264,22 +224,23 @@
 	}
 
 	function getDropDownElm(){
-		var img = document.createElement("img");
+		var img = document.createElement("img"),
+			msg = "Click to see the full snippet";
+			
 		img.src = "../imgs/d.gif";
-		img.setAttribute("alt", "Click to see the full snippet");
-		img.setAttribute("title", "Click to see the full snippet");
-		img.toggleClass("dropdown");
-		img.onclick = onDropDownClick;
+		img.setAttribute("alt", msg);
+		img.setAttribute("title", msg);
+		img.addClass("dropdown").on("click", onDropDownClick);
 
 		return img;
 	}
 
 	// receives array of snippet objects, and lists them in popup.html > div#snips
-	function listSnippets(snip_array, sval_to_show) {
+	function listSnippets(snip_array, sValToShow) {
 		// note that snip_array can be actual Data.snippets
 		// or smaller array from searchMode
 
-		var div, snipsDiv, ul, snip, li,
+		var snipsDiv, ul, snip, li,
 			divShort, divLong, btnCollection, created_on;
 
 		if(!DB_loaded){ // no data
@@ -289,23 +250,21 @@
 		}
 		// user does not have any snips
 		else if(!Data.snippets[0]){
-			div = $("#snips");
-
-			div.innerHTML = "<p class='display_msg_to_user'>You currently have no snippets.<br>Why not <a class='trigger_create_new'>create a new snippet?</a></p>";
-
-			$(".trigger_create_new").onclick = function(){
-				$(".button.createSnipBtn").onclick();
-			};
-
+			$("#snips").html("<p class='display_msg_to_user'>You currently have no snippets.<br>Why not <a class='trigger_create_new'>create a new snippet?</a></p>");
+			
+			$(".trigger_create_new").on("click", function(){
+				$(".button.createSnipBtn").trigger("click");
+			});
+			
 			return;
 		}
 
-		snip_array = !searchMode ? Data.snippets : snip_array;
+		snip_array = searchMode ? snip_array : Data.snippets;
 
 		// in the `ul`; we will place snips as `li` elements
 		snipsDiv = $("#snips");
 
-		setText(snipsDiv, "");
+		snipsDiv.html("");
 
 		ul = document.createElement("ul");
 
@@ -324,123 +283,143 @@
 
 			// creating the short `div` element
 			divShort = document.createElement("div");
+			setTextForNode(divShort, snip.name);
 
-			setTextareaText.call(divShort, snip.name);
-
-			li.appendChild(divShort).toggleClass("short");
+			li.appendChild(divShort.addClass("short"));
 
 			// our `div` long element; with Snip body
 			divLong = document.createElement("div");
-			setTextareaText.call(divLong, snip.body);
+			setTextForNode(divLong, snip.body);
 			// appended after btnCollection
 
 			// creating our collection of buttons
 			btnCollection = document.createElement("div");
 
 			// prepare and add buttons
-			setText(btnCollection.appendChild(document.createElement("button")), "Edit");
-			setText(btnCollection.appendChild(document.createElement("button")), "Delete");
+			transformButtonTo(btnCollection.appendChild(document.createElement("button")),
+				"Edit");
+			transformButtonTo(btnCollection.appendChild(document.createElement("button")),
+				"Delete");
 
 			// prepare and add dropdown image
 			btnCollection.appendChild(getDropDownElm());
 
-			li.appendChild(btnCollection).toggleClass("buttons");
+			li.appendChild(btnCollection.addClass("buttons"));
 
 			// always append divLong after btnCollection
-			li.appendChild(divLong).toggleClass("long");
+			li.appendChild(divLong.addClass("long"));
 
 			// Time stamp
 			created_on = document.createElement("div");
 
 			// set text to snip's timestamp
-			setText(created_on, "Created on " + snip.timestamp);
-			li.appendChild(created_on).toggleClass("timestamp");
+			created_on.html("Created on " + snip.timestamp);
+			li.appendChild(created_on.addClass("timestamp"));
 
 			// now append our constructed li into ul
-			ul.appendChild(li).toggleClass("snip");
+			ul.appendChild(li.addClass("snip"));
 
-			if(snip.name === sval_to_show)
-				li.toggleClass("shown");
+			if(snip.name === sValToShow){
+				li.addClass("shown");
+				
+				// highlight snippet after 0.5 seconds
+				// so that: 1) listSnippets is complete
+				// 2) the newest snippet is listed at top
+				setTimeout(function(){
+					// highlight so the user may notice it #ux
+					// add highlighting class, which induces -webkit-animation
+					this.addClass("highlighting");
+				}.bind(li), 500);
+			}
 		}
 
 		snipsDiv.appendChild(ul);
 	}
 
+	function attachCounterChecker(node, limit){
+		var p = document.createElement("P");
+		
+		node.on("keyup", function(){			
+			var len = getHTML(node).length,
+				diff = Math.abs(limit - len),			
+				// if currLength exceeds limit
+				bool = len > limit;
+			
+			p.html(bool ? "Too long by " + diff + " characters" : diff + " characters left")
+				.classList[bool ? "add" : "remove"]("red");
+		})
+			.insertAfter(p)		
+			// trigger once
+			.trigger("keyup");
+	}
+	
+	// Edit-> Save; Delete-> Cancel
+	// and reverse button transformations
+	function transformButtonTo(btn, newName){		
+		btn.html(newName).on("click", btnFuncMap[newName]);		
+	}
+	
 	// called on "Edit" button click
 	function editOnClick(){
+		function perform(node, name){
+			var bool = name === "Name";
+			
+			node = node.replaceWith(bool ? "input" : "textarea", "editSn" + name);			
+			
+			node.dataset.previous = getHTML(node);			
+			attachCounterChecker(node, snipLimits[name]);
+			
+			return node;
+		}
+		
 		var parent = this.parentNode,
-			divShort = parent.previousSibling,
-			divLong = parent.nextSibling;
-
-		setText(this, "Done");
-
-		var cancel = document.createElement("button");
-		setText(cancel, "Cancel");
+			// the name, body elements
+			snipNameElm = parent.previousSibling,
+			snipBodyElm = parent.nextSibling;
 
 		// remove down arrow img
 		parent.removeChild(parent.querySelector(".dropdown"));
-		// remove delete button
-		parent.removeChild(this.nextElementSibling);
 
-		this.insertAfter(cancel);
-
-		// replace div with textarea and insert in latter the full text fro div's dataset
-		var textareaS = divShort.replaceWith("input", "editSnName", undefined, divShort.dataset.full);
-		var textareaL = divLong.replaceWith("textarea", "editSnBody", undefined, divLong.dataset.full);
-
-		// set their common properties
-		setEditTextareaProps.call(textareaS);
-		setEditTextareaProps.call(textareaL);
-
-		textareaS.onkeyup = function(){
-			counterChecker.call(this, SNIP_NAME_LIMIT);
-		};
-
-		textareaL.onkeyup = function(){
-			counterChecker.call(this, SNIP_BODY_LIMIT);
-		};
-
-		// call counter checker
-		textareaS.onkeyup();
-		textareaL.onkeyup();
-
-		textareaS.focus();
+		// Edit -> Save
+		transformButtonTo(this, "Save");
+		// Delete -> Cancel
+		transformButtonTo(this.nextElementSibling, "Cancel");
+		
+		perform(snipBodyElm, "Body");
+		perform(snipNameElm, "Name").focus(); // focus the new textarea
 	}
 
-	// sets textarea properties
-	function setEditTextareaProps(){
-		// store previous value
-		this.dataset.oldText = this.value;
-
-		var pCounter = document.createElement("p");
-
-		this.insertAfter(pCounter);
+	function displayHighlightUsingVld(node, vld){		
+		var p = node.nextElementSibling;
+		
+		// passed
+		if(vld === true)
+			node.addClass("passed");
+		else{			
+			node.addClass("failed");
+			p.html(vld).addClass("red");
+		}
 	}
-
+	
 	// called on "Done" button click; after "Edit"
-	function doneOnClick(){
+	function saveOnClick(){
 		// will have to send the new details to popup.js
 		// and also the name of the old snip to delete
 
 		var btns = this.parentNode,
-			divS = btns.previousElementSibling.previousElementSibling,
-			divL = btns.nextElementSibling,
-			sVal = getText(divS),
-			lVal = getText(divL),
-			oldSVal = divS.dataset.oldText,
+			snipNameElm = btns.previousElementSibling.previousElementSibling,
+			snipBodyElm = btns.nextElementSibling,
+			sVal = getHTML(snipNameElm),
+			lVal = getHTML(snipBodyElm),
+			oldSVal = snipNameElm.dataset.previous,
 			vldS = validateSVal(sVal, sVal.length),
 			vldL = validateLVal(lVal.length);
 
 		// user doesn't change sVal but error got #workaround
-		if(vldS === "A snippet with name '" + sVal + "' already exists" &&
-				sVal === oldSVal)
-			vldS = true;
+		if(sVal === oldSVal) vldS = true;
 
 		// validation passed
 		if(vldS === true && vldL === true){
-			// do not do if(validationS) as then 
-			// strings would be considered true
-
 			// set new snippet replacing old snippet
 			setDataSnippet(sVal, lVal, oldSVal);
 
@@ -453,7 +432,7 @@
 					listSnippets(Data.snippets, sVal);
 				else {// invoke the onkeyup of search box to list snippets again
 					var elm = $("input[title='Search']");
-					elm.onkeyup({});
+					elm.trigger("keyup");
 				}
 
 				notifySnippetDataChanges();
@@ -461,187 +440,125 @@
 				checkRuntimeError();
 			});
 		}else{
-			// disable the outlines
-			divS.style.outline = "none";
-			divL.style.outline = "none";
-
-			showErrors(divS, divL, vldS, vldL);
+			displayHighlightUsingVld(snipNameElm, vldS);
+			displayHighlightUsingVld(snipBodyElm, vldL);
 		}
 	}
 
-	// used to show dialog div.message
+	// used to show dialog div.dlog
 	function showDialog(){
-		dlog.toggleClass("shown");
-		dlog.toggleClass("hidden");
-		dlog.style.top = "150px";
-		document.body.toggleClass("darkened");
+		dlog.addClass("shown");
+		document.body.addClass("darkened");
 		dialogPoppedUp = true;
 	}
 
 	function removeDialog(){
-		dlog.toggleClass("shown");
-		dlog.toggleClass("hidden");
-		dlog.style.top = "";
-		document.body.toggleClass("darkened");
+		dlog.removeClass("shown");
+		document.body.removeClass("darkened");
 		dialogPoppedUp = false;
 	}
 
 	// called on "Delete" button click
 	function deleteOnClick(){
-		var btns = this.parentNode,
-			divShort = btns.previousElementSibling;
-
-		if(divShort.tagName === "P" || divShort.tagName === "TEXTAREA"){
-			showDialog();
-			setText(dlog, "You are in edit mode. Please click \"Cancel\" button and try again.<br>");
-			var btn = document.createElement("button");
-			btn.onclick = removeDialog;
-			setText(btn, "Ok");
-			dlog.appendChild(btn);
-			return;
-		}
-
-		// this is when "Delete" was pressed once
+		var parent = this.parentNode,
+			divShort = parent.previousElementSibling;
+		
+		// this is "Delete" button outside delete popup
 		if(!dialogPoppedUp){
-			showDialog();
-			setText(dlog, "Delete '" + getText(divShort) + "'?<br>");
+			showDialog();			
 
-			var deleteBtn = document.createElement("button");
-			deleteBtn.onclick = function(){
-				deleteOnClick.call(this);
-				removeDialog();
-			}.bind(this);
-			deleteBtn.tabIndex = 1;
-			setText(deleteBtn, "Delete");
+			var deleteBtn = document.createElement("button");			
+			deleteBtn.html("Delete")
+				.on("click", deleteOnClick.bind(this))
+				.tabIndex = 1;
 
-			var cancelBtn = document.createElement("button");
-			cancelBtn.onclick = removeDialog;
-			setText(cancelBtn, "Cancel");
-			cancelBtn.tabIndex = 2;
+			var cancelBtn = document.createElement("button");			
+			cancelBtn.html("Cancel")
+				.on("click", removeDialog)
+				.tabIndex = 2;
 
-			dlog.appendChild(deleteBtn);
+			dlog.html("Delete '" + getHTML(divShort) + "'?<br>")
+				.appendChild(deleteBtn);
 			dlog.appendChild(cancelBtn);
 
 			deleteBtn.focus();
 		}
 		// this is for that "Delete" inside dialog popup
+		// which comes when you had clicked previous delete
 		else{
-			var sVal = (divShort.dataset && divShort.dataset.full) || getText(divShort);
-
-			// SNIP REMOVAL START
-
-			// get snip index
-			var snip = searchSnippets(sVal, false, "index");
-
-			// the index
-			var index = snip[1];
+			var sVal = getHTML(divShort),
+				snip = searchSnippets(sVal, false, "index"),
+				index = snip[1];
 
 			// remove the snip
 			Data.snippets.splice(index, 1);
 
 			// save these changes in Database
 			DB_save(function(){
+				// remove the open dialog
+				removeDialog();
+			
 				// the data is saved; now list the items in popup.html
 				if(!searchMode) // list only if no search taking place
 					listSnippets(Data.snippets);
+				else{
+					var parentLI = parent.parentNode,
+						snips = parentLI.parentNode;
+					snips.removeChild(parentLI);
+				}
 
 				notifySnippetDataChanges();
 
 				checkRuntimeError();
-			});
-
-			// SNIP REMOVAL END
-
-			var parentLI = btns.parentNode;
-			var snips = parentLI.parentNode;
-			snips.removeChild(parentLI);
+			});			
 		}
 	}
 
 	// called on "Cancel" button click (after "Edit" button)
-	function cancelOnClick(){
+	function cancelOnClick(){		
 		var parent = this.parentNode,
-			textaS = parent.previousElementSibling.previousElementSibling,
-			textaL = parent.nextElementSibling,
+			snipNameElm = parent.previousElementSibling.previousElementSibling,
+			snipBodyElm = parent.nextElementSibling,
 			parentLI = parent.parentNode;
-
-		// temp vars used on line 316, 317
-		var old1 = textaS.dataset.oldText;
-		var old2 = textaL.dataset.oldText;
-
-		parentLI.removeChild(textaS.nextElementSibling);
-		parentLI.removeChild(textaL.nextElementSibling);
-
-		// replace with div.(short/long) by replacing the original text
-		setTextareaText.call(textaS.replaceWith("div", "short"), old1);
-		setTextareaText.call(textaL.replaceWith("div", "long"), old2);
-
+		
+		// small helper
+		function perform(node, name){			
+			// remove counter checker
+			parentLI.removeChild(node.nextElementSibling);
+			// convert to div and set text
+			setTextForNode(node.replaceWith("div", name), node.dataset.previous);
+		}		
+		
+		perform(snipNameElm, "short");		
+		perform(snipBodyElm, "long");
+			
 		// remove `height` to get back min-height and max-height in action
 		parentLI.style.height = "";
 
-		// show .snip .long if not shown
-		if(!parentLI.hasClass("shown"))
-			parentLI.toggleClass("shown");
-
-		/*
-			Current .buttons:
-			[Done] [Cancel]
-		*/
-
-		// remove the "Done" button
-		parent.removeChild(this.previousElementSibling);
-
-		/*
-			Current .buttons:
-			[Cancel]
-		*/
-
-		// replace "Cancel" with "Edit" button
-		this.replaceWith("button", undefined, undefined, "Edit");
-		// add delete button
-		var btn = document.createElement("button");
-		setText(btn, "Delete");
-		parent.appendChild(btn);
+		// show .snip .long
+		parentLI.addClass("shown");
+	
+		// Cancel -> Delete
+		transformButtonTo(this, "Delete");
+	
+		// Save -> Edit
+		transformButtonTo(this.previousSibling, "Edit");
+		
 		// add dropdown button
 		parent.appendChild(getDropDownElm());
-
-		/*
-			Final .buttons:
-			[Edit] [Delete] [.dropdown]
-		*/
 	}
 
 	function onDropDownClick(){
-		var snip = this.parentNode.parentNode;
+		var snip = this.parentNode.parentNode,
+			// idx corresponds to text in map
+			idx = +snip.hasClass("shown"),
+			// text to set (same) for each of title, alt for snip object			
+			map = ["Click to hide the snippet",
+				"Click to show the full snippet"];
 
-		// shown currently, hide it!
-		if(snip.hasClass("shown")){
-			snip.toggleClass("shown");
-			this.setAttribute("title", "Click to show the full snippet");
-			this.setAttribute("alt", "Click to show the full snippet");
-		}
-		// not shown? show it!
-		else{
-			snip.toggleClass("shown");
-			this.setAttribute("title", "Click to hide the snippet");
-			this.setAttribute("alt", "Click to hide the snippet");
-		}
-	}
-
-	function showErrors(sValNode, lValNode, sValidation, lValidation){
-		function passOrFailNode(pass, node, name){
-			if(pass === true){
-				node.style.border = "2px solid rgb(94, 224, 94)";
-				counterChecker.call(node, name === "n" ? SNIP_NAME_LIMIT : SNIP_BODY_LIMIT);
-			}else{
-				setText(node.nextElementSibling, pass);
-				node.style.border = "2px solid rgb(245, 79, 79)";
-				node.nextElementSibling.toggleClass("red");
-			}
-		}
-
-		passOrFailNode(sValidation, sValNode, "n");
-		passOrFailNode(lValidation, lValNode, "b");
+		snip.toggleClass("shown");
+		this.setAttribute("title", map[idx]);
+		this.setAttribute("alt", map[idx]);
 	}
 
 	// updates the storage header in #headArea
@@ -649,14 +566,14 @@
 	function updateStorageAmount(){
 		storage.getBytesInUse(function(bytesInUse){
 			// set current bytes
-			$("#headArea .currentBytes").innerHTML = bytesInUse;
+			$("#headArea .currentBytes").html(bytesInUse);
 			
 			// set number of snippets written
-			$("#headArea .snippet_amount").innerHTML = Data.snippets.length;
+			$("#headArea .snippet_amount").html(Data.snippets.length);
 			
 			// set total bytes available
-			$("#headArea .bytesAvailable").innerHTML = 
-									storage.MAX_ITEMS ? /*sync*/ "102,400" : "5,242,880";
+			$("#headArea .bytesAvailable").html( 
+									storage.MAX_ITEMS ? /*sync*/ "102,400" : "5,242,880");
 		});
 	}
 
@@ -680,46 +597,23 @@
 	}
 
 	//////////////////////////////
-	// Element.prototype functions
+	// Helper functions
 	//////////////////////////////
 
-	function resetBox(box, isLong){
-		// reset border, outline and dataset, height
-		box.style.outline = "initial";
-		box.style.border = "1px solid rgb(169, 169, 169)";
+	function resetBox(box, name){
 		box.dataset.message = undefined;
-		box.style.height = "";
 
 		var nES = box.nextElementSibling;
 		
 		// reset `p` element text
-		setText(nES, (isLong ? SNIP_BODY_LIMIT : SNIP_NAME_LIMIT) +
-									" characters left");
-
-		// removes the "red" class if present
-		nES.className = "";
+		nES.html(snipLimits[name] +	" characters left")
+			// removes the "red" class if present
+			.className = "";
 
 		// reset text
-		setText(box, "");
-
-		// reset the elongated height of the textbox
-		box.toggleClass("active");
-	}
-
-	// checks the character length of textboxes; assumes
-	// there is a `p` element following them which shows
-	// the count
-	function counterChecker(limit){
-		// now update counter
-		var currLength = getText(this).length,
-			diff = Math.abs(currLength - limit),
-			nextSibling = this.nextElementSibling;
-		
-		// if currLength exceeds limit
-		var bool = currLength > limit;
-		
-		setText(nextSibling, bool ? "Too long by " + diff + " characters" : diff + " characters left");
-		nextSibling.classList[bool ? "add" : "remove"]("red");
+		box.html("")
+			// remove these classes
+			.removeClass(["active", "failed", "passed"]);
 	}
 
 	// changes type of storage: local-sync, sync-local
@@ -747,293 +641,247 @@
 	// Main init function called on load
 	/////////////////////////////////////
 
-    function init() {
+	function init() {
 		if(!DB_loaded) {
-				setTimeout(init, 1000);
-				return true;
-			}
-
-			// needs to be global
-		dlog = $(".message");
-
-			// define element variables
-		var searchButton = $(".searchSnipBtn"),
-				searchField = $(".searchField"),
-				createSnipButton = $(".createSnipBtn"),
-				optionsButton = $(".settingsBtn"),
-				// set to true if the .createSnipArea is flipped
-				flipped_mode = false,
-				snipSValBox = $("#sVal"),
-				snipLValBox = $("#lVal"),
-				backButton = $(".createSnipArea .back"),
-				doneButton = $(".createSnipArea .done"),
-				flipContainer = $(".flip-container");
-
-		$("#headArea .bytesAvailable").on("click", function(){
-				window.open("https://developer.chrome.com/extensions/storage#properties");
-			});
-
-		chrome.storage.onChanged.addListener(function(){
-				updateStorageAmount();
-			});
-
-		window.on("resize", function(){
-				// zoom is in zoom% (100, 125, etc.)
-				var zoom = getPageZoom() * 100,
-					elm = document.documentElement;
-
-				if(zoom >= 125){
-					elm.className = "zoom125";
-				}else if(zoom <= 75){
-					elm.className = "zoom75";
-				}else{
-					elm.className = "";
-				}
-			});
+			setTimeout(init, 1000);
+			return true;
+		}
 
 		updateStorageAmount();
+		
+		// needs to be global
+		dlog = $(".dlog");
 
-		function addListener(box, lim){
-				box.on("keyup", function(){
-					counterChecker.call(box, lim);
-				});
-			}
-			
-		addListener(snipLValBox, SNIP_BODY_LIMIT);
-		addListener(snipSValBox, SNIP_NAME_LIMIT);
+		// define element variables
+		var searchButton = $(".searchSnipBtn"),
+			searchField = $(".searchField"),
+			createSnipButton = $(".createSnipBtn"),
+			optionsButton = $(".settingsBtn"),
+			// set to true if the .createSnipArea is flipped
+			flipped_mode = false,
+			snipSValBox = $("#sVal"),
+			snipLValBox = $("#lVal"),
+			backButton = $(".createSnipArea .back"),
+			doneButton = $(".createSnipArea .done"),
+			flipContainer = $(".flip-container"),
+			snips = $("#snips");
 
-		optionsButton.on("click", function(){
-				window.open("options.html");
-			});
+		// rotate from create snip area to snippet list
+		function getBackToHomePage(){
+			resetBox(snipSValBox, "name");
+			resetBox(snipLValBox, "body");				
 
-		backButton.on("click", function(){
-				resetBox(snipLValBox, true);
-				resetBox(snipSValBox, false);
-
-				// flip back to the home page
-				flipContainer.toggleClass("flipped");
-				flipped_mode = false;
-				// set tabIndices
-				snipSValBox.tabIndex = -1;
-				snipLValBox.tabIndex = -1;
-				doneButton.tabIndex  = -1;
+			// flip back to the home page
+			flipContainer.removeClass("flipped");
+			flipped_mode = false;
+			// set tabIndices
+			snipSValBox.tabIndex =
+				snipLValBox.tabIndex =
+				doneButton.tabIndex  =
 				backButton.tabIndex  = -1;
 
-				return false;
-			});
-
-			// create snip area
-		doneButton.on("click", function(){
-				var sVal = getText(snipSValBox),
-					lVal = getText(snipLValBox),
-					vldS = validateSVal(sVal, sVal.length),
-					vldL = validateLVal(lVal.length);
-
-				// disable the outlines
-				snipSValBox.style.outline = "none";
-				snipLValBox.style.outline = "none";
-
-				// both inputs correct
-				if(vldS === true && vldL === true){
-					// store snippets
-					setDataSnippet(sVal, lVal);
-
-					// save data
-					DB_save(function(){
-						// the data is saved; now list the items in popup.html
-						listSnippets(Data.snippets);
-
-						// notify all content scripts about the change
-						notifySnippetDataChanges();
-
-						checkRuntimeError();
-					});
-
-					// reset boxes to remove the green/red formatting
-					// and text that user entered
-					resetBox(snipLValBox, true);
-					resetBox(snipSValBox, false);
-
-					// flip back to the home page
-					flipContainer.toggleClass("flipped");
-					flipped_mode = false;
-					// set tabIndices
-					snipSValBox.tabIndex = -1;
-					snipLValBox.tabIndex = -1;
-					doneButton.tabIndex  = -1;
-					backButton.tabIndex  = -1;
-
-					return false;
-				}
-
-				showErrors(snipSValBox, snipLValBox, vldS, vldL);
-			});
+			return false;
+		}
 			
-		function searchButtonClick(title, textToSet, searchModeBool){
-				var s = "shown", h = "hidden";
+		$("#headArea .bytesAvailable").on("click", function(){
+			window.open("https://developer.chrome.com/extensions/storage#properties");
+		});
+
+		chrome.storage.onChanged.addListener(function(){
+			updateStorageAmount();
+		});
+
+		window.on("resize", debounce(function(){
+			// zoom is in zoom% (100, 125, etc.)
+			var zoom = getPageZoom() * 100,
+				elm = document.documentElement;
+
+			elm.className = zoom >= 125 ? "zoom125" : 
+							zoom <= 75 ? "zoom75" :
+							"";			
+		}));
+			
+		attachCounterChecker(snipLValBox, SNIP_BODY_LIMIT);
+		attachCounterChecker(snipSValBox, SNIP_NAME_LIMIT);
+
+		optionsButton.on("click", function(){
+			window.open("options.html");
+		});
+
+		// create snip area
+		backButton.on("click", function(){
+			getBackToHomePage();
+		});
+
+		// create snip area
+		doneButton.on("click", function(){
+			var sVal = snipSValBox.html(),
+				lVal = snipLValBox.html(),
+				vldS = validateSVal(sVal, sVal.length),
+				vldL = validateLVal(lVal.length);
 				
-				this.toggleClass("shortened");
-				setText(this, textToSet);
-				this.setAttribute("title", title);
+			// both inputs correct
+			if(vldS === true && vldL === true){
+				// store snippets
+				setDataSnippet(sVal, lVal);
 
-				searchField.toggleClass(s);
-				createSnipButton.toggleClass(h);
-				optionsButton.toggleClass(h);
+				// save data
+				DB_save(function(){
+					// the data is saved; now list the items in popup.html
+					listSnippets(Data.snippets, sVal);
 
-				searchMode = searchModeBool;
+					// notify all content scripts about the change
+					notifySnippetDataChanges();
+
+					checkRuntimeError();
+				});
+
+				getBackToHomePage();
+
+				return false;
+			}else{
+				displayHighlightUsingVld(snipSValBox, vldS);
+				displayHighlightUsingVld(snipLValBox, vldL);
 			}
+		});
+			
+		function searchButtonClick(btn, title, textToSet){
+			var s = "shown", h = "hidden";
+			
+			btn.html(textToSet)
+				.toggleClass("shortened")
+				.setAttribute("title", title);
+			
+			searchField.toggleClass(s);
+			createSnipButton.toggleClass(h);
+			optionsButton.toggleClass(h);
+
+			// toggle searchMode
+			searchMode = !searchMode;
+		}
 
 		searchButton.on("click", function(){			
-				if(!this.hasClass("shortened")){
-					searchButtonClick.call(this, "Click when done searching", "Done", true);
+			if(this.hasClass("shortened")){
+				searchButtonClick(this, "Search for snips", "Search for snips");
+				searchField.html("");
+				listSnippets(Data.snippets);				
+			}else{
+				searchButtonClick(this, "Click when done searching", "Done");
 
-					// 1000 => after animation finishes; focus searchField
-					setTimeout(function(){
-						searchField.focus();
-					}, 1000);
-				}else{
-					searchButtonClick.call(this, "Search for snips", "Search for snips", false);
-					setText(searchField, "");
-					listSnippets(Data.snippets);
-				}
-			});
+				// 1000 => after animation finishes; focus searchField
+				setTimeout(function(){
+					searchField.focus();
+				}, 1000);
+			}
+		});
 
 		searchField.on("keyup", function(){
-				var searchText = getText(this),
-					textLen = searchText.length,
-					snips = $("#snips"),
-					p = snips.querySelector("#snips p"),
-					snipsLen = Data.snippets.length,
-					displayPara = document.createElement("p"),
-					ul, msg; // green colored message
+			var searchText = this.html(),
+				textLen = searchText.length;
+				
+			if(!snips) snips = $("#snips");
+			
+			// the `>` is important as `p` may refer to
+			// the counter checker in li.snip
+			var	p = snips.querySelector("#snips > p"),
+				snipsLen = Data.snippets.length,
+				displayPara = document.createElement("p"),
+				ul, msg, // green colored message
+				// to perform search, user needs to type
+				// minimum three characters
+				MIN_CHARS_REQ = 3;
 
-				displayPara.toggleClass("display_msg_to_user");
+			displayPara.addClass("display_msg_to_user");
 
-				// if p then remove p as
-				// p might the error message
-				// shown to the user previously
-				if(p && p.parentNode === snips) snips.removeChild(p);
+			// if p then remove p as
+			// p might the error message
+			// shown to the user previously
+			if(p) snips.removeChild(p);
 
-				ul = snips.querySelector("#snips ul");
+			ul = snips.querySelector("ul");
 
-				// TODO: get rid of .parentNode?
-				// if ul then remove ul
-				// ul contains snippets
-				if(ul && ul.parentNode === snips) snips.removeChild(ul);
+			// if ul then remove ul
+			// ul contains snippets
+			if(ul) snips.removeChild(ul);
 
-				// if no more than 3 snippets
-				// do not search
-				if(snipsLen <= 3)
-					msg =  "You must have at least 4 snippets<br>for the search to\
-						function.<br>Currently, you have " + snipsLen + " snippet" + (snipsLen>1?"s.":".");
-				// at least 3 characters should be there
-				else if(textLen >= 3){
-					var result = searchSnippets(searchText, searchText);
-					result = Object.prototype.toString.call(result) === "[object Object]" ? [result] : result;
+			// if no more than 3 snippets
+			// do not search
+			if(snipsLen <= 3)
+				msg =  "You must have at least 4 snippets<br>for the search to\
+					function.<br>Currently, you have " + snipsLen + " snippets";
+			// at least 3 characters should be there
+			else if(textLen >= MIN_CHARS_REQ){
+				var result = searchSnippets(searchText, searchText);
+				if(isObject(result)) result = [result];
 
-					// nothing in result array; means nothing was found
-					if( !(result[0]) )
-						msg = "No snippet found.<br>Please rephrase your search query.";
-					else
-						// at least one snippet is there
-						listSnippets(result);
-				}else // less than 3 characters are there
-					msg = "Need to type " + (3 - textLen) + (" more character" +
-													((3 - textLen !== 1) ? "s." : "."));
+				// nothing in result array; means nothing was found
+				if(!result[0])
+					msg = "No snippet found.<br>Please rephrase your search query.";
+				else
+					// at least one snippet is there
+					listSnippets(result);
+			}
+			else // less than 3 characters are there
+				msg = "Need to type " + (MIN_CHARS_REQ - textLen) + " more characters.";
 
 
-				if(typeof msg === "string"){
-					setText(displayPara, msg);
-					snips.appendChild(displayPara);
-				}
-			});
+			if(typeof msg === "string")
+				snips.appendChild(displayPara.html(msg));
+		});
 
-		createSnipButton.onclick = function(){
-				// work only if the #snips is not already flipped
-				if(!flipped_mode){
-					flipped_mode = true;
+		createSnipButton.on("click", function(){
+			// work only if the #snips is not already flipped
+			if(!flipped_mode){
+				flipped_mode = true;
 
-					// add flipped class
-					flipContainer.toggleClass("flipped");
+				// add flipped class
+				flipContainer.addClass("flipped");
 
-					snipSValBox.toggleClass("active");
-					snipLValBox.toggleClass("active");
+				snipSValBox.addClass("active")
+					.tabIndex = 1;
+				snipLValBox.addClass("active")
+					.tabIndex = 3;
 
-					// set tabIndices
-					snipSValBox.tabIndex = 1;
-					snipLValBox.tabIndex = 3;
-					doneButton.tabIndex  = 5;
-					backButton.tabIndex  = 7;
+				// set tabIndices
+				doneButton.tabIndex  = 5;
+				backButton.tabIndex  = 7;
 
-					snipSValBox.style.border = "";
-					snipLValBox.style.border = "";
+				// focus the #sVal input, so user can start typing
+				snipSValBox.focus();
+			}
+		});
 
-					// focus the #sVal input, so user can start typing
-					snipSValBox.focus();
-				}
-			};
-
-			// list the existing data;
-			// as extension is called for first time;
+		// list the existing data;
+		// as extension is called for first time;
 		listSnippets(Data.snippets);
 
-			// use event delegation for edit, delete, etc. buttons
-			// since they are dynamically added
-		document.on("click", function(){
-				var node = event.target, func,
-					funcMap = {
-						"Edit" : editOnClick,
-						"Delete": deleteOnClick,
-						"Done": doneOnClick,
-						"Cancel": cancelOnClick
-					};
-
-				// check to make sure node is a ".buttons > button"
-				// in #snips li.snip
-				if(node.parentNode && node.parentNode.hasClass &&
-					node.parentNode.hasClass("buttons")){				
-					func = funcMap[getText(node)];
-
-					if(func) func.call(node);
-				}
-			});
-
-				if (!chrome.runtime) {
-				// Chrome 20-21
-					chrome.runtime = chrome.extension;
-			} else if (!chrome.runtime.onMessage) {
-				// Chrome 22-25
-					chrome.runtime.onMessage = chrome.extension.onMessage;
-					chrome.runtime.sendMessage = chrome.extension.sendMessage;
-					chrome.runtime.onConnect = chrome.extension.onConnect;
-					chrome.runtime.connect = chrome.extension.connect;
-			}
-	   
-			// now check if the user is first time user; get that data
+		// now check if the user is first time user; get that data
 		function check(){
-				// if DB not loaded
-				if(!Data.visited){ // first time user
-					// "Got it" button
-					var button = $(".new_user_msg button");
-					button.parentNode.style.display = "block";
+			var button, // "Got it" button
+				parentStyleObj;
+			
+			// if DB not loaded
+			if(!Data.visited){ // first time user					
+				button = $(".new_user_msg button");
+				parentStyleObj = button.parentNode.style;
+				parentStyleObj.display = "block";
 
-					// if the user clicks the button; he's no more a first time user
-					button.onclick = function(){
-						Data.visited = true;
-						DB_save(function(){
-							this.parentNode.style.display = "none";
-							$("#headArea button:first-child").toggleClass("firstInstall");
-						}.bind(this));
-					};
+				// if the user clicks the button; he's no more a first time user
+				button.on("click", function(){
+					Data.visited = true;
+					
+					DB_save(function(){
+						parentStyleObj.display = "none";
+						optionsButton.removeClass("firstInstall");
+					});
+				});
 
-					if(Data.snippets.length >= 5) return;
-
-					// create introductory snippets
-					var a = {
-							name: "sampleSnippet",
-							body: "Hello new user! Thank you for using ProKeys!\n\nThis is a sample snippet. Try using it on any webpage by typing 'sampleSnippet' (snippet name; without quotes), and press the hotkey (default: Shift+Space), and this whole text would come in place of it.",
-							timestamp: "July 05, 2015"
-						}, b = {
+				// create introductory snippets
+				var a = {
+						name: "sampleSnippet",
+						body: "Hello new user! Thank you for using ProKeys!\n\nThis is a sample snippet. Try using it on any webpage by typing 'sampleSnippet' (snippet name; without quotes), and press the hotkey (default: Shift+Space), and this whole text would come in place of it.",
+						timestamp: "July 05, 2015"
+					}, b = {
 						name: "letter",
 						body: "(Sample snippet to demonstrate the power of ProKeys snippets; for more detail on Placeholders, see the Help section)\n\nHello %name%,\n\nYour complaint number %complaint% has been noted. We will work at out best pace to get this issue solved for you. If you experience any more problems, please feel free to contact at me@organization.com.\n\nRegards,\n%my_name%,\nDate: [[%d(D-MM-YYYY)]]",
 						timestamp: "June 26, 2014"
@@ -1050,16 +898,17 @@
 						body: "Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5 m-5 s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
 						timestamp: "March 05, 2015"
 					};
+				
+				// snippets already present
+				if(Data.snippets.length >= 5) return;					
 
-					Data.snippets.push(a, b, c, d, e);
-					
-					$("#headArea button:first-child").toggleClass("firstInstall");
-					
-					DB_save(function(){
-						listSnippets();
-					});
-				}
+				Data.snippets.push(a, b, c, d, e);
+				
+				optionsButton.addClass("firstInstall");
+				
+				DB_save(listSnippets);
 			}
+		}
 
 		check();
 	}

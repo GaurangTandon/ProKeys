@@ -27,10 +27,10 @@
 			</div>
 			<div class="createSnipArea">
 				<input id="sVal" placeholder="Snippet name (Abbreviation - case-sensitive)" tabIndex=-1>
-				<p>25 characters left</p>
+				<!-- dynamically inserted <p>25 characters left</p>-->
 				<textarea id="lVal" placeholder="Snippet body (to which the snippet name expands)" tabIndex=-1></textarea>
-				<p>1000 characters left</p>
-				<p>Tip: Placeholders can only contain alphabets, numbers and underscore and are enclosed between `%`s. Example: "%boss_name%"<br><span class="reload_notice">Note: <b>Reload active webpages</b> to use new snippet.</span></p>
+				<!-- dynamically inserted <p>1000 characters left</p>-->
+				<p>Tip: Click "Settings/Help" if you need help.<br><span class="reload_notice">Note: <b>Reload active webpages</b> to use new snippet.</span></p>
 				<button class="done" tabIndex=-1>Save &#10004;</button>
 				<button class="back" tabIndex=-1>&#8592; Back</button>
 			</div>
@@ -44,9 +44,7 @@
 	</div>
 	
 	<!-- overlay div used for delete confirmation, showing runtimeError notification, exiting edit mode-->
-	<div class="message hidden">
-		
-	</div>
+	<div class="dlog"></div>
 	
 	<!--used to fade the body when modal is shown-->
 	<div class="fade"></div>

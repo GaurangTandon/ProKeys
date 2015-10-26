@@ -55,10 +55,10 @@
 		charsToAutoInsertUserList, // array of charsToAutoInsert
 		tabKeySpace, // boolean whether tab key --> "    "
 		isGoogle, isGmail,
+		// class of span element holding entire snippet
 		SPAN_CLASS = "prokeys-snippet-text",
-		months = ["January", "February", "March",
-					"April", "May", "June", "July", "August", "September",
-					"October", "November", "December"],
+		// class of span element holding placeholders
+		PLACE_CLASS = "prokeys-placeholder",
 		macros = [
 			["\\bs([+-]\\d+)?\\b", [function(date){           // secs
 				return padNumber(date.getSeconds());
@@ -108,24 +108,26 @@
 			// used for specifying from where to where to search and place placeholders
 			fromIndex: 0, toIndex: 0,
 			mode: false,     // false initially, made true only by checkSnippetPresence function
-			container: null, // the text node containing the start placeholder
+			node: null, // the text node containing the start placeholder
+			isCENode: false,
 			regex: /^%[A-Z0-9_]+%$/i,
 			regexAnywhere: /%[A-Z0-9_]+%/i,
-			index: null, // the index of the current text node in the array
-			array: null // array of all the text nodes
+			array: null, // array of all the text nodes
+			// for adjustment of textarea toIndex
+			selectionLength: 0
 		},
 		// prokeys cannot work in there input elements
 		// they don't support caret manipulration
 		bannedInputElms = ["password", "number", "email"];
-
+		
 	/*
-	 DataBase functions
-	 - DB_setValue
-	 - DB_save
-	 - DB_load
-	 - isEmpty
-	 - changeStorageType
-	 - setEssentialItemsOnDBLoad
+	DataBase functions
+		- DB_setValue
+		- DB_save
+		- DB_load
+		- isEmpty
+		- changeStorageType
+		- setEssentialItemsOnDBLoad
 	*/
 
 	function DB_setValue(name, value, callback) {
@@ -175,10 +177,10 @@
 	}
 
 	/*
-	 Helper functions for iframe related work
-	 - initiateIframeCheckForSpecialWebpages
-	 - checkIfSpecialPage
-	 - getNodeWindow
+	Helper functions for iframe related work
+		- initiateIframeCheckForSpecialWebpages
+		- checkIfSpecialPage
+		- getNodeWindow
 	*/
 
 	function initiateIframeCheckForSpecialWebpages(prop, sel){
@@ -251,9 +253,9 @@
 	}
 
 	/*
-		Miscellanous helper functions
+		Miscellanous helper function
 		- passedThrough
-	*/
+	
 
 	// Traverse DOM from event target up to parent, searching for selector
 	function passedThrough(event, selector, stopAt) {
@@ -266,23 +268,17 @@
 				currentNode = currentNode.parentNode;
 			else return false;
 		}
-	}
-
-	// prepends 0 to single digit num and returns it
-	function padNumber(num){
-		num = parseInt(num, 10);
-		return (num >= 1 && num <= 9 ? "0" : "") + num;
-	}
-
+	}*/
+	
 	/*
 	  Date/Time Macro related helper functions
-	  - to12Hrs
-	  - parseDay
-	  - parseMonth
-	  - formatDate
-	  - get31stDays
-	  - getFormattedData
-	  - getTimestamp
+		- to12Hrs
+		- parseDay
+		- parseMonth
+		- formatDate
+		- get31stDays
+		- getFormattedDate
+		- getTimestamp
 	*/
 
 	// receives 24 hour; comverts to 12 hour
@@ -303,7 +299,7 @@
 	// accepts num (0-11); returns month
 	// type means full, or half
 	function parseMonth(month, type){
-		return type === "full" ? months[month] : months[month].slice(0, 3);
+		return type === "full" ? MONTHS[month] : MONTHS[month].slice(0, 3);
 	}
 
 	// appends th, st, nd, to date
@@ -336,7 +332,7 @@
 			if(curr > 11) {curr = 0; year++;}
 			else if(curr < 0) {curr = 11; year--;}
 
-			switch(months[curr]){
+			switch(MONTHS[curr]){
 				case "January":
 				case "March":
 				case "May":
@@ -358,13 +354,6 @@
 		return isNegative ? -count : count;
 	}
 
-	function getFormattedDate(){
-		var d = new Date(),
-			date = padNumber(d.getDate());
-
-		return  parseMonth(d.getMonth(), "full") + " " + date + ", " + d.getFullYear();
-	}
-
 	function getTimestamp(){
 		var date = new Date();
 
@@ -377,23 +366,23 @@
 
 	/*
 	  Snippet/Placeholder functions
-	  - resetPlaceholderVariables
-	  - isProKeysNode
-	  - formatMacros
-	  - insertSpace
-	  - checkPlaceholderPresence
-	  - checkSnippetPresence
-	  - formatNextTextNode
-	  - insertTextContentEditable
-	  - testPlaceholderPresence
-	  - setPlaceholderSelection
+		- resetPlaceholderVariables
+		- isProKeysNode
+		- formatMacros
+		- insertSpace
+		- checkPlaceholdersInNode
+		- checkSnippetPresence
+		- formatNextTextNode
+		- insertTextContentEditable
+		- testPlaceholderPresence
+		- setPlaceholderSelection
 	*/
 
 	function resetPlaceholderVariables(){
 		Placeholder.mode = false;
 		Placeholder.fromIndex = Placeholder.toIndex = 0;
-		Placeholder.container = null;
-		Placeholder.index = null;
+		Placeholder.isCENode = false;
+		Placeholder.node = null;
 		Placeholder.array = null;
 	}
 
@@ -458,130 +447,19 @@
 		return snipBody;
 	}
 
-	// called by checkSnippetPresence for setting text node content
-	// as it breaks on newlines so for each newline
-	// create a <span> element
-	function insertTextContentEditable(node, start, snipBody, snipName){
-		// start is index just before snip name relative to node
-
-		// get the array of strings for textnodes to be inserted
+	function setCaretAtEndOf(node, pos){
 		var win = getNodeWindow(node),
-			lines = snipBody.split("\n"),
-			// content of text node
-			val = node.textContent,
-			// number of textnodes seen
-			counter = 0,
-			// the ending text of node after the snip name
-			preservedEndText = val.substring(start),
 			sel = win.getSelection(),
-			range = sel.getRangeAt(0),
-			// array of all the snip elements
-			spanArray = [],
-			// the first span element node
-			snipElmNode = document.createElement("span"),
-			// the first element node
-			firstNode = snipElmNode,
-			// on disqus thread the line break
-			// is represented by </p>
-			isDisqusThread = isParent(node, "#disqus_thread"),
-			// fragment is a div to be inserted after each span node
-			fragment;
+			range = sel.getRangeAt(0);
 
-		// make content of the textnode only till start
-		node.textContent = val.substring(0, start - snipName.length);
-
-		setText(snipElmNode, lines[0].replace(/ {2}/g, "&nbsp;&nbsp;"));
-		snipElmNode.classList.add(SPAN_CLASS); // identification purpose
-
-		node.insertAfter(snipElmNode); // and insert it after textnode
-		counter += 1; // one textnode
-		spanArray.push(snipElmNode); // insert node in array
-
-		// i starts at 1 because we already inserted 1st span
-		for(var i = 1, len = lines.length; i < len; i++){
-			fragment = document.createElement("div");
-
-			// if previous node had nothing, then add a <br>
-			// element to fragment
-			// as multiple divs in gmail collapse into one
-			if(snipElmNode.innerHTML === "")
-				fragment.innerHTML = isDisqusThread ? "<br></p>" : "<br>";
-
-			// set end after current node
-			range.setStartAfter(snipElmNode);
-			range.setEndAfter(snipElmNode);
-
-			// insert fragment at caret's place
-			range.insertNode(fragment);
-			range.setStartAfter(fragment);
-			range.setEndAfter(fragment);
-
-			// create new span node to isnert
-			snipElmNode = document.createElement("span");
-			setText(snipElmNode, lines[i].replace(/ {2}/g, "&nbsp;&nbsp;"));
-			snipElmNode.classList.add(SPAN_CLASS);
-
-			// insert node after fragment
-			range.insertNode(snipElmNode);
-
-			counter++;
-			spanArray.push(snipElmNode);
+		if(isProKeysNode(node)){
+			range.selectNodeContents(node);
+			range.collapse(false);
+			sel.removeAllRanges();
+			sel.addRange(range);
 		}
-
-		// insert the text we had preserved
-		setText(snipElmNode, getText(snipElmNode) + preservedEndText.replace(/ /g, "&nbsp;"));
-
-		// populate Placeholder object
-		Placeholder.array = spanArray.slice(0);
-		Placeholder.index = 0;
-		Placeholder.container = spanArray[0];
-		Placeholder.mode = true;
-
-		// return [lastNode, offset of snippet body end in last node, first node]
-		return [counter === 1 ? null : snipElmNode,
-					snipElmNode.innerText.length - preservedEndText.length, firstNode];
-	}
-
-	function testPlaceholderPresence(node, arr, valueND, snipBody, start, sel, range){
-		var endLength = start + snipBody.length, offset, nd, lastNode;
-
-		if(arr){
-			// offset is the end of snippet in lastNode
-			offset = arr[1];
-			nd = arr[2];
-			// can be null in case snipBody is only one line
-			lastNode = arr[0] || arr[2];
-		}else
-			nd = node;
-
-		if(Placeholder.regexAnywhere.test(snipBody)){
-			Placeholder.mode = true;
-			Placeholder.fromIndex = start; // this is the org. length w/o snip name
-			Placeholder.toIndex = isProKeysNode(nd) ? offset : endLength; // this is with snip body
-			// true below means text node is first
-			checkPlaceholderPresence(nd, valueND, Placeholder.fromIndex, Placeholder.toIndex, true);
-		}else{
-			resetPlaceholderVariables();
-
-			// set caret position just after snippet name
-			if(lastNode){
-				lastNode.focus();
-
-				// getting the textnode inside lastnode
-				var firstChild = lastNode.firstChild;
-				while(firstChild && firstChild.nodeType !== 3)
-					firstChild = firstChild.firstChild;
-
-				if(firstChild == null)
-					lastNode.firstChild = "";
-
-				range.setStart(firstChild || lastNode.firstChild, offset);
-				range.setEnd(firstChild || lastNode.firstChild, offset);
-				sel.removeAllRanges();
-				sel.addRange(range);
-			}else
-				nd.selectionEnd = nd.selectionStart = endLength;
-		}
+		else // textarea
+			node.selectionEnd = node.selectionStart = pos || Placeholder.toIndex;
 	}
 
 	function insertSpace(node, sel, range){
@@ -612,14 +490,14 @@
 			initialString = val.substring(0, caretPos);
 			endString = val.substring(caretPos);
 
-			setText(node, initialString + charToInsert + endString);
+			setHTML(node, initialString + charToInsert + endString);
 
 			node.selectionEnd = node.selectionStart = caretPos + 1;
 		}
 	}
 
 	function deleteSelection(node, sel, range){
-		var nSE, nSS, val, selectedText;
+		var nSE, nSS, val;
 
 		if(isContentEditable(node)){
 			if(!range.collapsed)
@@ -630,7 +508,6 @@
 
 			if(nSS !== nSE){
 				val = node.value;
-				selectedText = val.substring(nSS, nSE);
 
 				node.value = val.substring(0, nSS) + val.substring(nSE);
 				node.selectionStart = node.selectionEnd = nSS;
@@ -638,267 +515,227 @@
 		}
 	}
 
+	function searchSnippets(node, pos){
+		var val = getText(node), snip, snipName;
+		
+		for(var i = 0, len = Snippets.length; i < len; i++){
+			snip = Snippets[i];
+			snipName = snip.name;
+			
+			if(snip.name === val.substring(pos - snipName.length, pos))
+				return snip;
+		}
+		
+		return null;
+	}
+	
+	function checkSnippetPresenceContentEditable(node){
+		var win = getNodeWindow(node),
+			sel = win.getSelection(),
+			range = sel.getRangeAt(0);
+		
+		if(!range.collapsed) return insertSpace(node, sel, range);
+			
+		var	container = range.startContainer,
+			// pos relative to container (not node)			
+			caretPos = range.startOffset,			
+			snip = searchSnippets(container, caretPos),
+			snipBody,
+			snipElmNode = document.createElement("span"),
+			// on disqus thread the line break
+			// is represented by </p>
+			isDisqusThread = isParent(node, "#disqus_thread"),
+			lineSeparator = "<br>" + (isDisqusThread ? "</p>" : "");
+			
+		// snippet found
+		if(snip !== null){
+			// delete snip name from container
+			// to insert snip body in its place
+			range.setStart(container, caretPos - snip.name.length);
+			range.setEnd(container, caretPos);
+			range.deleteContents();
+		
+			// prepare snipppet body
+			snipBody = formatMacros(snip.body);		
+			snipBody = snipBody.replace(/\n/g, lineSeparator);		
+			snipBody = snipBody.replace(/(%[_A-Za-z0-9]+%)/g, function(w, $1){
+				return "<span class='" + PLACE_CLASS + "'>" + $1 + "</span>";
+			});
+			
+			snipElmNode.html(snipBody)
+				.addClass(SPAN_CLASS); // identification
+			
+			range.insertNode(snipElmNode);
+				
+			// populate Placeholder object
+			Placeholder.mode = true;
+			Placeholder.node = snipElmNode;
+			Placeholder.isCENode = true;
+			// convert the NodeList of <span.prokeys-placeholder> to array and store
+			Placeholder.array = [].slice.call(snipElmNode.querySelectorAll("." + PLACE_CLASS) || [], 0);
+			
+			// initiate placeholder logic
+			checkPlaceholdersInContentEditableNode();
+		}
+		// snippet not found
+		else insertSpace(node, sel, range);
+	}
+	
 	// check snippet's presence and intiate
 	// another function to insert snippet body
 	function checkSnippetPresence(node){
-		var win = getNodeWindow(node),
-			value = getText(node),
-			snip,           // holds current snippet object
+		if(isContentEditable(node)){
+			checkSnippetPresenceContentEditable(node);
+			return;
+		}
+		
+		var value = node.value,
+			caretPos = node.selectionStart,
+			snip = searchSnippets(node, caretPos),// holds current snippet object
 			snipNameLength, // length of snippet.name
 			snipBody,
-			snipped = false, // any snippet is found or not
-			sel = win.getSelection(),
-			range;
-
-		try{
-			if(sel && sel.getRangeAt)
-				range = sel.getRangeAt(0);
-		}catch(error){
-			node.focus();
-			range = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
-		}
-
-		if(!range) return;
-
-		// textnode or textarea
-		var nd = range.startContainer,
-			// where cursor is placed (in respect to container)
-			offset = isContentEditable(node) || nd.nodeType === 3 ?
-				range.endOffset : node.selectionEnd,
-			// value of text node
-			valueND = nd.nodeType === 3 ? nd.textContent : value,
-			arr, beginValue, endValue, start;
+			// textnode or textarea
+			beginValue, endValue, start;
 
 		// if the start and end points are not the same
 		// break and insert some character there
-		if(!range.collapsed) return insertSpace(node, sel, range);
+		if(caretPos !== node.selectionEnd) return insertSpace(node, sel, range);
+		
+		if(snip !== null){			
+			// start of snippet body
+			// for placeholder.fromIndex
+			start = caretPos - snip.name.length;
+			// value before snip name start
+			beginValue = value.substring(0, start);
+			// value after snip name end
+			endValue = value.substring(caretPos);
 
-		for(var i = 0, len = Snippets.length; i < len; i++){
-			snip = Snippets[i];
-			snipNameLength = snip.name.length;
-			snipBody = snip.body;
+			// format the macros first
+			snipBody = formatMacros(snip.body);
 
-			if(valueND.substring(offset - snipNameLength, offset) === snip.name){
-				// there is a snippet
-				snipped = true;
-
-				// start of snippet body
-				// for placeholder.fromIndex
-				start = offset - snipNameLength;
-				// value before snip name
-				beginValue = valueND.substring(0, start);
-				// value after snip name end
-				endValue = valueND.substring(offset);
-
-				// format the macros first
-				snipBody = formatMacros(snipBody);
-
-				if(nd && (nd.nodeType === 3 || isContentEditable(node)))
-					// insert the value at the offset after text node
-					// inserting new span element nodes as necessary
-					arr = insertTextContentEditable(nd, offset, snipBody, snip.name);
-				else
-					// textareas
-					setText(node, beginValue + snipBody + endValue);
-
-				testPlaceholderPresence(node, arr, valueND, snipBody, start, sel, range);
-			}
-		} // for-loop end
-
-		// if there was no snip
-		if(!snipped)
-			insertSpace(node, sel, range);
+			Placeholder.node = node.html(beginValue + snipBody + endValue);
+			
+			testPlaceholderPresence(node, snipBody, start);
+		}
+		// no snippet found
+		else insertSpace(node, sel, range);
 	}
 
-	// calls checkSnippetPresence for next text node with
-	// all the requirements
-	function formatNextTextNode(){
-		var from = Placeholder.index === 0 ?
-					Placeholder.fromIndex : // first node
-					0; // not first node
-
-		var to = Placeholder.index === 0 ?
-					Placeholder.toIndex : // first node
-					Placeholder.container.textContent.length; // not first node
-
-		var bool = setPlaceholderSelection(Placeholder.container, from, to);
-
-		// a placeholder was found in the existing node
-		// and it is now selected
-		if(bool){
-			return; // no need to check for next node
+	// only used by textarea
+	function testPlaceholderPresence(node, snipBody, start){
+		var endLength = start + snipBody.length;
+		
+		if(Placeholder.regexAnywhere.test(snipBody)){
+			Placeholder.mode = true;
+			Placeholder.fromIndex = start; // this is the org. length just before snip name
+			Placeholder.toIndex = endLength; // this just after snip body
+			checkPlaceholdersInNode(node, Placeholder.fromIndex, Placeholder.toIndex, true);
 		}
-
-		// one node will increase
-		Placeholder.index += 1;
-
-		// we are possibly on a text node other than that of snippet
-		// as we have gone on more text nodes than limit
-		if(Placeholder.index === Placeholder.array.length){
-			resetPlaceholderVariables(); // end placeholder mode
-			return;
+		else{
+			setCaretAtEndOf(node, endLength);
+			
+			resetPlaceholderVariables();	
 		}
-
-		var next = Placeholder.array[Placeholder.index];
-		Placeholder.container = next;
-
-		// on the last text node; the `to` setting would apply
-		// a b c d
-		//   ^- from
-		// e f g h // full
-		// i j k l // full
-		// m n o p
-		//     ^- end
-		if(Placeholder.index === Placeholder.array.length - 1){ // last text node
-			to = Placeholder.toIndex;
+	}
+	
+	function checkPlaceholdersInContentEditableNode(){
+		var pArr = Placeholder.array, currND;
+		
+		if(pArr && pArr.length > 0){
+			currND = pArr[0];
+			
+			selectEntireTextIn(currND);
+			pArr.shift();
+			return true;
 		}else{
-			to = 0;
-		}
-
-		// from is set to zero as we are on a new textnode and hence have
-		// to start at start of content
-		checkPlaceholderPresence(next, next.textContent, 0, to, false);
-	}
-
-	// jumps from one `%asd%` to another (does not warp from last to first placeholder)
-	function checkPlaceholderPresence(nd, value, from, to, notCheckSelection){
-		// nd is textnode
-		// check if there is %asd% in nd
-		// - yes
-		// - - highlight it
-		// - no
-		// - - move to next until Placeholder.toIndex
-		// notCheckSelection avoids recursion
-
-		var text = getUserSelection(nd);
-
-		// if the `%A%` is selected, move to next
-		if(Placeholder.regex.test(text) && notCheckSelection){
-			if(isProKeysNode(nd)) formatNextTextNode();
-			else // textarea
-				checkPlaceholderPresence(nd, nd.value, nd.selectionEnd, to, false);
-
+			setCaretAtEndOf(Placeholder.node);
+			resetPlaceholderVariables();
 			return false;
 		}
+	}
+	
+	// jumps from one `%asd%` to another (does not warp from last to first placeholder)
+	// notCheckSelection avoids recursion
+	function checkPlaceholdersInNode(node, from, to, notCheckSelection){		
+		var selectedText, // in node
+			bool; // bool indicates if placeholder was found (true) or not (false)
 
-		if(isProKeysNode(nd) && Placeholder.array[Placeholder.index + 1])
-			// this if condition means that if there is a next node
-			// so we can set `to` to nd.length as the current node covers all the line
-			to = nd.length;
+		// might have been called from keyEventhandler
+		if(Placeholder.isCENode) checkPlaceholdersInContentEditableNode();
+		
+		// text area logic
+		if(notCheckSelection){
+			selectedText = getUserSelection(node);
+			
+			if(Placeholder.regex.test(selectedText)){
+				checkPlaceholdersInNode(node, node.selectionEnd, to, false);
+				return false;
+			}
+		}
 
-
-		// bool indicates if placeholder was found (true) or not (false)
-		var bool = setPlaceholderSelection(nd, from, to);
-
-		// span node
-		if(isProKeysNode(nd)){
-			// if no placeholder in current node, format next node
-			if(!bool) formatNextTextNode();
-		}else{ // textareas
-			// now probably the end of the snippet's placeholders has been reached
-			// as no placeholder was found
-			if(!bool)
-				// now Placeholder.mode has ended
-				resetPlaceholderVariables();
+		bool = setPlaceholderSelection(node, from, to);
+		
+		// now probably the end of the snippet's placeholders has been reached
+		// as no placeholder was found
+		if(!bool){
+			// but set this prop to make sure next tab
+			// jumps after snippet body
+			setCaretAtEndOf(node, to);
+			resetPlaceholderVariables();
 		}
 	}
-
+	
+	// always content editable
+	// used by span.prokeys-placeholder
+	function selectEntireTextIn(node){
+		var win = getNodeWindow(node),
+			sel = win.getSelection(),
+			range = sel.getRangeAt(0);
+			
+		range.selectNodeContents(node);
+		sel.removeAllRanges();
+		sel.addRange(range);
+	}
+	
 	// set selection of next placeholder
 	// returns false if no placeholder else true
+	// in textarea
 	function setPlaceholderSelection(node, from, to){
 		var foundPlaceholder = false;
 
 		// text of node (from `from` to `to`)
-		var nodeText = isProKeysNode(node) ?
-						node.textContent : getText(node),
-			index,
-			win = getNodeWindow(node),
-			sel = win.getSelection(),
-			range;
-
-		if(isProKeysNode(node)){ // textnodes
-			range = sel.getRangeAt(0);
-
-			// if something is selected in the same node
-			if(!range.collapsed && range.endContainer == node)
-				from = range.endOffset;
-
-			index = nodeText.substring(from, to).search(Placeholder.regexAnywhere);
-
-			if(index > -1){ // placeholder found
-				foundPlaceholder = true;
-
-				// since we took a substring, so
-				// we have to bring index in terms of
-				// the actual whole node.textContent
-				// and not the substringed part
-				index += from;
-
-				var str = "";
-				// first get whole placeholder length
-				for(var i = index + 1; nodeText[i] !== "%"; i++){
-					str += nodeText[i];
-				}
-				// increase i by 2 (because condition of loop ignores both `%`)
-				i += 2;
-				// subtract one because end has already started
-				// at first `%`
-				i -= 1;
-
-				range = sel.getRangeAt(0);
-
-				/*
-				`node` can:
-
-				<span>"adasdasd" "asdasdasd" "asdasdasdasd"</span>
-				// having three text nodes
-				so, here, node.firstChild would return first textnode
-				and offset index would be greater than its length
-				so, in case this happens (usually in evernote)
-				that's why getNodeAtOffset is needed
-				*/
-
-				var arrStart = getNodeAtOffset(node, index),
-					arrEnd = getNodeAtOffset(node, i),
-					startNode = arrStart[0],
-					endNode = arrEnd[0],
-					lenSkipped1 = arrStart[1],
-					lenSkipped2 = arrEnd[1];
-
-				range.setStart(startNode, index - lenSkipped1);
-				range.setEnd(endNode, i - lenSkipped2);
-				sel.removeAllRanges();
-				sel.addRange(range);
-			}
-		}else{ // textareas
+		var nodeText = node.value,
 			// index of placeholder
 			index = nodeText.substring(from, to).search(Placeholder.regexAnywhere);
 
-			// one placeholder exists
-			if(index > -1){
-				// increase by `from` since
-				// we had substring string at start
-				index += from;
+		// one placeholder exists
+		if(index > -1){
+			// increase by `from` since
+			// we had substring string at start
+			index += from;
 
-				foundPlaceholder = true;
+			foundPlaceholder = true;
 
-				node.selectionStart = index;
+			node.selectionStart = index;
 
-				// first get whole placeholder length
-				for(var j = index + 1; nodeText[j] !== "%"; j++);
-				// increase i by 2 (because condition of loop ignores both `%`)
-				j += 2;
-				// subtract one because end has already started
-				// at first `%`
-				j -= 1;
+			// first get whole placeholder length
+			for(var j = index + 1; nodeText[j] !== "%"; j++);
+			// increase j by 2 (because condition of loop ignores both `%`)
+			// subtract one because end has already started
+			// at first `%`
+			// so, in total add 1
+			j += 1;
 
-				node.selectionEnd = j;
-			}
+			node.selectionEnd = j;
+			
+			// for adjusting toIndex
+			Placeholder.justSelected = true;
+			Placeholder.selectionLength = j - index;			
 		}
 
 		return foundPlaceholder;
 	}
-
+	
 	/*
 		Auto-Insert Character functions
 		- searchAutoInsertChars
@@ -942,7 +779,7 @@
 				sel.addRange(range);
 			}
 		}else{ // textarea
-			var val = getText(node),
+			var val = getHTML(node),
 				text = character[1],
 				curPos = getCaretPosition(node);
 
@@ -962,7 +799,7 @@
 			val = val.substring(0, curPos) + text + val.substring(curPos);
 
 			// set the text
-			setText(node, val);
+			setHTML(node, val);
 
 			// reset selection indices
 			node.selectionStart = node.selectionEnd = curPos;
@@ -1050,7 +887,7 @@
 		}
 		// textarea
 		else{
-			return getText(node)
+			return getHTML(node)
 						.substring(node.selectionStart, node.selectionEnd);
 		}
 	}
@@ -1061,13 +898,16 @@
 		var children = elmNode.childNodes, child, childTextLen,
 			lengthSkipped = 0;
 
-		for(var i = 0, len = children.length; i < len; i++){
+		for(var i = 0, len = children.length; i < len; i++){			
 			child = children[i];
-			childTextLen  = getText(child).length;
-
-			if(childTextLen >= offset){
+			// use innerText here; to avoid tags of nested elms
+			childTextLen = child.text().length;
+			
+			console.log(child, childTextLen);
+			
+			if(childTextLen >= offset)
 				return [child, lengthSkipped];
-			}else{
+			else{
 				offset -= childTextLen;
 				lengthSkipped += childTextLen;
 			}
@@ -1184,69 +1024,6 @@
 		return null;
 	}
 
-	// gets string containing `[[something=]]`
-	// returns the string having evaluated the something
-	function evaluateDoubleBrackets(wholeValue, start, end){
-		var rValue; // value to replace in the brackets
-
-		// and then, start and end should correspond
-		// to start and end of value inside the brackets
-		// and not include the brackets, so adjust the
-		// values below
-		end -= 2;
-		start += 2;
-
-		var orgValue = wholeValue.substring(start, end);
-		rValue = orgValue.replace(/[\[\]]/g, "");
-
-		var variable = formatVariable(rValue);
-
-		if(variable) rValue = variable;
-		else{ // no date or time; I can safely remove all non-expected symbols
-			rValue = rValue.replace(/[^\d\^\*\/\.\-\+\%\(\)]/g, "");
-
-			// empty string
-			if(!rValue) rValue = orgValue;
-			else{
-				try{
-					// replace for ^ exponent operators
-					rValue = rValue.replace(/(\d+)\^(\d+)/g, function(wMatch, $1, $2){
-						return "Math.pow(" + $1 + "," + $2 + ")";
-					});
-					// replace for % operator
-					rValue = rValue.replace(/%/g, "/100");
-					rValue = eval(rValue);
-				}catch(e){
-					rValue = orgValue;
-				}
-
-				// convert to float of 5 point precision and to string
-				rValue = parseFloat(rValue).toFixed(5).toString();
-
-				// remove the extraneous zeros after decimal
-				rValue = rValue.replace(/\.(\d*?)0+$/, ".$1");
-
-				// remove the dot if no digits are there after it
-				rValue = rValue.replace(/\.$/, "");
-
-				if(isNaN(rValue))
-					rValue = orgValue;
-			}
-		}
-
-		// rValue changed
-		if(rValue !== orgValue){
-			// replace the `[[expression]]` with rValue
-			wholeValue = wholeValue.replace(wholeValue.substring(start - 2, end + 2), rValue);
-		}else{
-			// add brackets to set that
-			// so that the handleKeyPress can detect anomaly
-			rValue = "[[" + rValue + "]]";
-		}
-
-		return [wholeValue, rValue];
-	}
-
 	function insertTabChar(node){
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
@@ -1273,9 +1050,9 @@
 			sel.addRange(range);
 		}else{ // textarea
 			caretPos = node.selectionStart;
-			value = getText(node);
+			value = getHTML(node);
 
-			setText(node,
+			setHTML(node,
 				value.substring(0, caretPos) + "    " + value.substring(caretPos));
 
 			node.selectionStart = node.selectionEnd = caretPos + 4;
@@ -1379,6 +1156,67 @@
 		end.textContent = "";
 	}
 
+	function evaluateMathExpression(str, orgValue){
+		// remove all non-expected symbols
+		str = str.replace(/[^\d\^\*\/\.\-\+\%\(\)]/g, "");
+
+		// empty string
+		if(!str) return orgValue;
+		else{
+			try{
+				// replace for ^ exponent operators
+				str = str.replace(/(\d+)\^(\d+)/g, function(wMatch, $1, $2){
+					return "Math.pow(" + $1 + "," + $2 + ")";
+				});
+				// replace for % operator
+				str = eval(str.replace(/%/g, "/100"));
+			}catch(e){
+				str = orgValue;
+			}
+
+			// convert to float of 5 point precision and to string
+			str = parseFloat(str).toFixed(5).toString();
+
+			// remove the extraneous zeros after decimal
+			str = str.replace(/\.(\d*?)0+$/, ".$1");
+
+			// remove the dot if no digits are there after it
+			str = str.replace(/\.$/, "");
+			
+			return isNaN(str) ? orgValue : str;			
+		}
+	}
+	
+	// gets string containing `[[something=]]`
+	// returns the string having evaluated the something
+	function evaluateDoubleBrackets(wholeValue, start, end){
+		// and then, start and end should correspond
+		// to start and end of value inside the brackets
+		// and not include the brackets, so adjust the
+		// values below
+		end -= 2;
+		start += 2;
+		
+		var orgValue = wholeValue.substring(start, end),
+			// value to replace in the brackets
+			rValue = orgValue.replace(/[\[\]]/g, ""),
+			variable = formatVariable(rValue);
+
+		rValue = variable || evaluateMathExpression(rValue, orgValue);		
+
+		// rValue changed
+		if(rValue !== orgValue){
+			// replace the `[[expression]]` with rValue
+			wholeValue = wholeValue.replace(wholeValue.substring(start - 2, end + 2), rValue);
+		}else{
+			// add brackets to set that
+			// so that the handleKeyPress can detect anomaly
+			rValue = "[[" + rValue + "]]";
+		}
+
+		return [wholeValue, rValue, orgValue];
+	}
+	
 	// provides double bracket functionality
 	// i.e. replacement of text of mathomania/variable
 	// with their required value after `=` has been pressed
@@ -1389,7 +1227,7 @@
 			caretPos = isContentEditable(node) || node.nodeType === 3 ?
 					range.endOffset : node.selectionEnd,
 			value = isContentEditable(node) || node.nodeType === 3 ?
-					node.textContent : getText(node),
+					node.textContent : getHTML(node),
 			// index of start and close brackets `[ and `]`
 			startBracketIndex, closeBracketIndex, closeNode, firstNode,
 			operate = true;
@@ -1423,7 +1261,7 @@
 			// are not `[`, do not operate
 			if(value[startBracketIndex] !== "[" ||
 				value[startBracketIndex - 1] !== "[")
-					operate = false;
+				operate = false;
 				
 			// set index to the first bracket of the `[[` pair
 			else
@@ -1438,17 +1276,18 @@
 			// get value to set
 			var rValue = evaluateDoubleBrackets(value, startBracketIndex, closeBracketIndex);
 			value = rValue[0]; //  used in setting value for textarea
+			var orgValue = rValue[2]; // with brackets
 			rValue = rValue[1];
-
+			
 			// set value
-			if(node.nodeType === 3){
+			if(node.nodeType === 3){				
 				// empty the nodes containing the expression
 				// a whole
 				emptyNodes(firstNode, node);
 				emptyNodes(node, closeNode);
 
 				// set value in main node
-				node.textContent = rValue;
+				setHTML(node, rValue);
 
 				// set cursor after the rValue
 				// note that node is a textnode containing
@@ -1458,8 +1297,40 @@
 				range.collapse(true);
 				sel.removeAllRanges();
 				sel.addRange(range);
-			}else{
-				setText(node, value);
+			}
+			// certain sites like Quora
+			else if(isContentEditable(node)){
+				// in such sites
+				// the entire text of value is in the startNode
+				// and the `]]` are in the endNode
+				
+				var startNode = range.startContainer,
+					endNode = startNode.nextSibling,
+					startVal = getHTML(startNode),
+					endVal = getHTML(endNode),
+					result = evaluateMathExpression(orgValue);
+				
+				if(result !== orgValue){
+					// remove orgValue (math expression) from startVal
+					// -2 for the [[
+					startVal = startVal.slice(0, startVal.length - 2 - orgValue.length);					
+					startVal += result;
+					
+					// remove the last `]]` brackets
+					endVal = endVal.slice(2);
+				}
+				
+				setHTML(startNode, startVal);
+				setHTML(endNode, endVal);
+				
+				range.setStart(startNode, startVal.length);
+				range.setEnd(endNode, 0);
+				range.collapse(true);
+				sel.removeAllRanges();
+				sel.addRange(range);
+			}
+			else{
+				setHTML(node, value);
 
 				// let expression = 900
 				// [[ 900=]]
@@ -1487,14 +1358,17 @@
 	// keypress, keydown functions
 	function isUsableNode(node){
 		var tgN = node.tagName,
-			inputNodeType;
-			
+			inputNodeType,
+			data = node.dataset;
+
+		if(data && data.prokeyscachednode)
+			return true;		
 		// node having reactid is operated upon
 		// by ReactJS and ProKeys can't work simultaneously
-		if(node.dataset && typeof node.dataset.reactid !== "undefined")
-			return console.log("A") && 0;
+		else if(data && typeof data.reactid !== "undefined")
+			return false;
 		else if(isParent(node, null, ["CodeMirror", "ace"], 3))
-			return console.log("B") && 0;
+			return false;
 		else if(tgN === "INPUT"){
 			inputNodeType = node.getAttribute("type");
 			return bannedInputElms.indexOf(inputNodeType) === -1;
@@ -1510,30 +1384,26 @@
 		// document iframe
 		if(!tgN) return;
 
-		if(isGmail && isParent(node, "form"))
-			// in Gmail, the subject and to address field
-			// should not have any function.
-			// These two fields have a "form" as their parent.
-			// thus, we check if the node has a form as a parent
-			// if it is, then it is a to or subject field node
-			// and we will not perform operation (return false)
-			return false;
-
-
-		node = isContentEditable(node) ?
-			(Placeholder.container || node)
-			: node;
-
-		tgN = node.tagName;
-
 		// [Tab] key for tab spacing/placeholder shifting
 		if(keyCode === 9 && !e.shiftKey && !e.ctrlKey){
+			if(isGmail && isParent(node, "form"))
+				// in Gmail, the subject and to address field
+				// should not have any tab function.
+				// These two fields have a "form" as their parent.
+				// thus, we check if the node has a form as a parent
+				// if it is, then it is a to or subject field node
+				// and we will not perform operation (return false)
+				return false;
+			
 			// in placeholder mode, tab => jumping of placeholders
 			if(Placeholder.mode){
 				e.stopPropagation();
 				e.preventDefault();
-
-				checkPlaceholderPresence(node, getText(node), Placeholder.fromIndex, Placeholder.toIndex, true);
+				
+				if(Placeholder.isCENode)
+					checkPlaceholdersInContentEditableNode();
+				else
+					checkPlaceholdersInNode(node, Placeholder.fromIndex, Placeholder.toIndex, true);
 			}
 			// normal tab spacing if user specifies
 			else if(tabKeySpace && tgN !== "INPUT"){
@@ -1589,27 +1459,13 @@
 
 			// insert char
 			insertChar(text, node);
+			
+			toIndexIncrease = 2;
 		}
 
 		// Char insertion technique end
 		////////////////////////////////
-
-		if(index !== -1)
-			toIndexIncrease = 2;
-		else
-			toIndexIncrease = 1;
-
-		var caretPos = getSelectionStart(node);
-
-		// due to aforementioned bug
-		if( Placeholder.mode &&
-			caretPos > Placeholder.fromIndex && caretPos < Placeholder.toIndex)
-			Placeholder.toIndex += toIndexIncrease;
-
-		var sel, range,
-			operate = true, // to operate or not operate
-			value;
-
+		
 		// to type date, we do [[date=]] and for time we do [[time=]]
 		// so check for that
 		if(charTyped === "="){
@@ -1619,34 +1475,52 @@
 			// wait till the = sign actually appears in node value
 			setTimeout(provideDoubleBracketFunctionality, 10, node, win);
 		}
+		
+		// this logic of Placeholder only for textarea
+		// about adjusting toIndex to match typed text
+		if(!Placeholder.isCENode){	
+			var caretPos = node.selectionStart;
+
+			if( Placeholder.mode &&
+				caretPos > Placeholder.fromIndex && caretPos < Placeholder.toIndex){					
+				// when you select text of length 10, and press one key
+				// I have to subtract 9 chars in toIndex
+				if(Placeholder.justSelected){
+					Placeholder.justSelected = false;
+					toIndexIncrease -= Placeholder.selectionLength;
+				}
+				
+				Placeholder.toIndex += toIndexIncrease;
+			}
+		}
 	}
 
 	// attaches event to document receives
 	// `this` as the function to call on event
 	function keyEventAttacher(handler){
-		return function(event){
+		return function eventHandler(event){
 			var node = event.target;
 			
-			if(isUsableNode(node))
+			if(isUsableNode(node)){
+				if(!node.dataset) node.dataset = {};
+				node.dataset.prokeyscachednode = true;
 				handler.call(node, event);
+			}
 		};
 	}
-
+	
 	var onKeyDownFunc = keyEventAttacher(handleKeyDown),
 		onKeyPressFunc = keyEventAttacher(handleKeyPress);
 
 	function isSnippetSubstitutionKey(event, keyCode){
 		var hk0 = Data.hotKey[0],
 			hk1 = Data.hotKey[1];
-
-		if(hk1)
-			return event[hk0] && keyCode === hk1;
-		else
-			return keyCode === hk0;
+		
+		return hk1 ? event[hk0] && keyCode === hk1 :
+				keyCode === hk0;
 	}
 
 	// asynchoronous function call
-	// to load data
 	DB_load(function(){
 		// wrong storage Placeholder.mode
 		if(Data.snippets === false){
@@ -1730,9 +1604,9 @@
 				setTimeout(checkForNewIframe, 1500, doc, uniq); //<-- delay of 1.5 second
 			})(document, 1 + Math.random()); // Initiate recursive function for the document.
 			return;
-		}*/
+		}
 
-		/*
+		
 		var interval = setInterval(function(){
 			var elm = $("div.aoI"); // see reason quicknotes
 
@@ -1761,9 +1635,9 @@
 		*/
 
 		chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-			var s = request["blockSite"];
+			/*var s = request["blockSite"];
 			
-			/*if(s){
+			if(s){
 				Data.blockedSites = s;
 				DB_save(function(){
 					console.log(s);

@@ -188,7 +188,7 @@ ul {
 /*class set on li.snip when user makes a new snippet*/
 /*we need to highlight that snippet*/
 .snip.highlighting{
-	background: gold;
+	background: #75E275;
 	/*slowly fade away the gold background*/
 	-webkit-animation: fadeBackground 3s;
 	animation: fadeBackground 3s;
@@ -257,6 +257,18 @@ ul {
     width: 440px;
 	font-size: 13px;
 	height: 180px;
+}
+
+/*validation passed; green border*/
+.editSbBody.passed, .editSnName.passed,
+	#lVal.passed, #sVal.passed{
+	border: 2px solid rgb(94, 224, 94);
+}
+
+/*validation failed; red border*/
+.editSbBody.failed, .editSnName.failed,
+	#lVal.failed, #sVal.failed{
+	border: 2px solid rgb(245, 79, 79);
 }
 
 .timestamp {
@@ -352,6 +364,8 @@ ul {
     width: 100%;
     margin: auto;
     margin-top: 15px;
+	outline: initial;
+	border: 1px solid rgb(169, 169, 169);
 }
 
 #sVal {
@@ -479,7 +493,7 @@ input + p, textarea + p {
     cursor: pointer;
 }
 
-.message{
+.dlog{
 	width: 90%;
 	min-height: 50px;
 	max-height: 300px;
@@ -488,18 +502,19 @@ input + p, textarea + p {
 	color: #588336;
 	padding: 10px;
 	position: absolute;
-	top: 99px;
+	top: 150px;
 	left: 16px;
 	border:1px solid black;
 	background: white;
 	z-index: 100;
+	display: none;
 }
 
-.message.shown{
+.dlog.shown{
 	display: block;
 }
 
-.message button{
+.dlog button{
 	width: 40%;
 	height: 40px;
 	background: none;
@@ -525,10 +540,6 @@ body .fade{
 
 body.darkened .fade{
 	display: block;
-}
-
-.message.hidden{
-	display: none;
 }
 
 .red{
@@ -577,7 +588,7 @@ body.darkened .fade{
 	width: 190px;
 }
 
-.zoom125 .message{
+.zoom125 .dlog{
 	font-size: 21px;
 	padding: 10px 5px;
 }

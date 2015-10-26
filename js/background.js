@@ -19,7 +19,7 @@ function injectScript(tab){
 
 	// loop through content scripts and execute in order
 	var contentScripts = chrome.runtime.getManifest().content_scripts[0].js;
-	console.log(contentScripts);
+
 	for (var i = 0, len = contentScripts.length; i < len; i++){
 		if(!/chrome:\/\//.test(tab.url))
 			chrome.tabs.executeScript(tab.id, {
@@ -45,7 +45,7 @@ chrome.runtime.onInstalled.addListener(function(details){
 	}else if(details.reason === "update"){
 		version = chrome.runtime.getManifest().version;
 		title = "ProKeys successfully updated to v" + version;
-		text = "Please reload active tabs to use new version, which gives you a faster and better ProKeys :)";
+		text = "Please reload active tabs to use new version, which makes ProKeys faster.";
 	}
 
 	// either update or install was there
