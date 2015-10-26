@@ -1,7 +1,7 @@
 [![logo of prokeys](http://s27.postimg.org/7z02emgg3/main_logo.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
-**Latest version**: 2.6.1
-**Status**: active, stable build (last update 21/Oct/15)
+**Latest version**: 2.6.2
+**Status**: active, stable build (last update 26/Oct/15)
 
 ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn) and [Opera](https://addons.opera.com/en/extensions/details/prokeys/?display=en) extension that lets you be productive in online text-related work with its number of features like:
 
