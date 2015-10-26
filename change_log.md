@@ -5,8 +5,9 @@
 - remove case-sensitivity for snippet names!
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) 
 
-**2.6.2** - upcoming
+**2.6.2** - 26/10/2015
 - fix for multiline bold elements not working
+- complete change in setup of snippets/placeholder working (for third time ;) but this one is best and final!)
 
 **2.6.1** - 21/10/2015
 - (green) highlight snippet on save, edit to indicate save
