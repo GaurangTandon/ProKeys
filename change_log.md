@@ -5,6 +5,9 @@
 - remove case-sensitivity for snippet names!
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) 
 
+**2.6.2.1** - 30/10/2015
+- fix for single key hotkey not inserting default char when no snippet found
+
 **2.6.2** - 26/10/2015
 - fix for multiline bold elements not working
 - complete change in setup of snippets/placeholder working (for third time ;) but this one is best and final!)
