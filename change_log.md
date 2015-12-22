@@ -1,9 +1,12 @@
 ## Change log
 
-**2.7.0** - upcoming
-- settings access in context menu // (show modal in settings page on context menu click)
+**2.8.0** - upcoming
 - remove case-sensitivity for snippet names!
-- fix for certain keycodes not corresponding with their actual key name (in hotkey feature) 
+
+**2.7.0** - upcoming
+- block site/snippets access in context menu
+- fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
+- select element keydown getting delayed due to prokeys interference - bug fixed
 
 **2.6.2.1** - 30/10/2015
 - fix for single key hotkey not inserting default char when no snippet found
