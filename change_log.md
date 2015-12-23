@@ -6,7 +6,8 @@
 **2.7.0** - upcoming
 - block site/snippets access in context menu
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
-- select element keydown getting delayed due to prokeys interference - bug fixed
+- button/select/etc. element keydown getting delayed due to prokeys interference - bug fixed
+- tabbing in popup.js for dropdown element
 
 **2.6.2.1** - 30/10/2015
 - fix for single key hotkey not inserting default char when no snippet found
