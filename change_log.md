@@ -2,14 +2,16 @@
 
 **2.8.0** - upcoming
 - remove case-sensitivity for snippet names!
-- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 
-**2.7.0** - upcoming
+**2.7.1** - upcoming
+- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
+- fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
+
+**2.7.0** - 23/01/2015
 - block site access in context menu
 - insert snippet from context menu
 - enabled for wepaste.com
 - fixed issue for iframes not being blocked when parent page is blocked
-- fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - left
 - button/select/etc. element keydown getting delayed due to prokeys interference - bug fixed
 - added tabbing in popup.js for dropdown elements for keyboard accessibility
 - added info in Help regarding some sites not working
