@@ -4,7 +4,7 @@
 - remove case-sensitivity for snippet names!
 
 **2.7.0** - upcoming
-- block site access in context menu - left
+- block site access in context menu
 - insert snippet from context menu - left
 - enabled for wepaste.com
 - fixed issue for iframes not being blocked when parent page is blocked
