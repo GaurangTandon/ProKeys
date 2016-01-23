@@ -2,6 +2,7 @@
 
 **2.8.0** - upcoming
 - remove case-sensitivity for snippet names!
+- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 
 **2.7.0** - upcoming
 - block site access in context menu
