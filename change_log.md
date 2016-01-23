@@ -5,7 +5,7 @@
 
 **2.7.0** - upcoming
 - block site access in context menu
-- insert snippet from context menu - left
+- insert snippet from context menu
 - enabled for wepaste.com
 - fixed issue for iframes not being blocked when parent page is blocked
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - left
