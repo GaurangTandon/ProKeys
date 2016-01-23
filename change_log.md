@@ -12,6 +12,7 @@
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - left
 - button/select/etc. element keydown getting delayed due to prokeys interference - bug fixed
 - added tabbing in popup.js for dropdown elements for keyboard accessibility
+- added info in Help regarding some sites not working
 
 **2.6.2.1** - 30/10/2015
 - fix for single key hotkey not inserting default char when no snippet found
