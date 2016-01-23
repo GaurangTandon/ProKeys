@@ -6,6 +6,7 @@
 **2.7.1** - upcoming
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
+- clicking on dropdown elm in popup.js (when focused) should transfer focus on the Edit button
 
 **2.7.0** - 23/01/2015
 - block site access in context menu
