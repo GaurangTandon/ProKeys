@@ -14,7 +14,7 @@ ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore
 6. **Date/Time Arithmetic** - use the `+` or `-` sign to move forward or backward in time in date/time macros. Supports both relative as well as independent evaluation.  
 7. **Variables** - built-in variables holding dynamic values for "date", "time" and (browser) "version"  
 8. **Tab Key** - The tab key can be made to insert 4 spaces, instead of it's default function, thus speeding up work.  
-9. **Context menu access** - for blocking sites and inserting snippets
+9. **Context menu access** - for blocking sites and inserting snippets.  
 10. **Sync/Local storage** - Use whichever you prefer.
 
 ## Libraries/Code sources
