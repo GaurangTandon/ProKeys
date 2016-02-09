@@ -9,6 +9,7 @@
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
 - remove case-sensitivity for snippet names!
 - sort of green notification on options page when things are updated instead of the alert box
+- two digit year date/time macro - added!
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
