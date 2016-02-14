@@ -12,7 +12,7 @@
 - two digit year date/time macro - added
 - made snippet handling OOP - doing
 - removed snippet character limits
-- changed "Restore" backup to <input type="file">
+- changed "Restore" backup to `<input type="file">`
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
