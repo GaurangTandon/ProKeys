@@ -7,9 +7,12 @@
 - clicking on dropdown elm in popup.js (when focused) should transfer focus on the Edit button
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
-- remove case-sensitivity for snippet names!
+- remove case-sensitivity for snippet names
 - sort of green notification on options page when things are updated instead of the alert box
-- two digit year date/time macro - added!
+- two digit year date/time macro - added
+- made snippet handling OOP - doing
+- removed snippet character limits
+- changed "Restore" backup to <input type="file">
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
