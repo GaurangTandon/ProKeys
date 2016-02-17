@@ -1,5 +1,9 @@
 ## Change log
 
+**3.0.1** - upcoming
+- remove prepare300update function
+- remove timestamp argument from Snip and Folder constructors
+
 **3.0.0** - upcoming
 - logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
 - Another attempt at fixing: https://github.com/GaurangTandon/ProKeys/issues/3 - done
