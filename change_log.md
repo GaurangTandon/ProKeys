@@ -18,6 +18,7 @@
 - made snippet handling OOP - doing
 - removed snippet character limits
 - changed "Restore" backup to `<input type="file">`
+- - removed googleBool in setText
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
