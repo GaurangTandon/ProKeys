@@ -9,7 +9,6 @@
 - logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
 - Another attempt at fixing: https://github.com/GaurangTandon/ProKeys/issues/3 - done
 - first install should open popup box directly and give a greeting message/explaining 3.0.0 changes
-- clicking on dropdown elm in popup.js (when focused) should transfer focus on the Edit button
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
 - remove case-sensitivity for snippet names
@@ -18,7 +17,7 @@
 - made snippet handling OOP - doing
 - removed snippet character limits
 - changed "Restore" backup to `<input type="file">`
-- - removed googleBool in setText
+- removed googleBool in setText
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
