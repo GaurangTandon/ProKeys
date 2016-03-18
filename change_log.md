@@ -2,6 +2,7 @@
 
 **3.1.0** - upcoming
 - enable rich text editor for snippets
+- highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
 
 **3.0.0** - upcoming
