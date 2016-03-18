@@ -2,22 +2,22 @@
 
 **3.1.0** - upcoming
 - enable rich text editor for snippets
-- remove prepare300update function
 - remove timestamp argument from Snip and Folder constructors
 
 **3.0.0** - upcoming
+- made snippet handling OOP, added folder suppet - done
 - logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
 - Another attempt at fixing: https://github.com/GaurangTandon/ProKeys/issues/3 - done
-- first install should open popup box directly and give a greeting message/explaining 3.0.0 changes
-- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
-- fix for certain keycodes not corresponding with their actual key name (in hotkey feature)
-- remove case-sensitivity for snippet names
-- sort of green notification on options page when things are updated instead of the alert box
+- first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - NOT DONE
+- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode - NOT DONE
+- fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - NOT DONE
+- remove case-sensitivity for snippet names - done
+- sort of green notification on options page when things are updated instead of the alert box - NOT DONE
 - two digit year date/time macro - added
-- made snippet handling OOP - doing
-- removed snippet character limits
+- removed snippet character limits - done
 - changed "Restore" backup to `<input type="file">`
-- removed googleBool in setText
+- removed googleBool in setText - UNTESTED
+- removed delete dialog  - done
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
