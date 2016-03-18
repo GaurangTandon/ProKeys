@@ -7,7 +7,9 @@
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet - done
-- logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
+- logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!) - done
+- removed snippets popup, listing snippets in options page now - done
+- completely redesigned the options page - DOING
 - Another attempt at fixing: https://github.com/GaurangTandon/ProKeys/issues/3 - done
 - first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - NOT DONE
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode - NOT DONE
