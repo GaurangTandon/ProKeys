@@ -21,6 +21,8 @@
 - changed "Restore" backup to `<input type="file">`
 - removed googleBool in setText - UNTESTED
 - removed delete dialog  - done
+- add export, import, print buttons in the Snippet page, remove backup tab
+- add support for <=200% zoom
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
