@@ -4,6 +4,7 @@
 - enable rich text editor for snippets
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
+- check for duplicate snippets and folders in restore data
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet - done
