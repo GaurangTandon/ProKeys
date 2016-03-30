@@ -5,6 +5,7 @@
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
 - check for duplicate snippets and folders in restore data
+- allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: ![](https://s12.postimg.org/f7ef080sd/initial.png)
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet - done
