@@ -2,7 +2,7 @@
 <sup>cum to-do list</sup>
 
 **3.1.0** - upcoming
-- enable rich text editor for snippet editing
+- enable rich text editor for snippet editing - http://nicedit.com/demos.php?demo=2
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
 - check for duplicate snippets and folders in restore data
