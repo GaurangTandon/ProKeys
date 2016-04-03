@@ -7,7 +7,7 @@
 - remove timestamp argument from Snip and Folder constructors
 - check for duplicate snippets and folders in restore data
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
-- allow custom import
+- allow custom import, such as http://www.wordexpander.net/libraries.htm
 - sort of green notification on options page when things are updated instead of the alert box
 - think of a better way to display "3259 bytes used out of 5,242,880 bytes"
 - try fixing bug: open Compose in Gmail, press `[`; problem- automatic insertion of new line
