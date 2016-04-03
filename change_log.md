@@ -1,30 +1,31 @@
 ## Change log
 
 **3.1.0** - upcoming
-- enable rich text editor for snippets
+- enable rich text editor for snippet editing
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
 - check for duplicate snippets and folders in restore data
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
+- allow custom import
+- sort of green notification on options page when things are updated instead of the alert box
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet - done
 - logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!) - done
 - removed snippets popup, listing snippets in options page now - done
-- completely redesigned the options page - DOING
+- completely redesigned the options page, made responsive till 200% zoom - DOING
 - Another attempt at fixing: https://github.com/GaurangTandon/ProKeys/issues/3 - done
 - first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - NOT DONE
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode - NOT DONE
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - NOT DONE
 - remove case-sensitivity for snippet names - done
-- sort of green notification on options page when things are updated instead of the alert box - NOT DONE
 - two digit year date/time macro - added
 - removed snippet character limits - done
-- changed "Restore" backup to `<input type="file">`
+- changed "Restore" backup to `<input type="file">` - done
 - removed googleBool in setText - UNTESTED
 - removed delete dialog  - done
-- add export, import, print buttons in the Snippet page, remove backup tab
-- add support for <=200% zoom
+- added export, import, past revisions buttons in the Snippet page - done
+- added past revision restore facility - done
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
