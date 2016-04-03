@@ -1,4 +1,5 @@
 ## Change log
+<sup>cum to-do list</sup>
 
 **3.1.0** - upcoming
 - enable rich text editor for snippet editing
@@ -8,6 +9,7 @@
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
 - allow custom import
 - sort of green notification on options page when things are updated instead of the alert box
+- think of a better way to display "3259 bytes used out of 5,242,880 bytes"
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet - done
