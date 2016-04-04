@@ -11,6 +11,7 @@
 - sort of green notification on options page when things are updated instead of the alert box
 - think of a better way to display "3259 bytes used out of 5,242,880 bytes"
 - try fixing bug: open Compose in Gmail, press `[`; problem- automatic insertion of new line
+- show `?` mark near things that are likely to confuse users and add a gif photo there
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet - done
