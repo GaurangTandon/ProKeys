@@ -19,7 +19,7 @@
 - logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!) - done
 - removed snippets popup, listing snippets in options page now - done
 - completely redesigned the options page, made responsive till 200% zoom - DOING
-- Another attempt at fixing: https://github.com/GaurangTandon/ProKeys/issues/3 - done
+- fixed: https://github.com/GaurangTandon/ProKeys/issues/3 - done
 - first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - NOT DONE
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode - NOT DONE
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - NOT DONE
