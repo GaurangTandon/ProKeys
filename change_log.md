@@ -28,10 +28,11 @@
 - two digit year date/time macro - added
 - removed snippet character limits - done
 - changed "Restore" backup to `<input type="file">` - done
-- removed googleBool in setText - UNTESTED
+- removed googleBool in setText - done, working fine
 - removed delete dialog  - done
 - added export, import, past revisions buttons in the Snippet page - done
 - added past revision restore facility - done
+- removed bannedElementNodes thing, which was an attempt to fix #3
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
