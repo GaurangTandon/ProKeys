@@ -32,7 +32,7 @@
 - removed delete dialog  - done
 - added export, import, past revisions buttons in the Snippet page - done
 - added past revision restore facility - done
-- removed bannedElementNodes thing, which was an attempt to fix #3
+- removed `bannedElementNodes` String array, which was an attempt to fix issue #3
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
