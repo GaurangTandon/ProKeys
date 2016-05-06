@@ -9,11 +9,13 @@
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
 - allow custom import, such as http://www.wordexpander.net/libraries.htm
 - sort of green notification on options page when things are updated instead of the alert box
-- think of a better way to display "3259 bytes used out of 5,242,880 bytes"
 - show `?` mark near things that are likely to confuse users and add a gif photo there
 - show the .folderList .selectList with +/- marks to collapse folders, similar to Windows explorer
 - .selectList UI decide color
 -  if the user accidentally presses the completing parenthesis [')'] out of habit then porkeys should delete a ')' to give ['()'] instead of ['())']
+-  highlight matched search phrase in snippet list searching
+-  possibility of unlimited revisions, and being able to delete revisions
+-  comment the code more properly with precondition and postcondition
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet - done
@@ -21,7 +23,7 @@
 - removed snippets popup, listing snippets in options page now - done
 - completely redesigned the options page, made responsive till 200% zoom - DOING
 - fixed: https://github.com/GaurangTandon/ProKeys/issues/3 - done
-- first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - NOT DONE
+- first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - done
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode - NOT DONE
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - NOT DONE
 - remove case-sensitivity for snippet names - done
@@ -33,6 +35,7 @@
 - added export, import, past revisions buttons in the Snippet page - done
 - added past revision restore facility - done
 - removed `bannedElementNodes` String array, which was an attempt to fix issue #3
+- create uniformity in naming convention - "name" and "body" only; eliminate "long" and "short" - done
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
