@@ -36,6 +36,7 @@
 - added past revision restore facility - done
 - removed `bannedElementNodes` String array, which was an attempt to fix issue #3
 - create uniformity in naming convention - "name" and "body" only; eliminate "long" and "short" - done
+- create uniformity in css class naming regarding dash and underscore - all switched over to underscore - done
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
