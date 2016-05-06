@@ -32,7 +32,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 3. Fork the repo, make changes, and submit a pull request, describing the changes made.
 4. Help me translate ProKeys to your native language.
 5. Share the word about ProKeys with people!
-6. [Flattr ProKeys](https://flattr.com/thing/3a21a326ed09014a80254c2938cd5bee) - buy me a ~~beer~~ coffee!
+6. Monetary donations are gratefully accepted at email 1gaurangtandon@gmail.com using [PayPal](https://www.paypal.com/myaccount/transfer/buy)
 
 **Contact me** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
 
