@@ -12,7 +12,7 @@
 - show `?` mark near things that are likely to confuse users and add a gif photo there
 - show the .folderList .selectList with +/- marks to collapse folders, similar to Windows explorer
 - .selectList UI decide color
--  if the user accidentally presses the completing parenthesis [')'] out of habit then porkeys should delete a ')' to give ['()'] instead of ['())']
+-  if the user accidentally presses the completing parenthesis [')'] out of habit then prokeys should delete a ')' to give ['()'] instead of ['())']
 -  highlight matched search phrase in snippet list searching
 -  possibility of unlimited revisions, and being able to delete revisions
 -  comment the code more properly with precondition and postcondition
