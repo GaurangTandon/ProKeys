@@ -18,25 +18,25 @@
 -  comment the code more properly with precondition and postcondition
 
 **3.0.0** - upcoming
-- made snippet handling OOP, added folder suppet - done
-- logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!) - done
-- removed snippets popup, listing snippets in options page now - done
-- completely redesigned the options page, made responsive till 200% zoom - DOING
-- fixed: https://github.com/GaurangTandon/ProKeys/issues/3 - done
+- made snippet handling OOP, added folder suppet
+- logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
+- removed snippets popup, listing snippets in options page now
+- completely redesigned the options page, made responsive till 200% zoom
+- fixed: https://github.com/GaurangTandon/ProKeys/issues/3
 - first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - done
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode - NOT DONE
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - NOT DONE
-- remove case-sensitivity for snippet names - done
-- two digit year date/time macro - added
-- removed snippet character limits - done
-- changed "Restore" backup to `<input type="file">` - done
-- removed googleBool in setText - done, working fine
-- removed delete dialog  - done
-- added export, import, past revisions buttons in the Snippet page - done
-- added past revision restore facility - done
+- remove case-sensitivity for snippet names
+- two digit year date/time macro added
+- removed snippet character limits
+- changed "Restore" backup to `<input type="file">`
+- removed googleBool in setText
+- removed delete dialog, replaced with simple window.alert
+- added export, import, past revisions buttons in the Snippet page
+- added past edited, added, deleted snips restore facility
 - removed `bannedElementNodes` String array, which was an attempt to fix issue #3
-- create uniformity in naming convention - "name" and "body" only; eliminate "long" and "short" - done
-- create uniformity in css class naming regarding dash and underscore - all switched over to underscore - done
+- create uniformity in naming convention - "name" and "body" only; eliminate "long" and "short"
+- create uniformity in css class naming regarding dash and underscore - all switched over to underscore
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
