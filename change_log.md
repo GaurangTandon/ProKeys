@@ -12,7 +12,6 @@
 - show `?` mark near things that are likely to confuse users and add a gif photo there
 - show the .folderList .selectList with +/- marks to collapse folders, similar to Windows explorer
 - .selectList UI decide color
--  if the user accidentally presses the completing parenthesis [')'] out of habit then prokeys should delete a ')' to give ['()'] instead of ['())']
 -  highlight matched search phrase in snippet list searching
 -  possibility of unlimited revisions, and being able to delete revisions
 -  comment the code more properly with precondition and postcondition
@@ -37,6 +36,7 @@
 - removed `bannedElementNodes` String array, which was an attempt to fix issue #3
 - create uniformity in naming convention - "name" and "body" only; eliminate "long" and "short"
 - create uniformity in css class naming regarding dash and underscore - all switched over to underscore
+-  if the user accidentally presses the completing parenthesis [')'] out of habit then prokeys should delete a ')' to give ['()'] instead of ['())'] - only valid when user does not insert any char in between
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
