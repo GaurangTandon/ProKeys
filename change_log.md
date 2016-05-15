@@ -25,7 +25,8 @@
 - completely redesigned the options page, made responsive till 200% zoom
 - fixed: https://github.com/GaurangTandon/ProKeys/issues/3
 - first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - done
-- fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - NOT DONE
+- fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - fixed for numpad keys, comma and dot;
+  unchecked for other OS
 - remove case-sensitivity for snippet names
 - two digit year date/time macro added
 - removed snippet character limits
