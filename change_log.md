@@ -16,6 +16,7 @@
 -  highlight matched search phrase in snippet list searching
 -  possibility of unlimited revisions, and being able to delete revisions
 -  comment the code more properly with precondition and postcondition
+- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet
@@ -24,7 +25,6 @@
 - completely redesigned the options page, made responsive till 200% zoom
 - fixed: https://github.com/GaurangTandon/ProKeys/issues/3
 - first install should open popup box directly and give a greeting message/explaining 3.0.0 changes - done
-- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode - NOT DONE
 - fix for certain keycodes not corresponding with their actual key name (in hotkey feature) - NOT DONE
 - remove case-sensitivity for snippet names
 - two digit year date/time macro added
