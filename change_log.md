@@ -16,7 +16,6 @@
 -  possibility of unlimited revisions, and being able to delete revisions
 -  comment the code more properly with precondition and postcondition
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
-- remove blocking of ReactJS elements
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet
@@ -38,6 +37,8 @@
 - create uniformity in naming convention - "name" and "body" only; eliminate "long" and "short"
 - create uniformity in css class naming regarding dash and underscore - all switched over to underscore
 -  if the user accidentally presses the completing parenthesis [')'] out of habit then prokeys should delete a ')' to give ['()'] instead of ['())'] - only valid when user does not insert any char in between
+- remove blocking of ReactJS elements
+- removed the condition [][word] in Generic.isValidName which made special fixes for snippet names like "constructor"
 
 **2.7.0** - 24/01/2015
 - block site access in context menu
