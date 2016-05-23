@@ -8,14 +8,15 @@ ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore
 [More info on all these in Help section inside the app]  
 1. **Snippets** - define custom abbreviations, and retrieve the text associated with them simply by pressing the hotkey (default: Shift+Space). Example: "brb" can expand to "Be right back!"  
 2. **Placeholders** - are fields in the snippet body that can be given dynamic values on using the snippet.  
-3. **Mathomania** - do math without leaving your text editor, and without calculators. Example: "[[ 15% * 600 =]]" gives "90" and "[[ (5+6) * 15^2 =]]" gives "2475"  
-4. **Auto-Insert** - Quotes ('"') and braces ('(', '[', '{') are auto-completed, and you can specify your custom insert-it-for-me also (like, inserting a '>' on typing of a '<') in the settings.  
-5. **Date/Time Macros** - embed short symbols inside the parentheses of '[[%d()]]' inside a snippet body and it will auto replace the symbol with the current date and time related value. A sample snippet as well as a guide has been provided (in Help section inside the app)   
-6. **Date/Time Arithmetic** - use the `+` or `-` sign to move forward or backward in time in date/time macros. Supports both relative as well as independent evaluation.  
-7. **Variables** - built-in variables holding dynamic values for "date", "time" and (browser) "version"  
-8. **Tab Key** - The tab key can be made to insert 4 spaces, instead of it's default function, thus speeding up work.  
-9. **Context menu access** - for blocking sites and inserting snippets.  
-10. **Sync/Local storage** - Use whichever you prefer.
+3. **Mathomania** - do math without leaving your text editor, and without calculators. Example: "[[ 15% * 600 =]]" gives "90" and "[[ (5+6) * 15^2 =]]" gives "2475".
+4. **Clipboard access** - insert `[[%p]]` anywhere in your snippet body. It will automatically be substituted with teh current clipboard data.
+5. **Auto-Insert** - Quotes ('"') and braces ('(', '[', '{') are auto-completed, and you can specify your custom insert-it-for-me also (like, inserting a '>' on typing of a '<') in the settings.  
+6. **Date/Time Macros** - embed short symbols inside the parentheses of '[[%d()]]' inside a snippet body and it will auto replace the symbol with the current date and time related value. A sample snippet as well as a guide has been provided (in Help section inside the app)   
+7. **Date/Time Arithmetic** - use the `+` or `-` sign to move forward or backward in time in date/time macros. Supports both relative as well as independent evaluation.  
+8. **Variables** - built-in variables holding dynamic values for "date", "time" and (browser) "version"  
+9. **Tab Key** - The tab key can be made to insert 4 spaces, instead of it's default function, thus speeding up work.  
+10. **Context menu access** - for blocking sites and inserting snippets.  
+11. **Sync/Local storage** - Use whichever you prefer.
 
 ## Libraries/Code sources
 No libraries what so ever! I only utilized vanilla JS for super performce and less app size. Only Eric Meyer's CSS reset stylesheet - public domain - has been used with modifications.
