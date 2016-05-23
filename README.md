@@ -1,4 +1,4 @@
-[![logo of prokeys](http://s33.postimg.org/i8kmdd74f/transparent_background_logo.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
+[![logo of prokeys](http://s33.postimg.org/uoupgi05r/transparent_logo_narrow.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
 **Latest version**: 3.0.0
 **Status**: active, stable build (last update 24/Jan/15)
