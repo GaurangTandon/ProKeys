@@ -16,6 +16,7 @@
 -  possibility of unlimited revisions, and being able to delete revisions
 -  comment the code more properly with precondition and postcondition
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
+- remove #backward compatibility statements
 
 **3.0.0** - upcoming
 - made snippet handling OOP, added folder suppet
