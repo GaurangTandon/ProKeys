@@ -1,20 +1,29 @@
+/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate, snipLimits */
+/* global $, setTextForNode, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
+/* global triggerEvent, setHTML, MONTHS, formatTextForNodeDisplay */
+
 // custom functions inspired from jQuery
 // special thanks to
 // bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32 
+
+function nodeListPrototypes(prop){
+	NodeList.prototype[prop] = function() {
+		var args = [].slice.call(arguments, 0);
+		[].forEach.call(this, function(node) {
+			node[prop].apply(node, args);
+		});
+		return this;
+	};
+}
+
 (function(){
-	window.SNIP_NAME_LIMIT = 25;
-	window.SNIP_BODY_LIMIT = 2000;
+	window.OBJECT_NAME_LIMIT = 30;
 	window.MONTHS = ["January", "February", "March",
 					"April", "May", "June", "July", "August", "September",
 					"October", "November", "December"];
-	window.snipLimits = {
-		"name": SNIP_NAME_LIMIT,
-		"Name": SNIP_NAME_LIMIT,
-		"input": SNIP_NAME_LIMIT,
-		"body": SNIP_BODY_LIMIT,
-		"Body": SNIP_BODY_LIMIT,
-		"textarea": SNIP_BODY_LIMIT
-	};
+	window.DAYS = ["Sunday", "Monday", "Tuesday",
+							"Wednesday", "Thursday", 
+							"Friday", "Saturday"];
 	
 	function hasEvent(elm, type) {
 		return type in elm.pEvents;
@@ -50,6 +59,18 @@
 	EventTarget.prototype.addEventListener = makeListener("add", true);
 	EventTarget.prototype.removeEventListener = makeListener("remove", false);
 	
+	// used for triggering context menu event
+	// on window object
+	window.triggerEvent = function(node, eventName, obj){
+		var ev = new CustomEvent(eventName, obj || {});
+		
+		node.dispatchEvent(ev);
+	};
+	
+	Node.prototype.trigger = function(eventName, obj){
+		triggerEvent(this, eventName, obj);
+	};
+	
 	window.$ = function(selector){
 		var elms = document.querySelectorAll(selector);
 
@@ -58,19 +79,16 @@
 	};
 
 	Node.prototype.on = window.on = function (name, fn, useCapture) {
-		this.addEventListener(name, fn, useCapture);
+		var names = name.split(/,\s*/g);
+		
+		for(var i = 0, len = names.length; i < len; i++)
+			this.addEventListener(names[i], fn, useCapture);
+		
 		return this;
 	};
 
 	NodeList.prototype.__proto__ = Array.prototype;
-
-	NodeList.prototype.on = NodeList.prototype.addEventListener = function (name, fn) {
-		this.forEach(function (elem) {
-			elem.on(name, fn);
-		});
-		return this;
-	};
-
+	
 	// inserts the newNode after `this`
 	Node.prototype.insertAfter =  function(newNode){
 		this.parentNode.insertBefore(newNode, this.nextSibling);
@@ -83,37 +101,41 @@
 	};
 
 	Node.prototype.toggleClass = function(cls){
-		if(this.hasClass(cls)) this.classList.remove(cls);
-		else this.classList.add(cls);
+		this.classList.toggle(cls);
 		return this;
 	};
 	
 	Node.prototype.addClass = function(cls){
 		// multiple classes to add
-		if(Array.isArray(cls)){
-			cls.forEach(function(e){
-				this.addClass(e);
-			}.bind(this));
-			return this;
-		}
+		if(!Array.isArray(cls))
+			cls = [cls];
+
+		cls.forEach(function(e){
+			this.classList.add(e);
+		}.bind(this));		
 		
-		this.classList.add(cls);
 		return this;
 	};
 	
 	Node.prototype.removeClass = function(cls){
 		// multiple classes to remove
-		if(Array.isArray(cls)){
-			cls.forEach(function(e){
-				this.removeClass(e);
-			}.bind(this));
-			return this;
-		}
+		if(!Array.isArray(cls))
+			cls = [cls];
+
+		cls.forEach(function(e){
+			this.classList.remove(e);
+		}.bind(this));		
 		
-		this.classList.remove(cls);
 		return this;
 	};
-
+	
+	var nodeListProps = ["addEventListener", "removeEventListener", "on",
+						"addClass", "removeClass", "toggleClass", "hasClass",
+						"trigger"];
+	
+	for(var i = 0, len = nodeListProps.length; i < len; i++)		
+		nodeListPrototypes(nodeListProps[i]);	
+	
 	// replaces `this` with `newElm`; `newElm` is a string; returns new element
 	Node.prototype.replaceWith = function(newElm, newClass, id, textToReplace){
 		// string newClass, id, textToReplace (optional: to dictate which text should be in replaced element)
@@ -126,12 +148,13 @@
 		if(newClass){
 			newClass = newClass.split(" ");
 			for(var i = 0; newClass[i]; i++)
-				newElement.toggleClass(newClass[i]);
+				newElement.addClass(newClass[i]);
 		}
 
 		if(id) newElement.id = id;
-
-		// if should `replaceText`, get text from old and set it in new; always `formatTextForNodeDisplay`		
+		
+		// if should `replaceText`, get text from old and set it in new
+		// always `formatTextForNodeDisplay`		
 		setHTML(newElement, formatTextForNodeDisplay(newElement, textToReplace || getHTML(this)));
 
 		// perform replace function
@@ -143,12 +166,6 @@
 
 	Node.prototype.isTextBox = function(){
 		return this.tagName === "INPUT" || this.tagName === "TEXTAREA";
-	};
-
-	Node.prototype.trigger = function(eventName, obj){
-		var ev = new CustomEvent(eventName, obj || {});
-		
-		this.dispatchEvent(ev);
 	};
 	
 	// returns innerText
@@ -163,7 +180,7 @@
 	
 	// prototype alternative for setText/getText
 	// use only when sure that Node is "not undefined"
-	Node.prototype.text = function(textToSet){		
+	Node.prototype.text = function(textToSet){	
 		// can be zero/empty string; make sure it's undefined
 		return this.html(textToSet, "innerText");
 	};
@@ -171,52 +188,44 @@
 	window.getHTML = function(node, prop){
 		if(!node) return;
 		
-		var googleBool = window.isGoogle || false;
-		
-		// prop used by getText
-		prop = prop || "innerHTML";
-		
 		if(node.nodeType == 3)
-			return node.textContent;
+			return node.textContent.replace(/\u00a0/g, " ");
 		
 		switch(node.tagName){
-			case "DIV":
-				// return innerText to avoid div's and replace &nbsp with space
-				return (googleBool ? node.innerText.replace(/\u00A0/g, " ") : node[prop])
-								.replace(/&nsbp;/g, " ").replace(/<br>/g, "\n");
 			case "TEXTAREA":
 			case "INPUT":
 				return node.value;
 			default:
-				return node[prop].replace(/&nsbp;/g, " ").replace(/<br>/g, "\n");			
+				return node[prop || "innerHTML"];
 		}	
 	};
 	
-	window.setHTML = function(node, newVal, prop){
-		var googleBool = window.isGoogle || false;
-		
+	window.setHTML = function(node, newVal, prop){	
 		// in case number is passed; .replace won't work
 		newVal = newVal.toString();
-		
-		// prop used by setText
-		prop = prop || "innerHTML";
-		
+				
 		if(node.nodeType === 3){
-			node.textContent = newVal;
+			node.textContent = newVal.replace(/ /g, "\u00a0");
 			return node;
 		}
 		
 		switch(node.tagName){
-			case "DIV":
-				node[prop] = (googleBool ? newVal.replace(/\u00A0/g, " ") : newVal).replace(/ {2}/g, " &nbsp;").replace(/\n/g, "<br>");
-				break;
 			case "TEXTAREA":
 			case "INPUT":
-				node.value = newVal; break;
+				node.value = newVal.replace("<br>", "\n")
+									.replace("&nbsp;", " "); break;
 			default:
-				node[prop] = newVal.replace(/ {2}/g, " &nbsp;").replace(/\n/g, "<br>");
-				break;
-		}	
+				if(prop === "innerText")
+					// but innertext will collapse consecutive spaces
+					// do not use textContent as it will collapse even single newlines
+					node.innerText = newVal.replace("<br>", "\n")
+											.replace("&nbsp;", " ");
+				// first .replace is required as at the end of any text
+				// as gmail will not display single space for unknown reason
+				else node.innerHTML = newVal.replace(/ $/g, "&nbsp;")
+											.replace(/ {2}/g, " &nbsp;")
+											.replace(/\n/g, "<br>");
+		}
 		
 		return node;
 	};
@@ -230,19 +239,20 @@
 				getHTML(this, prop);
 	};
 	
-	// replaces string's `<` with `&gt' or reverse; sop to render html as text and not html
-	// in snip names and bodies
+	// replaces string's `<` with `&gt' or reverse
+	// sop to render html as text and not html in snip names and bodies
 	window.formatTextForNodeDisplay = function(node, string, overwrite){
-		var mode = overwrite || (node.isTextBox() ? "makeHTML" : "makeEntity");
+		var mode = overwrite || (node.isTextBox() ? "makeHTML" : "makeEntity"),
+			map = [["&gt;", ">"], ["&lt;", "<"], ["&nbsp;", " "]],
+			bool = mode == "makeHTML",
+			regexIndex = +!bool, replacerIdx = +bool, elm;
+			
+		for(var i = 0, len = map.length; i < len; i++){
+			elm = map[i];
+			string = string.replace(new RegExp(elm[regexIndex], "g"), elm[replacerIdx]);
+		}
 		
-		if(mode == "makeHTML")
-			return string.replace(/&gt;/g, ">").replace(/&lt;/g, "<");
-		else
-			return string.replace(/>/g, "&gt;").replace(/</g, "&lt;");
-	};
-	
-	window.setTextForNode = function(node, text){
-		setHTML(node, formatTextForNodeDisplay(node, text));
+		return string;
 	};
 	
 	window.cloneObject = function(obj) {
@@ -250,17 +260,16 @@
 
 		for(var i in obj) {
 			elm = obj[i];
-			clone[i] = Object.prototype.toString.call(elm) == "[object Object]" ? 
-				cloneObject(elm) : elm;
+			clone[i] = isObject(elm) ? cloneObject(elm) : elm;
 		}
 		return clone;
 	};
 	
 	window.isEmpty = function(obj) {
-		for(var prop in obj) {
+		for(var prop in obj)
 			if(obj.hasOwnProperty(prop))
 				return false;
-		}
+		
 		return true;
 	};
 	
@@ -276,34 +285,66 @@
 		return (num <= 9 ? "0" : "") + num;
 	};
 	
-	window.getFormattedDate = function(){
-		var d = new Date(),
-			date = padNumber(parseInt(d.getDate(), 10));
+	window.getFormattedDate = function(timestamp){
+		var d = (timestamp ? new Date(timestamp) : new Date()).toString();
 
-		return MONTHS[d.getMonth()] + " " + date + ", " + d.getFullYear();
+		// sample date would be:
+		// "Sat Feb 20 2016 09:17:23 GMT+0530 (India Standard Time)"
+		return d.substring(4, 15);
 	};
 	
-	// Returns a function, that, as long as it continues to be invoked, will not
-	// be triggered. The function will be called after it stops being called for
-	// N milliseconds. If `immediate` is passed, trigger the function on the
-	// leading edge, instead of the trailing.
-	window.debounce = function(func, wait, immediate) {
-		var timeout;
-		
-		return function() {
-			var context = this, args = arguments;
-			var later = function() {
-				timeout = null;
-				if (!immediate) func.apply(context, args);
-			};
-			var callNow = immediate && !timeout;
-			clearTimeout(timeout);
-			timeout = setTimeout(later, wait);
-			if (callNow) func.apply(context, args);
-		};
-	};
-
 	window.isObject = function(o){
 		return Object.prototype.toString.call(o) === "[object Object]";
+	};
+	
+	// if it is a callForParent, means that a child node wants 
+	// to get its parents checked
+	window.isContentEditable = function(node, callForParent){
+		var tgN = node && node.tagName,
+			attr, parentCount, parent;
+
+		// insanity checks first
+		if(!node || tgN === "TEXTAREA" || tgN === "INPUT" || !node.getAttribute)
+			return false;
+		else{
+			attr = node.getAttribute("contenteditable");
+	
+			// empty string to support <element contenteditable> markup
+			if(attr === "" || attr === "true" || attr === "plaintext-only")
+				return true;		
+			
+			// important part below
+			// note that if we introduce a snippet
+			// then it generates <span> elements in contenteditable `div`s
+			// but they don't have content-editable true attribute
+			// so they fail the test, hence, here is a new check for them
+			// search if their parents are contenteditable
+			// but only do this if the current node is not a textarea
+			// which we have checked above
+
+			if(callForParent) return false;
+			
+			parentCount = 1; // only two parents allowed
+			parent = node;
+
+			do{
+				parent = parent.parentNode;
+				parentCount++;
+
+				if(!parent) return false;
+				// parent check call
+				if(isContentEditable(parent, true)) return true;
+			}while(parentCount <= 2);
+
+			return false;
+		}
+	};
+
+	window.checkRuntimeError = function(){
+		if(chrome.runtime.lastError){
+			alert("An error occurred! Please press [F12], copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!");
+			console.log(chrome.runtime.lastError);
+			return true;
+		}
 	};
 })();
