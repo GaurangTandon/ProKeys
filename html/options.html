@@ -6,89 +6,345 @@
 	<link href="../css/reset.css" rel="stylesheet">
 	<link href="../css/options.css" rel="stylesheet">
 	<script src="../js/pre.js"></script>
+	<script src="../js/snippet_classes.js"></script>
 	<script src="../js/options.js"></script>
-	<script src="../js/detector.js"></script>
+	<script src="../js/detector.js"></script>	
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-	<div id="sidebar">
-		<div id="logo">
-			<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn">
-				<img src="../imgs/r.png" alt="ProKeys - logo">
+	<div class="sidebar">
+		<div class="logo">
+			<a target="_blank" href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn">
 			</a>
 		</div>		
-		<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn">ProKeys</a>
-		<div id="btnContainer">
+		<div class="buttons">
 			<!-- actually it's divID but HTML won't allow upcase names here :(-->
+			<button id="snippetsButton" data-divid="snippets">Snippets</button>
 			<button id="settingButton" data-divid="settings">Settings</button>
 			<button id="helpButton" data-divid="help">Help</button>
-			<button id="backupButton" data-divid="backup">Backup and Print</button>
 			<button id="aboutButton" data-divid="about">About</button>
 		</div>
 	</div>
-	
+
 	<main class="wrapper">
 		<div class="verticalLine"></div>
-		
+
 		<div id="faded"></div>
+
+		<div class="change-log hidden box">
+			<p class="heading">ProKeys v3.0.0<span>Changelog</span></p>
+			<div class="content">
+				<p><i>We've made some changes. Here's what you need to know:</i></p>
+				<h2>&#x25cf; UI changes</h2>
+				<ul>
+					<li>Snippets are now listed in the Options page here.</li>
+					<li>Import/Export/Past revisions button are listed in the Snippets page.</li>
+					<li>The options page has been redesigned.</li>
+					<li>The logo and artwork has been redesigned.</li>
+				</ul>
+				<h2>&#x25cf; Functional changes</h2>
+				<ul>
+					<li>Clicking the "K" icon at the top-right will open this page only.</li>
+					<li>Folders are now supported. Nesting of folders is allowed too.</li>
+					<li>Case-sensitivity for snippet names has been removed. ("Abcd" and "ABCD" now mean the same)</li>
+					<li>Two-digit date-time macro ("YY") added.</li>
+					<li>Removed snippet body character limit.</li>
+					<li>Clipboard data can now be accessed by adding `[[%p]]` in the snippet body. See the "clipboard_macro" snippet to know more.</li>
+				</ul>
+				<h2>&#x25cf; Bugs squashed</h2>
+				<ul>
+					<li>UI glitches at >=150% zoom</li>
+					<li>High CPU usage in multiple web apps, including Gmail.</li>
+				</ul>
+				<button>Got it!</button>
+			</div>
+		</div>
 		
 		<div id="content">
-			<!--By default shows the settings page-->
-			<div id="settings">
-				<h1>Settings</h1>
+			<div id="snippets">
+				<h1>Snippets</h1>
+				<p class="storageBytes">
+					<span class="currentBytes"></span> out of <a href="https://developer.chrome.com/extensions/storage#properties">
+					<span class="bytesAvailable"></span> used</a> 
+				</p>				
 				
-				Current hotkey for snippet substitution is: <span class="hotkey_display"></span>
-				<textarea class="hotkey_listener"></textarea><br>
-				<button class="change_hotkey">Change hotkey</button><br><br>
-				Hotkey can only be composed of an optional, first Shift/Ctrl/Alt key and then a second key, which would be a key other than Shift/Ctrl/Alt. If Shift/Ctrl/Alt key are not used, hotkey combo can also be a single key like "a", " " (space). Please keep holding the first key, if used, while pressing the second key.
-				<hr>
-				
-				<div id="storageMode">
-					<p><b>Storage Mode settings</b></p>
-					<div class="container">
-						<!-- values set dynamically by options.js-->
-						<div class="current">
-							<h3>Current data storage mode:</h3>
-							<p></p>
-						</div>
-						<div class="transfer">
-							<h3>Set data storage mode to:</h3>
-							<p></p>
-						</div>
-					</div>
-					<p class="warning">You <b>MUST TAKE A BACKUP</b> before chaging storage mode.</p>
+				<div class="export-buttons">
+					<button class="export">Export/Backup</button>
+					<button class="import">Import/Restore</button>
+					<button class="revisions">Past data versions</button>
 				</div>
 				
-				<hr>
+				<div class="panel panel_snippets">
+					<div class="panel_top">
+						<div class="folder_path">
+							<!--div.path_part+div-->
+						</div>						
+						<div class="add_new_btn panel_btn" title="Add new snippet or folder"></div>
+						<div class="sort_btn panel_btn" title="Sort snippets"></div>
+						<div class="checkbox_btn panel_btn" title="Perform bulk action"></div>
+						<div class="search_btn panel_btn" title="Search snippets and folders"></div>
+					</div>
+					<div class="panel_search sub_panel">
+						<input type="text" placeholder="Type search phrase">
+					</div>
+					<div class="panel_add_new sub_panel">
+						<input type="button" value="Create new Snippet">
+						<input type="button" value="Create new Folder">
+					</div>
+					<div class="panel_sort sub_panel">
+						<div class="sort-dir">
+							Sort direction:
+							<label><input type="radio" name="sort-dir" checked>Ascending</label>
+							<label><input type="radio" name="sort-dir">Descending</label>
+						</div>
+						<div class="sort-type">
+							Sort by:
+							<label><input type="radio" name="sort-type" checked>Name</label>
+							<label><input type="radio" name="sort-type">Date created</label>
+						</div>
+						<input type="button" value="Sort">
+					</div>
+					<div class="panel_bulk_action sub_panel">						
+						<div class="selection_count">
+							Bulk Actions:
+							<span></span> selected
+							<input type="button" value="Select all">
+						</div>
+						<div class="bulk_actions">
+							<input type="button" value="Move to folder">
+							<input type="button" value="Delete selected">
+						</div>
+						<div class="folderSelect hidden">
+							<p>Select a folder and click "Move to folder" button again</p>
+							<div class="selectList">
+							
+							</div>
+						</div>
+					</div>
+					<div class="panel_content">
+						<!--div.snip {div.name, div.body, div.buttons} or div.folder{same}-->
+					</div>
+				</div>
 				
-				<p><b>Auto-Insert</b> all these letters, that is, on typing one of the below letter (say `(`), automatically insert its counter part (`)`), and place the caret (cursor) in between
-				<span class="tip_auto_insert">Tip</span></p>
-				<table class="auto_insert">
-				<thead><tr><th>Character</th><th>Counterpart</th></tr></thead>
-				</table>
+				<div class="panel edit-panel panel_snip_edit hidden">
+					<div class="panel_top">
+						<div class="header">
+							<span></span>
+						</div>
+						<div class="tick_btn panel_btn" title="Save snippet"></div>
+						<div class="close_btn panel_btn" title="Close dialog"></div>
+					</div>
+					<div class="panel_content">
+						<div class="name">
+							<p>Snippet Name: abbreviation</p>
+							<input type="text" placeholder="Case-insensitive ('ABCD' and 'abcd' same)">
+							<p class="error"></p>
+						</div>
+						<div class="body">
+							<p>Snippet Body: to which snippet name expands</p>
+							<textarea></textarea>
+							<p class="error"></p>
+						</div>
+						<div class="timestamp">
+							<span></span>
+						</div>
+						<div class="folderSelect">
+							<p>Nested under/Move to folder:</p>
+							<div class="selectList">
+								
+							</div>
+						</div>
+					</div>
+				</div>
 				
-				<hr>
+				<div class="panel edit-panel panel_folder_edit hidden">
+					<div class="panel_top">
+						<div class="header">
+							<span></span>
+						</div>
+						<div class="tick_btn panel_btn" title="Save folder"></div>
+						<div class="close_btn panel_btn" title="Close dialog"></div>
+					</div>
+					<div class="panel_content">
+						<div class="name">
+							<p>Folder Name</p>
+							<input type="text" placeholder="Case-insensitive ('ABCD' and 'abcd' same)">
+							<p class="error"></p>
+						</div>
+						<div class="timestamp">
+							<span></span>
+						</div>
+						<div class="folderSelect">							
+							<p>Nested under/Move to folder:</p>
+							
+							<div class="selectList">
+								
+							</div>
+						</div>
+					</div>
+				</div>
 				
-				<input type="checkbox" id="tabKey"> 
-				<label for="tabKey">Should [Tab] key insert four spaces instead of its default function?</label>
+				<div class="panel panel_popup export">
+					<div class="panel_top">
+						<div class="close_btn panel_btn" title="Close popup"></div>
+					</div>
+					<div class="panel_content">
+						<div class="step">
+							<span>1</span>
+							<div>
+								<p>Choose data to export:</p>
+								<label><input type="radio" name="data_export" value="data" checked>Entire data</label>
+								<label><input type="radio" name="data_export" value="snippets">Only snippets</label>
+							</div>
+						</div>
+						<div class="step">
+							<span>2</span>
+							<div>
+								<p>Choose use of exported data:</p>
+								<label><input type="radio" name="data_export_use" value="backup" checked>To backup data</label>
+								<label><input type="radio" name="data_export_use" value="print">To use in printing snippets</label>
+							</div>
+						</div>
+						<div class="step">
+							<span>3</span>
+							<div>
+								<a href="" download="">Download your data</a>							
+							</div>
+						</div>
+					</div>					
+				</div>
 				
-				<hr>
+				<div class="panel panel_popup import">
+					<div class="panel_top">
+						<div class="close_btn panel_btn" title="Close popup"></div>
+					</div>
+					<div class="panel_content">
+						<div class="step">
+							<span>1</span>
+							<div>
+								<p>Choose type of data being imported:</p>
+								<label><input type="radio" name="data_import" value="data" checked>Entire data</label>
+								<label><input type="radio" name="data_import" value="snippets">Only snippets</label>
+							</div>
+						</div>
+						<div class="import_folder_name step">
+							<span>2</span>
+							<div>
+								<p>Select folder under which new snippets will be imported:</p>
+								<div class="selectList">
+								</div>
+								<label><input type="checkbox">Delete existing snippets of selected folder?</label>
+							</div>
+						</div>
+						<div class="input step">
+							<span>3</span>
+							<div>
+								<input type="file" accept=".txt, .doc, .docx, .rtf">
+								<a href="#" class="file_input"></a>
+							</div>
+						</div>
+						<button class="restore">Restore</button>						
+					</div>					
+				</div>
 				
-				<b>Block Sites</b> - ProKeys will not work on the following sites:<br>
-				<ul></ul>
-				<br><br>
-				Add website to block (for example: `xyz.abcd.com`, `xyz.com/path`; but without `www` or `https://` or `http://`):
-				<br>
-				<input type="text" placeholder="Type address here" class="siteBlockInput">
-				<button>Block site</button>
+				<div class="panel panel_popup revisions">
+					<div class="panel_top">
+						<div class="close_btn panel_btn" title="Close popup"></div>
+					</div>
+					<div class="panel_content">
+						<p>This feature lets you recover your previous snippet data in case you, for example,
+							deleted important snippets, moved wrong snippets, etc.</p>
+						<div class="step">
+							<span>1</span>
+							<div>
+								<p>Choose available revision:</p>
+								<select>
+								
+								</select>
+							</div>
+						</div>
+						<div class="step">
+							<span>2</span>
+							<div>
+								<p>View (and, if needed, edit) the selected revision:</p>
+								<textarea></textarea>
+							</div>
+						</div>
+						<div class="input step">
+							<span>3</span>
+							<div>
+								Press Restore to use the selected revision.
+								The present snippet data will then be stored as a new revision.
+							</div>
+						</div>
+						<button class="restore">Restore</button>						
+					</div>					
+				</div>
 			</div>
-			<div id="help" class="show">
-				<h1>Help</h1>
+			<div id="settings">
+				<h1>Settings</h1>
+				<div class="box hotkey">
+					<p class="heading">Current hotkey: <span class="hotkey_display"></span></p>
+					<div class="content">
+						<textarea class="hotkey_listener"></textarea>
+						<button class="change_hotkey">Change hotkey</button>
+						<p class="info">
+							Pressing the hotkey immediately expands the snippet present before the cursor.
+							A hotkey can be composed of any button on the keyboard (optionally, in combination with Shift/Ctrl/Alt)
+						</p>
+					</div>
+				</div>
+
+				<div class="box storageMode">
+					<p class="heading">Storage Mode</p>
+					<div class="content">
+						<div class="container">
+							<!-- values set dynamically by options.js-->
+							<div class="current">
+								<h3>Current data storage mode:</h3>
+								<p></p>
+							</div>
+							<div class="transfer">
+								<h3>Set data storage mode to:</h3>
+								<p></p>
+							</div>
+						</div>
+						<p class="warning">You <b>MUST TAKE A BACKUP</b> before chaging storage mode.</p>
+					</div>
+				</div>
+
+				<div class="box auto-insert">
+					<p class="heading">Auto-Insert character pairs</p>
+					<div class="content">
+						On typing one of the letters below (say `(`), its complement (`)`), is automatically 
+						inserted after it, and the caret (cursor) in positioned between both of them</p>
+						<table class="auto_insert"></table>
+					</div>
+				</div>
+
+				<div class="box tabkey">
+					<div class="content">
+						<input type="checkbox" id="tabKey">
+						<label for="tabKey">Should [Tab] key insert four spaces instead of its default function?</label>
+					</div>
+				</div>				
 				
+				<div class="box blocked-sites">
+					<p class="heading">Block Sites</p>ProKeys will not work on the following sites:<br>
+					<div class="content">
+						<ul></ul>
+						<br><br>
+						Add website to block (for example: `xyz.abcd.com`, `xyz.com/path`):
+						<br>
+						<input type="text" placeholder="Type address here" class="siteBlockInput">
+						<button>Block site</button>
+					</div>
+				</div>
+			</div>
+			<div id="help">
+				<h1>Help</h1>
+
 				<section>
-					<p class="warning"><em><strong>Heads up!</strong> "Using a snippet" means performing snippet substitution in a web page with an already created snippet. "Creating a snippet" means creating a new snippet in the popup box.</em></p>
-					<p>Click the question you want to know about. Try the features in this editor</p>
-					
 					<div id="tryit">
 						<div class="nav">
 							<span>Swap editor mode: </span>
@@ -97,22 +353,28 @@
 						</div>
 						<textarea class="show">This is a normal text editor. It does not support bold, italics, etc. formatting using HTML.
 
-But multiline text is still supported.</textarea>
-						<div class="editor" contenteditable=true>This is a contenteditable or editable div. These editors are generally found in your email client like Gmail, Outlook, etc.<br><br><i>This editor supports </i><b>HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.</div>
+But multiline text is still supported.
+
+You can experiment with ProKeys' features here.</textarea>
+						<div class="editor" contenteditable=true>This is a contenteditable or editable div. These editors are generally found in your email client like Gmail, Outlook, etc.<br><br><i>This editor <u>supports</u></i><b> HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.</div>
 					</div>
-					
-					<h2>Info</h2>					
+
+					<h2>Info</h2>
 					<dl>
 						<dt>What are snippets (snips)?</dt>
 						<dd><p>Snippets are pairs of an abbreviation and a long text. Typing the abbreviation, pressing the hotkey (default: Shift+Space), replaces it with the long text.</p>
-							<p><b>Example:</b> Snippet with snippet name - "brb". The snippet name is the abbreviation. It is <b>case-sensitive</b>, so "brb", "BRB", and "bRb" are all different.
+							<p><b>Example:</b> Snippet with snippet name - "brb". The snippet name is the abbreviation. It is <b>case-insensitive</b>, so "brb", "BRB", and "bRb" are all same.
 							Typing "brb" and pressing the hotkey, would replace it with the snippet body, which here is "be right back".
 							Snippets can be created in the popup box.</p>
 							<a href="#tryit">Try snippets in editor</a> - you can view the snippets in the popup box</dd>
-						
+
 						<dt>Can a deleted snippet be restored?</dt>
-						<dd>No, unfortunately, snippets once deleted cannot be restored. Therefore, it is recommended you take a backup regularly.</dd>
-						
+						<dd>Yes, if your snippet is listed in the "Past data revisions" on the 
+							<a href="options.html#snippets">Snippets</a> tab, you can easily recover it.</dd>
+							
+						<dt>I want to revert to an older version of my data. How do I do that?</dt>
+						<dd>Please click the "Past data revisions" button on the <a href="options.html#snippets">Snippets</a> tab, there the steps to revert are mentioned.</dd>
+
 						<dt>What are Placeholders?</dt>
 						<dd><p>Placeholders are fields in the snippet body which are populated with dynamic values provided by you on using the snippet. A placeholder has the format `%text%` such that the text can only contain alphabets, digits and the underscore symbol.</p>
 							<p><b>Example:</b> snippet "wishBDay", which you can use to wish your friends Happy Birthday! Since the name of the friend keeps changing, so you can add a placeholder to the snippet body, as "%name%"(without quotes). It would be auto-highlighted whenever you use the snippet and you can type your friend's name into it.</p>
@@ -126,7 +388,7 @@ But multiline text is still supported.</textarea>
 							</ol>
 							</p>
 						</dd>
-						
+
 						<dt>What is Mathomania?</dt>
 						<dd><p>Often, mathematical calculations require you to leave your current work and use the calculator. But, using Mathomania, you can do calculations within the text editor itself.</p>
 							<p><b>Supported operations</b> are: addition, subtraction, multiplication, division, exponentiation (like: 2^3; of integer constants only), and percentage (using % symbol). You can group expressions using parentheses too.</p>
@@ -139,7 +401,7 @@ But multiline text is still supported.</textarea>
 							</p>
 							<a href="#tryit">Try math expressions in the editor</a> (like "[[5^3=]]")
 						</dd>
-						
+
 						<dt>What are Date/Time macros?</dt>
 						<dd><p>Date-Time macros can be used to insert current date and time related data.</p>
 							<strong>Usage</strong>
@@ -149,91 +411,61 @@ But multiline text is still supported.</textarea>
 								<li>Place one or more of the symbols inside the parentheses, from the symbol list.</li>
 								<li>When you use the snippet, this entire string of `[[%d(...)]]` would be replaced by the current value of the symbols it contains.</li>
 							</ol>
-							
+
 							<strong>Symbol list</strong>
 							<table>
 								<tr>
-									<td>Symbol to insert</td>
-									<td>Remarks</td>
-									<td>Sample output</td>
+									<td>Symbol to insert</td><td>Remarks</td><td>Sample output</td>
 								</tr>
 								<tr>
-									<td>s</td>
-									<td>seconds</td>
-									<td>40</td>
+									<td>s</td><td>seconds</td><td>40</td>
+								</tr>
+								<tr><td>m</td><td>minutes</td><td>56</td>
+								</tr>
+								<tr><td>h</td><td>hour (in 12 hour format)</td><td>11</td>
 								</tr>
 								<tr>
-									<td>m</td>
-									<td>minutes</td>
-									<td>56</td>
+									<td>hh</td><td>hour (in 24 hour format)</td><td>23</td>
 								</tr>
 								<tr>
-									<td>h</td>
-									<td>hour (in 12 hour format)</td>
-									<td>11</td>
+									<td>a</td><td>am or pm, as per time</td><td>am</td>
 								</tr>
 								<tr>
-									<td>hh</td>
-									<td>hour (in 24 hour format)</td>
-									<td>23</td>
+									<td>Do</td><td>date</td><td>14th</td>
 								</tr>
 								<tr>
-									<td>a</td>
-									<td>am or pm, as per time</td>
-									<td>am</td>
+									<td>D</td><td>date</td><td>14</td>
 								</tr>
 								<tr>
-									<td>Do</td>
-									<td>date</td>
-									<td>14th</td>
+									<td>dddd</td><td>day of the week</td><td>Sunday</td>
 								</tr>
 								<tr>
-									<td>D</td>
-									<td>date</td>
-									<td>14</td>
-								</tr>								
-								<tr>
-									<td>dddd</td>
-									<td>day of the week</td>
-									<td>Sunday</td>
+									<td>ddd</td><td>day of the week (short name)</td><td>Sun</td>
 								</tr>
 								<tr>
-									<td>ddd</td>
-									<td>day of the week (short name)</td>
-									<td>Sun</td>
-								</tr>								
-								<tr>
-									<td>MMMM</td>
-									<td>full month name</td>
-									<td>March</td>
+									<td>MMMM</td><td>full month name</td><td>March</td>
 								</tr>
 								<tr>
-									<td>MMM</td>
-									<td>short month name</td>
-									<td>Mar</td>
+									<td>MMM</td><td>short month name</td><td>Mar</td>
 								</tr>
 								<tr>
-									<td>MM</td>
-									<td>numeric month</td>
-									<td>03</td>
+									<td>MM</td><td>numeric month</td><td>03</td>
 								</tr>
 								<tr>
-									<td>YYYY</td>
-									<td>year</td>
-									<td>2015</td>
-								</tr>								
-								<tr>
-									<td>date</td>
-									<td>complete current date</td>
-									<td>March 05, 2015</td>
+									<td>YY</td><td>year (two digit)</td><td>15</td>
 								</tr>
 								<tr>
-									<td>time</td>
-									<td>complete current time (24hour format)</td>
-									<td>01:29:55</td>
+									<td>YYYY</td><td>year (four digit)</td><td>2015</td>
+								</tr>
+								<tr>
+									<td>date</td><td>complete current date</td><td>March 05, 2015</td>
+								</tr>
+								<tr>
+									<td>time</td><td>complete current time (24hour format)</td><td>01:29:55</td>
 								</tr>
 							</table></p>
 						</dd>
+
 						<dt>What is Date/Time arithmetic?</dt>
 						<dd><p>Date and Time arithmetic lets you move forward or backward in time in the Date/Time macros. It is of <b>two types:</b></p>
 							<p><b>1. Relative: </b>All the macro symbols inside a parentheses perform calculations relative to the same date, and have a single shared copy of the date. So, calculations on one symbol change that same shared copy, and could affect result of another symbol. Like, on forwarding a date by 10 days (using <span class="code">[[%d(D+10)]]</span>), if the date is caused to move into another month, then <i>that changed month</i> would be used as the current month for any calculation on any month symbol further inside the parentheses. Similar rules apply for changing minutes (causing the hour to change), etc.<br>
@@ -242,10 +474,20 @@ But multiline text is still supported.</textarea>
 							<p><b>Usage: </b>After a date/time macro symbol, you have to place a "+" or "-" sign (indicating whether to move forward or backward respectively), followed by a number, which would indicate the amount by which to move forward or backward. No white space or any other character should be used between the symbol, sign, and number. So, <span class="code">[[%d(Do+5 M-10)]]</span> is valid, while <span class="code">[[%d(Do - 5 M- 10)]]</span> is invalid.
 							<p><B>Evaluation</b> of these symbols is from left to right, and the symbol that appears first (at the top) in the symbols list, is evaluated first.</p></p>
 							<p><b>Example: </b>Consider this date/time macro: <span class="code">[[%d(YYYY:MM:D)]]</span>. If you want to move 10 days forward and 5 months backward,
-							 you could write: <span class="code">[[%d(YYYY:MM-5:D+10)]]</span> This was independent calculation. If you it to be relative, use <span class="code">[[%d(!YYYY:MM-5:D+10)]]</span> (with that <span class="code">!</span>)</p>
+							 you could write: <span class="code">[[%d(YYYY:MM-5:D+10)]]</span> This was independent calculation. If you want it to be relative, use <span class="code">[[%d(!YYYY:MM-5:D+10)]]</span> (with that <span class="code">!</span>)</p>
 							 <a href="#tryit">Try date and time arithmetic in editor</a> (use dateArithmetic sample snippet)
 							 <p><b>Limitation</b>: The "date" and "time" symbols do not support date and time arithmetic (I might fix this in future).</p>
 							 </dd>
+
+						<dt>How do I use Clipboard Paste Macro?</dt>
+						<dd>
+							Clipboard Paste Macro is used to paste the contents of your clipboard (that data which you have earlier copied or cut)
+							into the snippet body.<br>
+							To use it, you only have to place "[[%p]]" (without quotes) in the snippet body, at the location where 
+							you want your clipboard data to be pasted.
+						</dd>
+
+							 
 						<dt>What are Variables?</dt>
 						<dd><p>Variables are used to insert dynamic values at any time while typing. They are inbuilt and cannot be created by you. Of course, I would love a recommendation from you for a new variable! (email: prokeys.feedback@gmail.com)</p>
 							<p><b>Usage:</b>
@@ -256,132 +498,136 @@ But multiline text is still supported.</textarea>
 							<p>The following Variables (case-insensitive) are supported:
 							<table>
 								<tr>
-									<td>Variable name</td>
-									<td>Value it holds</td>
-									<td>Sample output</td>
+									<td>Variable name</td><td>Value it holds</td><td>Sample output</td>
 								</tr>
 								<tr>
-									<td>date</td>
-									<td>current, complete date</td>
-									<td>March 05, 2015</td>
+									<td>date</td><td>current, complete date</td><td>March 05, 2015</td>
 								</tr>
 								<tr>
-									<td>time</td>
-									<td>current, complete time</td>
-									<td>01:29:55</td>
+									<td>time</td><td>current, complete time</td><td>01:29:55</td>
 								</tr>
 								<tr>
-									<td>version</td>
-									<td>current browser version</td>
-									<td>Chrome 43.0.2357.130</td>
+									<td>version</td><td>current browser version</td><td>Chrome 43.0.2357.130</td>
 								</tr>
 							</table>
 							</p>
 							<a href="#tryit">Try these variables in editor</a>
 						</dd>
+
 						<dt>How are Variables different from Snippets?</dt>
 						<dd>Variables are more useful when you need to retrieve system-related dynamic values. Like the version of the browser, which would need to be manually entered into a snippet. A Variable would get it automatically.</dd>
 					</dl>
 					<hr>
 					<h2>Troubleshoot</h2>
+					<i>Try reloading the page before anything else. That fixes most issues.</i>
 					<dl>
+						<dt>ProKeys works improperly/does not work on XYZ site</dt>
+						<dd>
+							<ul>
+								<li>Some sites like Google Docs, Quora, Facebook, etc. insert their custom textboxes which maks it difficult for
+									ProKeys to recognize the caret position and perform relevant functions. <br> Unfortunately, there is no
+									workaround for this problem and you can only <b>block the site in <a href="options.html#settings">Settings</a></b> for the time being.</li>
+								<li>Some sites like Evernote insert their own custom &lt;iframe&gt;s in the page which may require a <b>custom, manual check</b>
+								     as it difficult to get ProKeys to work with &lt;iframe&gt;s. Please mail me at prokeys.feedback@gmail.com if you have come across
+									any such site and I will try my best to fix ProKeys for that site.</li>
+								<li>Code/programming editors like Codemirror, Ace, etc. used in variety of sites are not supported since they have their own custom
+									features and prevent ProKeys from working properly.</li>
+								<li>Check that the site is not blocked in <a href="options.html">Settings</a>.</li>
+								<li>If nothing works, take a backup of your data and reinstall ProKeys. Restore your data back and try again.</li>
+								<li>If it <em>still</em> does not work, contact me at prokeys.feedback@gmail.com</li>
+							</ul>
+						</dd>
 						<dt>Snippet replacement is not working</dt>
 						<dd><ul>
 							<li>Make sure your caret(cursor) is placed just after the snippet name. Example: If your snippet name is "abcd", place your caret after "d"</li>
 							<li>Snippet names are case-sensitive. "ABCD" and "abcd" are not the same.</li>
-							<li>Refresh the webpage you are working on.</li>							
-							<li>If nothing works, then take a backup of your data and reinstall ProKeys. Restore your data back and try again.</li>
-							<li>If it <em>still</em> does not work, contact me at prokeys.feedback@gmail.com</li>
-						</ul></dd>
-						<dt>I get an error reading: "Invalid Snip Name! Please prefix it with a underscore and try again." while creating/editing snips.</dt>
-						<dd>Some words cannot be allowed because they interfere with the internal working of ProKeys. But prefixing them with an underscore will allow you to use them, though you'd need to type the underscore at the start while using it on a webpage. Example, if word 'abcd' gives this error, then use '_abcd' as the snippet name.</dd>
+							<li>Refresh the webpage you are working on.</li>
+							<li>Check the above bullet point for more details.</li></ul></dd>
 					</dl>
 				</section>
 			</div>
-			<div id="backup">
-				<h1>Backup, Restore and Print</h1>
-				
-				<button class="backup">Backup</button><br><br>
-				<p>This will open a dialog containing text of all your data. Copy and paste it into a text file (document), and save that file on your PC.</p>
-				<hr>
-				
-				<button class="restore">Restore</button><br><br>
-				This will help you restore data using a previously stored data backup<Br>
-				
-				<hr>
-				
-				<button class="print">Print snippets</button><br><br>
-				Use this button to print your snippets.
-				
-				<!--DIV initially hidden but shown on clicking "backup"-->
-				<div class="showers backupShow hidden">
-					Copy the following text (Ctrl+C/Cmd+C):
-					
-					<div class="text">
-					
-					</div>
-					
-					<button class="selectText">Select Text Again</button><br>
-					
-					and paste it in a text editor. Save the file in plain text format (.txt) only.<br><br>
-
-					<button class="close">Close This Dialog</button>
-				</div>
-				
-				<div class="showers restoreShow hidden">
-					Paste the text from your backup file below and press Restore below:
-					
-					<textarea></textarea>
-					
-					<button>Restore</button><br><br>
-					
-					<button class="close">Close This Dialog</button>
-				</div>
-			</div>
 			<div id="about">
 				<h1>About</h1>
-				Made by <a href="https://plus.google.com/u/0/110764286121755681313/posts">Gaurang Tandon</a><br>
-				Version: 2.6.2<br>
-				&copy; 2015 Copyright Reserved<br><br>
-				
-				Check out the <a href="https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md">change log</a> and <a href="https://github.com/GaurangTandon/ProKeys">source code on GitHub!</a><br><br>
-				Contact me for feedback: <strong>prokeys.feedback@gmail.com</strong><br>
-				Please check <a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known bugs list</a> before reporting a bug
-				<hr>
-				Please support me. Thank you :-)
-				<br>
-				
-				<!-- FB button-->
-				<a class="fb-share" href="http://www.facebook.com/sharer.php?u=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn&t=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%20https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" target="_blank"></a>
-				
-				<!-- Twitter button-->
-				<a target="_blank" class='tw-share' href="http://twitter.com/intent/tweet?text=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%23chrome-extension%20%23chrome&url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn"></a>
-				
-				<!-- G+ button-->
-				<a href="https://plus.google.com/share?url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" class="g-plus"><img src="../imgs/g.png" alt="Share on Google+"/></a>
-	  
-				<br>
-				<div class="buttons">
-					<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews" target="_blank">Leave a Review</a>
-					<a href="https://chrome.google.com/webstore/support/ekfnbpgmmeahnnlpjibofkobpdkifapn#feature" target="_blank">Request a feature</a>
-					<a href="https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form" target="_blank">Anonymous Feedback</a>
+				<div class="team-info box">
+					<p class="heading">The Team - Aquila Softworks</p>
+					<div class="profile">
+						<img src="../imgs/gt.png">
+						<p class="name">Gaurang Tandon</p>						
+						<p class="roles">Initial idea|Programming|QA-Features</p>
+						<div class="info">
+							I am an avid lover of latest technology, especially interested in JS.
+							Being a student, I do self-training of ES5 and ES6 at home, and am perpetually
+							up-to-date with the web dev community. I am also interested in advanced maths and chess.
+						</div>
+						<div class="social-links">
+							<a href="https://plus.google.com/+GaurangTandon/about">Google+</a>
+							<a href="https://github.com/GaurangTandon">GitHub</a>
+							<a href="https://www.linkedin.com/in/gaurang-tandon-330ab0106">LinkedIn</a>
+							<a href="http://stackexchange.com/users/3136569/gaurang-tandon">StackExchange</a>
+							<a href="https://www.chess.com/member/GaurangTandon">Chess.com</a>
+						</div>
+					</div>
+					<div class="profile">
+						<img src="../imgs/vs.jpg">
+						<p class="name">Varun Singh</p>						
+						<p class="roles">Artwork|Design|Writing|QA-UI</p>
+						<div class="info">							
+							I write, code, draw, read, and think until I've built something awesome. To get new ideas I go play some basketball.
+							I come back and train until my limbs hurt. Then I do it all over again. I almost never blog, develop videogames during
+							the summer, and walk the dog (simultaneously) with a pug and a yo-yo.
+						</div>
+						<div class="social-links">
+							<a href="https://plus.google.com/+VarunSingh000/about">Google+</a>
+							<a href="http://severaltales.blogspot.in/">Blog</a>
+							<a href="https://github.com/iWrote">GitHub</a>
+							<a href="http://singhgalus.deviantart.com/">DeviantArt</a>
+						</div>
+					</div>
 				</div>
-			
-				<!--
-				<hr>
-				Please support me! Thank you so much! (You might see (No Title) instead of "ProKeys" in the name box; that's because ProKeys has got no Flattrs yet)<br>
-				<a id="flattr" href="https://flattr.com/thing/3a21a326ed09014a80254c2938cd5bee" alt="Flattr link">Flattr ProKeys</a>
-				-->
-				
-				<hr>
-				<span class="disclaimer-heading">DISCLAIMER:</span><br> <p>Every effort has been made to avoid bugs in this extension. In spite of this, some bugs might have crept in. Any mistake, error or
-				discrepancy noted may be brought to my notice (email: prokeys.feedback@gmail.com) and I shall try my best to remove it. It is notified that I will not be responsible 
-				for any loss to any one due to misuse/bugs of this application of any kind in any manner. This extension, does not, in any manner, store any user's extension's settings and his/her snippets,
-				anywhere but the user's own PC (apart from Sync storage which then gets synced across user's signed in Chrome browsers on different machines). No user snippets, settings, browser history, or whatever,
-				is sent to any external server anywhere by this application.</p>
-				<hr>
+				<div class="box">
+					<p class="heading">Please support us. Thank you :-)</p>
+					<div class="content">
+						<p class="heading2">Share ProKeys with your friends!</p>
+						<!-- FB button-->
+						<a class="fb-share" href="http://www.facebook.com/sharer.php?u=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn&t=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%20https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" target="_blank"></a>
+
+						<!-- Twitter button-->
+						<a target="_blank" class='tw-share' href="http://twitter.com/intent/tweet?text=Increase%20your%20efficiency%3B%20write%20less,%20do%20more!%20Install%20ProKeys%20now,%20and%20impress%20everyone!%20%23chrome-extension%20%23chrome&url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn"></a>
+
+						<!-- G+ button-->
+						<a href="https://plus.google.com/share?url=https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn" class="g-plus" target="_blank"><img src="../imgs/g.png" alt="Share on Google+"/></a>
+							
+						<p class="heading2">Give feedback!</p>		
+						<div class="buttons">
+							<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews" target="_blank">Leave a Review</a>
+							<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support" target="_blank">Request a feature</a>
+							<a href="https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form" target="_blank">Anonymous Feedback</a>
+						</div>
+						
+						<p class="heading2">Donate money!</p>
+						Monetary donations are gratefully accepted at email 1gaurangtandon@gmail.com using <a href="https://www.paypal.com/myaccount/transfer/buy">PayPal</a>
+						<br><br>
+						<p class="heading2">Found a bug?</p>
+						Contact me with relevant information: <strong>prokeys.feedback@gmail.com</strong> Please check <a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known bugs list</a> before reporting.
+					</div>					
+				</div>
+
+				<div class="box">
+					<p class="heading">Disclaimer:</p>
+					<div class="content">
+						Every effort has been made to avoid bugs in this extension. The developers are not liable for any loss or corruption of the users' data due to glitches/misuse.<br>
+						No information regarding the users, their snippets, and settings is stored anywhere but the browser (except in case of Sync storage which then gets synced across user's signed-in Chrome browsers).
+						Neither is the aforementioned information sent to any external server.<br>
+						User feedback at prokeys.feedback@gmail.com (regarding bugs, security concerns, help using ProKeys, etc.) is encouraged.
+					</div>
+				</div>
 			</div>
 		</div>
+		
+		<footer>
+			Version: 3.0.0 - Gaurang Tandon, Varun Singh &copy; 2016<br>
+			Check out the <a href="https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md">change log</a> and <a href="https://github.com/GaurangTandon/ProKeys">source code on GitHub!</a><br><br>
+		</footer>
 	</main>
 </body>
 </html>
