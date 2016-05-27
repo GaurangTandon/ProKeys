@@ -1,6 +1,6 @@
 [![logo of prokeys](http://s33.postimg.org/uoupgi05r/transparent_logo_narrow.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
-**Developed by**: [Gaurang Tandon](https://github.com/GaurangTandon) and [Varun Singh](https://github.com/iWrote)
+**Developed by**: [Gaurang Tandon](https://github.com/GaurangTandon) and [Varun Singh](https://github.com/iWrote)  
 **Latest version**: 3.0.0
 **Status**: active, stable build (last update 27/May/16)
 
@@ -9,8 +9,8 @@ ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore
 [More info on all these in Help section inside the app]  
 1. **Snippets** - define custom abbreviations, and retrieve the text associated with them simply by pressing the hotkey (default: Shift+Space). Example: "brb" can expand to "Be right back!"  
 2. **Placeholders** - are fields in the snippet body that can be given dynamic values on using the snippet.  
-3. **Mathomania** - do math without leaving your text editor, and without calculators. Example: "[[ 15% * 600 =]]" gives "90" and "[[ (5+6) * 15^2 =]]" gives "2475".
-4. **Clipboard access** - insert `[[%p]]` anywhere in your snippet body. It will automatically be substituted with teh current clipboard data.
+3. **Mathomania** - do math without leaving your text editor, and without calculators. Example: "[[ 15% * 600 =]]" gives "90" and "[[ (5+6) * 15^2 =]]" gives "2475".  
+4. **Clipboard access** - insert `[[%p]]` anywhere in your snippet body. It will automatically be substituted with teh current clipboard data.  
 5. **Auto-Insert** - Quotes ('"') and braces ('(', '[', '{') are auto-completed, and you can specify your custom insert-it-for-me also (like, inserting a '>' on typing of a '<') in the settings.  
 6. **Date/Time Macros** - embed short symbols inside the parentheses of '[[%d()]]' inside a snippet body and it will auto replace the symbol with the current date and time related value. A sample snippet as well as a guide has been provided (in Help section inside the app)   
 7. **Date/Time Arithmetic** - use the `+` or `-` sign to move forward or backward in time in date/time macros. Supports both relative as well as independent evaluation.  
@@ -42,9 +42,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 
 ## Next feature to come:
 
-1. Clipboard access in snippet body
-2. Get started with gaurangtandon.github.io/prokeys. Use http://dns.js.org/ for hosting. Use: https://github.com/Khan/tota11y
-3. Update Opera with latest release
-4. Create ProKeys for Firefox, IE, Edge, Safari
+1. Get started with gaurangtandon.github.io/prokeys. Use http://dns.js.org/ for hosting. Use: https://github.com/Khan/tota11y
+2. Create ProKeys for Firefox, IE, Edge, Safari
 
 ## [Change Log](https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md)
