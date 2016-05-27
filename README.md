@@ -1,6 +1,6 @@
 [![logo of prokeys](http://s33.postimg.org/uoupgi05r/transparent_logo_narrow.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
-**Developed by**: Aquila Softworks([Gaurang Tandon](https://github.com/GaurangTandon) and [Varun Singh](https://github.com/iWrote))  
+**Developed by**: Aquila Softworks ([Gaurang Tandon](https://github.com/GaurangTandon) and [Varun Singh](https://github.com/iWrote))  
 **Latest version**: 3.0.0
 **Status**: active, stable build (last update 27/May/16)
 
