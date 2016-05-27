@@ -1,8 +1,8 @@
+*{
+	margin: 0; padding: 0; box-sizing: border-box;
+}
 html, body{
 	width: 100%;
-	max-height: 1000px;
-	height: 600px;
-	min-height: 500px;
 }
 
 /*reset user agent's default styles*/
@@ -16,40 +16,66 @@ h2{
 h3{
 	font-size: 22px;
 }
-ul{
-	list-style-type: disc;
-}
-ol{
-	list-style-type: decimal;
+ul, ol, li{
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
 }
 
-#sidebar{
-	position: absolute;
-	height: 100%;
+button, #about .buttons a{
+	font-size: 20px;
+    font-family: Calibri;
+    color: white;
+    background: #5580F0;
+    cursor: pointer;
+    outline: none;
+    border: none;
+	padding: 5px;
+	transition: .5s ease;
+}
+
+button:hover, #about .buttons a:hover{
+	background: #18C470;
+}
+
+label > input{
+	margin-right: 2px;
+}
+
+input[type=file]{
+	display:block;width: 0; height: 0;
+}
+
+input[type=button], td, th{
+	padding: 5px;
+}
+
+.sidebar{
+	position: fixed;
+    height: 100%;
 	width: 15%;
+	background: #FEFEFE;
 }
 
-#logo {
-	width: 50%;
-	height: 15%;
-	margin: 30px auto 10px auto;
+.logo {
+	width: 150px;
+    height: 150px;
+    margin: 30px auto 15px auto;
+    background: white;
 }
 
-#logo a{
-	display: block;
-	padding: 0;
-	margin: 0;
+.logo a{
 	width: 100%;
-	height: 100%;
+    height: 100%;
+    margin: auto;
+    display: block;
+	background-image: url('../imgs/gk.png');
+	background-size: cover;
+	border-radius: 50%;
 }
 
-#logo img{
-	cursor: pointer;
-	width: 100%;
-	height: 100%;
-}
-
-#sidebar > a {
+.sidebar > a {
 	width: 100%;
 	text-align: center;
 	font-family: Garamond;
@@ -60,30 +86,26 @@ ol{
 	color: #4472b9;
 }
 
-#btnContainer{
+.sidebar .buttons{
 	width: 100%;
 	min-height: 10px;
 	max-height: 400px;
 	text-align: center;
 }
 
-#btnContainer button {
+.sidebar .buttons button {
 	width: 80%;
-	padding: 5px;
-	margin: 20px 0;
-	font-size: 30px;
-	font-family: Garamond;
-	color: white;
-	background: #3a8db4;
-	cursor: pointer;
-	border-radius: 10px;
-	outline: none;
+    padding: 5px;
+    margin: 10px 0; 
+	font-size: 30px;	
+}
+
+.sidebar .buttons button.selected{
+	background: #18C470;
 }
 
 .wrapper{
-	width: 85%;
-	min-height: 100%;
-	max-height: 1500px;
+	width: 85%;	
 	position: absolute;
 	left: 15%;
 }
@@ -96,8 +118,12 @@ ol{
 	float: right;
 }
 
+footer {
+    text-align: center;
+}
+
 .verticalLine{
-	border-left: 1px solid black;
+	border-left: 1px solid #B7B7B7;
 	height: 100%;
 	width: 0px;
 	position: absolute;
@@ -106,7 +132,7 @@ ol{
 }
 
 #faded{
-	position: absolute;
+	position: fixed;
 	top: 0;
 	left: 0;
 	width: 100%;
@@ -115,33 +141,159 @@ ol{
 	z-index: -1;
 }
 
-#help, #settings, #about, #backup{
+#content > div{
 	width: 75%;
 	min-height: 700px;
-	max-height: 2500px; /*to allow for zoom out*/
 	margin: 0 auto;
 	display: none;
 	padding: 10px;
 	font-size: 20px;
-	z-index: 2;
 	background: white;
+	display: none;
 }
 
 #content h1{
-	color: purple;
-	font-size: 40px;
-
-	padding: 5px;
-	margin: 20px 10px;
+    color: #18C470;
+    font-size: 50px;
+    font-family: Calibri;
+    padding: 5px;
+    margin: 50px 10px 20px 10px;
 }
 
-#content > div{
+.box{	
+    border: 1px solid #1EEC88;
+    width: 95%;
+    margin: 0 auto;
+	margin-bottom: 10px;
+	text-align: left;
+	padding: 15px;
+}
+
+#about .box{
+	width: 90%;
+	box-sizing: content-box;
+	padding: 0;
+}
+
+.box.team-info{
+	padding: 0; border: 0;	
+}
+
+#about .box.team-info .heading{ /*keep #about to maintain precedence*/
+	margin: 0;
+}
+
+.box .heading, .box .heading2{	
+    font-size: 25px;
+	font-weight: bold;
+}
+
+#about .box .heading, .box.change-log .heading{
+	display: inline-block;
+	width: 100%;
+	background: #18C470;
+	color: white;
+	padding: 10px 20px;
+    font-size: 35px;
+    text-align: left;
+	margin-bottom: 10px;
+}
+
+#about .box .content, .box.change-log .content{
+	padding: 15px;
+}
+
+.box.hotkey .change_hotkey{
+	padding: 10px;
+	font-size: 20px;
+	position: relative;
+	top: -10px;
+	margin-top: 10px;
+}
+
+.box.hotkey .info{
+	width: calc(100% - 200px);
+	display: inline-block;
+	margin: 10px 20px;
+}
+
+.box.change-log{
+	position: fixed;
+	top: 10%;
+	left: 30%;
+	background: white;
+	width: 550px;
+	z-index: 20;
+	padding: 0;
+}
+
+.box.change-log h2{
+	font-size: 25px;
+	margin-top: 10px;
+	color: #18C470;
+}
+
+.box.change-log p:not(.heading){
+	margin-bottom: 10px;
+}
+
+.box.change-log p i{
+	color: #18C470;	
+	font-size: 18px;
+}
+
+.box.change-log .heading span{
+	float: right;
+}
+
+.box.change-log.hidden{
 	display: none;
+}
+
+.box.change-log button{
+	margin-top: 10px;
+}
+
+.box.change-log ul{
+	line-height: 20px;
+    font-size: 18px;
+    padding-top: 5px;
+    padding-left: 33px;
+    list-style-type: decimal;
 }
 
 #content > .show{
 	display: block;
 	top: 0;
+}
+
+#snippets{
+	min-width: 560px !important;
+}
+
+#snippets .export-buttons {
+    margin-bottom: 10px;
+    margin: 0 auto 10px auto;
+}
+
+#snippets .export-buttons button{
+	margin-right: 10px;
+	padding: 5px;
+	font-size: 20px;
+	width: 30%;
+}
+
+.storageBytes {
+    display: inline-block;
+    margin: 0 auto;
+    position: relative;
+    top: -25px;
+    font-size: 14px;
+    color: #777;
+}
+
+.storageBytes a{
+	color: #777; /*manula override*/
 }
 
 /*blocked sites list item*/
@@ -163,8 +315,8 @@ ol{
 
 #settings .auto_insert {
 	display: inline-block;
-	margin: 10px;
-	padding: 10px;
+	margin-top: 10px;
+	font-size: 18px;
 }
 
 #settings .auto_insert thead th{
@@ -179,25 +331,15 @@ ol{
 	cursor:pointer;
 }
 
-#settings .auto_insert{
-	font-size: 18px;
-}
-
-/*Tip paragraph*/
-#settings span.tip_auto_insert{
-	text-decoration:underline;
-	cursor: pointer;
+#settings .auto_insert th, #settings .auto_insert td {
+	text-align: center;
 }
 
 /*for the list of blocked sites*/
 #settings ul{
 	list-style-type: none;
-}
-
-.change_hotkey{
 	margin-top: 10px;
-	padding: 5px;
-	font-size: 15px;
+    text-align: center;
 }
 
 .siteBlockInput {
@@ -214,33 +356,27 @@ ol{
 	cursor: pointer;
 }
 
-#storageMode{
-	width: 80%;
-	margin: auto;
-}
-
-#storageMode .container{
-	text-align: left;
-	width: 95%;
+.storageMode .container{
+	text-align: left;	
 	position: relative;
 }
 
-#storageMode .container div{
+.storageMode .container div{
 	margin-top: 10px;
 }
 
-#storageMode h3{
+.storageMode h3{
 	font-weight: bold;
 	font-size: 20px;	
 	margin-bottom: 5px;
 }
 
-#storageMode .container p{
+.storageMode .container p{
 	font-size: 18px;
 	margin-left: 10px;
 }
 
-#storageMode .warning{
+.storageMode .warning{
 	font-size: 15px;
 	margin-top: 10px;
 }
@@ -252,15 +388,8 @@ ol{
 
 #help h2{
 	font-size: 35px;
-	color: darkorchid;
-	margin: 0 10px 20px;
-}
-
-#help .warning{
-	display: block;
-	margin: 10px auto;
-	width: 90%;	
-	text-align: justify;
+	color: #18C470;
+	margin: 5px auto;
 }
 
 #help dt{
@@ -281,24 +410,6 @@ ol{
 
 #help dd.hide{
 	display: none;
-}
-
-#help dd a{
-	color: #1143BB;
-}
-
-#help dd a[data-target="#tryit"]{
-	display: inline-block;
-    min-width: 150px;
-    max-width: 350px;
-    margin: 10px 0;
-    color: #1143BB;
-	cursor: pointer;	
-}
-
-#help h3{
-	font-size: 26px;
-	margin-bottom: 15px;
 }
 
 /*the paragraph below "Heads up!"*/
@@ -334,7 +445,7 @@ ol{
 
 #tryit{
 	margin: auto;
-	width: 70%;
+	width: 90%;
 	height: 210px;
 	border: 1px solid grey;
 }
@@ -366,8 +477,8 @@ ol{
 
 #tryit > .show{
 	display: block;
-	height: 180px;
 	width: 100%;
+	height: calc(100% - 30px);	
 	padding: 5px;
 	font-size: 18px;
 	box-sizing: border-box;
@@ -383,89 +494,9 @@ ol{
 	display: none;
 }
 
-.disclaimer-heading{
-	color: green;
-}
-
-.backup, .restore, .print{
-	min-width: 165px;
-	max-width: 200px;
-	font-size: 22px;
-	background: none;
-	box-shadow: none;
-	border: 1px solid black;
-	cursor: pointer;
-}
-
-#backup > p, #about p{
-	width: 500px;
-	text-align: justify;
-	min-height: 50px;
-	max-height: 450px;
-	margin: auto;
-}
-
-#about p{
-	width: 95%;
-}
-
-/*the dialog boxes for print, and backup*/
-#backup .showers{
-	z-index: 2;
-	position: absolute;
-	width: 50%;
-	top: 10%;
-	left: 25%;
-	display: none;
-	background: white;
-	min-height: 200px;
-	border: 1px solid black;
-	padding: 10px;
-}
-
-#backup .showers.shown{
-	display: block;
-}
-
-#backup .showers .close{
-	cursor: pointer;
-	font-size: 15px;
-	font-family: Helvetica;
-}
-
-#backup .backupShow .text{
-	border: 1px solid black;
-	width: 100%;
-	min-height: 50px;
-	max-height: 425px;
-	white-space: pre;
-	font-family: monospace;
-	text-align: justify;
-	overflow: auto;
-	margin: 10px 0;
-}
-
-#backup .restoreShow textarea{
-	width: 98%;
-	margin: auto;
-	height: 150px;
-	resize: none;
-	overflow: auto;
-	margin: 10px 0;
-}
-
-#backup .restoreShow button:not(.close){
-	font-size: 22px;
-	color: black;
-	border: 1px solid black;
-	background: none;
-	cursor: pointer;
-	margin-bottom: 5px;
-}
-
 a{
 	text-decoration: none;
-	color: #4a6b82;
+	color: #1143BB;
 }
 
 td{
@@ -473,11 +504,11 @@ td{
 	padding: 5px;
 }
 
-.buttons {
+#about .buttons {
 	min-width: 50%;
-	max-width: 90%;
+	max-width: 100%;
 	height: 50px;
-	margin: 20px auto;
+	margin: 10px auto;
 }
 
 .g-plus img, .fb-share, .tw-share{
@@ -498,35 +529,12 @@ td{
 	background-size: cover;
 }
 
-#flattr, .buttons a, .backup, .restore, .print{
-	display: inline-block;
-	padding: 10px;
-	margin: auto;
-	margin-top: 20px;
-	border: 1px solid #4a6b82;
-	cursor: pointer;
-	transition: 0.5s ease;
-}
-
-#flattr:hover, .buttons a:hover, .backup:hover, .restore:hover, .print:hover{
-	color: white;
-	background: #4a6b82;
-}
-
-.buttons a {
-	display: block;
-	float: left;
-	margin: 0 10px 0 0;
-	padding: 10px 5px;
-	min-width: 20%;
-	max-width: 33%;
-	border: 1px solid;
-	color: black;
-	text-decoration: none;
-}
-
-.hotkey_display{
-	font-weight: bold;
+#about .buttons a{
+    padding: 5px;
+    display: inline-block;
+    text-align: center;
+    padding: 10px;
+    margin-left: 10px;
 }
 
 .hotkey_listener{
@@ -535,110 +543,212 @@ td{
 	height: 0;
 }
 
+.generic {
+    padding: 5px;
+	position: relative; /*for .buttons*/
+    border-bottom: 1px solid grey;
+    word-wrap: break-word;
+    list-style: none;
+	text-align: left;
+	cursor: pointer;
+	font-family: Arial;
+}
+
+.generic .name {
+    display: inline-block;
+    margin: 5px;
+	font-size: 17px;
+	height: 25px;
+	line-height: 25px;
+	min-width: 160px;
+}
+
+/*during bulk action*/
+.generic input[type=checkbox]{
+	margin-right: 10px;
+}
+
+.snip .name{
+	font-weight: bold;
+}
+
+.snip.contracted .name{
+	font-weight: normal;
+}
+
+.snip .body {
+    font-size: 16px;    
+    width: 100%;
+	padding: 5px;
+	cursor: text;
+}
+
+.snip.contracted .body{
+	color: grey;
+	display: inline-block;
+	/*little more than font size
+		so that the letters can fit properly
+		earlier the letter "y" was being */
+	height: 18px; 
+	position: relative; 
+	/* due to more height the .body was shifting towards the top, #FIXIT*/
+    top: 3px; 
+	padding: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;	
+	/*while this property is unnecessary, as we are setting .style.width
+	 in options.js, however, it is necessary to prevent FOUT*/
+	width: calc(100% - 250px);
+}
+
+/* images need to be shortened*/
+.snip.contracted .body * {
+    height: 15px;
+}
+
+.snip.contracted .clickable{
+	height: 100%;
+}
+
+.snip .buttons, .folder .buttons{
+	margin-top: 5px;
+	height: 20px;
+	width: 55px;
+    position: absolute;
+	right: 5px;
+	top: 5px;
+}
+
+.snip .buttons div, .folder .buttons div{
+	height: 20px;
+    width: 20px;
+	display: inline-block;
+	margin-right: 5px;
+}
+
+.snip .clickable{
+	height: 45px; /*~ .snip's height*/
+	width: calc(100% - 60px);
+	opacity: 0;
+    position: absolute;
+	left: 0;
+	top: 0;
+	cursor: pointer;
+}
+
+.snip .timestamp{
+	font-size: 14px;
+    color: grey;
+    margin: 5px;
+}
+
+.snip.contracted .timestamp{
+	display: none;
+}
+
+/*class set on li.snip when user makes a new snippet*/
+/*we need to highlight that snippet*/
+.snip.highlighting, .folder.highlighting{
+	background: #75E275;
+	/*slowly fade away the gold background*/
+	-webkit-animation: fadeBackground 3s;
+	animation: fadeBackground 3s;
+	-webkit-animation-fill-mode: forwards;
+	animation-fill-mode: forwards;
+}
+
+@-webkit-keyframes fadeBackground{
+	to{
+		background: white;
+	}
+}
+
 @media screen and (max-width: 75em){
 	/* move the sidebar to the top as a nav bar START*/
 	.verticalLine{ display: none; } /*remove vertical line*/
 
-	#sidebar{
+	.sidebar{
+		z-index: 2;
+		position: fixed;
 		top: 0px;
 		left: 0;
 		width: 100%;
 		height: 8%;
-		margin: 0px;
-		border-right: 0px;
-		border-bottom: 1px solid black;
+		border-bottom: 1px solid black;	
 	}
 
-	#logo{
-		margin: 0;
+	.logo{
 		display: inline-block;
-		height: 90%;
-		width: 4%;
-		position: absolute;
-		left: 5%;
-		top: 50%;
-		transform: translateY(-50%);
+		height: 80%;
+		width: 40px;
+		margin: 4px 0 0 15px;
+		border-radius: 0;
 	}
-
-	#sidebar > a{
-		display: none;
+	
+	.logo a{		
+		border-radius: 0;
+		background-size: 125%;
+		background-position: center center;
 	}
-
-	#sidebar button{
+	
+	.sidebar .buttons button{
 		width: 20%;
 		float: left;
 		height: 90%;
 		margin: 2px 5px;
 		padding: 0px;
-		position: static;
 		border: 1px solid black;
-		border-radius: 0;
 		font-size: 20px;
-		background: white;
-		color: black;
-		box-shadow: none;
 	}
 
-	button#backupButton{ height: 90%; font-size: 16px; }
-
-	#btnContainer{
-		max-width: 100%;
+	.sidebar .buttons{
 		width: 89%;
 		float: right;
 		height: 100%;
-		text-align: start;
 	}
 	/* move the sidebar to the top as a nav bar END*/
 
 	.wrapper{
-		position: absolute;
 		left: 0;
 		top: 8%;
 		width: 100%;
 	}
 
-	#backup .showers{
-		width: 60%;
-		left: 20%;
-		top: 0;
-	}
-
-	/*hide the br after Restore button so that
-	  the Close This Dialog fits inside*/
-	#backup .showers.restoreShow button + br{
-		display: none;
-	}
-
-	#faded{
-		width: 100%;
-	}
-
-	.buttons a{
-		font-size: 15px;
+	#content h1{
+		margin-top: 0;
 	}
 	
-	body{
-		padding-bottom: 40px;
+	.panel_popup{		
+		left: 10% !important; 
 	}
-
 	
+	#about .buttons a{
+		margin: 0;
+	}
+	
+	#content > div{
+		width: 95%;
+	}
+	
+	#about .box{
+		width: 95%;
+	}
+	
+	.change-log.box{left: 20%;}
 }
 
 /*1600x1200+ begins*/
 @media screen and (min-width: 100em){
-	#sidebar > a{
-		font-size: 30px;
-	}
-
-	#btnContainer button{
+	.sidebar .buttons button{
 		font-size: 40px;
 	}
 
-	#help, #settings, #about, #backup{
+	#content > div{
 		font-size: 30px;
 	}
 
-	button, input, .siteBlockInput + button, .siteBlockInput, #backup .showers .close{
+	button, input, .siteBlockInput + button, .siteBlockInput{
 		padding: 5px;
 		font-size: 24px;
 	}
@@ -653,11 +763,7 @@ td{
 		height: 33px;
 	}
 
-	kbd{
-		font-size: 22px;
-	}
-
-	#storageMode p{
+	.storageMode p{
 		font-size: 22px;
 	}
 
@@ -665,12 +771,367 @@ td{
 		font-size: 55px;
 	}
 
-	#backup > button{
-		font-size: 26px;
-	}
-
 	.g-plus img, .fb-share, .tw-share{
 		width: 55px;
 		height: 55px;
 	}
+}
+
+.panel{
+	width: 100%;
+	min-height: 100px;
+	border: 1px solid rgba(0, 0, 0, .35);
+	font-family: Calibri;
+}
+
+.panel.hidden{
+	display: none;
+}
+
+.panel_top{
+	position: relative;
+	width: 100%;
+	height: 50px;
+	background: linear-gradient(to bottom, rgba(250,250,255,1) 0%, rgba(222,223,224,1) 100%);
+}
+
+.panel_top .header {
+    text-align: center;
+    padding-top: 11px;
+    font-size: 25px;
+    color: rgb(50, 50, 50);
+	/*setting width: 100% will prevent buttons from being clicked*/
+    width: calc(100% - 100px);
+    position: absolute;
+    left: 50px;
+}
+
+.panel_content {
+	text-align: left;
+}
+
+.panel_content .empty_folder{
+	color: grey;
+	text-align: center;
+	margin: 10px auto;
+}
+
+.panel_content > div >  p{
+	margin-bottom: 10px;
+}
+
+.edit-panel .panel_content div{
+	margin: 10px;
+}
+
+.edit-panel .name input[type="text"] {
+    width: 317px;
+    height: 30px;
+    font-size: 80%;
+    padding: 5px;
+}
+
+.edit-panel .body textarea {
+	width: 100%;
+    height: 300px;
+    overflow: auto;
+	padding: 5px;
+}
+
+.edit-panel .error{
+	color: red;
+	margin-top: 5px;
+    font-size: 17px;
+	display: none;
+}
+
+.edit-panel .error.shown{
+	display: block;    
+}
+
+.selectList{
+	padding-top: 10px;
+	width: 100%;
+	text-align: left;
+}
+
+.selectList > div {
+	border: 1px solid #efefef;
+}
+
+..selectList > div div{
+	border-top: 1px solid #efefef;
+}
+
+.selectList p {
+    padding: 10px;
+	cursor: pointer;
+}
+
+.selectList p.selected {
+    background: rgb(230, 230, 230);
+}
+
+.folder_path {
+    display: inline-block;
+    height: 50px;
+    width: calc(100% - 242px);
+	text-align: left;
+}
+
+.folder_path .path_part {
+    display: inline-block;
+    height: 50px;
+    line-height: 50px;
+    vertical-align: middle;
+	min-width: 40px;
+	font-size: 20px;
+	padding: 0 10px;
+	position: relative;
+	z-index: 10;	
+}
+
+.folder_path .path_part.ellipsized{
+	whitespace: no-wrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.folder_path .path_part:hover {
+    background: rgba(255,255,255,0.3);
+	cursor: pointer;
+}
+
+.folder_path .path_part:not(:first-child) {
+    padding-left: 15px;
+}
+
+.folder_path .right_arrow {
+    display: inline-block;
+	vertical-align: middle;
+    height: 35px;
+    width: 35px;
+    content: "";
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+    border: 1px solid rgba(0,0,0,0.2);
+    -webkit-mask-image: -webkit-gradient(linear, left top, right bottom, from(transparent), color-stop(0.5,transparent), color-stop(0.5, #000000), to(#000000));
+	margin-left: -25px;
+	position: relative;
+	z-index: 1;
+}
+
+.sub_panel{
+	display: none;
+}
+
+.panel_search input[type="text"] {
+    width: 95%;
+    height: 100%;
+    font-size: 80%;
+	margin: 0 auto;
+    color: rgb(50, 50, 50);
+    padding: 5px;
+}
+
+.sub_panel.shown{
+	display: block;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+	width: 100%;
+    padding: 5px;	
+}
+
+.panel_add_new input{
+	width: 35%;
+	height: 90%;
+	font-size: 16px;
+}
+
+.panel_sort{
+	position: relative;
+	font-size: 17px;
+	height: 55px !important;
+	text-align: left;
+}
+
+.panel_sort div{
+	margin-bottom: 5px;
+}
+
+.panel_sort input[type="button"]{
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	font-size: 18px;
+	padding: 5px;
+}
+
+.panel_bulk_action > div{
+	margin-bottom: 10px;
+	display: inline-block;
+}
+
+.panel_bulk_action .folderSelect.hidden{
+	display: none;
+}
+
+.panel_bulk_action .bulk_actions{
+	float: right;
+}
+
+.panel_popup{
+	display: none;
+	position: absolute;	
+	top: 10%;
+    left: 28%;
+    width: 40%;
+    min-height: 220px;
+	min-width: 525px;
+}
+
+.panel_popup.shown{
+	display: block;
+	z-index: 10;
+	background: white;    
+}
+
+.panel_popup .panel_content{
+	padding: 10px;
+}
+
+.panel_popup .panel_content div{
+	margin-bottom: 10px;
+}
+
+.panel_popup .step{
+	margin-top: 10px;
+}
+
+.panel_popup .step span{
+	display: inline-block;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #20ED89;
+    color: white;
+    text-align: center;
+    line-height: 25px;
+    font-size: 18px;
+    float: left;
+    margin: 0 10px 5px 0;
+}
+
+.import .restore{
+	font-size: 25px;
+	margin-left: 37%;
+}
+
+.panel_popup textarea{
+	width: 100%;
+	height: 200px;
+}
+
+.panel_btn{
+	width: 40px;
+	height: 40px;
+	border: 1px solid rgba(0, 0, 0, .25);
+	cursor: pointer;
+	margin: 5px 10px;
+	float: right;
+}
+
+.panel_btn.active::after{
+	height: 50px;
+    width: 50px;
+    background: rgba(100, 100, 100, 0.1);	
+	margin: -5px;
+    content: "";
+    display: block;
+}
+
+.panel_btn:hover{
+	border: 1px solid rgba(0, 0, 0, .35);	
+}
+
+.add_new_btn{
+	background: url("../imgs/plus.png") no-repeat no-repeat center;
+}
+
+.search_btn{
+	background: url("../imgs/s.png") no-repeat no-repeat center;
+}
+
+.sort_btn{	
+	background: url("../imgs/sort-asc.png") no-repeat no-repeat center;
+}
+
+.close_btn{	
+	background: url("../imgs/close.png") no-repeat no-repeat center;
+	float: left;
+}
+
+.tick_btn{	
+	background: url("../imgs/tick.png") no-repeat no-repeat center;
+}
+
+.edit_btn{	
+	background: url("../imgs/edit.png") no-repeat no-repeat center;
+}
+
+.delete_btn{	
+	background: url("../imgs/delete.png") no-repeat no-repeat center;
+}
+
+.checkbox_btn{
+	background: url("../imgs/checkbox.png") no-repeat no-repeat center;
+}
+
+.team-info{
+	margin-bottom: 10px;
+}
+
+.profile{
+    margin: 0 auto;
+    padding: 10px;
+    border: 1px solid #18C470;
+}
+
+.profile img{
+	width: 100px;
+    height: 100px;
+    border-radius: 50%;
+	float: left;
+}
+
+.profile .name{
+	font-size: 25px;
+    font-weight: bold;
+    margin-left: 125px;
+	margin-bottom: 10px;
+    font-family: Calibri;
+    text-align: left;
+}
+
+.profile .roles{
+	font-size: 20px;
+    margin-left: 125px;
+	margin-bottom: 10px;
+    font-family: Calibri;
+    text-align: left;
+    font-weight: bolder;	
+}
+
+.profile .social-links{
+	margin-left: 125px;
+	margin-top: 10px;
+}
+
+.profile .social-links a{
+	display: inline-block;
+	padding: 5px;
+}
+
+.profile .info{
+	padding-left: 125px;
+    text-align: justify;
 }
