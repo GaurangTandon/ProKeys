@@ -18,7 +18,7 @@
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - remove #backward compatibility statements
 
-**3.0.0** - upcoming
+**3.0.0** - 27/May/2016
 - made snippet handling OOP, added folder suppet
 - logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
 - removed snippets popup, listing snippets in options page now
