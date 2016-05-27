@@ -1,7 +1,7 @@
 [![logo of prokeys](http://s33.postimg.org/uoupgi05r/transparent_logo_narrow.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
 **Developed by**: Aquila Softworks ([Gaurang Tandon](https://github.com/GaurangTandon) and [Varun Singh](https://github.com/iWrote))  
-**Latest version**: 3.0.0
+**Latest version**: 3.0.0.1
 **Status**: active, stable build (last update 27/May/16)
 
 ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn) and [Opera](https://addons.opera.com/en/extensions/details/prokeys/?display=en) extension that lets you be productive in online text-related work with its number of features like:
