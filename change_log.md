@@ -18,9 +18,10 @@
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - remove #backward compatibility statements
 
-**3.0.1** - 27/May/2016
+**3.0.0.1** - 27/May/2016
 - linted the js files
-- fixed two embarrrasing typos
+- fixed two embarrrasing typos in change log
+- fixed the error in Snip.fromObject where snip.timestamp was undefined
 
 **3.0.0** - 27/May/2016
 - made snippet handling OOP, added folder suppet
