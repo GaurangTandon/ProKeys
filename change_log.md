@@ -18,6 +18,10 @@
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - remove #backward compatibility statements
 
+**3.0.1** - 27/May/2016
+- linted the js files
+- fixed two embarrrasing typos
+
 **3.0.0** - 27/May/2016
 - made snippet handling OOP, added folder suppet
 - logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
