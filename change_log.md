@@ -8,7 +8,6 @@
 - check for duplicate snippets and folders in restore data
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
 - allow custom import, such as http://www.wordexpander.net/libraries.htm
-- sort of green notification on options page when things are updated instead of the alert box
 - show `?` mark near things that are likely to confuse users and add a gif photo there
 - show the .folderList .selectList with +/- marks to collapse folders, similar to Windows explorer
 - .selectList UI decide color
