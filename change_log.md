@@ -5,7 +5,6 @@ Upcoming
 - enable rich text editor for snippet editing - http://nicedit.com/demos.php?demo=2
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
-- check for duplicate snippets and folders in restore data
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
 - allow custom import, such as http://www.wordexpander.net/libraries.htm
 - show `?` mark near things that are likely to confuse users and add a gif photo there
@@ -21,6 +20,7 @@ Upcoming
 - redid the Help page
 - redesigned blocked sites display
 - fixed auto-insert display code
+- check for duplicate snippets and folders in restore data
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
