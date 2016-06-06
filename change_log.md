@@ -1,7 +1,7 @@
 ## Change log
 <sup>cum to-do list</sup>
 
-**3.1.0** - upcoming
+Upcoming
 - enable rich text editor for snippet editing - http://nicedit.com/demos.php?demo=2
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
@@ -16,6 +16,11 @@
 -  comment the code more properly with precondition and postcondition
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - remove #backward compatibility statements
+
+**3.1.0** -
+- redid the Help page
+- redesigned blocked sites display
+- fixed auto-insert display code
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
