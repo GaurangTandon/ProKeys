@@ -4,7 +4,7 @@
 3. Remove `console.log`s from all JS files.  
 4. Minify all the files.  
 
-Please follow the following conventions:
+**Please follow the following conventions:**
 
 1. All class names in HTML must be in small case. Multiple words should be separated by underscore.
 2. Snippet parts should be referred to as "name" and "body" respectively.
