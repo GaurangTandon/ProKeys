@@ -8,4 +8,4 @@ Please follow the following conventions:
 
 1. All class names in HTML must be in small case. Multiple words should be separated by underscore.
 2. Snippet parts should be referred to as "name" and "body" respectively.
-3. All variables namedrelated to a HTML Node should EITHER have $ at the start of their name OR contain the word "node" (not elm) in their name.
+3. All variables names related to a HTML Node should EITHER have $ at the start of their name OR contain the word "node" (not elm) in their name.
