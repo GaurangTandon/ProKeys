@@ -20,7 +20,7 @@ Upcoming
 - redid the Help page
 - redesigned blocked sites display
 - fixed auto-insert display code
-- check for duplicate snippets and folders in restore data
+- check for duplicate snippets and folders in restore data (ASSUMPTION: the input data for restore has no duplicates in itself)
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
