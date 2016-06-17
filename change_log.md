@@ -20,9 +20,10 @@ Upcoming
 - redid the Help page
 - redesigned blocked sites display
 - fixed auto-insert display code
-- better handling duplicate snippets and folders in restore data (ASSUMPTION: the input data for restore has no duplicates in itself) by offering, in case of duplicate data, to keep either both imported and existing snippets or one of them.
+- better handling duplicate snippets and folders in restore data (ASSUMPTION: the input data for restore has no duplicates in itself) by offering, in case of duplicate data, to keep either both imported and existing snippets or one of them. Also, can merge duplicate folder's contents.
 - expansion/contraction of folders in `.selectList`
 - fixed issues#13
+- allow option to match snippet by whole word in Settings
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
