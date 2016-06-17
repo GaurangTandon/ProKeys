@@ -16,6 +16,7 @@ Upcoming
 - remove #backward compatibility statements
 - back up prokeys data to google drive
 - macro to insert current URL of page
+- Drag and drop feature in ProKeys snippets - http://www.html5rocks.com/en/tutorials/dnd/basics/
 
 **3.1.0** -
 - redid the Help page
