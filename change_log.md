@@ -26,6 +26,7 @@ Upcoming
 - expansion/contraction of folders in `.selectList`
 - fixed issues#13, #14
 - allow option to match snippet by whole word in Settings
+- removed the option to choose type of data ("entire data" vs "only snippets") by enabling manual detection for the type of data (entire data is an object and snippets is an array)
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
