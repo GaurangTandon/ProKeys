@@ -14,6 +14,8 @@ Upcoming
 -  comment the code more properly with precondition and postcondition
 - make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
 - remove #backward compatibility statements
+- back up prokeys data to google drive
+- macro to insert current URL of page
 
 **3.1.0** -
 - redid the Help page
@@ -21,9 +23,8 @@ Upcoming
 - fixed auto-insert display code
 - better handling duplicate snippets and folders in restore data (ASSUMPTION: the input data for restore has no duplicates in itself) by offering, in case of duplicate data, to keep either both imported and existing snippets or one of them. Also, can merge duplicate folder's contents.
 - expansion/contraction of folders in `.selectList`
-- fixed issues#13
+- fixed issues#13, #14
 - allow option to match snippet by whole word in Settings
-- fixed issues#14
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
