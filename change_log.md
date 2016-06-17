@@ -2,7 +2,7 @@
 <sup>cum to-do list</sup>
 
 Upcoming
-- enable rich text editor for snippet editing - http://nicedit.com/demos.php?demo=2
+- enable rich text editor for snippet editing - http://nicedit.com/demos.php?demo=2 (alternatively, Chrome browser supports Ctrl+I, Ctrl+B, Ctrl+U shortcuts as well)
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
