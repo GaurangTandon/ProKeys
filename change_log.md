@@ -24,6 +24,7 @@ Upcoming
 - expansion/contraction of folders in `.selectList`
 - fixed issues#13
 - allow option to match snippet by whole word in Settings
+- fixed issues#14
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
