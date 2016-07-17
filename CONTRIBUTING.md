@@ -2,7 +2,8 @@
 1. ESLint all the JS files.  
 2. Update the version number in options.html and manifest to the latest version number.  
 3. Remove `console.log`s from all JS files.  
-4. Minify all the files.  
+4. Minify all the files.
+5. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)
 
 **Please follow the following conventions:**
 
