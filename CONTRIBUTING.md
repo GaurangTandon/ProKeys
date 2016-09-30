@@ -5,6 +5,7 @@
 4. Minify all the files.
 5. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)
 6. Make sure that the update fixes all the bugs listed for its milestone number.
+7. Make sure that the update fixes concerned bugs listed under "In Progress" on user feedback page.
 
 **Please follow the following conventions:**
 
