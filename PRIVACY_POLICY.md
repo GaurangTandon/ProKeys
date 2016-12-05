@@ -1,4 +1,4 @@
-W.r.t. to the Chrome Privacy Policy requirement (16/04/2016), here is the Privacy Policy for ProKeys (https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn):
+W.r.t. the Chrome Privacy Policy requirement (16/04/2016), here is the Privacy Policy for ProKeys (https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn):
 
 1. The word "user data" refers to the data stored by the user in Snippets or in Settings.
 2. All user data is stored in either local chrome storage area or sync chrome storage area, both of which are implemented by the Chrome browser and provided for use to developers, and the user is allowed to switch between the two.
