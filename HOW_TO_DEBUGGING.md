@@ -13,12 +13,12 @@ Suppose your `<head>` of html looks like:
 
 <script src="../js/pre.js"></script>             // A
 <script src="../js/snippet_classes.js"></script> // B
-<script src="../js/options.js"></script>        // C
+<script src="../js/options.js"></script>         // C
 <script src="../js/detector.js"></script>        // D
 <script src="../js/editor.min.js"></script>   	 // E (independent)
 <script src="../js/temp.js"></script>            // F (independent)
 ```
-_(in order of decreasing dependency, each js file uses functions from previous file)_
+_(in order of increasing dependency, each js file uses functions from previous file)_
 
 You need to delink the files one by one and keep checking if the issue repeats.
 
