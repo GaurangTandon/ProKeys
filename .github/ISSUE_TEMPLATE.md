@@ -1,4 +1,15 @@
+### Data
 **Browser name:** - %YOUR_BROWSER_NAME%
 **OS name:** - %YOUR_OS_NAME%
 **Site** where ProKeys is functioning improperly - %site_url%
-**Description:** %describe_issue_in_detail_here%
+### **Description:**
+**Steps to reproduce issue**
+Doing the following in latest ProKeys version will cause the problem I'm writing about.
+
+1. %step_1%
+
+**Actual behavior**
+The above steps result in: %describe%
+
+**Expected behavior**
+The following was supposed to happen/should have happened: %describe%
