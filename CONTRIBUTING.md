@@ -1,7 +1,8 @@
 **Before uploading your files**  
+0. Check all "TODO" comments and for each, resolve it/raise an issue about it and then remove it's comment.
 1. ESLint all the JS files.  
 2. Update the version number in options.html and manifest to the latest version number.  
-3. Remove `console.log`s from all JS files.  
+3. Remove/comment `console.log`s from all JS files. 
 4. Minify all the files.
 5. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)
 6. Make sure that the update fixes all the bugs listed for its milestone number.  
