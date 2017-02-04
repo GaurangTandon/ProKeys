@@ -1,15 +1,17 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate, snipLimits */
-/* global $, setTextForNode, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, formatTextForNodeDisplay, chrome */
-/* global escapeRegExp, getText*/
-
+/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate,  */
+/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
+/* global triggerEvent, setHTML, MONTHS, chrome */
+/* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData*/
+/* global escapeRegExp, getText, modalHTML, listOfSnippetCtxIDs, latestRevisionLabel */
+console.log("Loaded once " + new Date());
 var contextMenuActionBlockSite,	
 	wasOnBlockedSite = false,
 	BLOCK_SITE_ID = "blockSite", SNIPPET_MAIN_ID = "snippet_main",
-	// boolean set to true on updating app
+	// boolean set to true on updating app as well as when extension loads
+	// or after browser restart
 	// so that user gets updated snippet list whenever he comes
 	// on valid website (not chrome://extension)
-	needToGetLatestData = false,
+	needToGetLatestData = true,
 	// can recall at max 10 times
 	// for gettting the blocked site status in case of unfinished loading of cs.js
 	LIMIT_OF_RECALLS = 10,
@@ -21,6 +23,7 @@ var contextMenuActionBlockSite,
 	latestCtxTimestamp;
 
 // so that snippet_classes.js can work properly
+// doesn't clash with the Data variable in options.js
 window.Data = {};
 Data.snippets = new Folder("Snippets");
 window.listOfSnippetCtxIDs = [];
@@ -43,16 +46,16 @@ function getDomain(url){
 }
 
 function getPasteData(){
-	var $elm = document.createElement("textarea"),
+	var $elm = $.new("textarea"),
 		$actElm = document.activeElement.appendChild($elm).parentNode;
     
 	$elm.focus();	
-    document.execCommand("Paste", null, null);
+	document.execCommand("Paste", null, null);
     
 	var data = $elm.value;	
-    $actElm.removeChild($elm);
+	$actElm.removeChild($elm);
 	
-    return data;
+	return data;
 }
 
 function injectScript(tab){
@@ -72,6 +75,10 @@ function createBlockSiteCtxItem(){
 	chrome.contextMenus.create({
 		id: BLOCK_SITE_ID,
 		title: "reload page for blocking site"
+	}, function(){
+		if(chrome.runtime.lastError){
+			// do nothing
+		}			
 	});
 }
 
@@ -80,13 +87,13 @@ function openSnippetsPage(version, reason){
 		url: chrome.extension.getURL("html/options.html#snippets")
 	});
 	
-	if(version === "3.0.0" && reason === "update")
-		localStorage.prepare300Update = true;
+	if(version === "3.1.0" && reason === "update")
+		localStorage.showChangeLog = true;
 }
 
 // create modal dialog for blocking site by detector.js
 (function createBlockSiteModal(){
-	var modalContent = "<div class='block block-theme-plain'>\
+	var modalContent = "<div class='prokeys-block block-theme-plain'>\
 		<div class='block-overlay'></div>\
 		<div class='block-content'>\
 			<div class='block-dialog-form'>\
@@ -105,7 +112,6 @@ chrome.runtime.onInstalled.addListener(function(details){
 		version = chrome.runtime.getManifest().version;
 	
 	if(reason === "install"){
-		// TODO: greeting for user
 		openSnippetsPage(version);
 		
 		title = "ProKeys successfully installed!";
@@ -120,9 +126,10 @@ chrome.runtime.onInstalled.addListener(function(details){
 	else if(reason === "update"){		
 		title = "ProKeys successfully updated to v" + version;
 		text = "Please reload active tabs to use the new version.";
-		// TODO: explain changes to user
+		
 		openSnippetsPage(version, reason);
 		needToGetLatestData = true;
+		addCtxSnippetList();
 	}
 
 	// either update or install was there
@@ -143,24 +150,11 @@ try{
 	console.log("Error", e, e.getMessage());
 }
 
-try{
-	createBlockSiteCtxItem();
-}catch(e){
-	chrome.contextMenus.remove(BLOCK_SITE_ID);
-	createBlockSiteCtxItem();
-}
-
-try{
-	addCtxSnippetList(Data.snippets, true);
-}catch(e){
-	chrome.contextMenus.remove(SNIPPET_MAIN_ID);	
-	addCtxSnippetList(Data.snippets, true);
-	
-}
+createBlockSiteCtxItem();
 
 chrome.contextMenus.onClicked.addListener(function(info, tab){
 	var id = info.menuItemId,
-		url = info.pageUrl, msg;
+		url = info.pageUrl, msg, startIndex, snip;
 	
 	if(id === BLOCK_SITE_ID){
 		msg = {
@@ -174,8 +168,9 @@ chrome.contextMenus.onClicked.addListener(function(info, tab){
 			chrome.tabs.sendMessage(tabs[0].id, msg);
 		});
 	}
-	else if(Generic.CTX_SNIP_REGEX.test(id)){
-		snip = Data.snippets.getUniqueSnip(id.substring(Generic.CTX_START[Generic.SNIP_TYPE].length));
+	else if(Generic.CTX_SNIP_REGEX.test(id)){		
+		startIndex = Generic.CTX_START[Generic.SNIP_TYPE].length;
+		snip = Data.snippets.getUniqueSnip(id.substring(startIndex));
 		//console.log(snip, id.substring(Generic.CTX_START[Generic.SNIP_TYPE].length));
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs){			
 			if(tabs[0])
@@ -227,11 +222,11 @@ function updateContextMenu(isRecalled) {
 			// remove all snippet support as well
 			if(isBlocked) {
 				removeCtxSnippetList(true);
-				console.log(listOfSnippetCtxIDs);
+				wasOnBlockedSite = true;
 			}
 			else if(wasOnBlockedSite){
 				wasOnBlockedSite = false;
-				addCtxSnippetList(Data.snippets, true);
+				addCtxSnippetList();
 			}			
 			
 			chrome.contextMenus.update(BLOCK_SITE_ID, {
@@ -241,16 +236,17 @@ function updateContextMenu(isRecalled) {
 		
 		if(needToGetLatestData){
 			chrome.tabs.sendMessage(tabs[0].id, {giveSnippetList: true}, function(response){
-				if(Array.isArray(response)){
+				if(Array.isArray(response)){					
 					needToGetLatestData = false;
-					addCtxSnippetList(Folder.fromArray(response), true);
+					loadSnippetListIntoBGPage(response);
+					addCtxSnippetList();
 				}
 			});		
 		}
 	});
 }
 
-function addCtxSnippetList(snippets, addMainEntryFlag){
+function addCtxSnippetList(snippets){
 	function addMainEntry(){
 		chrome.contextMenus.create({
 			contexts: ["editable"],
@@ -265,13 +261,12 @@ function addCtxSnippetList(snippets, addMainEntryFlag){
 		});
 	}
 	
-	removeCtxSnippetList();	
-	
-	Data.snippets = snippets;
-	Folder.setIndices();
-	var hasSnippets = Data.snippets.list.length > 0;
-	
-	if(addMainEntryFlag) addMainEntry();
+	// just in case previous data is larger that current data
+	// we might have overlapping data display so avoid all problems
+	removeCtxSnippetList(true);
+	snippets = snippets || Data.snippets;
+	var hasSnippets = snippets.list.length > 0;
+	addMainEntry();
 	
 	// now create the new context menus
 	snippets.createCtxMenuEntry();
@@ -281,15 +276,24 @@ function removeCtxSnippetList(removeMainEntryFlag){
 	while(listOfSnippetCtxIDs.length > 0)
 		chrome.contextMenus.remove(listOfSnippetCtxIDs.pop());	
 	
-	if(removeMainEntryFlag) {
-		wasOnBlockedSite = true;
-		chrome.contextMenus.remove(SNIPPET_MAIN_ID);
-	}
+	if(removeMainEntryFlag)		
+		chrome.contextMenus.remove(SNIPPET_MAIN_ID, function(){
+			// entirely possible that flag-^ is true w/o any snippet_main_id
+			// actually being present
+			if(chrome.runtime.lastError);
+		});
+}
+
+function loadSnippetListIntoBGPage(list){
+	Data.snippets = Folder.fromArray(list);
+	Folder.setIndices();
+	return Data.snippets;
 }
 
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
+	// when user updates snippet data, reloading page is not required
 	if(typeof request.snippetList !== "undefined")
-		addCtxSnippetList(Folder.fromArray(request.snippetList));
+		addCtxSnippetList(loadSnippetListIntoBGPage(request.snippetList));
 	else if(request.openBlockSiteModalInParent === true){
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
 			var tab = tabs[0];

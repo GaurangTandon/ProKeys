@@ -1,6 +1,6 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate, snipLimits */
-/* global $, setTextForNode, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, formatTextForNodeDisplay, chrome */
+/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate */
+/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
+/* global triggerEvent, setHTML, MONTHS, chrome */
 /* global escapeRegExp, getText, isContentEditable, DAYS*/
 
 /* #quickNotes
@@ -29,6 +29,10 @@
 	////////////////////////
 
 	var isGoogle, isGmail,
+		/* should be "span"; if "p" is used, then it gets appended inside 
+			another "p" which the webpage was using. this can cause styling
+			problems for that rich editor */
+		TAGNAME_SNIPPET_HOLDER_ELM = "SPAN",
 		// class of span element holding entire snippet
 		SPAN_CLASS = "prokeys-snippet-text",
 		// class of span element holding placeholders
@@ -254,7 +258,7 @@
 
 	// checks if the span node is added by prokeys
 	function isProKeysNode(node){
-		return node.tagName === "SPAN" &&
+		return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM &&
 				(node && node.hasClass(SPAN_CLASS) || isGoogle);
 
 		// in plus.google.com, the span elements which
@@ -322,7 +326,7 @@
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0);
 
-		if(isProKeysNode(node)){
+		if(isProKeysNode(node)){			
 			range.selectNodeContents(node);
 			range.collapse(false);
 			sel.removeAllRanges();
@@ -330,23 +334,6 @@
 		}
 		// textarea
 		else node.selectionEnd = node.selectionStart = pos || Placeholder.toIndex;
-	}
-
-	// when you press the hotkey but no snippet is found
-	// then the character that gets inserted
-	function getCharToInsertWhenNoSnippet(){
-		var kC = Data.hotKey[1] || Data.hotKey[0],
-			specials = {
-				13 : "\n",
-				32 : " ",
-				188 : ",",
-				192 : "`"
-			};
-
-		// numpad keys
-		if(kC >= 96 && kC <= 105) kC -= 48;
-		
-		return specials[kC] || String.fromCharCode(kC);
 	}
 
 	function deleteSelectionTextarea(node){
@@ -387,7 +374,7 @@
 	
 	function insertSnippetInContentEditableNode(range, snipBody, node){
 		prepareSnippetBody(snipBody, node, function(snipBody){
-			var snipElmNode = document.createElement("span");
+			var snipElmNode = $.new(TAGNAME_SNIPPET_HOLDER_ELM);
 			snipElmNode.html(snipBody)
 				.addClass(SPAN_CLASS); // identification
 
@@ -419,7 +406,7 @@
 			// pos relative to container (not node)
 			caretPos = range.startOffset,
 			snip = Data.snippets.getUniqueSnippetAtCaretPos(container, caretPos);
-			
+
 		// snippet found
 		if(snip !== null) {
 			setTimeout(onSnipFound, 10);
@@ -436,9 +423,9 @@
 			endValue = nodeText.substring(caretPos);
 
 		// format the macros first
-		formatMacros(snipBody, function(snipBody){
+		formatMacros(snipBody, function(snipBody){			
 			Placeholder.node = node.html(beginValue + snipBody + endValue);
-		
+			
 			testPlaceholderPresence(node, snipBody, start);
 		});	
 	}
@@ -488,7 +475,7 @@
 
 	function checkPlaceholdersInContentEditableNode(){
 		var pArr = Placeholder.array, currND;
-
+		console.log(Placeholder);
 		if(pArr && pArr.length > 0){
 			currND = pArr[0];
 
@@ -639,7 +626,7 @@
 		
 			var text = node.value,
 				caretPos = node.selectionEnd;
-				console.dir(node);
+
 			text = text.substring(0, caretPos) + character + text.substring(caretPos);
 
 			// set the text
@@ -660,7 +647,7 @@
 		
 		var	rangeNode = range.startContainer,
 			//originalNode = rangeNode,			
-			isCENode = rangeNode.nodeType === 1, workElm,
+			isCENode = rangeNode.nodeType === 1,
 			caretPos = range.startOffset;
 		/*console.dir(range);
 		console.dir(caretPos);*/
@@ -673,7 +660,6 @@
 		setHTML(rangeNode, textToSet);
 		
 		$caretSetElm = isCENode ? rangeNode.firstChild : rangeNode;
-			
 
 		/*console.log(text + "\n--\n" + caretPos + "\n--\n" + textBefore + "\n--\n" + textAfter + "\n--\n" + caretPosToSet + "\n--\n" + textToSet);
 		
@@ -726,24 +712,6 @@
 		}
 	}
 
-	// get caret pos, or rather where it ends
-	function getCaretPosition(node) {
-		var range, preCaretRange, caretOffset,
-			win = getNodeWindow(node);
-
-		if(isContentEditable(node)){
-			range = win.getSelection().getRangeAt(0);
-			preCaretRange = range.cloneRange();
-
-			preCaretRange.selectNodeContents(node);
-			preCaretRange.setEnd(range.endContainer, range.endOffset);
-			caretOffset = preCaretRange.innerText.length;
-
-			return caretOffset;
-		}
-		else return node.selectionEnd;
-	}
-
 	// classArray for CodeMirror and ace editors
 	// parentSelector for others
 	// max search upto 10 parent nodes (searchLimit)
@@ -785,8 +753,8 @@
 
 	function formatVariable(str){	
 		return  /date/i.test(str)     ? getFormattedDate() :
-			    /time/i.test(str)     ? getTimestamp() :
-			    /version/i.test(str) ?
+				/time/i.test(str)     ? getTimestamp() :
+				/version/i.test(str) ?
 					navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ") :
 					null;
 	}
@@ -947,12 +915,14 @@
 		
 		else if(tgN === "INPUT"){
 			inputNodeType = node.getAttribute("type");
-			retVal = allowedInputElms.indexOf(inputNodeType) > -1;
-		}		
+			// "!inputNodeType" -> github issue #40
+			retVal = !inputNodeType ||
+						allowedInputElms.indexOf(inputNodeType) > -1;
+		}
 		else retVal = false;
 		
 		node.dataset[CACHE_DATASET_STRING] = retVal;
-		
+				
 		return retVal;
 	}
 
@@ -1063,7 +1033,7 @@
 					Placeholder.toIndex += toIndexIncrease;				
 				}
 			}
-		}
+		};
 		
 		handleKeyDown = function(e) {
 			var keyCode = e.keyCode,
@@ -1106,8 +1076,6 @@
 					e.stopPropagation();
 
 					insertTabChar(node);
-					// #TODO fix this? do I really need these lines when
-					// when Placeholder.mode is false
 					resetPlaceholderVariables();
 				}
 				else resetPlaceholderVariables();
@@ -1125,7 +1093,7 @@
 				autoInsertTyped = false;
 				resetPlaceholderVariables();
 			}
-		}
+		};
 	})();	
 
 	// attaches event to document receives
@@ -1201,8 +1169,9 @@
 		var isBlocked = isBlockedSite(URL);		
 		
 		chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-			var diffInTime, iframeRecentFlag, snip, timestamp;
+			var timestamp;
 			
+			// when user updates snippet data, reloading page is not required
 			if(typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE){
 				Data.snippets = Folder.fromArray(request);	
 				Folder.setIndices();
@@ -1219,7 +1188,6 @@
 			}
 			
 			else if(typeof request.clickedSnippet !== "undefined"){
-				snip = Snip.fromObject(request.clickedSnippet);
 				timestamp = parseInt(request.ctxTimestamp, 10);
 				
 				if(ctxTimestamp === timestamp){

@@ -7,10 +7,8 @@
 	1. chrome:// urls are inaccessible by content script so modal box cannot be inserted
 		there
 */
-/* globals (window variables) written by this file are: DataName, Data, DB_loaded*/
 (function(){	
-	var DataName = "UserSnippets",
-		storage = chrome.storage.local;
+	var storage = chrome.storage.local;
 	
 	// globals are:
 	window.DB_loaded = false;
@@ -35,7 +33,12 @@
 					["[", "]"]],
 		hotKey: ["shiftKey", 32] // added in 2.4.1
 	};
-	
+	window.OLD_DATA_STORAGE_KEY = "UserSnippets";
+	window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
+	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
+	/*
+	// function to save data for specific
+	// name and value
 	function DB_setValue(name, value, callback) {
 		var obj = {};
 		obj[name] = value;
@@ -43,13 +46,97 @@
 		storage.set(obj, function() {
 			if(callback) callback();
 		});
+	}*/
+
+	// sets the global variable Data (in object format; not string)
+	// after retrieval  of user's data
+	function DB_load(callback) {
+		var itemCount, i,
+			newKey2 = NEW_DATA_STORAGE_KEY + "_0",
+			restoredObjectStr = "";
+
+		function storeDataInNewStorageFormat(){
+			storage.set({ newKey2 : JSON.stringify(Data), DATA_KEY_COUNT_PROP: 1}, function(){
+				if(callback) callback();
+			});
+		}
+
+		// get all of the data at once, then take what's required
+		storage.get(null, function(data){
+			if(data.hasOwnProperty(DATA_KEY_COUNT_PROP)){
+				itemCount = data[DATA_KEY_COUNT_PROP];
+				
+				for(i = 0; i < itemCount; i++)
+					restoredObjectStr += data[NEW_DATA_STORAGE_KEY + "_" + i];		
+				
+				Data = JSON.parse(restoredObjectStr);
+				
+				if(callback) callback();
+			}
+			// user uses data <= v3.0.0.1
+			else if(data.hasOwnProperty(OLD_DATA_STORAGE_KEY)){			
+				Data = data[OLD_DATA_STORAGE_KEY];
+				
+				// make async calls to:
+				// 1. remove the older data
+				// 2. set new key2
+				// 3. call callback
+				storage.remove(OLD_DATA_STORAGE_KEY, storeDataInNewStorageFormat);
+			}
+			// data does not exist due to first time
+			// (1) install (2) transfer to sync storage
+			else{
+				// Data in this else branch refers to sample data 
+				// stored in global variable
+				storeDataInNewStorageFormat();
+			}
+		});
 	}
 
+	// NOTE: chunking data is NOT required in local storage since it does NOT
+	// have QUOTA_BYTES_PER_ITEM, but best way is to maintain consistency in storage
+	// methods for both sync and local storage
 	function DB_save(callback) {
-		DB_setValue(DataName, Data, function() {
-			if(callback) callback();
+		function afterStorageClear(){
+			storage.set(storageObj, function(){
+				if(callback) callback();
+			});
+		}
+		var jsonstr = JSON.stringify(Data), i = 0, storageObj = {},
+			// (note: QUOTA_BYTES_PER_ITEM only on sync storage)
+			maxBytesPerItem = chrome.storage.sync.QUOTA_BYTES_PER_ITEM, 
+			// since the key uses up some per-item quota, use
+			// "maxValueBytes" to see how much is left for the value
+			maxValueBytes, index, segment, counter;
+
+		// split jsonstr into chunks and store them in an object indexed by `key_i`
+		while(jsonstr.length > 0) {
+			index = NEW_DATA_STORAGE_KEY + "_" + i++;
+			maxValueBytes = maxBytesPerItem - lengthInUtf8Bytes(index);
+			
+			counter = maxValueBytes;
+			segment = jsonstr.substr(0, counter);			
+			while(lengthInUtf8Bytes(JSON.stringify(segment)) > maxValueBytes)
+				segment = jsonstr.substr(0, --counter);
+			
+			storageObj[index] = segment;
+			jsonstr = jsonstr.substr(counter);
+		}
+		// later used by retriever function
+		storageObj[DATA_KEY_COUNT_PROP] = i;
+
+		// say user saves till chunk 20 in case I
+		// in case II, user deletes several snippets and brings down
+		// total no. of "required" chunks to 15; however, the previous chunks
+		// (16-20) remain in memory unless they are "clear"ed.
+		storage.clear(function(){
+			if(getCurrentStorageType() === "sync")
+				// only 120ops allowed per min
+				// only 2ops allowed per sec
+				setTimeout(afterStorageClear, 2000);
+			else afterStorageClear();
 		});
-	}	
+	}
 		
 	// save data not involving snippets
 	function saveData(msg, callback){
@@ -63,29 +150,20 @@
 			
 			if(callback) callback();
 		});
-	}	
-	
-	function DB_load(callback) {
-		storage.get(DataName, function(r) {
-			if (isEmpty(r[DataName])) {
-				DB_setValue(DataName, Data, callback);
-			} else if (r[DataName].dataVersion != Data.dataVersion) {
-				DB_setValue(DataName, Data, callback);
-			} else {
-				Data = r[DataName];
-				if (callback) callback();
-			}
-		});
 	}
 	
 	// changes type of storage: local-sync, sync-local
 	function changeStorageType(){
 		// property MAX_ITEMS is present only in sync
 
-		if(storage.MAX_ITEMS)
-			storage = chrome.storage.local;
-		else
-			storage = chrome.storage.sync;
+		if(storage.MAX_ITEMS) storage = chrome.storage.local;
+		else storage = chrome.storage.sync;
+	}
+	
+	// get type of current storage as string
+	function getCurrentStorageType(){
+		// property MAX_ITEMS is present only in sync
+		return storage.MAX_ITEMS ? "sync" : "local";
 	}
 	
 	function setEssentialItemsOnDBLoad(){
@@ -102,7 +180,7 @@
 			var txt = (shouldBlockSite ? "" : "un") + "blocked",
 				reloadHandler = function(){ window.location.reload(); },
 				reloadHandlerKeyup = keyHandlerCreator(reloadHandler),
-				reloadBtn = document.createElement("BUTTON")
+				reloadBtn = $.new("BUTTON")
 							.html("Reload page")
 							.on("click", reloadHandler)
 							.on("keyup", reloadHandlerKeyup);
@@ -198,7 +276,7 @@
 	}
 	
 	window.showBlockSiteModal = function(msg){
-		var modal = document.createElement("div").html(msg.modal).firstChild,
+		var modal = $.new("div").html(msg.modal).firstChild,
 			action = msg.action,
 			shouldBlockSite = action === "Block",
 			siteNameElm = modal.querySelector(".site-name"),
@@ -213,12 +291,12 @@
 		
 		if(URLAlertingText !== ""){
 			modal.querySelector(".block-dialog-message")
-				.appendChild(document.createElement("P").html(URLAlertingText));
+				.appendChild($.new("P").html(URLAlertingText));
 		}
 		
 		window.document.body.appendChild(modal);		
 		siteNameElm.focus();
-	}
+	};
 	
 	// asynchoronous function call
 	DB_load(function(){

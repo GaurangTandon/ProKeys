@@ -1,8 +1,11 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate, snipLimits */
-/* global $, setTextForNode, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, formatTextForNodeDisplay, chrome */
-/* global escapeRegExp, getText*/
+/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate */
+/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
+/* global triggerEvent, setHTML, MONTHS, chrome */
+/* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData*/
+/* global latestRevisionLabel, $containerSnippets, $panelSnippets, $containerFolderPath*/
+// above are defined in window. format
 
+// TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
 (function(){
 	"use strict";
 
@@ -15,15 +18,25 @@
 		validateSnippetData, validateFolderData,
 		// property name of localStorage item that stores past snippets versions
 		LS_REVISIONS_PROP = "prokeys_revisions",
-		MAX_REVISIONS_ALLOWED = 20,
+		MAX_REVISIONS_STORED = 20,
 		MAX_SYNC_DATA_SIZE = 102400,
-		MAX_LOCAL_DATA_SIZE = 5242880;
-	
+		MAX_LOCAL_DATA_SIZE = 5242880,
+		$autoInsertTable,
+		SHOW_CLASS = "shown",
+		$tabKeyInput,
+		$snipMatchDelimitedWordInput, $snipNameDelimiterListDIV,
+		RESERVED_DELIMITER_LIST = "`~|\\^",
+		ORG_DELIMITER_LIST = "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+		dualSnippetEditorObj;
+
+	// these variables are accessed by multiple files
 	window.DB_loaded = false;
+	// currently it's storing default data for first install;
+	// after DB_load, it stores the latest data
+	// snippets are later added
 	window.Data = {
 		dataVersion: 1,
-		snippets: [
-		],
+		snippets: [], // filled in IIFE below
 		language: "English",
 		visited: false,
 		// dictates whether tab key translates to "    "; set by user
@@ -34,103 +47,226 @@
 					["{", "}"],
 					["\"", "\""],
 					["[", "]"]],
-		hotKey: ["shiftKey", 32] // added in 2.4.1
+		hotKey: ["shiftKey", 32],
+		dataUpdateVariable: true,
+		matchDelimitedWord: false,
+		snipNameDelimiterList: ORG_DELIMITER_LIST
 	};
 	window.IN_OPTIONS_PAGE = true;
 	window.$containerSnippets = null;
 	window.$panelSnippets = null;
 	window.$containerFolderPath = null;
 	window.latestRevisionLabel = "data created (5 defaut snippets)";
-	
+	window.snipNameDelimiterListRegex = null;
+	window.OLD_DATA_STORAGE_KEY = "UserSnippets";
+	window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
+	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
+
+	// stored in global Data variable
+	(function createBuiltInSnippets(){
+		var name = "README-New_UI_Details",
+			body = 
+				// using + operator avoids the inadvertently introduced tab characters
+				"Dear user, here are some things you need to know in this new UI:\n\n" +
+				"1. You need to click on the name or body of the listed snippet to expand it completely. In the following image, " +
+				"the purple area shows where you can click to expand the snippet.\n\n<img src='../imgs/help1.png'>\n\n" +
+				"2. Click on the pencil icon to edit and the dustbin icon to delete a snippet/folder.\n" +
+				"3. Click on the folder, anywhere in the purple area denoted below, to view its contents.\n\n<img src='../imgs/help2.png'>\n\n" + 
+				"4. Click on a folder name in the navbar to view its contents. In the example below, the navbar consists of 'Snippets', 'sampleFolder' and 'folder2', " +
+				" each nested within the previous.\n\n" +
+				"<img src='../imgs/help3.png'>",
+			name2 = "clipboard_macro",
+			body2 = "Use this snippet anywhere and the following - [[%p]] - will be replaced by " + 
+						" your clipboard data. Clipboard data includes text that you have previously copied or cut with intention to paste.",
+			ts = Date.now(),
+			snips = 
+		[Folder.MAIN_SNIPPETS_NAME, ts,
+			["sampleFolder", ts],
+			{
+				name: "sampleSnippet",
+				body: "Hello new user! Thank you for using ProKeys!\n\nThis is a sample snippet. Try using it on any webpage by typing 'sampleSnippet' (snippet name; without quotes), and press the hotkey (default: Shift+Space), and this whole text would come in place of it.",
+				timestamp: ts
+			}, {
+				name: "letter",
+				body: "(Sample snippet to demonstrate the power of ProKeys snippets; for more detail on Placeholders, see the Help section)\n\nHello %name%,\n\nYour complaint number %complaint% has been noted. We will work at our best pace to get this issue solved for you. If you experience any more problems, please feel free to contact at me@organization.com.\n\nRegards,\n%my_name%,\nDate: [[%d(D-MM-YYYY)]]",
+				timestamp: ts
+			}, {
+				name: "brb", body: "be right back", timestamp: ts
+			}, {
+				name: "my_sign",
+				body: "<b>Aquila Softworks ©</b>\n<i>Creator Of ProKeys</i>\n<u>prokeys.feedback@gmail.com</u>",
+				timestamp: ts
+			}, {
+				name: "dateArithmetic",
+				body: "Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5 m-5 s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
+				timestamp: ts
+			},
+			{
+				name: name, body: body, timestamp: ts
+			},
+			{
+				name: name2, body: body2, timestamp: ts
+			}
+		];
+
+		Data.snippets = snips;
+	})();
+
 	// when we restore one revision, we have to remove it from its
 	// previous position; saveSnippetData will automatically insert it 
 	// back at the top of the list again
 	function deleteRevision(index){
 		var parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
-			
-		parsed.splice(index, 1);		
+
+		parsed.splice(index, 1);
 		localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
 	}
-	
+
 	function saveRevision(dataString){
 		var parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
-		
+
 		parsed.unshift({  // push latest revision
 			label: getFormattedDate() + " - " + latestRevisionLabel,
 			data: dataString || Data.snippets
 		});
-		
-		parsed = parsed.slice(0, MAX_REVISIONS_ALLOWED);
+
+		parsed = parsed.slice(0, MAX_REVISIONS_STORED);
 		localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
 	}
-	
+
 	// objectNamesToHighlight - when you add snippet/folder, it gets highlighted
 	window.saveSnippetData = function(callback, folderNameToList, objectNamesToHighlight){
 		Data.snippets = Data.snippets.toArray();
-		
+
 		// refer github issues#4
 		Data.dataUpdateVariable = !Data.dataUpdateVariable;
-		
+
 		DB_save(function(){
-			// called while Data.snippets is still a string
-			saveRevision(); 
+			saveRevision(Data.snippets.toArray()); 
 			notifySnippetDataChanges();
 			
-			Data.snippets = Folder.fromArray(Data.snippets);
 			Folder.setIndices();
 			var folderToList = folderNameToList ? 
 									Data.snippets.getUniqueFolder(folderNameToList) :
-									Data.snippets;		
+									Data.snippets;
 			folderToList.listSnippets(objectNamesToHighlight);
-			
-			checkRuntimeError();			
-			
+
+			checkRuntimeError();
+
 			if(callback) callback();
 		});
-	}
-	
+		
+		Data.snippets = Folder.fromArray(Data.snippets);
+	};
+
 	// save data not involving snippets
 	function saveOtherData(msg, callback){
 		Data.snippets = Data.snippets.toArray();
-		
-		// refer github issues#4
+
+		// github issues#4
 		Data.dataUpdateVariable = !Data.dataUpdateVariable;
-		
+
 		DB_save(function(){
-			Data.snippets = Folder.fromArray(Data.snippets);
-		
 			if(typeof msg === "function") msg();
 			else if(typeof msg === "string") alert(msg);
 			checkRuntimeError();
-			
+
 			if(callback) callback();
 		});
-	}
-	
-	function DB_setValue(name, value, callback) {
-		var obj = {};
-		obj[name] = value;
-		storage.set(obj, function() {
-			if(callback) callback();
-		});
+		
+		// once DB_save has been called, doesn't matter
+		// if this prop is object/array since storage.clear/set
+		// methods are using a separate storageObj
+		Data.snippets = Folder.fromArray(Data.snippets);
 	}
 
+	// sets the global variable Data (in object format; not string)
+	// after retrieval  of user's data
 	function DB_load(callback) {
-		storage.get(DataName, function(r) {
-			if (isEmpty(r[DataName]))
-				DB_setValue(DataName, Data, callback);
-			else if (r[DataName].dataVersion != Data.dataVersion)
-				DB_setValue(DataName, Data, callback);
-			else {
-				Data = r[DataName];
-				if (callback) callback();
+		var itemCount, i,
+			newKey2 = NEW_DATA_STORAGE_KEY + "_0",
+			restoredObjectStr = "";
+
+		function storeDataInNewStorageFormat(){
+			storage.set({ newKey2 : JSON.stringify(Data), DATA_KEY_COUNT_PROP: 1}, function(){
+				if(callback) callback();
+			});
+		}
+
+		// get all of the data at once, then take what's required
+		storage.get(null, function(data){
+			if(data.hasOwnProperty(DATA_KEY_COUNT_PROP)){
+				itemCount = data[DATA_KEY_COUNT_PROP];
+
+				for(i = 0; i < itemCount; i++)
+					restoredObjectStr += data[NEW_DATA_STORAGE_KEY + "_" + i];
+
+				Data = JSON.parse(restoredObjectStr);
+
+				if(callback) callback();
+			}
+			// user uses data <= v3.0.0.1
+			else if(data.hasOwnProperty(OLD_DATA_STORAGE_KEY)){
+				Data = data[OLD_DATA_STORAGE_KEY];
+
+				// make async calls to:
+				// 1. remove the older data
+				// 2. set new key2
+				// 3. call callback
+				storage.remove(OLD_DATA_STORAGE_KEY, storeDataInNewStorageFormat);
+			}
+			// data does not exist due to first time
+			// (1) install (2) transfer to sync storage
+			else{
+				// Data in this else branch refers to sample data 
+				// stored in global variable
+				storeDataInNewStorageFormat();
 			}
 		});
 	}
-
+	
+	// NOTE: chunking data is NOT required in local storage since it does NOT
+	// have QUOTA_BYTES_PER_ITEM, but best way is to maintain consistency in storage
+	// methods for both sync and local storage
 	function DB_save(callback) {
-		DB_setValue(DataName, Data, function() {
-			if(callback) callback();
+		function afterStorageClear(){
+			storage.set(storageObj, function(){
+				if(callback) callback();
+			});
+		}
+		var jsonstr = JSON.stringify(Data), i = 0, storageObj = {},
+			// (note: QUOTA_BYTES_PER_ITEM only on sync storage)
+			maxBytesPerItem = chrome.storage.sync.QUOTA_BYTES_PER_ITEM,
+			// since the key uses up some per-item quota, use
+			// "maxValueBytes" to see how much is left for the value
+			maxValueBytes, index, segment, counter;
+
+		// split jsonstr into chunks and store them in an object indexed by `key_i`
+		while(jsonstr.length > 0) {
+			index = NEW_DATA_STORAGE_KEY + "_" + i++;
+			maxValueBytes = maxBytesPerItem - lengthInUtf8Bytes(index);
+			
+			counter = maxValueBytes;
+			segment = jsonstr.substr(0, counter);			
+			while(lengthInUtf8Bytes(JSON.stringify(segment)) > maxValueBytes)
+				segment = jsonstr.substr(0, --counter);
+			//console.log(lengthInUtf8Bytes(JSON.stringify(segment)), maxValueBytes);
+			storageObj[index] = segment;
+			jsonstr = jsonstr.substr(counter);
+		}
+		// later used by retriever function
+		storageObj[DATA_KEY_COUNT_PROP] = i;
+		console.log(JSON.stringify(storageObj));
+		// say user saves till chunk 20 in case I
+		// in case II, user deletes several snippets and brings down
+		// total no. of "required" chunks to 15; however, the previous chunks
+		// (16-20) remain in memory unless they are "clear"ed.
+		storage.clear(function(){
+			if(getCurrentStorageType() === "sync")
+				// only 120ops allowed per min
+				// only 2ops allowed per sec
+				setTimeout(afterStorageClear, 2000);
+			else afterStorageClear();
 		});
 	}
 
@@ -148,51 +284,37 @@
 		return false;
 	}
 
-	// returns an array of matched snip objects; or unique snip object
-	// based on 2 optional parameters
-	// return value is an array of three elements; first value is boolean 
-	// indicates whether there was exact match; if boolean is true, then:
-	//    second is the snippet object of exact match
-	//    third is an array containing global index and nested index
-	//    global index is -1 if snip is in global scope (out of any folder)
-    //    else it is 0-n denoting folder index
-	//    nested index, if global index = -1, nested index is within snippet list
-	//    as a whole, else index is within folder array
-	// else if boolean is false, then there is only a second element which is an array
-	// containing all the snippet objects that were nearly matched
-	// `return_val` is `"index"` when index of the matched unique snip
-	// is required; else it is omitted
-
 	function listBlockedSites(){
-		var ul = $("#settings ul"),
-			li, pElm, delDiv;
+		function getLI(url){
+			var li = $.new("li"),
+				label = $.new("label"),
+				input = $.new("input");
+			input.type = "checkbox";
+			label.appendChild(input);
+			label.appendChild(document.createTextNode(url));
+			li.appendChild(label);
+			return li;
+		}
+
+		var ul = $(".blocked-sites ul"),
+			i = 0, len = Data.blockedSites.length;
 
 		// if atleast one blocked site
-		if(Data.blockedSites[0]) ul.html("");
+		if(len > 0) ul.html("").removeClass("empty");
 		else{
-			ul.html("<li>None Currently</li>");
-
-			return; // exit
+			ul.html("None Currently").addClass("empty");
+			return;
 		}
 
-		for(var i = 0, len = Data.blockedSites.length; i < len; i++){
-			li = document.createElement("li");
-
-			pElm = document.createElement("p");
-			li.appendChild(pElm.html(Data.blockedSites[i]));
-
-			delDiv = document.createElement("div");
-			li.appendChild(delDiv.html("Unblock"));
-
-			ul.appendChild(li);
-		}
+		for(; i < len; i++)
+			ul.appendChild(getLI(Data.blockedSites[i]));
 	}
 
 	function createTableRow(textArr){
-		var tr = document.createElement("tr");
+		var tr = $.new("tr");
 
 		for(var i = 0, len = textArr.length; i < len; i++)
-			tr.appendChild(document.createElement("td").html(textArr[i]));
+			tr.appendChild($.new("td").html(textArr[i]));
 
 		return tr;
 	}
@@ -200,15 +322,15 @@
 	// notifies content script and background page
 	// about Data.snippets changes
 	function notifySnippetDataChanges(){
-		var msg = {snippetList: Data.snippets};
-		
+		var msg = {snippetList: Data.snippets.toArray()};
+
 		chrome.tabs.query({}, function(tabs){
 			var tab;
 
 			for (var i = 0, len = tabs.length; i < len; i++) {
 				tab = tabs[i];
 				if(!tab || !tab.id) continue;
-				
+
 				chrome.tabs.sendMessage(tab.id, msg);
 			}
 		});
@@ -216,72 +338,130 @@
 		chrome.extension.sendMessage(msg);
 	}
 
+	function removeAutoInsertChar(autoInsertPair){
+		var index = getAutoInsertCharIndex(autoInsertPair[0]);
+
+		Data.charsToAutoInsertUserList.splice(index, 1);
+
+		saveOtherData("Removed auto-insert pair '" + autoInsertPair.join("") + "'",
+			listAutoInsertChars);
+	}
+
+	function saveAutoInsert(autoInsertPair){
+		var firstChar = autoInsertPair[0],
+			lastChar = autoInsertPair[1],
+			str = "Please type exactly one character in ";
+
+		if(firstChar.length !== 1){
+			alert(str + "first field.");
+			return;
+		}
+
+		if(lastChar.length !== 1){
+			alert(str + "second field.");
+			return;
+		}
+
+		if(getAutoInsertCharIndex(firstChar) !== -1){
+			alert("The character \"" + firstChar + "\" is already present.");
+			return;
+		}
+
+		// first insert in user list
+		Data.charsToAutoInsertUserList.push(autoInsertPair);
+
+		saveOtherData("Saved auto-insert pair - " + firstChar + lastChar,
+			listAutoInsertChars);
+	}
+
 	// inserts in the table the chars to be auto-inserted
 	function listAutoInsertChars(){
 		var arr = Data.charsToAutoInsertUserList,
-			table = $("#settings table"),
 			// used to generate table in loop
-			thead, tr, inputBox;
-
-		// clear the table initially
-		table.html("");
-
-		for(var i = 0, len = arr.length; i < len; i++)
-			// create <tr> with <td>s having text as in current array and Remove
-			table.appendChild(createTableRow(arr[i].concat("Remove")));
+			thead, tr, i = 0, 
+			len = arr.length;
 
 		if(len === 0)
-			table.html("None currently. Add new:");
-		else{ // insert character-complement pair <thead> elements
-			thead = document.createElement("thead");
-			tr = document.createElement("tr");
+			$autoInsertTable.html("No Auto-Insert pair currently. Add new:");
+		else{
+			// clear the table initially
+			$autoInsertTable.html("");
+			thead = $.new("thead");
+			tr = $.new("tr");
 
-			tr.appendChild(document.createElement("th").html("Character"));
-			tr.appendChild(document.createElement("th").html("Complement"));
+			tr.appendChild($.new("th").html("Character"));
+			tr.appendChild($.new("th").html("Complement"));
 
 			thead.appendChild(tr);
 
-			table.insertBefore(thead, table.firstChild);
+			$autoInsertTable.appendChild(thead);
+
+			for(; i < len; i++)
+				// create <tr> with <td>s having text as in current array and Remove
+				$autoInsertTable.appendChild(createTableRow(arr[i].concat("Remove")));
 		}
 
-		inputBox = table.lastChild.firstChild;
-
-		// if there is no input box present or there is no auto-insert char
-		if( !(inputBox && /input/.test(inputBox.html()) || len === 0) )
-			appendInputBoxesInTable(table);
+		appendInputBoxesInTable();
 	}
 
-	function searchAutoInsertChars(firstChar, shouldReturnIndex){
+	function getAutoInsertCharIndex(firstCharToGet){
 		var arr = Data.charsToAutoInsertUserList,
-			complement;
+			firstChar;
 
 		for(var i = 0, len = arr.length; i < len; i++){
-			complement = arr[i][0];
+			firstChar = arr[i][0];
 
-			if(complement === firstChar){
-				return shouldReturnIndex ? [i, complement] : complement;
-			}
+			if(firstCharToGet === firstChar)
+				return i;
 		}
 
-		return undefined;
+		return -1;
 	}
 
-	function appendInputBoxesInTable(table){
-		var textList = ["<input type='text' placeholder='Type new character' class='auto-insert-char input'>",
-						"<input type='text' placeholder='Type its complement' class='auto-insert-char input'>",
-						"<input type='button' value='Save' class='auto-insert-char button'>"];
+	function appendInputBoxesInTable(){
+		function append(elm){
+			var td = $.new("td");
+			td.appendChild(elm);
+			tr.appendChild(td);
+		}
 
-		table.appendChild(createTableRow(textList));
+		function configureTextInputElm(attribute){
+			var inp = $.new("input");
+
+			inp.type = "text";
+			inp.addClass(mainClass)
+				.setAttribute("placeholder", "Type " + attribute);
+
+			append(inp);
+
+			inp.onkeydown = function(e){
+				if(e.keyCode === 13)
+					saveAutoInsert([inp1.value, inp2.value]);
+			};
+
+			return inp;
+		}
+
+		var mainClass = "char_input",
+			tr = $.new("tr"),
+			inp1 = configureTextInputElm("new character"),
+			inp2 = configureTextInputElm("its complement");
+
+		append($.new("button").html("Save"));
+
+		$autoInsertTable.appendChild(tr);
 	}
 
-	var validateRestoreData;
+	var validateRestoreData, initiateRestore;
 	(function backUpDataValidationFunctions(){
-		function validateSnippetsFolder(arr, isPre300Version){
-			if(isPre300Version){
+		var duplicateSnippetToKeep, typeOfData;
+
+		function validateSnippetsFolder(arr){
+			if(typeof arr[0] !== "string"){ // possibly before 300 version
 				arr.unshift(Date.now());
-				arr.unshift(Folder.MAIN_SNIPPETS_NAME);				
+				arr.unshift(Folder.MAIN_SNIPPETS_NAME);
 			}
-			
+
 			/*Note: Generic.getDuplicateObjectsText is being used below
 				to suppress duplicate snippets warnings. They will NOT be checked.
 				If a user creates duplicate folders, it's his own fault.*/
@@ -292,23 +472,27 @@
 				expectedPropsLength = props.length,
 				checks = {
 					"body": Snip.isValidBody,
-					"name": Snip.isValidName,
+					"name": Snip.isValidName
 				}, checkFunc, snippetVld,
 				// counter to make sure no extra properties
 				propCounter, prop, propVal,
 				snippetUnderFolderString;
-				
+
 			if(typeof folderName !== "string")
 				return "Folder name " + folderName + " is not a string.";
-			if((folderVld = Folder.isValidName(folderName)) !== "true" &&
-					Generic.getDuplicateObjectsText(folderName, Generic.FOLDER_TYPE) !== folderVld)
+
+			folderVld = Folder.isValidName(folderName);
+
+			if(folderVld !== "true" && 
+				Generic.getDuplicateObjectsText(folderName, Generic.FOLDER_TYPE) !== folderVld)
 				return "Folder name " + folderName + " is invalid because: " + folderVld;
+
 			if(typeof folderTimestamp !== "number")
 				return "Timestamp for " + folderName + " is not a number"; 
-			
-			for(var i = 0, len = snippets.length, elm; i < len; i++){				
+
+			for(var i = 0, len = snippets.length, elm; i < len; i++){
 				elm = snippets[i];
-				
+
 				if(Array.isArray(elm)){
 					if((snippetVld = validateSnippetsFolder(elm)) !== "true")
 						return snippetVld;
@@ -320,15 +504,15 @@
 					propCounter = 0;
 					snippetUnderFolderString = (i + 1) + 
 									"th snippet under folder " + folderName;
-					
+
 					// check whether this item has all required properties
-					for(prop in elm){		
+					for(prop in elm){
 						// if invalid property or not of string type
 						if(props.indexOf(prop) === -1)
 							return "Invalid property " + prop + " in " + snippetUnderFolderString;
 						else propCounter += 1;
 
-						propVal = elm[prop];						
+						propVal = elm[prop];
 						checkFunc = checks[prop];
 
 						if(checkFunc && (snippetVld = checkFunc(propVal)) !== "true" &&
@@ -336,22 +520,88 @@
 							return "Invalid value for property " + prop + " in " + snippetUnderFolderString +
 									"; received error: " + snippetVld;
 					}
-					
+
 					if(propCounter !== expectedPropsLength)
 						return "Expected " + expectedPropsLength + " properties in " +
 								snippetUnderFolderString + ". Instead got " + propCounter;
-				}				
+				}
 			}
-			
+
 			return "true";
 		}
-		
+
+		// duplicateSnippetToKeep - one of "existing", "imported", "both"
+		function handleDuplicatesInSnippets(inputFolder, shouldMergeDuplicateFolderContents){
+			var stringToAppendToImportedObject = "(1)";
+			handler(inputFolder);
+
+			function both(object){
+				var objectNameLen = object.name.length;
+
+				if(objectNameLen <= OBJECT_NAME_LIMIT - stringToAppendToImportedObject.length)
+					object.name += stringToAppendToImportedObject;
+				else object.name = 
+						object.name.substring(0, objectNameLen - 3) + 
+							stringToAppendToImportedObject;
+			}
+
+			function handler(inputFolder){
+				var removeIdxs = [];
+
+				inputFolder.list.forEach(function(object, idx){
+					if(handleSingleObject(object))
+						removeIdxs.push(idx);
+				});
+
+				var len = removeIdxs.length - 1;
+				while(len >= 0)
+					inputFolder.list.splice(removeIdxs[len--], 1);
+			}
+
+			function handleSingleObject(importedObj){
+				var duplicateObj = Data.snippets.getUniqueObject(importedObj.name, importedObj.type),
+					shouldDeleteImportedObject = false,
+					shouldKeepBothFolders = duplicateSnippetToKeep === "both";
+
+				if(duplicateObj){
+					console.log("DUPLICATE - " + duplicateObj.name);
+					switch(duplicateSnippetToKeep){
+						case "both":
+							both(importedObj); break;
+						case "imported":
+							duplicateObj.remove(); break;
+						case "existing":
+							shouldDeleteImportedObject = true;
+					}
+				}
+
+				if(Folder.isFolder(importedObj)){
+					handler(importedObj);
+
+					// have to merge non-duplicate contents of
+					// duplicate folders
+					if(duplicateObj &&
+						!shouldKeepBothFolders && shouldMergeDuplicateFolderContents)
+						// first we had corrected all the contents of fromFolder (deletedFolder)
+						// by calling handler and then moved
+						// the corrected contents to toFolder (keptFolder)
+						if(duplicateSnippetToKeep === "imported"){
+							console.dir(duplicateObj.list);
+							Folder.copyContents(duplicateObj, importedObj);
+						}
+						else Folder.copyContents(importedObj, duplicateObj);
+				}
+
+				return shouldDeleteImportedObject;
+			}
+		}
+
 		// receives charToAutoInsertUserList from user
 		// during restore and validates it
 		function validateCharListArray(charList){
 			for(var i = 0, len = charList.length, item; i < len; i++){
 				item = charList[i];
-				
+
 				// item should be array
 				if(!Array.isArray(item))
 					return "Invalid elements of character list " + (i + 1) + "th";
@@ -377,33 +627,93 @@
 			return "true";
 		}
 
+		initiateRestore = function(data){
+			var selectList = $(".import .selectList"),
+				selectedFolder = Folder.getSelectedFolderInSelectList(selectList),
+				existingSnippets, inputSnippetsJSON, inputSnippets, validation,
+				$deleteExistingSnippetsInput = $(".import .delete_existing"),
+				shouldDeleteExistingSnippets = $deleteExistingSnippetsInput.checked,
+				shouldMergeDuplicateFolderContents = $(".import input[name=merge]").checked;
+
+			duplicateSnippetToKeep = $(".import input[name=duplicate]:checked").value;
+
+			try{
+				data = JSON.parse(data);
+			}catch(e){
+				alert("Data was of incorrect format! Check console log for error report.");
+				console.log(e);
+				return;
+			}
+
+			typeOfData = Array.isArray(data) ? "snippets" : "data";
+
+			inputSnippetsJSON = typeOfData === "data" ? data.snippets : data;
+
+			validation = validateRestoreData(data, inputSnippetsJSON);
+
+			if(validation !== "true"){
+				alert(validation);
+				return;
+			}
+
+			inputSnippets = Folder.fromArray(inputSnippetsJSON);
+
+			if(shouldDeleteExistingSnippets) selectedFolder.list = [];
+
+			// handling duplicates requires correct indexes
+			Folder.setIndices();
+
+			handleDuplicatesInSnippets(inputSnippets, shouldMergeDuplicateFolderContents);
+
+			Folder.copyContents(inputSnippets, selectedFolder);
+
+			if(typeOfData === "data"){
+				existingSnippets = Folder.fromArray(Data.snippets.toArray()); // copied
+				Data = data;
+				Data.snippets = existingSnippets;
+			}
+
+			saveSnippetData(function(){
+				if(confirm("Data saved! Reload the page for changes to take effect?"))
+					window.location.reload();
+			});
+		};
+
 		// receives data object and checks whether
 		// it has only those properties which are required
 		// and none other
-		validateRestoreData = function(data, snippets, dataType){
+		validateRestoreData = function(data, snippets){
+			function setPropIfUndefined(name){
+				if(typeof data[name] === "undefined")
+					data[name] = name === "snipNameDelimiterList" ? 
+								ORG_DELIMITER_LIST : false;
+			}
+
 			// if data is of pre-3.0.0 times
 			// it will not have folders and everything
-			var isPre300Version = typeof data.dataUpdateVariable === "undefined",
-				vld1 = validateSnippetsFolder(snippets, isPre300Version);
-				
-			if(vld1 !== "true") return vld1;
+			var snippetsValidation = validateSnippetsFolder(snippets);
+
+			if(snippetsValidation !== "true") return snippetsValidation;
 
 			// all the checks following this line should be of "data" type
-			if(dataType !== "data") return "true";
-			
+			if(typeOfData !== "data") return "true";
+
 			var propCount = 0,
 				// the list of the correct items
 				correctProps = ["blockedSites", "charsToAutoInsertUserList", "dataVersion",
-						"language", "snippets", "tabKey", "visited", "hotKey", "dataUpdateVariable"],
+						"language", "snippets", "tabKey", "visited", "hotKey", "dataUpdateVariable",
+						"matchDelimitedWord", "snipNameDelimiterList"],
 				msg = "Data had invalid property: ";
 
 			// ensure backwards compatibility
 			data.dataUpdateVariable = false; // #backwardscompatibility
-				
+			setPropIfUndefined("matchDelimitedWord");// #backwardscompatibility
+			setPropIfUndefined("snipNameDelimiterList");// #backwardscompatibility
+
 			for(var prop in data){
 				if(correctProps.indexOf(prop) > -1){
 					propCount++;
-										
+
 					switch(prop){
 						case "blockedSites":
 						case "charsToAutoInsertUserList":
@@ -415,15 +725,23 @@
 						case "language":
 							// no need to produce error message, just rewrite the value
 							// with the expected value we require
-							data[prop] = "English"
+							data[prop] = "English";
 							break;
 						case "dataVersion":
 							data[prop] = 1;
 							break;
-						case "tabKey":
 						case "visited":
-						case "dataUpdateVariable":							
+						case "dataUpdateVariable":
 							data[prop] = prop === "visited" ? true : false;
+							break;
+						case "matchDelimitedWord":
+						case "tabKey":
+							if(typeof data[prop] !== "boolean")
+								data[prop] = false;
+							break;
+						case "snipNameDelimiterList":
+							if(typeof data[prop] !== "string")
+								data[prop] = ORG_DELIMITER_LIST;
 							break;
 						default: // possibly wrong property
 							return msg + prop;
@@ -438,7 +756,7 @@
 			// number of properties
 			if(propCount !== actualPropsNumber)
 				return "Expected " + actualPropsNumber + " properties in data; instead got " + propCount + " properties.";
-			
+
 			var vld2 = validateCharListArray(data.charsToAutoInsertUserList);
 			if(vld2 !== "true") return vld2;
 
@@ -476,7 +794,11 @@
 	}
 
 	// transfer data from one storage to another
-	function migrateData(transferData){
+	function migrateData(transferData, callback){
+		function afterMigrate(){
+			Data.snippets = Folder.fromArray(Data.snippets);
+			callback();
+		}
 		var str = Data.snippets.toArray(); // maintain a copy
 
 		// make current storage unusable
@@ -485,13 +807,13 @@
 
 		DB_save(function(){
 			changeStorageType();
-			
+
 			if(transferData){
 				// get the copy
-				Data.snippets = Folder.fromArray(str);				
-				saveOtherData(location.reload.bind(location));
+				Data.snippets = str;
+				DB_save(afterMigrate);
 			}
-			else location.reload();
+			else afterMigrate();
 		});
 	}
 
@@ -517,14 +839,14 @@
 		// dual-key combo
 		if(combo[1]){
 			result += metaKeyNames[combo[0]] + " + ";
-			
+
 			kC = combo[1];
 		}
 		else kC = combo[0];
 
 		// numpad keys
 		if(kC >= 96 && kC <= 105) kC -= 48;
-		
+
 		result += specials[kC] || String.fromCharCode(kC);
 
 		return result;
@@ -538,7 +860,7 @@
 		if( !(regex.test(value)) ) { alert("Invalid form of site address entered."); return;}
 
 		value = value.replace(/^(https?:\/\/)?(www\.)?/, "");
-		
+
 		// already a blocked site
 		if( isBlockedSite(value) ) { alert("Site " + value + " is already blocked."); return;}
 
@@ -550,164 +872,153 @@
 		saveOtherData("Blocked " + value, listBlockedSites);
 	}
 
-	function selectTextIn(elm){
-		if(isContentEditable(elm)){
-			var sel = window.getSelection(),
-				range = document.createRange();
-
-			range.selectNodeContents(elm);
-			sel.removeAllRanges();
-			sel.addRange(range);
-		}
-		else{
-			elm.selectionStart = 0;
-			elm.selectionEnd = elm.value.length;
-		}
-	}
-	
 	// folder and snippet edit panel
 	function editPanel(type){
 		var $panel = $(".panel_" + type + "_edit");
-		
+
 		function highlightInFolderList(folderElm, name){
 			var folderNames = folderElm.querySelectorAll("p"),
 				folder;
-			
+
 			for(var i = 0, len = folderNames.length; i < len; i++)
 				if((folder = folderNames[i]).html() === name){
 					folder.addClass("selected");
 					return;
 				}
 		}
-		
+
 		return function(object, isClosingEditPanel){
 			var	headerSpan = $panel.querySelector(".header span"),
 				nameElm = $panel.querySelector(".name input"),
-				bodyElm = $panel.querySelector(".body textarea"),				
 				folderElm = $panel.querySelector(".folderSelect .selectList"),
 				folderPathElm = $panelSnippets.querySelector(".folder_path :nth-last-child(2)"),
 				// boolean to tell if call is to edit existing snippet/folder
 				// or create new snippet
-				isEditing = !!object;				
-			
-			$panelSnippets.toggleClass("hidden");			
-			$panel.toggleClass("hidden");
+				isEditing = !!object,
+				isSnip = type == "snip";
+
+			$panelSnippets.toggleClass(SHOW_CLASS);
+			$panel.toggleClass(SHOW_CLASS);
 			if(isEditing) $panel.removeClass("creating-new");
 			else $panel.addClass("creating-new");
-			
+
 			if(isClosingEditPanel) return;
-			
+
 			// reset
-			folderElm.html("");	
-			
-			// cannot nest a folder under itself	
+			folderElm.html("");
+
+			// cannot nest a folder under itself
 			folderElm.appendChild(isEditing && type === "folder" ? 
 									Data.snippets.getFolderSelectList(object.name) :
 									Data.snippets.getFolderSelectList());
-			
+
 			if(isEditing){
 				var parent = object.getParentFolder();
 				highlightInFolderList(folderElm, parent.name);
 			}
-			else highlightInFolderList(folderElm, folderPathElm.html());			
-			
+			else highlightInFolderList(folderElm, folderPathElm.html());
+
 			headerSpan.html((isEditing ? "Edit " : "Create new ") + type);
-			
-			$(".error").removeClass("shown");			
-			
+
+			$(".error").removeClass(SHOW_CLASS);
+
+			if(isSnip)
+				dualSnippetEditorObj.switchToDefaultView();
+
 			if(isEditing){
 				nameElm.text(object.name).focus();
 				nameElm.dataset.name = object.name;
-				if(bodyElm) bodyElm.text(object.body);			
+				if(isSnip)
+					dualSnippetEditorObj.setShownText(object.body);
 			}
 			else{
 				nameElm.text("").focus();
-				if(bodyElm) bodyElm.text("");
+				if(isSnip) dualSnippetEditorObj.setShownText("");
 				nameElm.dataset.name = "";
-			}			
+			}
 		};
 	}
-	
+
 	// things common to snip and folder
 	function commonValidation(panelName){
 		var panel = $(".panel_" + panelName + "_edit");
-		
-		function manipulateElmForValidation(elm, validateFunc){
-			var text = elm.value,
+
+		function manipulateElmForValidation(elm, validateFunc, errorElm){
+			var text = elm ? elm.value : dualSnippetEditorObj.getShownText(),
 				textVld = validateFunc(text),
 				isTextValid = textVld === "true",
-				textErrorElm = elm.nextElementSibling;
-				
+				textErrorElm = errorElm || elm.nextElementSibling;
+
 			// when we are editing snippet/folder it does
 			// not matter if the name remains same
 			if(textVld === Generic.getDuplicateObjectsText(text, panelName)
 					&& elm.dataset.name === text)
 				isTextValid = true;
-				
+
 			if(!isTextValid){
 				textErrorElm
-					.addClass("shown")
-					.html(textVld);			
+					.addClass(SHOW_CLASS)
+					.html(textVld);
 			}
-			else textErrorElm.removeClass("shown");
-			
+			else textErrorElm.removeClass(SHOW_CLASS);
+
 			return [text, isTextValid];
 		}
-		
-		return function(callback){			
+
+		return function(callback){
 			var	nameElm = panel.querySelector(".name input"), name,
 				selectList = panel.querySelector(".selectList"),
 				folder = Folder.getSelectedFolderInSelectList(selectList),
 				isSnippet = /snip/.test(panel.className), bodyElm, body;
-			
+
 			if(isSnippet){
-				bodyElm = panel.querySelector(".body textarea");
 				name = manipulateElmForValidation(nameElm, Snip.isValidName);
-				body = manipulateElmForValidation(bodyElm, Snip.isValidBody);		
+				body = manipulateElmForValidation(undefined, Snip.isValidBody,
+					panel.querySelector(".body .error"));
 			}
 			else name =  manipulateElmForValidation(nameElm, Folder.isValidName);
-			
+
 			var	allValid = name[1] && (isSnippet ? body[1] : true),
 				oldName = nameElm.dataset.name;
-				
+
 			if(allValid){
-				if(isSnippet) toggleSnippetEditPanel(undefined, true);			
-				else toggleFolderEditPanel(undefined, true);			
+				if(isSnippet) toggleSnippetEditPanel(undefined, true);
+				else toggleFolderEditPanel(undefined, true);
 
 				callback(oldName, name[0], body && body[0], folder);
 			}
 		};
 	}
-	
+
 	// (sample) input 1836 => "2KB"
 	// input 5,123,456 => "5MB"
 	function roundByteSize(bytes){
 		var powers = [6, 3, 0, -3],
 			suffixes = ["MB", "KB", "B", "mB"],
 			DECIMAL_PLACES_TO_SHOW = 1;
-		
+
 		for(var i = 0, len = powers.length, lim; i < len; i++){
 			lim = Math.pow(10, powers[i]);
-			
+
 			if(bytes >= lim)
-				return (bytes / lim).toFixed(DECIMAL_PLACES_TO_SHOW) + suffixes[i];
+				return parseFloat((bytes / lim).toFixed(DECIMAL_PLACES_TO_SHOW)) + suffixes[i];
 		}
 	}
-	
+
 	function roundByteSizeWithPercent(bytes, bytesLim){
 		var out = roundByteSize(bytes),
 			// nearest multiple of five
 			percent = Math.round(bytes / bytesLim * 20) * 5;
-		
+
 		return out + " (" + percent + "%)";
 	}
-	
+
 	// updates the storage header in #headArea
 	// "You have x bytes left out of y bytes"
-	function updateStorageAmount(){		
+	function updateStorageAmount(){
 		storage.getBytesInUse(function(bytesInUse){
 			var bytesAvailable = storage.MAX_ITEMS ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
-		
+
 			// set current bytes
 			$(".currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
 
@@ -716,29 +1027,32 @@
 		});
 	}
 
-	function init(){		
+	function init(){
 		// needs to be set before database actions
 		$containerSnippets = $("#snippets .panel_snippets .panel_content");
 		$containerFolderPath = $("#snippets .panel_snippets .folder_path");
 		$panelSnippets = $(".panel_snippets");
-		
+		$snipMatchDelimitedWordInput = $(".snippet_match_whole_word input[type=checkbox]");
+		$tabKeyInput = $("#tabKey");
+		$snipNameDelimiterListDIV = $(".delimiter_list");
+
 		if(!DB_loaded){
-			setTimeout(init, 500);	return;
+			setTimeout(init, 100);	return;
 		}
 
 		// should only be called when DB has loaded
 		// and page has been initialized
 		setEssentialItemsOnDBLoad();
-		
+
 		var changeHotkeyBtn = $(".change_hotkey"),
-			hotkeyListener = $(".hotkey_listener");	
-			
+			hotkeyListener = $(".hotkey_listener");
+
 		$(".bytesAvailable").on("click", function(){
 			window.open("https://developer.chrome.com/extensions/storage#properties");
 		});
 
 		chrome.storage.onChanged.addListener(updateStorageAmount);
-			
+
 		// panels are - #content div
 		(function panelWork(){
 			var url = window.location.href;
@@ -747,7 +1061,7 @@
 				// get the id and show divs based on that
 				showHideDIVs(url.match(/#(\w+)$/)[1]);
 			else showHideDIVs("settings"); // default panel
-				
+
 			// used when buttons in navbar are clicked
 			// or when the url contains an id of a div
 			function showHideDIVs(DIVName){
@@ -759,20 +1073,20 @@
 					selectedBtn = $(".sidebar .buttons ." + selectedBtnClass);
 
 				if(DIVName === "snippets") Data.snippets.listSnippets();
-					
+
 				if(selectedDIV) selectedDIV.removeClass("show");
 				$(containerSel + DIVSelector).addClass("show");
-				
+
 				if(selectedBtn) selectedBtn.removeClass(selectedBtnClass);
 				$(btnSelector).addClass(selectedBtnClass);
-				
+
 				var href = window.location.href,
 					selIndex = href.indexOf("#");
 
 				if(selIndex !== -1) href = href.substring(0, selIndex);
 
 				window.location.href = href + DIVSelector;
-				
+
 				// the page shifts down a little
 				// for the exact location of the div;
 				// so move it back to the top
@@ -790,129 +1104,138 @@
 			/* set up accordion in help page */
 			// heading
 			$("#help section dt").on("click", function(){
-				this.nextElementSibling.toggleClass("hide");
-			});
-
-			// corresponding content
-			$("#help section dd").forEach(function(elm){
-				elm.addClass("hide");
+				this.toggleClass("show");
 			});
 
 			// the tryit editor in Help section
-			$("#tryit .nav p").on("click", function(){
-				var ots, // the currently shown nav elm
-					s = "show", t = "#tryit ";
-
-				// only toggle if not already shown
-				if(!this.hasClass("show")){
-					// hide the currently shown nav elm
-					ots = $(t + ".nav ." + s);
-					ots.removeClass(s);
-					// and its corresponding editor
-					$(t + ots.dataset.selector).toggleClass(s);
-
-					// show nav elm which was clicked
-					this.addClass(s);
-					// along with its corresponding editor
-					$(t + this.dataset.selector).toggleClass(s);
-				}
-			});
+			new DualTextbox($("#tryit"))
+				.setPlainText("You can experiment with various ProKeys' features in this interactive editor! This editor is resizable.\n\n\
+Textarea is the normal text editor mode. No support for bold, italics, etc. But multiline text is supported.\n\
+Think Notepad.")
+				.setRichText("This is a contenteditable or editable div. \
+These editors are generally found in your email client like Gmail, Outlook, etc.<br><br><i>This editor \
+<u>supports</u></i><b> HTML formatting</b>. You can use the \"my_sign\" sample snippet here, and see the effect.");
 		})();
 
-		document.on("click", function(event){
-			var node = event.target,
-				tagName = node.tagName,
-				value = node.html(),
-				domain, index,
-				firstCharElm, firstChar;
-
-			// blocked sites Unblock button
-			if(value === "Unblock"){
-				domain = node.previousElementSibling.html();
-
-				index = Data.blockedSites.indexOf(domain);
-
-				Data.blockedSites.splice(index, 1);
-
-				//chrome.extension.getBackgroundPage().addRemoveBlockedSite(domain, false);
-
-				saveOtherData(listBlockedSites);
-			}
-			// Remove button for auto-insert character list
-			else if(tagName === "TD" && value === "Remove"){
-				firstCharElm = node.previousElementSibling.previousElementSibling;
-				firstChar = formatTextForNodeDisplay(firstCharElm, firstCharElm.html(), "makeHTML");
-
-				// retrieve along with index (at second position in returned array)
-				index = searchAutoInsertChars(firstChar, true)[0];
-
-				Data.charsToAutoInsertUserList.splice(index, 1);
-
-				saveOtherData("Removed pair having '" + firstChar + "'",
-					listAutoInsertChars);
-
-			}
-			// newAutoInsertChar
-			else if(tagName === "INPUT" && value === "Save"){
-				// get elements
-				var newAutoInsertChar = document.querySelectorAll("#settings table .auto-insert-char"),
-					elmChar1 = newAutoInsertChar[0],
-					elmChar2 = newAutoInsertChar[1],
-					text1 = elmChar1.value,
-					str = "Please type atleast/only one character in ";
-
-				if(text1.length !== 1){
-					alert(str + "first field.");
-					return false;
-				}
-
-				var text2 = elmChar2.value;
-
-				if(text2.length !== 1){
-					alert(str + "second field.");
-					return false;
-				}
-
-				// already present
-				if(searchAutoInsertChars(text1, true) !== undefined){
-					alert("The character \"" + text1 + "\" is already present.");
-					return false;
-				}
-
-				// first insert in user list
-				Data.charsToAutoInsertUserList.push([text1, text2]);
-
-				saveOtherData("Saved auto-insert pair - " + text1 + " " + text2,
-					listAutoInsertChars);
-			}
-		});
-
 		(function settingsPageHandlers(){
-			// on user input in tab key setting
-			$("#tabKey").on("change", function(){
-				// change Data
-				Data.tabKey	= $("#tabKey").checked;
+			var $unblockBtn = $(".blocked-sites .unblock"),
+				$delimiterCharsInput = $(".delimiter_list input"),
+				$delimiterCharsResetBtn = $(".delimiter_list button");
 
-				// and save it
+			// on user input in tab key setting
+			$tabKeyInput.on("change", function(){
+				Data.tabKey	= this.checked;
+
 				saveOtherData("Saved!");
 			});
 
-			// siteBlockInput field
 			$("#settings .siteBlockInput").on("keyup", function(event){
 				if(event.keyCode === 13) blockSite.call(this);
 			});
 
-			// siteBlockButton
-			$("#settings .siteBlockInput + button").on("click", function(){
-				blockSite.call(this.previousElementSibling);
+			$unblockBtn.on("click", function(){
+				function getURL(elm){
+					return elm.nextSibling.textContent;
+				}
+
+				var str = "Are you sure you want to unblock - ",
+					$selectedCheckboxes = $(".blocked-sites ul input:checked"),
+					l = $selectedCheckboxes.length,
+					sites, index;
+
+				sites = l === 1 ? [getURL($selectedCheckboxes)] :
+						$selectedCheckboxes.map(getURL);
+
+				if(l === 0) alert("Please select at least one site using the checkboxes.");
+				else if(confirm(str + sites.join(", ") + "?")){
+					for(var i = 0; i < l; i++){
+						index = Data.blockedSites.indexOf(sites[i]);
+
+						Data.blockedSites.splice(index, 1);
+					}
+
+					saveOtherData(listBlockedSites);
+				}
 			});
+
+			function getAutoInsertPairFromSaveInput(node){
+				var $clickedTR = node.parentNode.parentNode;
+				return $clickedTR.querySelectorAll(".char_input")
+							.map(function(e){return e.value;});
+			}
+
+			function getAutoInsertPairFromRemoveInput(node){
+				var $clickedTR = node.parentNode;
+				return $clickedTR.querySelectorAll("td")
+							// slice to exclude Remove button
+							.map(function(e){return e.innerText;}).slice(0, 2);
+			}
+
+			$autoInsertTable.on("click", function(e){
+				var node = e.target;
+
+				if(node.tagName === "BUTTON")
+					saveAutoInsert(getAutoInsertPairFromSaveInput(node));
+				else if(getHTML(node) === "Remove")
+					removeAutoInsertChar(getAutoInsertPairFromRemoveInput(node));
+			});
+
+			$snipMatchDelimitedWordInput.on("change", function(){
+				var isChecked = this.checked;
+				Data.matchDelimitedWord = isChecked;
+				$snipNameDelimiterListDIV.toggleClass(SHOW_CLASS);
+				saveOtherData("Data saved!");
+			});
+
+			function validateDelimiterList(stringList){
+				var i = 0, len = RESERVED_DELIMITER_LIST.length, reservedDelimiter; 
+				for(; i < len; i++){
+					reservedDelimiter = RESERVED_DELIMITER_LIST.charAt(i);
+					if(stringList.match(escapeRegExp(reservedDelimiter)))
+						return reservedDelimiter;
+				}
+				
+				return true;
+			}
+			
+			$delimiterCharsInput.on("keyup", function(e){
+				if(e.keyCode === 13){
+					var vld = validateDelimiterList(this.value);
+					if(vld !== true){
+						alert("Input list contains reserved delimiter \"" + vld + "\". Please remove it from the list. Thank you!")
+						return true;
+					}
+					Data.snipNameDelimiterList = this.value;
+					setDelimiterListRegex();
+					saveOtherData("Data saved!");
+				}
+			});
+
+			$delimiterCharsResetBtn.on("click", function(){
+				if(confirm("Are you sure you want to replace the current list with the default delimiter list?")){
+					Data.snipNameDelimiterList = ORG_DELIMITER_LIST;
+					delimiterInit();
+					saveOtherData("Data saved!");
+				}
+			});
+
+			delimiterInit();
+
+			function setDelimiterListRegex(){
+				snipNameDelimiterListRegex = new RegExp("[" + escapeRegExp(Data.snipNameDelimiterList) + "]");
+			}
+
+			function delimiterInit(){
+				$delimiterCharsInput.value = Data.snipNameDelimiterList;
+				setDelimiterListRegex();
+			}
 		})();
 
 		(function snippetWork(){
 			// define element variables
 			var $searchBtn = $(".search_btn"),
 				$searchPanel = $(".panel_search"),
-				$searchField = $(".panel_search input[type=text]"),				
+				$searchField = $(".panel_search input[type=text]"),
 				$closeBtn = $(".close_btn"),
 				$snippetSaveBtn = $(".panel_snip_edit .tick_btn"),
 				$folderSaveBtn = $(".panel_folder_edit .tick_btn"),
@@ -928,24 +1251,26 @@
 				$bulkActionPanel = $(".panel_snippets .panel_bulk_action"),
 				folderPath = $(".folder_path"),
 				$selectList = $(".selectList");
-			
+
 			// functions
 			toggleSnippetEditPanel = editPanel(Generic.SNIP_TYPE);
 			toggleFolderEditPanel = editPanel(Generic.FOLDER_TYPE);
 			validateSnippetData = commonValidation(Generic.SNIP_TYPE);
 			validateFolderData = commonValidation(Generic.FOLDER_TYPE);
-			
+
+			dualSnippetEditorObj = new DualTextbox($("#body-editor"), true);
+
 			$containerSnippets.on("click", function(e){
 				var node = e.target,
 					objectElm = node.parentNode.parentNode;
-					
+
 				if(!objectElm) return true;
-				
+
 				var $name = objectElm.querySelector(".name"), name;
-				
+
 				if(!$name) return true;
 				name = $name.html();
-				
+
 				if(node.matches("#snippets .panel_content .edit_btn")){
 					if(/snip/.test(objectElm.className))
 						toggleSnippetEditPanel(Data.snippets.getUniqueSnip(name));
@@ -954,11 +1279,11 @@
 				}else if(node.matches("#snippets .panel_content .delete_btn"))
 					deleteOnClick.call(objectElm, name);
 			});
-			
+
 			folderPath.on("click", function(e){
 				var node = e.target,
 					folderName, folder;
-				
+
 				if(node.matches(".chevron")){
 					folder = Folder.getListedFolder();
 					folder.getParentFolder().listSnippets();
@@ -969,22 +1294,22 @@
 					folder.listSnippets();
 				}
 			});
-			
+
 			$closeBtn.on("click", function(){
 				var $panel = this.parentNode.parentNode;
-				$panel.addClass("hidden");
-				$panelSnippets.removeClass("hidden");
+				$panel.removeClass(SHOW_CLASS);
+				$panelSnippets.addClass(SHOW_CLASS);
 			});
-			
+
 			function objectSaver(type){
 				return function(oldName, name, body, newParentfolder){
 					var object, oldParentFolder, timestamp;
-					
-					if(oldName) {				
+
+					if(oldName) {
 						object = Data.snippets["getUnique" + type](oldName);
 						oldParentFolder = object.getParentFolder();
 						timestamp = object.timestamp;
-						
+
 						if(newParentfolder.name !== oldParentFolder.name) {
 							object.remove();
 							if(type === "Snip") newParentfolder.addSnip(name, body, timestamp);
@@ -995,55 +1320,57 @@
 					else newParentfolder["add" + type](name, body);
 				};
 			}
-			
-			$snippetSaveBtn.on("click", function(){								
+
+			$snippetSaveBtn.on("click", function(){
 				validateSnippetData(objectSaver("Snip"));
 			});
-			
-			$folderSaveBtn.on("click", function(){				
+
+			$folderSaveBtn.on("click", function(){
 				validateFolderData(objectSaver("Folder"));
 			});
-			
+
 			function deleteOnClick(name){
 				var type = /snip/.test(this.className) ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
 					object, folder;
-				
+
 				if(confirm("Delete '" + name + "' " + type + "?")){
 					object = Data.snippets
 							.getUniqueObject(name, type);
 					folder = object.getParentFolder();
-					
-					object.remove();					
+
+					object.remove();
 					this.parentNode.removeChild(this);
-					
+
 					latestRevisionLabel = "deleted " + object.type + " \"" + object.name + "\"";
-					
+
 					saveSnippetData(undefined, folder.name);
 				}
 			}
 
-			// grey out select list on this checkbox click
-			// cannot use css here :(
-			$selectList.on("click", function(e){				
-				var node = e.target, classSel = "selected", others;
-				
+			$selectList.on("click", function(e){
+				var node = e.target, classSel = "selected", 
+					others, $containerDIV, collapsedClass = "collapsed";
+
 				if(node.tagName === "P"){
 					// do not use $selectList
 					// as it is a NodeList
+					$containerDIV = node.parentNode;
+					$containerDIV.toggleClass(collapsedClass);
+
 					others = this.querySelector("." + classSel);
 					if(others) others.removeClass(classSel);
 					node.addClass(classSel);
 				}
 			});
-			
+
 			// for searchBtn and $searchPanel
 			// $addNewBtn and $addNewPanel
 			// and other combos
-			function toggleBtnAndPanel(btn, panel){	
+			function toggleBtnAndPanel(btn, panel){
 				var existingPanel = $(".sub_panel.shown");
-				if(!panel.hasClass("shown")) panel.addClass("shown");
-				if(existingPanel) existingPanel.removeClass("shown");
-				
+				if(!panel.hasClass(SHOW_CLASS)) panel.addClass(SHOW_CLASS);
+				if(existingPanel) existingPanel.removeClass(SHOW_CLASS);
+
 				var existingBtn = $(".panel_btn.active");
 				if(!btn.hasClass("active"))	btn.addClass("active");
 				if(existingBtn)	existingBtn.removeClass("active");
@@ -1051,62 +1378,62 @@
 				// we need these checks as another might have been clicked
 				// to remove the search/checkbox panel and so we need to remove
 				// their type of list
-				if(!$searchPanel.hasClass("shown") &&
+				if(!$searchPanel.hasClass(SHOW_CLASS) &&
 					Folder.getListedFolder().isSearchResultFolder)
 					Data.snippets.listSnippets();
-																
+
 				// if checkbox style list is still shown
 				if($containerSnippets.querySelector("input[type=\"checkbox\"]") &&
-					!$bulkActionPanel.hasClass("shown"))
+					!$bulkActionPanel.hasClass(SHOW_CLASS))
 					Data.snippets.getUniqueFolder($bulkActionPanel.dataset.originalShownFolderName)
-						.listSnippets();					
+						.listSnippets();
 			}
-			
+
 			$sortBtn.on("click", function(){
 				toggleBtnAndPanel($sortBtn, $sortPanel);
 			});
-			
+
 			$sortPanelBtn.on("click", function(){
 				var sortDir = $sortPanel.querySelector(".sort-dir :checked").parentNode.innerText,
 					sortType = $sortPanel.querySelector(".sort-type :checked").parentNode.innerText,
 					descendingFlag = sortDir = sortDir === "Descending",
 					lastFolderDOM = folderPath.lastChild.previousSibling,
 					folder = Data.snippets.getUniqueFolder(lastFolderDOM.html());
-					
-				sortType = sortType === "Name" ? "alphabetic" : "date";				
-					
+
+				sortType = sortType === "Name" ? "alphabetic" : "date";
+
 				folder.sort(sortType, descendingFlag);
-				
+
 				latestRevisionLabel = "sorted folder \"" + folder.name + "\"";
 			});
-			
+
 			$addNewBtn.on("click", function(){
 				toggleBtnAndPanel($addNewBtn, $addNewPanel);
 			});
-	
+
 			$createSnipBtn.on("click", function(){
 				toggleSnippetEditPanel();
 			});
-			
+
 			$createFolderBtn.on("click", function(){
 				toggleFolderEditPanel();
 			});
-			
+
 			$searchBtn.on("click", function(){
 				toggleBtnAndPanel($searchBtn, $searchPanel);
 				$searchField.html("").focus();
 				// now hidden search panel, so re-list the snippets
-				if(!$searchPanel.hasClass("shown"))
+				if(!$searchPanel.hasClass(SHOW_CLASS))
 					Folder.getListedFolder().listSnippets();
 			});
-			
+
 			$searchBtn.setAttribute("title", "Search for folders or snips");
 
 			$searchField.on("keyup", function(){
 				var searchText = this.value,
 					listedFolder = Folder.getListedFolder(),
 					searchResult = listedFolder.searchSnippets(searchText);
-					
+
 				searchResult.listSnippets();
 			});
 
@@ -1117,67 +1444,67 @@
 					selectAllBtn = $bulkActionPanel.querySelector(".selection_count input"),
 					folderSelect = $bulkActionPanel.querySelector(".folderSelect"),
 					selectList = $bulkActionPanel.querySelector(".selectList");
-			
+
 				function updateSelectionCount(){
 					selectedObjects = 
 						DOMcontainer.querySelectorAll("input:checked") || [];
-						
+
 					selectedObjects	= selectedObjects.map(function(e){
 						var div = e.nextElementSibling.nextElementSibling,
 							name = div.html(), 
 							img = e.nextElementSibling,
-							type = img.src.match(/\w+(?=\.png)/)[0];					
-						
+							type = img.src.match(/\w+(?=\.png)/)[0];
+
 						return Data.snippets.getUniqueObject(name, type);
 					});
-						
+
 					$bulkActionPanel
 						.querySelector(".selection_count span").html(selectedObjects.length);
-						
+
 					$bulkActionPanel.querySelectorAll(".bulk_actions input").forEach(function(elm){
 						elm.disabled = !selectedObjects.length;
-					});				
+					});
 				}
-				
+
 				$bulkActionBtn.on("click", function(){
 					var originalShownFolderName, originalShownFolder;
-					
-					toggleBtnAndPanel(this, $bulkActionPanel);				
-					
-					if($bulkActionPanel.hasClass("shown")){
+
+					toggleBtnAndPanel(this, $bulkActionPanel);
+
+					if($bulkActionPanel.hasClass(SHOW_CLASS)){
 						originalShownFolderName = Folder.getListedFolderName();
 						originalShownFolder = Data.snippets.getUniqueFolder(originalShownFolderName);
 						DOMcontainer = Folder.insertBulkActionDOM(originalShownFolder);
-							
+
 						$bulkActionPanel.dataset.originalShownFolderName = originalShownFolderName;
-						
-						DOMcontainer.on("click", function(e){
-							// watching clicks on checkbox and div.name is tedious
+
+						DOMcontainer.on("click", function(){
+							// watching clicks on checkbox and div.name is resource intensive
 							// so just update count every time anywhere you click
 							updateSelectionCount(DOMcontainer);
 						});
-						
+
 						updateSelectionCount();
-						folderSelect.addClass("hidden");
+						folderSelect.removeClass(SHOW_CLASS);
 					}
 				});
-				
+
 				// select all button
 				selectAllBtn.on("click", function(){
 					DOMcontainer.querySelectorAll("input").forEach(function(elm){
 						elm.checked = true;
 					});
-					
+
 					updateSelectionCount();
 				});
-							
+
 				// move to folder button
 				moveToBtn.on("click", function(){
 					var selectFolderName, selectedFolder;
-					
-					if(folderSelect.hasClass("hidden")){
+
+					if(!folderSelect.hasClass(SHOW_CLASS)){
 						Folder.refreshSelectList(selectList);
-						folderSelect.removeClass("hidden");
+						folderSelect.addClass(SHOW_CLASS);
 					}
 					else{
 						selectedFolder = Folder.getSelectedFolderInSelectList(selectList);
@@ -1188,125 +1515,62 @@
 							else alert("Cannot move " + e.type + " \"" + e.name + "\" to \"" + selectedFolder.name + "\"" +
 									"; as it is the same as (or a parent folder of) the destination folder");
 						});
-						
+
 						latestRevisionLabel = "moved " + selectedObjects.length + 
-												" object to folder \"" + selectFolderName + "\"";
-						
+												" objects to folder \"" + selectFolderName + "\"";
+
 						saveSnippetData(function(){
 							// hide the bulk action panel
 							$bulkActionBtn.trigger("click");
 						}, selectFolderName, selectedObjects.map(function(e){return e.name;}));
-					}					
+					}
 				});
-				
+
 				deleteBtn.on("click", function(){
 					if(confirm("Are you sure you want to delete these " + selectedObjects.length + " items? " + 
 							"Remember that deleting a folder will also delete ALL its contents.")){
 						selectedObjects.map(function(e){
 							e.remove();
 						});
-					
+
 						latestRevisionLabel = "deleted " + selectedObjects.length + " objects";
-					
+
 						saveSnippetData(function(){
 							// hide the bulk action panel
 							$bulkActionBtn.trigger("click");
 						}, Folder.getListedFolderName());
 					}
 				});
-			})();			
-					
-			// now check if the user is first time user; get that data
+			})();
+
 			(function checkIfFirstTimeUser(){
 				var $button = $(".change-log button"),
-					$changeLog = $(".change-log"),
-					hiddenClass = "hidden",
-					// the snippet "auto_generated_note" needs to be inserted at two places
-					// hence we store its name and body here.
-					name = "README-New_UI_Details",
-					body = 
-						// using + operator avoids the inadvertently introduced tab characters
-						"Dear user, here are some things you need to know in this new UI:\n\n" +
-						"1. You need to click on the name or body of the listed snippet to expand it completely. In the following image, " +
-						"the purple area shows where you can click to expand the snippet.\n\n<img src='../imgs/help1.png'>\n\n" +
-						"2. Click on the pencil icon to edit and the dustbin icon to delete a snippet/folder.\n" +
-						"3. Click on the folder, anywhere in the purple area denoted below, to view its contents.\n\n<img src='../imgs/help2.png'>\n\n" + 
-						"4. Click on a folder name in the navbar to view its contents. In the example below, the navbar consists of 'Snippets', 'sampleFolder' and 'folder2', " +
-						" each nested within the previous.\n\n" +
-						"<img src='../imgs/help3.png'>",
-					name2 = "clipboard_macro",
-					body2 = "Use this snippet anywhere and the following - [[%p]] - will be replaced by " + 
-								" your clipboard data. Clipboard data includes text that you have previously copied or cut with intention to paste.";
-				
-				if(localStorage.prepare300Update === "true"){
-					$changeLog.removeClass(hiddenClass);
-					
-					$button.on("click", function(){
-						$changeLog.addClass(hiddenClass);
-						localStorage.prepare300Update = "false";
-					});
-					
-					// silly hack to get around addFolder, which saveSnippetData (asynchronous)										
-					Data.snippets.list.unshift(new Folder("sampleFolder"));
-					Data.snippets.list.push(new Snip(name2, body2));
-					Data.snippets.addSnip(name, body);
-				}
-				
-				if(!Data.visited){
-					$changeLog.removeClass(hiddenClass);
-					
-					$button.on("click", function(){
-						$changeLog.addClass(hiddenClass);
-						Data.visited = true;
-						saveOtherData();
-					});
-					
-					// create introductory snippets
-					var ts = Date.now(),
-						snips = 
-					[Folder.MAIN_SNIPPETS_NAME, ts,
-						["sampleFolder", ts],
-						{
-							name: "sampleSnippet",
-							body: "Hello new user! Thank you for using ProKeys!\n\nThis is a sample snippet. Try using it on any webpage by typing 'sampleSnippet' (snippet name; without quotes), and press the hotkey (default: Shift+Space), and this whole text would come in place of it.",
-							timestamp: ts
-						}, {
-							name: "letter",
-							body: "(Sample snippet to demonstrate the power of ProKeys snippets; for more detail on Placeholders, see the Help section)\n\nHello %name%,\n\nYour complaint number %complaint% has been noted. We will work at our best pace to get this issue solved for you. If you experience any more problems, please feel free to contact at me@organization.com.\n\nRegards,\n%my_name%,\nDate: [[%d(D-MM-YYYY)]]",
-							timestamp: ts
-						}, {
-							name: "brb", body: "be right back", timestamp: ts
-						}, {
-							name: "my_sign",
-							body: "<b>Aquila Softworks ©</b>\n<i>Creator Of ProKeys</i>\n<u>prokeys.feedback@gmail.com</u>",
-							timestamp: ts
-						}, {
-							name: "dateArithmetic",
-							body: "Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5 m-5 s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
-							timestamp: ts
-						},
-						{
-							name: name, body: body, timestamp: ts
-						},
-						{
-							name: name2, body: body2, timestamp: ts
-						}							
-					];
-					
-					// snippets already present
-					if(Data.snippets.list.length >= 5) return;					
+					$changeLog = $(".change-log"),					
+					// ls set by background page
+					isUpdate = localStorage.showChangeLog === "true";
 
-					Data.snippets = Folder.fromArray(snips);					
-					Data.visited = true;
-					
-					saveSnippetData();
+				if(isUpdate){
+					$changeLog.addClass(SHOW_CLASS);
+
+					$button.on("click", function(){
+						$changeLog.removeClass(SHOW_CLASS);
+						localStorage.showChangeLog = "false";
+					});
 				}
-				// Data.snippets.addSnip will call (=>) saveSnippetData => listSnippets				
-				// moreover, saveSnippetData causes Data.snippets to become string and
-				// is asynchrmous, hence without the else if the below line will give error
-				else if(localStorage.prepare300Update !== "true")
-					Data.snippets.listSnippets();
-			})();		
+			})();
+
+			Data.snippets.listSnippets();
+			
+			/* executed in the very end since saveOtherData async and 
+				stringifies data.snippets*/
+			// till now, we don't have any use for data.visited
+			// variable in any file; but still keeping it just in case
+			// it comes handy later
+			var isFreshInstall = !Data.visited;
+			if(isFreshInstall){
+				Data.visited = true;
+				saveOtherData();
+			}
 		})();
 
 		(function storageModeWork(){
@@ -1315,9 +1579,18 @@
 				if(!confirm("Migrate data to " + str + " storage? It is VERY NECESSARY to take a BACKUP before proceeding.")){
 					this.checked = false; return; }
 
-				migrateData(transferData);
-
-				alert("Done! Data migrated to " + str + " storage successfully!");
+				storage.getBytesInUse(function(bytesInUse){
+					if(getCurrentStorageType() === "local" && 
+						bytesInUse > MAX_SYNC_DATA_SIZE){
+						alert("You are currently using " + bytesInUse + " bytes of data; while sync storage only permits a maximum of " + MAX_SYNC_DATA_SIZE + " bytes.\n\nPlease reduce the size of data (by deleting, editing, exporting snippets) you're using to migreate to sync storage successfully.")
+					}
+					else{
+						migrateData(transferData, function(){
+							alert("Done! Data migrated to " + str + " storage successfully!");
+							//location.reload();
+						});
+					}
+				});
 			}
 
 			// event delegation since radio buttons are
@@ -1332,7 +1605,7 @@
 			});
 		})();
 
-		(function backUpWork(){			
+		(function backUpWork(){
 			function getSnippetPrintData(folder){
 				var list = folder.list,
 					res = "", sn,
@@ -1340,7 +1613,7 @@
 
 				for(var i = 0, len = list.length; i < len; i++){
 					sn = list[i];
-					
+
 					if(Folder.isFolder(sn))
 						folders.push(sn);
 					else{
@@ -1350,77 +1623,33 @@
 						res += "\n\n--\n\n";
 					}
 				}
-				
-				for(var i = 0, len = folders.length; i < len; i++)
+				i = 0; len = folders.length;
+				for(; i < len; i++)
 					res += getSnippetPrintData(folders[i]);
-				
+
 				return res;
 			}
 
 			$(".panel_popup .close_btn").on("click", function(){
-				$(".panel_popup.shown").removeClass("shown");
+				$(".panel_popup.shown").removeClass(SHOW_CLASS);
 			});
-			
+
 			$(".export-buttons button").on("click", function(){
 				$("#snippets .panel_popup." + this.className)
-					.addClass("shown");
-					
+					.addClass(SHOW_CLASS);
+
 				switch(this.className){
 					case "export": showDataForExport(); break;
 					case "import": setupImportPopup(); break;
 					case "revisions": setUpPastRevisions();
 				}
 			});
-			
-			function initiateRestore(data){
-				var dataType = $(".import input[name=data_import]:checked").value,
-					selectList = $(".import .selectList"),
-					selectedFolder = Folder.getSelectedFolderInSelectList(selectList),
-					existingSnippets, inputSnippetsJSON, inputSnippets, validation,
-					deleteExistingSnippets = $(".import .import_folder_name input").checked;
-					
-				try{
-					data = JSON.parse(data);
-				}catch(e){
-					alert("Data was of incorrect format! Check console log for error report.");
-					return;
-				}
-				
-				inputSnippetsJSON = dataType === "data" ? data.snippets : data;				
-				
-				validation = validateRestoreData(data, inputSnippetsJSON, dataType);
-				
-				if(validation !== "true"){
-					alert(validation);
-					return;
-				}
-				
-				inputSnippets = Folder.fromArray(inputSnippetsJSON);
-				
-				if(deleteExistingSnippets) selectedFolder.list = [];
-				
-				Folder.copySnippets(inputSnippets, selectedFolder);
-				
-/*				console.dir(inputSnippets); console.dir(selectedFolder);
-				console.dir(Data.snippets); console.dir(existingSnippets);*/
-				if(dataType === "data"){
-					existingSnippets = Folder.fromArray(Data.snippets.toArray()); // copied
-					Data = data;
-					Data.snippets = existingSnippets;
-				}
-				//console.dir(Data.snippets);
-				saveSnippetData(function(){
-					alert("Data saved!");/*
-					window.location.href = "#snippets";
-					window.location.reload();*/
-				});
-			}
-			
-			function showDataForExport(){				
-				var dataType = $(".export .step:first-child input:checked").value,
-					data, dataUse = $(".export .step:nth-child(2) input:checked").value,
+
+			function showDataForExport(){
+				var dataType = $(".export .steps :first-child input:checked").value,
+					data, dataUse = $(".export .steps :nth-child(2) input:checked").value,
 					downloadLink = $(".export a"), blob;
-				
+
 				if(dataUse === "print"){
 					if(dataType === "data"){
 						alert("Sorry! Entire data cannot be printed. Only snippets can be printed. Choose \"only snippets\"" + 
@@ -1436,89 +1665,95 @@
 					// convert back to normal after work finishes
 					Data.snippets = Folder.fromArray(Data.snippets);
 				}
-				
+
 				blob = new Blob([data], {type: "text/js"});
-				
+
 				downloadLink.href = URL.createObjectURL(blob);
 				downloadLink.download = (dataUse === "print" ?
 											"ProKeys snippets print data" :
 											"ProKeys " + dataType)
-											+ " " + getFormattedDate() + ".txt";			
+											+ " " + getFormattedDate() + ".txt";
 			}
-			
+
 			$(".export input").on("change", showDataForExport);
-			
+
 			function setupImportPopup(){
 				var $selectList = $(".import .selectList");
-				Folder.refreshSelectList($selectList);				
+				Folder.refreshSelectList($selectList);
 				fileInputLink.html("Choose file containing data");
+				// reset so that if same file is selected again,
+				// onchange can still fire
+				$inputFile.value = "";
 			}
-			
-			$(".import .restore").on("click", function(){				
+
+			$(".import .restore").on("click", function(){
 				if(importFileData) initiateRestore(importFileData);
-				else alert("Please select a file above.");
+				else alert("Please choose a file.");
 			});
-			
+
 			var fileInputLink = $(".import .file_input"),
-				$inputFile = fileInputLink.previousElementSibling,
+				$inputFile = fileInputLink.nextElementSibling,
 				initialLinkText = fileInputLink.html(),
 				importFileData = null;
-				
-			fileInputLink.on("click", function(e){
-				e.preventDefault();
-				$inputFile.trigger("click");				
-			});
-			
+
 			$inputFile.on("change", function(){
 				var file = $inputFile.files[0];
-				
+
 				if(!file) return false;
-				
+
 				var reader = new FileReader();
-			
+
 				reader.onload = function(event) {
-					importFileData = event.target.result;					
-					
-					fileInputLink.html("File " + file.name + " is READY:" + 
+					importFileData = event.target.result;
+
+					fileInputLink.html("File '" + file.name + "' is READY." + 
 							" Click Restore button to begin. Click here again to choose another file.");
 				};
 
 				reader.onerror = function(event) {
-					console.error("File " + importFileData.name + 
-							" could not be read! Error " + event.target.error.code);
+					console.error("File '" + importFileData.name + 
+							"' could not be read! Please send following error to prokeys.feedback@gmail.com " + 
+							" so that I can fix it. Thanks! ERROR: "
+							+ event.target.error.code);
 					fileInputLink.html(initialLinkText);
 				};
 
 				reader.readAsText(file);
-			
-				fileInputLink.html("READING FILE: " + file.name);				
+
+				fileInputLink.html("READING FILE: " + file.name);
 			});
-			
+
 			var $resvisionsRestoreBtn = $(".revisions .restore"),
 				$textarea = $(".revisions textarea"),
 				$select = $(".revisions select"),
 				$closeRevisionsPopupBtn = $(".revisions .close_btn"),
+				$preserveCheckboxesLI = $(".import .preserve_checkboxes"),
+				$mergeDuplicateFolderContentsInput = $preserveCheckboxesLI.querySelector("[name=merge]"),
+				$preserveExistingContentInput = $preserveCheckboxesLI.querySelector("[value=existing]"),
+				$preserveImportedContentInput = $preserveCheckboxesLI.querySelector("[value=imported]"),
+				$caveatParagraph = $preserveCheckboxesLI.querySelector("p"),
 				selectedRevision;
-			
+
+
 			function setUpPastRevisions(){
 				var revisions = JSON.parse(localStorage[LS_REVISIONS_PROP]);
-				
+
 				$select.html("");
-				
+
 				revisions.forEach(function(rev){
-					$select.appendChild(document.createElement("option").html(rev.label));
+					$select.appendChild($.new("option").html(rev.label));
 				});
-				
+
 				function showRevision(){
 					selectedRevision = revisions[$select.selectedIndex];
 					$textarea.value = JSON.stringify(selectedRevision.data, undefined, 2);
 				}
-				
+
 				$select.oninput = showRevision;
 				showRevision();
 			}
-		
-			$resvisionsRestoreBtn.on("click", function(){				
+
+			$resvisionsRestoreBtn.on("click", function(){
 				try{
 					if(confirm("Are you sure you want to use the selected revision?")){
 						Data.snippets = Folder.fromArray(JSON.parse($textarea.value));
@@ -1530,7 +1765,20 @@
 					}
 				}catch(e){
 					alert("Data in textarea was invalid. Please try again!");
-				}					
+				}
+			});
+
+			$preserveCheckboxesLI.on("click", function(){
+				if(!$mergeDuplicateFolderContentsInput.checked){
+					if($preserveExistingContentInput.checked)
+						$caveatParagraph.html("<b>Caveat</b>: Unique content of " + 
+										"folders with the same name will not be imported.");
+					else if($preserveImportedContentInput.checked)
+						$caveatParagraph.html("<b>Caveat</b>: Unique content of existing folders " + 
+											"with the same name will be lost.");
+					else $caveatParagraph.html("");
+				}
+				else $caveatParagraph.html("");
 			});
 		})();
 
@@ -1591,7 +1839,7 @@
 				else{
 					alert("Setting new hotkey failed!");
 					alert("It was missing a key other than ctrl/alt/shift/meta key. Or, it was a key-combo reserved by the Operating System. \
-						Or you may try refreshing the page. ");
+Or you may try refreshing the page. ");
 				}
 
 				resetHotkeyBtn();
@@ -1608,13 +1856,13 @@
 			});
 		})();
 	}
-	
+
 	DB_load(function DBLoadCallback(){
 		/* Consider two PCs. Each has local data set.
 			When I migrate data on PC1 to sync. The other PC's local data remains.
 			And then it overrides the sync storage. The following lines
 			manage that*/
-
+		// console.dir(Data);
 		// wrong storage mode
 		if(Data.snippets === false){
 			// change storage to other type
@@ -1622,15 +1870,7 @@
 
 			DB_load(DBLoadCallback);
 		}
-		else {
-			// if hotkey array is not present initially
-			if(typeof Data.hotKey === typeof void 0){
-				Data.hotKey = ["shiftKey", 32];
-				saveOtherData();
-			}
-			
-			DB_loaded = true;
-		}
+		else DB_loaded = true;
 	});
 
 	var local = "<b>Local</b> - storage only on one's own PC. More storage space than sync",
@@ -1640,27 +1880,30 @@
 		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
 	function setEssentialItemsOnDBLoad(){
-		Data.snippets = Folder.fromArray(Data.snippets);
-		
-		// user updates from 2.7.0 to 3.0.0 or installs extension; set ls prop
+		// console.log(Data.snippets);
+		if(!isObject(Data.snippets))
+			Data.snippets = Folder.fromArray(Data.snippets);
+
+		// user installs extension; set ls prop
 		if(!localStorage[LS_REVISIONS_PROP]){
 			localStorage[LS_REVISIONS_PROP] = "[]";
-			// do not save revision in case of install as
-			// saveSnippetData will be called in checkIfFirstTimeUser
-			if(Data.visited) saveRevision(Data.snippets.toArray());
-			
+			saveRevision(Data.snippets.toArray());
+
 			// refer github issues#4
 			Data.dataUpdateVariable = false;
 		}
-		
+
 		Folder.setIndices();
 		// on load; set checkbox state to user preference
-		$("#tabKey").checked = Data.tabKey;
+		$tabKeyInput.checked = Data.tabKey;
+		$snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
 
-		// now list blocked sites
+		if(Data.matchDelimitedWord)
+			$snipNameDelimiterListDIV.addClass(SHOW_CLASS);
+
 		listBlockedSites();
 
-		// list auto-insert chars
+		$autoInsertTable = $(".auto_insert");
 		listAutoInsertChars();
 
 		// store text for each div
@@ -1669,23 +1912,21 @@
 				"sync": [sync, localT]
 			},
 			currArr = textMap[getCurrentStorageType()];
-			
+
 		$(".storageMode .current p").html(currArr[0]);
 		$(".storageMode .transfer p").html(currArr[1]);
 
 		// display current hotkey combo
 		$(".hotkey_display").html(getCurrentHotkey());
-		
+
 		updateStorageAmount();
-		
-		// we need to set height of logo
-		// equal to width but css can't detect
-		// height so we need js hack
+
+		// we need to set height of logo equal to width
+		// but css can't detect height so we need js hack
 		var logo = $(".logo");
 		window.onresize = function(){
 			logo.style.width = logo.clientHeight + "px";
 			Folder.implementChevronInFolderPath();
-			//Folder.preventDivLogOverflow();
 		};
 	}
 })();

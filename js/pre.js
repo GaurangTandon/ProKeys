@@ -1,19 +1,22 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate, snipLimits */
-/* global $, setTextForNode, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
+/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate */
+/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
 /* global triggerEvent, setHTML, MONTHS, formatTextForNodeDisplay */
 
 // custom functions inspired from jQuery
 // special thanks to
 // bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32 
 
-function nodeListPrototypes(prop){
-	NodeList.prototype[prop] = function() {
+function setNodeListProp(prop, func){
+	// in case of custom created array of Nodes, Array.prototype is necessary
+	Array.prototype[prop] = NodeList.prototype[prop] = function() {
 		var args = [].slice.call(arguments, 0);
-		[].forEach.call(this, function(node) {
-			node[prop].apply(node, args);
+		this.forEach(function(node) {
+			func.apply(node, args);
 		});
 		return this;
 	};
+	
+	Node.prototype[prop] = func;
 }
 
 (function(){
@@ -25,87 +28,73 @@ function nodeListPrototypes(prop){
 							"Wednesday", "Thursday", 
 							"Friday", "Saturday"];
 	
-	function hasEvent(elm, type) {
-		return type in elm.pEvents;
-	}
-
-	function addRemoveEvent(elm, type, callback, isAdder) {
-		if (isAdder) elm.pEvents[type] = callback;
-		else delete elm.pEvents[type];
-	}
-
-	function makeListener(name, isAdder) {
-		var f = EventTarget.prototype[name + "EventListener"];
-
-		return function (type, callback, capture) {
-			// pEvents -> prokeys events
-			if(!this.pEvents) this.pEvents = {};
-
-			var has = hasEvent(this, type);
-
-			// event has already been added with
-			// another or same listener
-			// so first remove it
-			if (isAdder && has)
-				this.removeEventListener(type, this.pEvents[type]);			
-			
-			f.call(this, type, callback, capture);
-			addRemoveEvent(this, type, callback, isAdder);
-
-			return true;
-		};
-	}
-
-	EventTarget.prototype.addEventListener = makeListener("add", true);
-	EventTarget.prototype.removeEventListener = makeListener("remove", false);
+	NodeList.prototype.__proto__ = Array.prototype;
 	
 	// used for triggering context menu event
 	// on window object
 	window.triggerEvent = function(node, eventName, obj){
-		var ev = new CustomEvent(eventName, obj || {});
-		
+		var ev = new CustomEvent(eventName, {
+			detail: obj || null
+		});
+		// those functions which need to access
+		// the custom values will need to separately
+		// access the "detail" property, in such a way:
+		// (ev.detail && ev.detail[requiredProperty]) || ev[requiredProperty]
+		// because if detail is not passed it's always null
+
 		node.dispatchEvent(ev);
 	};
 	
-	Node.prototype.trigger = function(eventName, obj){
+	setNodeListProp("trigger", function(eventName, obj){
 		triggerEvent(this, eventName, obj);
-	};
+	});
 	
 	window.$ = function(selector){
-		var elms = document.querySelectorAll(selector);
-
-		// return single element in case only one is found
-		return elms.length > 1 ? elms : elms[0];
+		var elms = document.querySelectorAll(selector), elm;
+		
+		// cannot always return a NodeList/Array
+		// as properties like firstChild, lastChild will only be able
+		// to be accessed by elms[0].lastChild which is too cumbersome
+		if(elms.length === 1){
+			elm = elms[0];
+			// so that I can access the length of the returned
+			// value else length if undefined
+			elm.length = 1;
+			return elm;
+		}
+		else return elms;				
+	};
+	
+	$.new = function(tagName){
+		return document.createElement(tagName);
 	};
 
-	Node.prototype.on = window.on = function (name, fn, useCapture) {
+	setNodeListProp("on", window.on = function (name, fn, useCapture) {
 		var names = name.split(/,\s*/g);
 		
 		for(var i = 0, len = names.length; i < len; i++)
 			this.addEventListener(names[i], fn, useCapture);
 		
 		return this;
-	};
-
-	NodeList.prototype.__proto__ = Array.prototype;
+	});
 	
 	// inserts the newNode after `this`
-	Node.prototype.insertAfter =  function(newNode){
+	setNodeListProp("insertAfter", function(newNode){
 		this.parentNode.insertBefore(newNode, this.nextSibling);
 		return this;
-	};
+	});
 
 	// returns true if element has class; usage: Element.hasClass("class")
-	Node.prototype.hasClass = function(className) {
+	setNodeListProp("hasClass", function(className) {
 		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
-	};
+	});
 
-	Node.prototype.toggleClass = function(cls){
+	setNodeListProp("toggleClass", function(cls){
 		this.classList.toggle(cls);
 		return this;
-	};
+	});
 	
-	Node.prototype.addClass = function(cls){
+	setNodeListProp("addClass", function(cls){
 		// multiple classes to add
 		if(!Array.isArray(cls))
 			cls = [cls];
@@ -115,9 +104,9 @@ function nodeListPrototypes(prop){
 		}.bind(this));		
 		
 		return this;
-	};
+	});
 	
-	Node.prototype.removeClass = function(cls){
+	setNodeListProp("removeClass", function(cls){
 		// multiple classes to remove
 		if(!Array.isArray(cls))
 			cls = [cls];
@@ -127,46 +116,11 @@ function nodeListPrototypes(prop){
 		}.bind(this));		
 		
 		return this;
-	};
+	});
 	
-	var nodeListProps = ["addEventListener", "removeEventListener", "on",
-						"addClass", "removeClass", "toggleClass", "hasClass",
-						"trigger"];
-	
-	for(var i = 0, len = nodeListProps.length; i < len; i++)		
-		nodeListPrototypes(nodeListProps[i]);	
-	
-	// replaces `this` with `newElm`; `newElm` is a string; returns new element
-	Node.prototype.replaceWith = function(newElm, newClass, id, textToReplace){
-		// string newClass, id, textToReplace (optional: to dictate which text should be in replaced element)
-		// string event containing innerHTML of element
-
-		var parent = this.parentNode,
-			// new element ready
-			newElement = document.createElement(newElm);
-
-		if(newClass){
-			newClass = newClass.split(" ");
-			for(var i = 0; newClass[i]; i++)
-				newElement.addClass(newClass[i]);
-		}
-
-		if(id) newElement.id = id;
-		
-		// if should `replaceText`, get text from old and set it in new
-		// always `formatTextForNodeDisplay`		
-		setHTML(newElement, formatTextForNodeDisplay(newElement, textToReplace || getHTML(this)));
-
-		// perform replace function
-		parent.replaceChild(newElement, this);
-
-		// return original element
-		return newElement;
-	};
-
-	Node.prototype.isTextBox = function(){
+	setNodeListProp("isTextBox", function(){
 		return this.tagName === "INPUT" || this.tagName === "TEXTAREA";
-	};
+	});
 	
 	// returns innerText
 	window.getText = function(node){
@@ -178,15 +132,10 @@ function nodeListPrototypes(prop){
 		return setHTML(node, newVal, "innerText");
 	};
 	
-	// prototype alternative for setText/getText
-	// use only when sure that Node is "not undefined"
-	Node.prototype.text = function(textToSet){	
-		// can be zero/empty string; make sure it's undefined
-		return this.html(textToSet, "innerText");
-	};
-	
 	window.getHTML = function(node, prop){
 		if(!node) return;
+		/*console.dir(node);
+		console.dir(node.nodeType);console.dir(node.textContent.replace(/\u00a0/g, " "));*/
 		
 		if(node.nodeType == 3)
 			return node.textContent.replace(/\u00a0/g, " ");
@@ -203,7 +152,7 @@ function nodeListPrototypes(prop){
 	window.setHTML = function(node, newVal, prop){	
 		// in case number is passed; .replace won't work
 		newVal = newVal.toString();
-				
+		
 		if(node.nodeType === 3){
 			node.textContent = newVal.replace(/ /g, "\u00a0");
 			return node;
@@ -215,6 +164,7 @@ function nodeListPrototypes(prop){
 				node.value = newVal.replace("<br>", "\n")
 									.replace("&nbsp;", " "); break;
 			default:
+//				console.log(newVal);
 				if(prop === "innerText")
 					// but innertext will collapse consecutive spaces
 					// do not use textContent as it will collapse even single newlines
@@ -222,9 +172,13 @@ function nodeListPrototypes(prop){
 											.replace("&nbsp;", " ");
 				// first .replace is required as at the end of any text
 				// as gmail will not display single space for unknown reason
-				else node.innerHTML = newVal.replace(/ $/g, "&nbsp;")
+				else {
+					try{
+						node.innerHTML = newVal.replace(/ $/g, "&nbsp;")
 											.replace(/ {2}/g, " &nbsp;")
 											.replace(/\n/g, "<br>");
+					}catch(e){}
+				}
 		}
 		
 		return node;
@@ -232,27 +186,61 @@ function nodeListPrototypes(prop){
 	
 	// prototype alternative for setHTML/getHTML
 	// use only when sure that Node is "not undefined"
-	Node.prototype.html = function(textToSet, prop){		
+	setNodeListProp("html", function(textToSet, prop){		
 		// can be zero/empty string; make sure it's undefined
 		return typeof textToSet !== "undefined" ?
 				setHTML(this, textToSet, prop) :
 				getHTML(this, prop);
-	};
+	});
 	
-	// replaces string's `<` with `&gt' or reverse
-	// sop to render html as text and not html in snip names and bodies
-	window.formatTextForNodeDisplay = function(node, string, overwrite){
-		var mode = overwrite || (node.isTextBox() ? "makeHTML" : "makeEntity"),
-			map = [["&gt;", ">"], ["&lt;", "<"], ["&nbsp;", " "]],
-			bool = mode == "makeHTML",
-			regexIndex = +!bool, replacerIdx = +bool, elm;
+	// prototype alternative for setText/getText
+	// use only when sure that Node is "not undefined"
+	setNodeListProp("text", function(textToSet){	
+		// can be zero/empty string; make sure it's undefined
+		return this.html(textToSet, "innerText");
+	});
+	
+	setNodeListProp("unwrap", function(){
+		var children = this.childNodes,
+			nextSibling = this.nextSibling, child,
+			len = children.length,
+			parent = this.parentNode;
+		
+		while(len > 0){
+			child = children[len - 1];
+			
+			if(nextSibling) 
+				parent.insertBefore(child, nextSibling);		
+			else parent.appendChild(child);
+			
+			nextSibling = child;
+			len--;
+		}
+		
+		parent.removeChild(this);
+	});
+	
+	// replaces string's `\n` with `<br>` or reverse
+	// `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
+	// false => convrt text for dislplay in text area (`.value`)
+	window.convertBetweenHTMLTags = function(string, convertForHTML){
+		var map = [["<br>", "\\n"], [" &nbsp;", "  "]],		
+			regexIndex = +convertForHTML, replacerIdx = +!convertForHTML, elm;
 			
 		for(var i = 0, len = map.length; i < len; i++){
 			elm = map[i];
 			string = string.replace(new RegExp(elm[regexIndex], "g"), elm[replacerIdx]);
 		}
 		
-		return string;
+		var container = $.new("div").html(string),
+			unnecessaryBRs = container.querySelectorAll("pre + br, blockquote + br"),
+			count = unnecessaryBRs.length;
+		for(i = 0; i < count; i++){
+			elm = unnecessaryBRs[i];
+			elm.parentNode.removeChild(elm);
+		}
+		
+		return container.innerHTML;
 	};
 	
 	window.cloneObject = function(obj) {
@@ -296,6 +284,15 @@ function nodeListPrototypes(prop){
 	window.isObject = function(o){
 		return Object.prototype.toString.call(o) === "[object Object]";
 	};
+	
+	// should use this since users may use foreign language
+	// characters which use up more than two bytes
+	window.lengthInUtf8Bytes = function(str) {
+		// Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
+		var m = encodeURIComponent(str).match(/%[89ABab]/g);
+		return str.length + (m ? m.length : 0);
+	}
+
 	
 	// if it is a callForParent, means that a child node wants 
 	// to get its parents checked
@@ -342,7 +339,7 @@ function nodeListPrototypes(prop){
 
 	window.checkRuntimeError = function(){
 		if(chrome.runtime.lastError){
-			alert("An error occurred! Please press [F12], copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!");
+			alert("An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!");
 			console.log(chrome.runtime.lastError);
 			return true;
 		}
