@@ -1,4 +1,4 @@
-.block.block-theme-plain {
+.prokeys-block.block-theme-plain {
     padding-top: 160px;
     padding-bottom: 160px;
     font-size: 14px;
@@ -9,11 +9,11 @@
 	z-index: 1000; /* force on top */
 }
 
-.block, .block *, .block ::before, .block ::after {
+.prokeys-block, .prokeys-block *, .prokeys-block ::before, .prokeys-block ::after {
     box-sizing: border-box;
 }
 
-.block-overlay {
+.prokeys-block .block-overlay {
     animation: block-fadein 0.5s;
     backface-visibility: hidden;
     position: fixed;
@@ -24,7 +24,7 @@
     left: 0px;
 }
 
-.block-content {
+.prokeys-block .block-content {
     font-family: 'Helvetica Neue', sans-serif;
     background: white;
     color: rgb(68, 68, 68);
@@ -35,45 +35,42 @@
     max-width: 100%;
     font-size: 1.1em;
     line-height: 1.5em;
-}
-
-.block-content {
     animation: block-fadein 0.5s;
     backface-visibility: hidden;
     background: white;
 }
 
-.block-dialog-form {
+.prokeys-block .block-dialog-form {
     margin: 0px;
 }
 
-.block-dialog-form .site-name{
+.prokeys-block .block-dialog-form .site-name{
     width: 300px;
 }
 
-.block-dialog-message {
+.prokeys-block .block-dialog-message {
     margin-bottom: 0.5em;
 }
 
-.block-dialog-buttons button, .block-dialog-form input{
+.prokeys-block .block-dialog-buttons button, .prokeys-block .block-dialog-form input{
 	padding: 5px;
 	color: black;
 }
 
-.block-dialog-form input{
+.prokeys-block .block-dialog-form input{
     border: 1px solid black;
 }
 
-.block-dialog-buttons::after {
+.prokeys-block .block-dialog-buttons::after {
     content: "";
     display: table;
     clear: both;
 }
 
-.block-dialog-button-primary {
+.prokeys-block .block-dialog-button-primary {
     background: #C7FF71;
 }
 
-.block-dialog-button-secondary {
+.prokeys-block .block-dialog-button-secondary {
     background: rgb(224, 224, 224);
 }

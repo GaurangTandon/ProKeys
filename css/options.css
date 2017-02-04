@@ -6,6 +6,16 @@ html, body{
 }
 
 /*reset user agent's default styles*/
+a, label.file_input{
+	cursor: pointer;
+	text-decoration: none;
+	color: #1143BB;
+}
+
+td{
+	border:1px solid;
+	padding: 5px;
+}
 em{
 	font-style: italic;
 }
@@ -21,6 +31,24 @@ ul, ol, li{
 	font-size: 100%;
 	font: inherit;
 	vertical-align: baseline;
+}
+blockquote{
+	margin-bottom: 5px;
+    margin-top: 5px;
+    padding-left: 16px;
+    border-left: 4px solid rgb(204, 204, 204);
+}
+pre{
+	white-space: pre-wrap;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    padding: 5px 10px;
+    background-color: rgb(240, 240, 240);
+    border-radius: 3px;
+}
+
+.tip{
+	font-size: 75%;
 }
 
 button, #about .buttons a{
@@ -44,11 +72,20 @@ label > input{
 }
 
 input[type=file]{
-	display:block;width: 0; height: 0;
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
 }
 
 input[type=button], td, th{
 	padding: 5px;
+}
+
+.shown{
+	display: block !important;
 }
 
 .sidebar{
@@ -73,17 +110,6 @@ input[type=button], td, th{
 	background-image: url('../imgs/gk.png');
 	background-size: cover;
 	border-radius: 50%;
-}
-
-.sidebar > a {
-	width: 100%;
-	text-align: center;
-	font-family: Garamond;
-	font-size: 20px;
-	margin-bottom: 40px;
-	display: inline-block;
-	text-decoration: none;
-	color: #4472b9;
 }
 
 .sidebar .buttons{
@@ -246,7 +272,7 @@ footer {
 	float: right;
 }
 
-.box.change-log.hidden{
+.box.change-log{
 	display: none;
 }
 
@@ -293,24 +319,27 @@ footer {
 }
 
 .storageBytes a{
-	color: #777; /*manula override*/
+	color: #777; /*manual override*/
 }
 
-/*blocked sites list item*/
-#settings ul li{
-	font-family: monospace, Arial;
+.blocked-sites ul{
+    display: inline-block;
+	min-width: 100px;
+	list-style-type: none;    
+    padding: 5px;    
 }
 
-#settings ul li p{
-	display: inline-block;
+.blocked-sites li{
+    border-bottom: 1px solid #999;    
+	margin-bottom: 10px;
+	padding: 5px;
+	padding-right: 20px;
 }
 
-/*delete button blocked sites list*/
-#settings ul li div {
-	display: inline-block;
-	margin: 5px 20px;
-	font-family: Garamond;
-	cursor: pointer;
+.blocked-sites li input{
+    margin-right: 10px;
+    position: relative;
+    top: 2px;
 }
 
 #settings .auto_insert {
@@ -335,13 +364,6 @@ footer {
 	text-align: center;
 }
 
-/*for the list of blocked sites*/
-#settings ul{
-	list-style-type: none;
-	margin-top: 10px;
-    text-align: center;
-}
-
 .siteBlockInput {
 	width: 200px;
 	height: 25px;
@@ -349,11 +371,12 @@ footer {
 	margin: 15px 0 0 0;
 }
 
-.siteBlockInput + button {
-	padding: 5px;
-	margin-left: 10px;
-	font-size: 16px;
-	cursor: pointer;
+.blocked-sites ul.empty{
+	padding-top: 15px;
+}
+
+.blocked-sites ul.empty + br + button{
+	display: none;
 }
 
 .storageMode .container{
@@ -381,19 +404,40 @@ footer {
 	margin-top: 10px;
 }
 
+.delimiter_list{
+	display: none;
+}
+
+.delimiter_list input{
+	width: 300px;
+    display: inline-block;
+    letter-spacing: 2px;
+	font-weight: bold;
+}
+
+.delimiter_list button {	
+	font-size: 15px;
+}
+
 #help section{
 	text-align: left;
 	padding: 10px;
+}
+
+#help .box{
+	/*otherwise <h2> gets pushed down really low*/
+	padding-top: 10px;
 }
 
 #help h2{
 	font-size: 35px;
 	color: #18C470;
 	margin: 5px auto;
+	font-weight: bold;
 }
 
 #help dt{
-	color: #222;
+	color: #5580F0;
 	font-size: 25px;
 	font-weight: bold;
 	margin: 10px 0;
@@ -404,17 +448,23 @@ footer {
 }
 
 #help dd{
-	margin-left: 30px;
 	margin-left: 20px;
+	height: 0px;
+	overflow: hidden;
+	transition: max-height 1s ease;
 }
 
-#help dd.hide{
-	display: none;
+#help dt.show + dd{
+	height: initial;
 }
 
-/*the paragraph below "Heads up!"*/
-#help p{
-	margin-bottom: 5px;
+#help dt::before{
+	content: "> ";	
+	color: #5580F0;
+}
+
+#help dt.show::before{
+	content: "v ";
 }
 
 #help section h2:nth-child(2){
@@ -444,23 +494,29 @@ footer {
 }
 
 #tryit{
-	margin: auto;
-	width: 90%;
-	height: 210px;
-	border: 1px solid grey;
+	margin: 0 auto 20px auto;
+    width: 95%;
+    /*height: 210px;*/
+    border: 1px solid grey;
+	/*if we allow resize horizontal, then on horizontal resize, the new value of width 
+	would be set inside element.style property and on maximizing/smalling the window, 
+	responsive css code would not work and element would retain the fixed with value set in
+	element.style prop.
+    resize: vertical;
+    overflow-y: auto;*/
 }
 
-#tryit .nav{
+.dualBoxContainer .nav{
 	width: 100%;
 	height: 30px;
 	background: rgb(232, 232, 232);
 }
 
-#tryit .nav span{
+.dualBoxContainer .nav span{
 	padding-left: 10px;	
 }
 
-#tryit .nav p{
+.dualBoxContainer .nav p{
 	display: inline-block;
 	height: 100%;
 	max-width: 200px;
@@ -471,37 +527,44 @@ footer {
 	font-family: 'Segoe UI', Tahoma, sans-serif;
 }
 
-#tryit .nav .show{
+.dualBoxContainer .nav .show{
 	background: white;
 }
 
-#tryit > .show{
+.dualBoxContainer > .show{
 	display: block;
-	width: 100%;
-	height: calc(100% - 30px);	
-	padding: 5px;
-	font-size: 18px;
+	/*don't add height here since textarea isa .show elm but 
+	the .ql-container is not. It is nested inside a .show elm*/	
+	width: 100%;		
 	box-sizing: border-box;
 	outline: none;
 	overflow-y: auto;
 }
 
-#tryit textarea{
-	resize: none;
-}
-
-#tryit > :not(.nav):not(.show){
-	display: none;
-}
-
-a{
-	text-decoration: none;
-	color: #1143BB;
-}
-
-td{
-	border:1px solid;
+/*can't give padding to that rich editor because it's very big and needs space*/
+.dualBoxContainer textarea {
 	padding: 5px;
+	font-size: 18px;
+	resize: vertical;
+	height: 210px;
+	overflow-y: auto;
+	width: 100%;
+	display: block;
+	outline: none;
+}
+
+/* two selectors to override specificity from editor.min.css */
+.dualBoxContainer .ql-container{		
+	/*provide initial height; don't use !important else element.style will get overruled
+	which is used for resizing*/
+	height: 210px;
+	resize: vertical;
+	overflow-y: auto;
+	font-size: 18px;
+}
+
+.dualBoxContainer > :not(.nav):not(.show){
+	display: none;
 }
 
 #about .buttons {
@@ -580,7 +643,9 @@ td{
     font-size: 16px;    
     width: 100%;
 	padding: 5px;
-	cursor: text;
+	/*text makes the cursor appear strange
+	when hovered over images*/
+	cursor: initial;
 }
 
 .snip.contracted .body{
@@ -649,7 +714,7 @@ td{
 
 /*class set on li.snip when user makes a new snippet*/
 /*we need to highlight that snippet*/
-.snip.highlighting, .folder.highlighting{
+.generic.highlighting{
 	background: #75E275;
 	/*slowly fade away the gold background*/
 	-webkit-animation: fadeBackground 3s;
@@ -782,9 +847,6 @@ td{
 	min-height: 100px;
 	border: 1px solid rgba(0, 0, 0, .35);
 	font-family: Calibri;
-}
-
-.panel.hidden{
 	display: none;
 }
 
@@ -820,7 +882,7 @@ td{
 	margin-bottom: 10px;
 }
 
-.edit-panel .panel_content div{
+.edit-panel .panel_content > div{
 	margin: 10px;
 }
 
@@ -831,11 +893,11 @@ td{
     padding: 5px;
 }
 
-.edit-panel .body textarea {
+.edit-panel #body-editor {
 	width: 100%;
-    height: 300px;
     overflow: auto;
-	padding: 5px;
+    font-size: 90%;
+    border: 1px solid grey;
 }
 
 .edit-panel .error{
@@ -843,10 +905,6 @@ td{
 	margin-top: 5px;
     font-size: 17px;
 	display: none;
-}
-
-.edit-panel .error.shown{
-	display: block;    
 }
 
 .selectList{
@@ -859,10 +917,6 @@ td{
 	border: 1px solid #efefef;
 }
 
-..selectList > div div{
-	border-top: 1px solid #efefef;
-}
-
 .selectList p {
     padding: 10px;
 	cursor: pointer;
@@ -870,6 +924,26 @@ td{
 
 .selectList p.selected {
     background: rgb(230, 230, 230);
+}
+
+.selectList div.collapsed > div{
+	display: none;
+}
+
+.selectList div.empty > p::before{
+	content: "" !important; /*no arrows on empty folders*/
+}
+
+.selectList div > p::before{
+	content: "\25BC ";
+    font-size: 15px;
+    vertical-align: middle;
+}
+
+.selectList div.collapsed > p::before {
+	content: "\25BA ";
+	font-size: 15px;
+    vertical-align: middle;
 }
 
 .folder_path {
@@ -935,7 +1009,6 @@ td{
 }
 
 .sub_panel.shown{
-	display: block;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 	width: 100%;
     padding: 5px;	
@@ -971,7 +1044,7 @@ td{
 	display: inline-block;
 }
 
-.panel_bulk_action .folderSelect.hidden{
+.panel_bulk_action .folderSelect{
 	display: none;
 }
 
@@ -982,15 +1055,13 @@ td{
 .panel_popup{
 	display: none;
 	position: absolute;	
-	top: 10%;
+	top: 50px;
     left: 28%;
-    width: 40%;
     min-height: 220px;
-	min-width: 525px;
+	max-width: 550px;
 }
 
 .panel_popup.shown{
-	display: block;
 	z-index: 10;
 	background: white;    
 }
@@ -999,31 +1070,47 @@ td{
 	padding: 10px;
 }
 
-.panel_popup .panel_content div{
-	margin-bottom: 10px;
-}
-
-.panel_popup .step{
+.steps {
+	counter-reset: li-counter;
+	list-style-type: none;
 	margin-top: 10px;
+	padding-left: 10px;	
 }
 
-.panel_popup .step span{
+.steps li {
+	counter-increment: li-counter;
+    position: relative;
+    padding-left: 30px;
+    margin-bottom: 10px;
+    min-height: 30px;
+}
+
+.steps li:before {
 	display: inline-block;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    background: #20ED89;
-    color: white;
-    text-align: center;
-    line-height: 25px;
-    font-size: 18px;
-    float: left;
-    margin: 0 10px 5px 0;
+	content: counter(li-counter);
+	height: 25px;
+	width: 25px;
+	border-radius: 50%;
+	background: #20ED89;
+	color: white;
+	text-align: center;
+	line-height: 25px;
+	font-size: 15px;
+	position: absolute;
+    left: 0;
 }
 
 .import .restore{
 	font-size: 25px;
 	margin-left: 37%;
+}
+
+.import .delete_existing{
+	margin-top: 10px;
+}
+
+.import .preserve_checkboxes label:last-child{
+	display: none;
 }
 
 .panel_popup textarea{
