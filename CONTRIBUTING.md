@@ -1,6 +1,6 @@
 **Before uploading your files**  
 0. Check all "TODO" comments and for each, resolve it/raise an issue about it and then remove it's comment.  
-1. ESLint all the JS files/W3Clint all HTML/CSS files
+1. ESLint all the JS files/W3Clint all HTML/CSS files.  
 2. Update the version number in options.html and manifest to the latest version number.  
 3. Remove/comment `console.log`s from all JS files. Run Replace function to remove all tab chars at the end of lines - `\t+$`  
 4. Minify all the files.   
