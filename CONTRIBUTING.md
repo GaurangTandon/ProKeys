@@ -7,6 +7,9 @@
 5. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)  
 6. Make sure that the update fixes all the bugs listed for its milestone number.  
 
+**After updating the extension**  
+0. Make sure to reply to all people on the [support page](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support) as well as on the official email (prokeys.feedback@gmail.com), whose errors have been fixed in this updated version.
+
 **Please follow the following conventions:**
 
 1. All class names in HTML must be in small case. Multiple words should be separated by underscore.
