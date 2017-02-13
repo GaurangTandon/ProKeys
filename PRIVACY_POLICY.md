@@ -7,5 +7,6 @@ W.r.t. the Chrome Privacy Policy requirement (16/04/2016), here is the Privacy P
 5. The user data is only used to provide the functionality as explained on the [description page](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn).
 6. The developers (Gaurang Tandon and Varun Singh) CANNOT access user data, from single or multiple users, either in identifiable or  anonymised form, in any manner.
 7. The browsing activity, history, bookmarks, etc., or any other thing that has not been described in the descriptions page, is NOT accessed and NOT stored.
+8. The user data is stored only as long as the user uses ProKeys. Once they uninstall ProKeys, the user data is lost too (apart from the sync storage data, managed by Chrome)
 
 By using ProKeys, you, as a user, agree to the above privacy policy.
