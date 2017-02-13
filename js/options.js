@@ -1,18 +1,18 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate */
-/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, chrome */
-/* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData*/
-/* global latestRevisionLabel, $containerSnippets, $panelSnippets, $containerFolderPath*/
+/* global isEmpty, isObject, getFormattedDate, checkRuntimeError */
+/* global $, getHTML, DualTextbox, OLD_DATA_STORAGE_KEY, OBJECT_NAME_LIMIT */
+/* global chrome, DB_loaded, NEW_DATA_STORAGE_KEY, saveSnippetData */
+/* global escapeRegExp, Folder, Data, Snip, Generic, $containerFolderPath */
+/* global latestRevisionLabel, $containerSnippets, $panelSnippets*/
 // above are defined in window. format
 
 // TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
+// TODO: latestRevisionLabel is shown read-only on eslint. Why?
 (function(){
 	"use strict";
 
 	window.onload = init;
 
 	var storage = chrome.storage.local,
-		DataName = "UserSnippets",
 		// global functions defined in init
 		toggleSnippetEditPanel, toggleFolderEditPanel,
 		validateSnippetData, validateFolderData,
@@ -56,8 +56,7 @@
 	window.$containerSnippets = null;
 	window.$panelSnippets = null;
 	window.$containerFolderPath = null;
-	window.latestRevisionLabel = "data created (5 defaut snippets)";
-	window.snipNameDelimiterListRegex = null;
+	window.latestRevisionLabel = "data created (5 defaut snippets)";	
 	window.OLD_DATA_STORAGE_KEY = "UserSnippets";
 	window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
 	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
@@ -180,93 +179,34 @@
 		Data.snippets = Folder.fromArray(Data.snippets);
 	}
 
-	// sets the global variable Data (in object format; not string)
-	// after retrieval  of user's data
-	function DB_load(callback) {
-		var itemCount, i,
-			newKey2 = NEW_DATA_STORAGE_KEY + "_0",
-			restoredObjectStr = "";
+	// function to save data for specific
+	// name and value
+	function DB_setValue(name, value, callback) {
+		var obj = {};
+		obj[name] = value;
 
-		function storeDataInNewStorageFormat(){
-			storage.set({ newKey2 : JSON.stringify(Data), DATA_KEY_COUNT_PROP: 1}, function(){
-				if(callback) callback();
-			});
-		}
-
-		// get all of the data at once, then take what's required
-		storage.get(null, function(data){
-			if(data.hasOwnProperty(DATA_KEY_COUNT_PROP)){
-				itemCount = data[DATA_KEY_COUNT_PROP];
-
-				for(i = 0; i < itemCount; i++)
-					restoredObjectStr += data[NEW_DATA_STORAGE_KEY + "_" + i];
-
-				Data = JSON.parse(restoredObjectStr);
-
-				if(callback) callback();
-			}
-			// user uses data <= v3.0.0.1
-			else if(data.hasOwnProperty(OLD_DATA_STORAGE_KEY)){
-				Data = data[OLD_DATA_STORAGE_KEY];
-
-				// make async calls to:
-				// 1. remove the older data
-				// 2. set new key2
-				// 3. call callback
-				storage.remove(OLD_DATA_STORAGE_KEY, storeDataInNewStorageFormat);
-			}
-			// data does not exist due to first time
-			// (1) install (2) transfer to sync storage
-			else{
-				// Data in this else branch refers to sample data 
-				// stored in global variable
-				storeDataInNewStorageFormat();
-			}
+		storage.set(obj, function() {
+			if(callback) callback();
 		});
 	}
 	
-	// NOTE: chunking data is NOT required in local storage since it does NOT
-	// have QUOTA_BYTES_PER_ITEM, but best way is to maintain consistency in storage
-	// methods for both sync and local storage
-	function DB_save(callback) {
-		function afterStorageClear(){
-			storage.set(storageObj, function(){
-				if(callback) callback();
-			});
-		}
-		var jsonstr = JSON.stringify(Data), i = 0, storageObj = {},
-			// (note: QUOTA_BYTES_PER_ITEM only on sync storage)
-			maxBytesPerItem = chrome.storage.sync.QUOTA_BYTES_PER_ITEM,
-			// since the key uses up some per-item quota, use
-			// "maxValueBytes" to see how much is left for the value
-			maxValueBytes, index, segment, counter;
+	function DB_load(callback) {
+		storage.get(OLD_DATA_STORAGE_KEY, function(r) {
+			if (isEmpty(r[OLD_DATA_STORAGE_KEY]))
+				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
+			else if (r[OLD_DATA_STORAGE_KEY].dataVersion != Data.dataVersion)
+				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
+			else {
+				//console.dir(r);
+				Data = r[OLD_DATA_STORAGE_KEY];
+				if (callback) callback();
+			}
+		});
+	}
 
-		// split jsonstr into chunks and store them in an object indexed by `key_i`
-		while(jsonstr.length > 0) {
-			index = NEW_DATA_STORAGE_KEY + "_" + i++;
-			maxValueBytes = maxBytesPerItem - lengthInUtf8Bytes(index);
-			
-			counter = maxValueBytes;
-			segment = jsonstr.substr(0, counter);			
-			while(lengthInUtf8Bytes(JSON.stringify(segment)) > maxValueBytes)
-				segment = jsonstr.substr(0, --counter);
-			//console.log(lengthInUtf8Bytes(JSON.stringify(segment)), maxValueBytes);
-			storageObj[index] = segment;
-			jsonstr = jsonstr.substr(counter);
-		}
-		// later used by retriever function
-		storageObj[DATA_KEY_COUNT_PROP] = i;
-		console.log(JSON.stringify(storageObj));
-		// say user saves till chunk 20 in case I
-		// in case II, user deletes several snippets and brings down
-		// total no. of "required" chunks to 15; however, the previous chunks
-		// (16-20) remain in memory unless they are "clear"ed.
-		storage.clear(function(){
-			if(getCurrentStorageType() === "sync")
-				// only 120ops allowed per min
-				// only 2ops allowed per sec
-				setTimeout(afterStorageClear, 2000);
-			else afterStorageClear();
+	function DB_save(callback) {
+		DB_setValue(OLD_DATA_STORAGE_KEY, Data, function() {
+			if(callback) callback();
 		});
 	}
 
@@ -564,7 +504,7 @@
 					shouldKeepBothFolders = duplicateSnippetToKeep === "both";
 
 				if(duplicateObj){
-					console.log("DUPLICATE - " + duplicateObj.name);
+					//console.log("DUPLICATE - " + duplicateObj.name);
 					switch(duplicateSnippetToKeep){
 						case "both":
 							both(importedObj); break;
@@ -640,7 +580,7 @@
 			try{
 				data = JSON.parse(data);
 			}catch(e){
-				alert("Data was of incorrect format! Check console log for error report.");
+				alert("Data was of incorrect format! Check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report.");
 				console.log(e);
 				return;
 			}
@@ -969,7 +909,7 @@
 			var	nameElm = panel.querySelector(".name input"), name,
 				selectList = panel.querySelector(".selectList"),
 				folder = Folder.getSelectedFolderInSelectList(selectList),
-				isSnippet = /snip/.test(panel.className), bodyElm, body;
+				isSnippet = /snip/.test(panel.className), body;
 
 			if(isSnippet){
 				name = manipulateElmForValidation(nameElm, Snip.isValidName);
@@ -1030,6 +970,7 @@
 	function init(){
 		// needs to be set before database actions
 		$containerSnippets = $("#snippets .panel_snippets .panel_content");
+		// initialized here; but used in snippet_classes.js
 		$containerFolderPath = $("#snippets .panel_snippets .folder_path");
 		$panelSnippets = $(".panel_snippets");
 		$snipMatchDelimitedWordInput = $(".snippet_match_whole_word input[type=checkbox]");
@@ -1202,11 +1143,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				if(e.keyCode === 13){
 					var vld = validateDelimiterList(this.value);
 					if(vld !== true){
-						alert("Input list contains reserved delimiter \"" + vld + "\". Please remove it from the list. Thank you!")
+						alert("Input list contains reserved delimiter \"" + vld + "\". Please remove it from the list. Thank you!");
 						return true;
 					}
 					Data.snipNameDelimiterList = this.value;
-					setDelimiterListRegex();
 					saveOtherData("Data saved!");
 				}
 			});
@@ -1221,13 +1161,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 			delimiterInit();
 
-			function setDelimiterListRegex(){
-				snipNameDelimiterListRegex = new RegExp("[" + escapeRegExp(Data.snipNameDelimiterList) + "]");
-			}
-
 			function delimiterInit(){
 				$delimiterCharsInput.value = Data.snipNameDelimiterList;
-				setDelimiterListRegex();
 			}
 		})();
 
@@ -1547,14 +1482,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				var $button = $(".change-log button"),
 					$changeLog = $(".change-log"),					
 					// ls set by background page
-					isUpdate = localStorage.showChangeLog === "true";
+					isUpdate = localStorage.extensionUpdated === "true";
 
 				if(isUpdate){
 					$changeLog.addClass(SHOW_CLASS);
 
 					$button.on("click", function(){
 						$changeLog.removeClass(SHOW_CLASS);
-						localStorage.showChangeLog = "false";
+						localStorage.extensionUpdated = "false";
 					});
 				}
 			})();
@@ -1582,7 +1517,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				storage.getBytesInUse(function(bytesInUse){
 					if(getCurrentStorageType() === "local" && 
 						bytesInUse > MAX_SYNC_DATA_SIZE){
-						alert("You are currently using " + bytesInUse + " bytes of data; while sync storage only permits a maximum of " + MAX_SYNC_DATA_SIZE + " bytes.\n\nPlease reduce the size of data (by deleting, editing, exporting snippets) you're using to migreate to sync storage successfully.")
+						alert("You are currently using " + bytesInUse + " bytes of data; while sync storage only permits a maximum of " + MAX_SYNC_DATA_SIZE + " bytes.\n\nPlease reduce the size of data (by deleting, editing, exporting snippets) you're using to migreate to sync storage successfully.");
 					}
 					else{
 						migrateData(transferData, function(){

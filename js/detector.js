@@ -1,7 +1,6 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate */
-/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, chrome */
-/* global escapeRegExp, getText, isContentEditable, DAYS*/
+/* global $, getHTML, DB_loaded, Folder, showBlockSiteModal */
+/* global setHTML, MONTHS, chrome, Data, setText, getFormattedDate */
+/* global escapeRegExp, getText, isContentEditable, DAYS, padNumber*/
 
 /* #quickNotes
 1. http://stackoverflow.com/questions/15980898/why-doesnt-this-jquery-event-to-fire-in-gmail
@@ -475,7 +474,7 @@
 
 	function checkPlaceholdersInContentEditableNode(){
 		var pArr = Placeholder.array, currND;
-		console.log(Placeholder);
+		//console.log(Placeholder);
 		if(pArr && pArr.length > 0){
 			currND = pArr[0];
 
@@ -875,8 +874,7 @@
 			win = getNodeWindow(node);
 			sel = win.getSelection(); range = sel.getRangeAt(0);
 			loc = range.startOffset + shiftAmount;
-			console.dir(node);
-			console.dir(range);
+			//console.dir(node);console.dir(range);
 			range.setStart(range.startContainer, loc);
 			range.setEnd(range.endContainer, loc);
 			sel.removeAllRanges();

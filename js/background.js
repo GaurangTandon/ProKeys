@@ -1,8 +1,4 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate,  */
-/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, chrome */
-/* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData*/
-/* global escapeRegExp, getText, modalHTML, listOfSnippetCtxIDs, latestRevisionLabel */
+/* global $, Folder, Data, Generic, chrome , modalHTML, listOfSnippetCtxIDs */
 console.log("Loaded once " + new Date());
 var contextMenuActionBlockSite,	
 	wasOnBlockedSite = false,
@@ -87,8 +83,8 @@ function openSnippetsPage(version, reason){
 		url: chrome.extension.getURL("html/options.html#snippets")
 	});
 	
-	if(version === "3.1.0" && reason === "update")
-		localStorage.showChangeLog = true;
+	if(reason === "update")
+		localStorage.extensionUpdated = true;
 }
 
 // create modal dialog for blocking site by detector.js
@@ -280,6 +276,7 @@ function removeCtxSnippetList(removeMainEntryFlag){
 		chrome.contextMenus.remove(SNIPPET_MAIN_ID, function(){
 			// entirely possible that flag-^ is true w/o any snippet_main_id
 			// actually being present
+			// TODO: why is this semicolon unnecessary?
 			if(chrome.runtime.lastError);
 		});
 }

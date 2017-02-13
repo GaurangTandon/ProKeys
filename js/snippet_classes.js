@@ -1,10 +1,8 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate */
-/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, chrome */
+/* global $, isObject, getFormattedDate, chrome */
 /* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData, OBJECT_NAME_LIMIT*/
 /* global convertBetweenHTMLTags, Quill, $containerFolderPath, $containerSnippets, listOfSnippetCtxIDs, latestRevisionLabel */
 
-/* this file is loaded both as a content script a
+/* this file is loaded both as a content script
 	as well as a background page*/
 
 // functions common to Snip and Folder
@@ -455,7 +453,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 			htmlElm = listElm.getDOMElement(objectNamesToHighlight);
 			div.appendChild(htmlElm);
 		}
-		console.log(this.list);
+
 		if(len === 0){
 			emptyDiv = $.new("div");
 			emptyDiv.addClass("empty_folder")
@@ -640,11 +638,9 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 			delimiterChar = val[pos - 1 - i];
 			
 			if((snip = this.getUniqueSnip(stringToCheck))){
-				console.log(delimiterChar);
 				if(Data.matchDelimitedWord && window.snipNameDelimiterListRegex){
-					console.log(delimiterChar);
 					// delimiter char may not exist if snip name
-					// is at the beginning of the textbox
+					// is at the beginning of the textbox					
 					if(!delimiterChar ||
 						window.snipNameDelimiterListRegex.test(delimiterChar) ||
 						delimiterChar === "\n") // a new line character is always a delimiter
@@ -671,7 +667,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 				parentId: parentId
 			}, function(){
 				if(chrome.runtime.lastError)
-					console.log("whoops!" + chrome.runtime.lastError);
+					console.log("Error while creating context menu: " + chrome.runtime.lastError);
 				// do nothing
 			});
 
@@ -689,6 +685,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 				title: emptyFolderText,
 				parentId: parentId
 			}, function(){
+				// TODO: why's this semicolon unnecessary
 				if(chrome.runtime.lastError);
 				// do nothing
 			});
@@ -936,12 +933,12 @@ window.DualTextbox = function($container, transferContentsToShownEditor){
 			["clean"]                                         // remove formatting button
 		];
 
-		var Link = Quill.import('formats/link');		
+		var Link = Quill.import("formats/link");
 		var builtInFunc = Link.sanitize;
 		Link.sanitize = function sanitizeLinkInput(linkValueInput){
 			var val = linkValueInput;
 			// do nothing, since this implies user's already using a custom protocol
-			if(/^\w+:/.test(val));
+			if(/^\w+:/.test(val)); // TODO: why's this semicolon unnecessary
 			else if(!/^https?:/.test(val))
 				val = "http:" + val;
 

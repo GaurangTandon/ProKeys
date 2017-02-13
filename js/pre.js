@@ -1,6 +1,4 @@
-/* global isEmpty, padNumber, cloneObject, isObject, getFormattedDate */
-/* global $, getHTML, SNIP_NAME_LIMIT, SNIP_BODY_LIMIT */
-/* global triggerEvent, setHTML, MONTHS, formatTextForNodeDisplay */
+/* global $, getHTML triggerEvent, setHTML, isContentEditable */
 
 // custom functions inspired from jQuery
 // special thanks to
@@ -177,7 +175,9 @@ function setNodeListProp(prop, func){
 						node.innerHTML = newVal.replace(/ $/g, "&nbsp;")
 											.replace(/ {2}/g, " &nbsp;")
 											.replace(/\n/g, "<br>");
-					}catch(e){}
+					}catch(e){
+						console.log("From setHTML: `node` argment is undefined");
+					}
 				}
 		}
 		
@@ -243,16 +243,6 @@ function setNodeListProp(prop, func){
 		return container.innerHTML;
 	};
 	
-	window.cloneObject = function(obj) {
-		var clone = {}, elm;
-
-		for(var i in obj) {
-			elm = obj[i];
-			clone[i] = isObject(elm) ? cloneObject(elm) : elm;
-		}
-		return clone;
-	};
-	
 	window.isEmpty = function(obj) {
 		for(var prop in obj)
 			if(obj.hasOwnProperty(prop))
@@ -291,14 +281,13 @@ function setNodeListProp(prop, func){
 		// Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
 		var m = encodeURIComponent(str).match(/%[89ABab]/g);
 		return str.length + (m ? m.length : 0);
-	}
-
+	};
 	
 	// if it is a callForParent, means that a child node wants 
 	// to get its parents checked
 	window.isContentEditable = function(node, callForParent){
 		var tgN = node && node.tagName,
-			attr, parentCount, parent;
+			attr, parentCount, parent, MAX_PARENTS_CHECKED = 3;
 
 		// insanity checks first
 		if(!node || tgN === "TEXTAREA" || tgN === "INPUT" || !node.getAttribute)
@@ -321,7 +310,7 @@ function setNodeListProp(prop, func){
 
 			if(callForParent) return false;
 			
-			parentCount = 1; // only two parents allowed
+			parentCount = 1;
 			parent = node;
 
 			do{
@@ -331,7 +320,7 @@ function setNodeListProp(prop, func){
 				if(!parent) return false;
 				// parent check call
 				if(isContentEditable(parent, true)) return true;
-			}while(parentCount <= 2);
+			}while(parentCount <= MAX_PARENTS_CHECKED);
 
 			return false;
 		}
