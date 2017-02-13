@@ -1,8 +1,9 @@
 ## Change log
 <sup>cum to-do list</sup>
 
+Helps organize exactly what things happened in which version.
+
 Upcoming
-- enable rich text editor for snippet editing - http://nicedit.com/demos.php?demo=2 (alternatively, Chrome browser supports Ctrl+I, Ctrl+B, Ctrl+U shortcuts as well)
 - highlight placeholders and date/time macros in div.long
 - remove timestamp argument from Snip and Folder constructors
 - allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
@@ -18,15 +19,21 @@ Upcoming
 - macro to insert current URL of page
 - Drag and drop feature in ProKeys snippets - http://www.html5rocks.com/en/tutorials/dnd/basics/
 
-**3.1.0** -
-- redid the Help page
-- redesigned blocked sites display
-- fixed auto-insert display code
-- better handling duplicate snippets and folders in restore data (ASSUMPTION: the input data for restore has no duplicates in itself) by offering, in case of duplicate data, to keep either both imported and existing snippets or one of them. Also, can merge duplicate folder's contents.
-- expansion/contraction of folders in `.selectList`
-- allow option to match snippet by whole word in Settings (separated by delimiter - custom list user editable)
-- removed the option to choose type of data ("entire data" vs "only snippets") by enabling manual detection for the type of data (entire data is an object and snippets is an array)
-- fixed [multiple issues](https://github.com/GaurangTandon/ProKeys/issues?q=is%3Aissue+milestone%3A3.1.0+is%3Aclosed)
+**3.1.0** - 13/Feb/2017
+- Added completely new rich text editor (YAY!) in snippets page.  
+- Compressed all images to save 50KB!  
+- Bug fixed: storage bytes (under Snippets heading) were shown as "906.0B" instead of "906B"  
+- designed better the Help page (cleaner font, bullets, more colors)  
+- redesigned blocked sites display  
+- fixed auto-insert display code  
+- better handling duplicate snippets and folders in restore data (ASSUMPTION: the input data for restore has no duplicates in itself) by offering, in case of duplicate data, to keep either both imported and existing snippets or one of them. Also, can merge duplicate folder's contents.  
+- expansion/contraction of folders in `.selectList`  
+- allow option to match snippet by whole word in Settings (separated by delimiter - custom list user editable)  
+- removed the option to choose type of data ("entire data" vs "only snippets") by enabling manual detection for the type of data (entire data is an object and snippets is an array)  
+- Selectors in site block modal css were interfering with normal webpages.  
+- Context menu snippet insertion was non-functional.  
+- No feature was working in Gmail subject field  
+- "Choose file" link in Restore popup was non-functional.  
 
 **3.0.0.1** - 27/May/2016
 - linted the js files
