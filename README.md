@@ -1,8 +1,8 @@
 [![logo of prokeys](http://s33.postimg.org/uoupgi05r/transparent_logo_narrow.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
 **Developed by**: Aquila Softworks ([Gaurang Tandon](https://github.com/GaurangTandon) and [Varun Singh](https://github.com/iWrote))  
-**Latest version**: 3.0.0.1
-**Status**: active, stable build (last update 27/May/16)
+**Latest version**: 3.1.0
+**Status**: active, stable build (last update 13/Feb/16)
 
 ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn) and [Opera](https://addons.opera.com/en/extensions/details/prokeys/?display=en) extension that lets you be productive in online text-related work with its number of features like:
 
@@ -20,7 +20,7 @@ ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore
 11. **Sync/Local storage** - Use whichever you prefer.
 
 ## Libraries/Code sources
-No libraries what so ever! I only utilized vanilla JS for super performce and less app size. Only Eric Meyer's CSS reset stylesheet - public domain - has been used with modifications.
+Except for the feather-weight open-source QuillJS rich text editor, I only utilized vanilla JS for super performce and less app size. Also Eric Meyer's CSS reset stylesheet - public domain - has been used with modifications.
 
 ##Technical details
 Are shared on [here](http://electricweb.org/chrome-extension-tutorial-snippets) in a long, three post series. In brief: this extension uses content scripts which are injected into every page and (what follows is for the snippet functionality only) every time the user presses the hotkey, a check is made for the preceding text, which if matches the name of any of the snippets, is substituted with the snippet body. A subsequent test for placeholders is made as well.
@@ -39,10 +39,5 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 **Contact me** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
 
 ## [Known Issues](https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing)
-
-## Next feature to come:
-
-1. Get started with gaurangtandon.github.io/prokeys. Use http://dns.js.org/ for hosting. Use: https://github.com/Khan/tota11y
-2. Create ProKeys for Firefox, IE, Edge, Safari
 
 ## [Change Log](https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md)
