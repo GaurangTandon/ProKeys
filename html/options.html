@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<title>ProKeys | Options</title>
 	<meta charset="utf-8"/>
@@ -45,17 +45,20 @@
 				</ul>
 				<h2>&#x25cf; Functional changes</h2>
 				<ul>
-					<li>Added bold, italics and underline shortcuts for the snip editor.</li>
+					<li>Added completely new rich text editor (YAY!) in snippets page.</li>
 					<li>Added option to match snippet name by whole word (separated by delimiters), in Settings.</li>
 					<li>Added option to handle duplicate snippets during import/restore.</li>
 					<li>Added folder expansion/contraction facility in folder select list.</li>
+					<li>Compressed all images to save 50KB!</li>
 				</ul>
 				<h2>&#x25cf; Bugs squashed</h2>
 				<ul>
 					<li>Removing all auto-inserts lost the UI to create new.</li>
 					<li>Storage bytes (under Snippets heading) were shown as "906.0B" instead of "906B"</li>
 					<li>Selectors in site block modal css were interfering with normal webpages.</li>
-					<li>Choose file link in Restore popup was non-functional.</li>
+					<li>"Choose file" link in Restore popup was non-functional.</li>
+					<li>No feature was working in Gmail subject field</li>
+					<li>Context menu snippet insertion was non-functional.</li>
 				</ul>
 				<button>Got it!</button>
 			</div>
@@ -198,6 +201,7 @@
 							<li>						
 								<a href="" download="">Download your data</a>							
 							</li>
+						</ol>
 					</div>					
 				</div>
 				
@@ -294,7 +298,7 @@
 					<p class="heading">Auto-Insert character pairs</p>
 					<div class="content">
 						On typing one of the letters below (say `(`), its complement (`)`), is automatically 
-						inserted after it, and the caret (cursor) in positioned between both of them</p>
+						inserted after it, and the caret (cursor) in positioned between both of them
 						<table class="auto_insert"></table>
 					</div>
 				</div>
@@ -358,33 +362,31 @@
 							<dd><p>Placeholders are fields in the snippet body which are populated with dynamic values provided by you while using the snippet.<br>A placeholder has the format `%text%` such that the <b>text can only contain alphabets, digits and the underscore symbol</b>.</p>
 								<p><b>Example:</b> snippet "wishBDay", which you can use to wish your friends Happy Birthday! Since the name of the friend keeps changing, so you can add a placeholder to the snippet body, as "%name%"(without quotes). It would be auto-highlighted whenever you use the snippet and you can type your friend's name into it.</p>
 								<a href="#tryit">Try the "letter" sample snippet in editor</a>
-								<p><b>Usage</b> of a placeholder:
+								<p><b>Usage</b> of a placeholder:</p>
 								<ol class="steps">
 									<li>Insert placeholders into the snippet body while creating or editing a snippet. Then, use this snippet.</li>
 									<li>The first placeholder would be auto-highlighted. Type whatever you want to type there.</li>
 									<li>Press `[Tab]` key to move to the next placeholder.</li>
 									<li>Repeat steps 2 and 3 till all placeholders are done filling.</li>
-								</ol>
-								</p>
+								</ol>								
 							</dd>
 
 							<dt>What is Mathomania?</dt>
 							<dd><p>Often, mathematical calculations require you to leave your current work and use the calculator. But, using Mathomania, you can do calculations within the text editor itself.</p>
 								<p><b>Supported operations</b> are: addition, subtraction, multiplication, division, exponentiation (like: 2^3; of integer constants only), and percentage (using % symbol). You can group expressions using parentheses too.</p>
-								<p><b>Usage:</b>
+								<p><b>Usage:</b></p>
 								<ol class="steps">
 									<li>Press square bracket key twice, the other `]]` pair of braces would auto-complete.</li>
 									<li>Type the math expression to be evalated inside the braces.</li>
 									<li>Press `=` (equals) key and the result of evaluation would replace the `[[...=]]`!</li>
-								</ol>
-								</p>
+								</ol>								
 								<a href="#tryit">Try math expressions in the editor</a> (like "[[5^3=]]")
 							</dd>
 
 							<dt>What are Date/Time macros?</dt>
 							<dd><p>Date-Time macros can be used to insert current date and time related data.</p>
 								<strong>Usage</strong>
-								<p>They are to be placed inside a snippet body while <em><strong>creating</strong> the snippet</em>.
+								<p>They are to be placed inside a snippet body while <em><strong>creating</strong> the snippet</em>.</p>
 								<ol class="steps">
 									<li>Place "[[%d()]]" (without quotes) inside the snippet body.</li>
 									<li>Place one or more of the symbols inside the parentheses, from the symbol list.</li>
@@ -442,7 +444,7 @@
 									<tr>
 										<td>time</td><td>complete current time (24hour format)</td><td>01:29:55</td>
 									</tr>
-								</table></p>
+								</table>
 							</dd>
 
 							<dt>What is Date/Time arithmetic?</dt>
@@ -450,8 +452,8 @@
 								<p><b>1. Relative: </b>All the macro symbols inside a parentheses perform calculations relative to the same date, and have a single shared copy of the date. So, calculations on one symbol change that same shared copy, and could affect result of another symbol. Like, on forwarding a date by 10 days (using <span class="code">[[%d(D+10)]]</span>), if the date is caused to move into another month, then <i>that changed month</i> would be used as the current month for any calculation on any month symbol further inside the parentheses. Similar rules apply for changing minutes (causing the hour to change), etc.<br>
 									To indicate relative calculation, add a <span class="code">!</span> at the start, like this: <span class="code">[[%d(! D+5 M-5 ....)]]</span></p>
 								<p><b>2. Independent (Default): </b>All the macro symbols while performing calculations are independent of one another. So, if forwarding a date by 10 days (using <span class="code">[[D+10]]</span>), causes the date to move into another month, still, <i>that changed month</i><b><i> would not be used as the current month</i></b> for any calculation on any symbol further inside the parentheses. All the symbols would have their <i>own separate copy</i> of the date.</p>
-								<p><b>Usage: </b>After a date/time macro symbol, you have to place a "+" or "-" sign (indicating whether to move forward or backward respectively), followed by a number, which would indicate the amount by which to move forward or backward. No white space or any other character should be used between the symbol, sign, and number. So, <span class="code">[[%d(Do+5 M-10)]]</span> is valid, while <span class="code">[[%d(Do - 5 M- 10)]]</span> is invalid.
-								<p><B>Evaluation</b> of these symbols is from left to right, and the symbol that appears first (at the top) in the symbols list, is evaluated first.</p></p>
+								<p><b>Usage: </b>After a date/time macro symbol, you have to place a "+" or "-" sign (indicating whether to move forward or backward respectively), followed by a number, which would indicate the amount by which to move forward or backward. No white space or any other character should be used between the symbol, sign, and number. So, <span class="code">[[%d(Do+5 M-10)]]</span> is valid, while <span class="code">[[%d(Do - 5 M- 10)]]</span> is invalid.</p>
+								<p><b>Evaluation</b> of these symbols is from left to right, and the symbol that appears first (at the top) in the symbols list, is evaluated first.</p>
 								<p><b>Example: </b>Consider this date/time macro: <span class="code">[[%d(YYYY:MM:D)]]</span>. If you want to move 10 days forward and 5 months backward,
 								 you could write: <span class="code">[[%d(YYYY:MM-5:D+10)]]</span> This was independent calculation. If you want it to be relative, use <span class="code">[[%d(!YYYY:MM-5:D+10)]]</span> (with that <span class="code">!</span>)</p>
 								 <a href="#tryit">Try date and time arithmetic in editor</a> (use dateArithmetic sample snippet)
@@ -477,7 +479,7 @@
 										<li>This entire `[[...=]]` would be replaced by the dynamic values of these variables.</li>
 									</ol>
 								</p>
-								<p>The following Variables (case-insensitive) are supported:
+								<p>The following Variables (case-insensitive) are supported:</p>
 								<table>
 									<tr>
 										<td>Variable name</td><td>Value it holds</td><td>Sample output</td>
@@ -491,8 +493,7 @@
 									<tr>
 										<td>version</td><td>current browser version</td><td>Chrome 43.0.2357.130</td>
 									</tr>
-								</table>
-								</p>
+								</table>								
 								<a href="#tryit">Try these variables in editor</a>
 							</dd>
 
@@ -531,7 +532,7 @@
 				<div class="team-info box">
 					<p class="heading">The Team - Aquila Softworks</p>
 					<div class="profile">
-						<img src="../imgs/gt.png">
+						<img src="../imgs/gt.png" alt="Gaurang's profile photo">
 						<p class="name">Gaurang Tandon</p>						
 						<p class="roles">Initial idea|Programming|Development|QA</p>
 						<div class="info">
@@ -548,7 +549,7 @@
 						</div>
 					</div>
 					<div class="profile">
-						<img src="../imgs/vs.jpg">
+						<img src="../imgs/vs.jpg" alt="Varun's profile photo">
 						<p class="name">Varun Singh</p>						
 						<p class="roles">Artwork|Design|Writing|QA</p>
 						<div class="info">							
@@ -605,7 +606,7 @@
 		</div>
 		
 		<footer>
-			Version: 3.1.0 - Gaurang Tandon, Varun Singh &copy; 2016<br>
+			Version: 3.1.0 - Gaurang Tandon, Varun Singh &copy; 2017<br>
 			Check out the <a href="https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md">change log</a> and <a href="https://github.com/GaurangTandon/ProKeys">source code on GitHub!</a><br><br>
 		</footer>
 	</main>
