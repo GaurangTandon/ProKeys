@@ -3,22 +3,6 @@
 
 Helps organize exactly what things happened in which version.
 
-Upcoming
-- highlight placeholders and date/time macros in div.long
-- remove timestamp argument from Snip and Folder constructors
-- allow some way to show folder timestamp, and no. of snippets/folders inside it. This was the initial design but it spoiled the menu's look: https://s12.postimg.org/f7ef080sd/initial.png
-- allow custom import, such as http://www.wordexpander.net/libraries.htm
-- show `?` mark near things that are likely to confuse users and add a gif photo there
-- .selectList UI decide color
--  highlight matched search phrase in snippet list searching
--  possibility of unlimited revisions, and being able to delete revisions
--  comment the code more properly with precondition and postcondition
-- make a way to remove the ctx entry (for insert snippet) in case textbox not isUsableNode
-- remove #backward compatibility statements
-- back up prokeys data to google drive
-- macro to insert current URL of page
-- Drag and drop feature in ProKeys snippets - http://www.html5rocks.com/en/tutorials/dnd/basics/
-
 **3.1.0** - 13/Feb/2017
 - Added completely new rich text editor (YAY!) in snippets page.  
 - Compressed all images to save 50KB!  
