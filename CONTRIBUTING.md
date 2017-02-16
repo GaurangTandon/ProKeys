@@ -12,6 +12,7 @@
 1. Update new cards (put them in their respective columns) on the [main project](https://github.com/GaurangTandon/ProKeys/projects/1) for the new issues that were filed while the development. This helps have laser sharp focus for the next update. (Also delete the column that was being used for this update.)  
 2. Upload the compressed zipped file under [Releases](https://github.com/GaurangTandon/ProKeys/releases) and the uncompressed files to master branch of codebase.  
 3. Update the [known bugs list](https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit)
+4. Clone the previous folder of the files on the local dev pc and rename the new folder as `v_nxt_v_num`
 
 **Please follow the following conventions:**
 
