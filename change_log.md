@@ -3,6 +3,10 @@
 
 Helps organize exactly what things happened in which version.
 
+### [**Upcoming**](https://github.com/GaurangTandon/ProKeys/projects/1)
+
+------
+
 **3.1.0** - 13/Feb/2017
 - Added completely new rich text editor (YAY!) in snippets page.  
 - Compressed all images to save 50KB!  
