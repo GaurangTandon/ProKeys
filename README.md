@@ -36,7 +36,7 @@ First of all, thanks for contribution! Every small bit of it counts! You can:
 5. Share the word about ProKeys with people!
 6. Monetary donations are gratefully accepted at email 1gaurangtandon@gmail.com using [PayPal](https://www.paypal.com/myaccount/transfer/buy)
 
-**Contact me** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
+**Contact us** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
 
 ## [Known Issues](https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing)
 
