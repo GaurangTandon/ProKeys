@@ -554,13 +554,20 @@ footer {
 }
 
 /* two selectors to override specificity from editor.min.css */
-.dualBoxContainer .ql-container{		
+.dualBoxContainer .ql-container, .dualBoxContainer .normal-editor{		
 	/*provide initial height; don't use !important else element.style will get overruled
 	which is used for resizing*/
 	height: 210px;
 	resize: vertical;
 	overflow-y: auto;
 	font-size: 18px;
+	overflow-x: hidden;
+}
+
+.dualBoxContainer .normal-editor{
+	padding: 5px;
+	outline: none;
+	border: 0.1px solid rgba(0, 0, 0, 0.4);
 }
 
 .dualBoxContainer > :not(.nav):not(.show){
