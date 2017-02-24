@@ -192,13 +192,13 @@
 	
 	function DB_load(callback) {
 		storage.get(OLD_DATA_STORAGE_KEY, function(r) {
-			if (isEmpty(r[OLD_DATA_STORAGE_KEY]))
+			var req = r[OLD_DATA_STORAGE_KEY];
+			console.dir(req);
+			
+			if (isEmpty(req) || req.dataVersion != Data.dataVersion)
 				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
-			else if (r[OLD_DATA_STORAGE_KEY].dataVersion != Data.dataVersion)
-				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
-			else {
-				//console.dir(r);
-				Data = r[OLD_DATA_STORAGE_KEY];
+			else {				
+				Data = req;
 				if (callback) callback();
 			}
 		});
@@ -580,8 +580,8 @@
 			try{
 				data = JSON.parse(data);
 			}catch(e){
-				alert("Data was of incorrect format! Check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report.");
-				console.log(e);
+				alert("Data was of incorrect format! Please close this box and check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report. And mail it to us at prokeys.feedback@gmail.com to be resolved.");
+				console.log(e.message);
 				return;
 			}
 
@@ -976,10 +976,11 @@
 		$snipMatchDelimitedWordInput = $(".snippet_match_whole_word input[type=checkbox]");
 		$tabKeyInput = $("#tabKey");
 		$snipNameDelimiterListDIV = $(".delimiter_list");
-
+				
 		if(!DB_loaded){
-			setTimeout(init, 100);	return;
+			setTimeout(DB_load, 100, DBLoadCallback); return;
 		}
+		console.log(Data.snippets);
 
 		// should only be called when DB has loaded
 		// and page has been initialized
@@ -1049,7 +1050,7 @@
 			});
 
 			// the tryit editor in Help section
-			new DualTextbox($("#tryit"))
+			new DualTextbox($("#tryit"), true)
 				.setPlainText("You can experiment with various ProKeys' features in this interactive editor! This editor is resizable.\n\n\
 Textarea is the normal text editor mode. No support for bold, italics, etc. But multiline text is supported.\n\
 Think Notepad.")
@@ -1193,7 +1194,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			validateSnippetData = commonValidation(Generic.SNIP_TYPE);
 			validateFolderData = commonValidation(Generic.FOLDER_TYPE);
 
-			dualSnippetEditorObj = new DualTextbox($("#body-editor"), true);
+			dualSnippetEditorObj = new DualTextbox($("#body-editor"));
 
 			$containerSnippets.on("click", function(e){
 				var node = e.target,
@@ -1699,7 +1700,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						});
 					}
 				}catch(e){
-					alert("Data in textarea was invalid. Please try again!");
+					alert("Data in textarea was invalid. Close this box and check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report. Or please try again!");
 				}
 			});
 
@@ -1792,12 +1793,12 @@ Or you may try refreshing the page. ");
 		})();
 	}
 
-	DB_load(function DBLoadCallback(){
+	function DBLoadCallback(){
 		/* Consider two PCs. Each has local data set.
 			When I migrate data on PC1 to sync. The other PC's local data remains.
 			And then it overrides the sync storage. The following lines
 			manage that*/
-		// console.dir(Data);
+		console.dir(Data.snippets);
 		// wrong storage mode
 		if(Data.snippets === false){
 			// change storage to other type
@@ -1805,8 +1806,8 @@ Or you may try refreshing the page. ");
 
 			DB_load(DBLoadCallback);
 		}
-		else DB_loaded = true;
-	});
+		else {DB_loaded = true;init();}
+	}
 
 	var local = "<b>Local</b> - storage only on one's own PC. More storage space than sync",
 		localT = "<label for=\"local\"><input type=\"radio\" id=\"local\" data-storagetoset=\"local\"/><b>Local</b></label> - storage only on one's own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.",
@@ -1815,7 +1816,9 @@ Or you may try refreshing the page. ");
 		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
 	function setEssentialItemsOnDBLoad(){
-		// console.log(Data.snippets);
+		Data.matchDelimitedWord = false;
+		Data.snipNameDelimiterList = ORG_DELIMITER_LIST;
+		
 		if(!isObject(Data.snippets))
 			Data.snippets = Folder.fromArray(Data.snippets);
 
@@ -1827,7 +1830,7 @@ Or you may try refreshing the page. ");
 			// refer github issues#4
 			Data.dataUpdateVariable = false;
 		}
-
+		saveOtherData();
 		Folder.setIndices();
 		// on load; set checkbox state to user preference
 		$tabKeyInput.checked = Data.tabKey;

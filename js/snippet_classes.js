@@ -32,7 +32,7 @@ window.Generic = function(){
 		folder.list.splice(thisIndex, 1);		
 	};
 
-	this.getParentFolder = function(){			
+	this.getParentFolder = function(){
 		var index = Data.snippets.getUniqueObjectIndex(this.name, this.type),
 			parent = Data.snippets;
 		
@@ -880,12 +880,13 @@ Folder.getListedFolder = function(){
 /* "transferContents" - in case user switches from rich to plain view, he'll
 lose all his formatting, so show alert box for a warning and then accordingly transfer contents
 to the new shown box */
-window.DualTextbox = function($container, transferContentsToShownEditor){	
+window.DualTextbox = function($container, isTryItEditor){	
 	// contants/flags
 	var SHOW_CLASS = "show",
 		RICH_EDITOR_CONTAINER_CLASS = "rich_editor_container",
-		RICH_EDITOR_CLASS = ".ql-editor",
-		isCurrModePlain = true; // default is textarea
+		RICH_EDITOR_CLASS = isTryItEditor ? "normal-editor" : "ql-editor",
+		isCurrModePlain = true, // default is textarea
+		transferContentsToShownEditor = !isTryItEditor;
 	
 	// create navbar
 	var $nav = $.new("DIV").addClass("nav"),
@@ -895,13 +896,13 @@ window.DualTextbox = function($container, transferContentsToShownEditor){
 	$pTextarea.dataset.containerSelector = "textarea";
 	$pRich.dataset.containerSelector = "." + RICH_EDITOR_CONTAINER_CLASS;
 	$pTextarea.dataset.editorSelector = "textarea";
-	$pRich.dataset.editorSelector = RICH_EDITOR_CLASS;
+	$pRich.dataset.editorSelector = "." + RICH_EDITOR_CLASS;
 	
 	$nav.appendChild($span);
 	$nav.appendChild($pTextarea);
 	$nav.appendChild($pRich);
 	$container.appendChild($nav);
-	$container.addClass("dualBoxContainer"); // for applying css styling
+	$container.addClass("dualBoxContainer"); // for css styling
 	
 	// create rich/plain boxes
 	// (textarea doesn't need a container; so assume itself to be the container)
@@ -913,9 +914,18 @@ window.DualTextbox = function($container, transferContentsToShownEditor){
 	$container.appendChild($textarea);
 	$richEditorContainer.appendChild($richEditor);
 	$container.appendChild($richEditorContainer);
-	quillObj = initializeQuill($richEditor, $richEditorContainer);
-	$richEditor = $container.querySelector(RICH_EDITOR_CLASS);
-
+	
+	// issues#115
+	if(isTryItEditor){
+		$richEditor
+			.addClass(RICH_EDITOR_CLASS)
+			.setAttribute("contenteditable", "true");
+	}		
+	else{
+		quillObj = initializeQuill($richEditor, $richEditorContainer);
+		$richEditor = $container.querySelector($pRich.dataset.editorSelector);
+	}
+	
 	function initializeQuill($editor, $container){		
 		var toolbarOptions = [
 			["bold", "italic", "underline", "strike"],        // toggled buttons
@@ -1001,7 +1011,8 @@ window.DualTextbox = function($container, transferContentsToShownEditor){
 	};
 	
 	this.setRichText = function(html){
-		quillObj.clipboard.dangerouslyPasteHTML(html);
+		if(quillObj) quillObj.clipboard.dangerouslyPasteHTML(html);
+		else $richEditor.html(html);
 		return this;
 	};
 	
