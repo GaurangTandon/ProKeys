@@ -225,22 +225,25 @@ function setNodeListProp(prop, func){
 	// false => convrt text for dislplay in text area (`.value`)
 	window.convertBetweenHTMLTags = function(string, convertForHTML){
 		var map = [["<br>", "\\n"], [" &nbsp;", "  "]],		
-			regexIndex = +convertForHTML, replacerIdx = +!convertForHTML, elm;
-			
-		for(var i = 0, len = map.length; i < len; i++){
+			regexIndex = +convertForHTML, replacerIdx = +!convertForHTML, elm,
+			i = 0, len = map.length;
+		
+		for(; i < len; i++){
 			elm = map[i];
 			string = string.replace(new RegExp(elm[regexIndex], "g"), elm[replacerIdx]);
 		}
 		
 		var container = $.new("div").html(string),
-			unnecessaryBRs = container.querySelectorAll("pre + br, blockquote + br"),
+			selector = "pre + br, blockquote + br, li + br, ol > br, ol + br, ul + br, ul > br",
+			unnecessaryBRs = container.querySelectorAll(selector),
 			count = unnecessaryBRs.length;
+		
 		for(i = 0; i < count; i++){
 			elm = unnecessaryBRs[i];
 			elm.parentNode.removeChild(elm);
 		}
 		
-		return container.innerHTML;
+		return container.innerHTML.replace(/&nbsp; ?&nbsp;<li>/g, "<li>");
 	};
 	
 	window.isEmpty = function(obj) {
