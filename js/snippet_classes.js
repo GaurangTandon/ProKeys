@@ -285,7 +285,8 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		var tagName = node.tagName,
 			resultString = "", elm, tags,
 			children = node.childNodes, // returns [] for no nodes
-			i = 0, childrenCount = children.length;
+			i = 0, childrenCount = children.length,
+			content;
 		
 		if(tagName === "PRE"){
 			// can't use outerHTML since it includes atributes
@@ -306,24 +307,33 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 			if(elm.nodeType == 1){
 				tags = getProperTagPair(elm);					
 				
-				resultString +=
-						tags[0]
+				content = tags[0]
 						+ topLevelElementSanitize(elm)
 						+ tags[1];
+				
+				if(elm.tagName === "LI") {					
+					resultString += "    " + content + "\n";
+				}
+				else
+					resultString += content;
+				
 			}
 			else resultString += elm.textContent;
 		}
 		
-		return node.tagName === "BLOCKQUOTE" ?
-				"<blockquote>" + resultString + "</blockquote>" : 
-				resultString;
+		switch(tagName){
+			case "BLOCKQUOTE": return "<blockquote>" + resultString + "</blockquote>";
+			case "OL": return "<ol>\n" + resultString + "</ol>";
+			case "UL": return "<ul>\n" + resultString + "</ul>";
+			default: return resultString;
+		}
 	}
 	
 	var children = htmlNode.children, // concerned with element nodes only (not text nodes)
 		finalString = "";
 	
 	/*
-	the container consists of top-level elements - p, pre, blockquote (more?)
+	the container consists of top-level elements - p, pre, blockquote, ul, ol (more?)
 	hence, we keep looping while there exist top-level children of container
 	at each iteration, we understand that it is a new line so add the html content 
 	of the top-level htmlNode (after a pElementSanitization) along with a `\n`
