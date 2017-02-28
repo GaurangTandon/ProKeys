@@ -753,7 +753,11 @@
 				Data.snippets = str;
 				DB_save(afterMigrate);
 			}
-			else afterMigrate();
+			// don't do Data.snippets = Folder.fromArray(Data.snippets);
+			// here since Data.snippets is false and since this is 
+			// the sync2 option, we need to retain the data that user had
+			// previously synced on another PC
+			else callback();
 		});
 	}
 
@@ -1523,7 +1527,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					else{
 						migrateData(transferData, function(){
 							alert("Done! Data migrated to " + str + " storage successfully!");
-							//location.reload();
+							location.reload();
 						});
 					}
 				});
