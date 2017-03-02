@@ -831,7 +831,7 @@
 				}
 		}
 
-		return function(object, isClosingEditPanel){
+		return function(object, isSavingSnippet){
 			var	headerSpan = $panel.querySelector(".header span"),
 				nameElm = $panel.querySelector(".name input"),
 				folderElm = $panel.querySelector(".folderSelect .selectList"),
@@ -845,8 +845,14 @@
 			$panel.toggleClass(SHOW_CLASS);
 			if(isEditing) $panel.removeClass("creating-new");
 			else $panel.addClass("creating-new");
-
-			if(isClosingEditPanel) return;
+			
+			/* cleanup  (otherwise abnormal rte swap alerts are received from 
+					userAllowsToLoseFormattingOnSwapToTextarea method when we
+					later would load another snippet)*/
+			dualSnippetEditorObj.setPlainText("").setRichText("");
+			
+			// had clicked the tick btn
+			if(isSavingSnippet)	return;
 
 			// reset
 			folderElm.html("");
@@ -864,21 +870,17 @@
 
 			headerSpan.html((isEditing ? "Edit " : "Create new ") + type);
 
-			$(".error").removeClass(SHOW_CLASS);
-
-			if(isSnip)
-				dualSnippetEditorObj.switchToDefaultView();
-
-			if(isEditing){
-				nameElm.text(object.name).focus();
-				nameElm.dataset.name = object.name;
-				if(isSnip)
-					dualSnippetEditorObj.setShownText(object.body);
-			}
-			else{
-				nameElm.text("").focus();
-				if(isSnip) dualSnippetEditorObj.setShownText("");
-				nameElm.dataset.name = "";
+			$(".error").removeClass(SHOW_CLASS);				
+			
+			// defaults
+			if(!isEditing)
+				object = {name: "", body: ""};
+			
+			nameElm.text(object.name).focus();
+			nameElm.dataset.name = object.name;
+			if(isSnip){
+				dualSnippetEditorObj.switchToDefaultView(object.body);
+				dualSnippetEditorObj.setShownText(object.body);
 			}
 		};
 	}
@@ -888,7 +890,7 @@
 		var panel = $(".panel_" + panelName + "_edit");
 
 		function manipulateElmForValidation(elm, validateFunc, errorElm){
-			var text = elm ? elm.value : dualSnippetEditorObj.getShownText(),
+			var text = elm ? elm.value : dualSnippetEditorObj.getShownTextForSaving(),
 				textVld = validateFunc(text),
 				isTextValid = textVld === "true",
 				textErrorElm = errorElm || elm.nextElementSibling;

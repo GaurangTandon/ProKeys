@@ -364,7 +364,107 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	finalString = finalString.substring(0, finalString.length - 1);
 	return finalString;
 };
+// replaces all the "ql-size-huge" types of classes with 
+// proper tags that render as expected in external websites
+Snip.makeHTMLValidForExternalEmbed = function(html){
+	// when both class name and property value share diff text
+	// as in font size
+	function replacer(cls, prop, val){
+		elms = $container.querySelectorAll("." + cls);
+			
+		if(elms){
+			elms.removeClass(cls);
+			elms.forEach(function(elm){
+				elm.style[prop] = val;
+			});
+		}
+	}
+	
+	// when both class name and property value share same text
+	// as in align and font family
+	function replacerThroughArray(clsList, clsPrefix, prop){
+		for(var i = 0, len = clsList.length; i < len; i++){
+			replacer(clsPrefix + clsList[i], prop, clsList[i]);
+		}
+	}
+	/*DETAILS:
+		it should remove the given class names and
+		add corresponding style rule
+	1. .ql-size-(small|huge|large) to style="font-size: 0.75|1.5|2.5em"
+	2. .ql-font-(monospace|serif) to style="font-family: monospace|serif"
+	3. .ql-align-(justify|center|right) to style="text-align: (same)"
+	4. existing 'style="color/background-color: rgb(...);"' 
+		remains as is
+	
+	Note that these classes aren't necessarily on span elms
+	they might also be present on sub/sup/etc.
+	*/
 
+	var fontSizesEm = {"small": 0.75, "large": 1.5, "huge": 2.5},
+		fontFamilies = ["monospace", "serif"],
+		textAligns = ["justify", "center", "right"];
+	
+	// messy area; don't use built-in .html() here
+	var $container = $.new("div");
+	$container.innerHTML = html;
+	
+	var cls, elms;
+	
+	// 1. font size
+	for(var fontSize in fontSizesEm)
+		if(fontSizesEm.hasOwnProperty(fontSize)){
+			cls = "ql-size-" + fontSize;
+			replacer(cls, "font-size", fontSizesEm[fontSize] + "em");
+		}
+	
+	// others
+	replacerThroughArray(fontFamilies, "ql-font-", "font-family");
+	replacerThroughArray(textAligns, "ql-align-", "text-align");
+
+	return $container.innerHTML;
+};
+// replace `style`s of font-size, font-family earlier obtained
+// from `Snip.makeHTMLValidForExternalEmbed` into
+// required quill classes
+// WHY? since Quill editor collapses unrecognized span elements
+// (which we were using to insert font size, family)
+// NOTE: alignment set on `p` elements = unaffected
+Snip.makeHTMLSuitableForQuill = function(html){	
+	function replacer(sel, prop, cls, val){
+		var elms = $container.querySelectorAll(sel);
+		
+		if(elms){
+			elms.forEach(function(e){
+				e.style[prop] = "";
+				e.addClass("ql-" + cls + "-" + val);
+			});
+		}
+	}
+	
+	function replacerThroughArray(values, prop){
+		for(var i = 0, len = values.length; i < len; i++){
+			replacer("span[style*=\"" + prop + ": " + values[i] + "\"]", 
+					prop, "font", values[i]);
+		}
+	}
+	
+	var $container = $.new("DIV");	
+	$container.innerHTML = html;
+	console.log($container.innerHTML);
+	var fontSizesEm = {"0.75em" : "small", "1.5em": "large", "2.5em": "huge"},
+		fontFamilies = ["monospace", "serif"];
+	
+	for(var fontSize in fontSizesEm)
+		if(fontSizesEm.hasOwnProperty(fontSize)){
+			replacer("span[style*=\"font-size: " + fontSize + "\"]", 
+					"font-size", "size", fontSizesEm[fontSize]);
+		}
+	
+	
+	replacerThroughArray(fontFamilies, "font-family");
+	console.log($container.innerHTML);
+	return $container.innerHTML;
+};
 // if we set divMain.click, then .body gets clicked
 // even when user is selecting text in it
 // hence we should put a selectable but transparent
@@ -975,6 +1075,9 @@ window.DualTextbox = function($container, isTryItEditor){
 			theme: "snow",
 			bounds: $container
 		});
+		
+		// cannot modify dangerouslyPasteHTML to have custom matcher
+		// for font-size/-family. It's as much work as making Snip.makeHTMLSuitableForQuill
 	}
 	
 	// implement swapping of textbox and richEditor
@@ -1015,11 +1118,20 @@ window.DualTextbox = function($container, isTryItEditor){
 		}			
 	}.bind(this));
 	
-	this.hasFormattedLossyContentInRTE = function(){
-		var html = $richEditor.innerHTML,
-			reqElms = [[/ql-font/, "font"], [/ql-align/, "alignment"], 
-						[/ql-size/, "size"], [/color:/, "color"], 
-						[/background-color:/, "background color"]];
+	// without quill classes
+	this.hasFormattedLossyContentWoQuillCls = function(html){
+		var reqElms = [/background-color: /, /color: /, /ql-align/, /ql-size/, /ql-font/];
+			
+		for(var i = 0, len = reqElms.length; i < len; i++)
+			if(reqElms[i].test(html)) return true;
+		
+		return false;
+	};
+	
+	this.getQuillClsForFormattedLossyContent = function(html){
+		var reqElms = [[/ql-font/, "font"], [/ql-align/, "alignment"], 
+						[/ql-size/, "size"], [/color: /, "color"], 
+						[/background-color: /, "background color"]];
 			
 		for(var i = 0, len = reqElms.length; i < len; i++)
 			if(reqElms[i][0].test(html)) return reqElms[i][1];
@@ -1030,15 +1142,15 @@ window.DualTextbox = function($container, isTryItEditor){
 	// if user did NOT set alignment, font color, size, family, returns true
 	// else gives a confirm box
 	this.userAllowsToLoseFormattingOnSwapToTextarea = function(){
-		var detected = this.hasFormattedLossyContentInRTE();
+		var detected = this.getQuillClsForFormattedLossyContent($richEditor.innerHTML);
 		
-		if(detected && !confirm("We detected formatted text " + detected + " in your text. You will lose it after this swap. Are you sure you wish to continue?"))
+		if(detected && !confirm("We detected formatted text " + detected + " in your expansion. You will lose it after this swap. Are you sure you wish to continue?"))
 			return false;
 		else return true;
 	};
 	
-	this.switchToDefaultView = function(){		
-		var detected = this.hasFormattedLossyContentInRTE();
+	this.switchToDefaultView = function(textToSet){		
+		var detected = this.hasFormattedLossyContentWoQuillCls(textToSet);
 	
 		$nav.trigger("click", {
 			target: detected ? $pRich : $pTextarea
@@ -1050,15 +1162,20 @@ window.DualTextbox = function($container, isTryItEditor){
 		return this;
 	};
 	
+	// NOTE: also used by Tryit editor which does not have Quill
 	this.setRichText = function(html){
-		if(quillObj) quillObj.clipboard.dangerouslyPasteHTML(html);
-		else $richEditor.html(html);
+		console.log(html);
+		console.trace();
+		$richEditor.innerHTML = 
+			quillObj ? Snip.makeHTMLSuitableForQuill(html) : html;
 		return this;
 	};
 	
+	// NOTE: do not use .html()/dangerouslyPasteHTML since it loses
+	// the custom styles for font-size/-family
 	this.setShownText = function(text){
 		if(isCurrModePlain)	$textarea.value = text;
-		else quillObj.clipboard.dangerouslyPasteHTML(text);
+		else $richEditor.innerHTML = Snip.makeHTMLSuitableForQuill(text);
 	};	
 	
 	this.getPlainText = function(){
@@ -1073,7 +1190,7 @@ window.DualTextbox = function($container, isTryItEditor){
 		if(isCurrModePlain) return this.getPlainText();
 		// can't use Snip.makeHTMLSuitableForTextarea here
 		// otherwise font color, alignment, etc. is lost
-		else return $richEditor.html();
+		else return Snip.makeHTMLValidForExternalEmbed($richEditor.innerHTML);
 	};
 };
 
