@@ -986,6 +986,11 @@ window.DualTextbox = function($container, isTryItEditor){
 			// only show if not already shown
 			node.hasClass(SHOW_CLASS)) return true;	
 		
+		// from rte to textarea
+		if(transferContentsToShownEditor && !isCurrModePlain &&
+			!this.userAllowsToLoseFormattingOnSwapToTextarea())
+			return false;
+		
 		var currShown = $container.querySelectorAll("." + SHOW_CLASS),
 			currShownEditor = currShown[1],
 			$newlyShownContainer, $newlyShownEditor;			
@@ -1004,11 +1009,29 @@ window.DualTextbox = function($container, isTryItEditor){
 
 		if(transferContentsToShownEditor){
 			// <b> tags get converted to bold formatted text (and vc-vs)
-			if(isCurrModePlain) this.setPlainText(this.getRichText());
+			if(isCurrModePlain)				
+				this.setPlainText(this.getRichText());			
 			else this.setRichText(convertBetweenHTMLTags(this.getPlainText(), true));
 		}			
 	}.bind(this));
-		
+	
+	// if user did NOT set alignment, font color, size, family, returns true
+	// else gives a confirm box
+	this.userAllowsToLoseFormattingOnSwapToTextarea = function(){
+		var html = $richEditor.innerHTML,
+			reqElms = [[/ql-font/, "font"], [/ql-align/, "alignment"], 
+						[/ql-size/, "size"], [/color:/, "color"], 
+						[/background-color:/, "background color"]],
+			detected = null;
+			
+		for(var i = 0, len = reqElms.length; i < len; i++)
+			if(reqElms[i][0].test(html)) detected = reqElms[i][1];
+
+		if(detected && !confirm("We detected formatted text " + detected + " in your text. You will lose it after this swap. Are you sure you wish to continue?"))
+			return false;
+		else return true;
+	};
+	
 	this.switchToDefaultView = function(){		
 		$nav.trigger("click", {
 			target: $pTextarea
@@ -1032,7 +1055,6 @@ window.DualTextbox = function($container, isTryItEditor){
 	};	
 	
 	this.getPlainText = function(){
-		//console.log($textarea.value);
 		return $textarea.value;
 	};
 
