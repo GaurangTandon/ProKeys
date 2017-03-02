@@ -1015,26 +1015,33 @@ window.DualTextbox = function($container, isTryItEditor){
 		}			
 	}.bind(this));
 	
-	// if user did NOT set alignment, font color, size, family, returns true
-	// else gives a confirm box
-	this.userAllowsToLoseFormattingOnSwapToTextarea = function(){
+	this.hasFormattedLossyContentInRTE = function(){
 		var html = $richEditor.innerHTML,
 			reqElms = [[/ql-font/, "font"], [/ql-align/, "alignment"], 
 						[/ql-size/, "size"], [/color:/, "color"], 
-						[/background-color:/, "background color"]],
-			detected = null;
+						[/background-color:/, "background color"]];
 			
 		for(var i = 0, len = reqElms.length; i < len; i++)
-			if(reqElms[i][0].test(html)) detected = reqElms[i][1];
-
+			if(reqElms[i][0].test(html)) return reqElms[i][1];
+		
+		return null;
+	};
+	
+	// if user did NOT set alignment, font color, size, family, returns true
+	// else gives a confirm box
+	this.userAllowsToLoseFormattingOnSwapToTextarea = function(){
+		var detected = this.hasFormattedLossyContentInRTE();
+		
 		if(detected && !confirm("We detected formatted text " + detected + " in your text. You will lose it after this swap. Are you sure you wish to continue?"))
 			return false;
 		else return true;
 	};
 	
 	this.switchToDefaultView = function(){		
+		var detected = this.hasFormattedLossyContentInRTE();
+	
 		$nav.trigger("click", {
-			target: $pTextarea
+			target: detected ? $pRich : $pTextarea
 		});
 	};
 
@@ -1062,9 +1069,11 @@ window.DualTextbox = function($container, isTryItEditor){
 		return Snip.makeHTMLSuitableForTextarea($richEditor);		
 	};
 	
-	this.getShownText = function(){
+	this.getShownTextForSaving = function(){
 		if(isCurrModePlain) return this.getPlainText();
-		else return this.getRichText();
+		// can't use Snip.makeHTMLSuitableForTextarea here
+		// otherwise font color, alignment, etc. is lost
+		else return $richEditor.html();
 	};
 };
 
