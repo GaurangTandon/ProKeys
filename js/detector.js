@@ -697,7 +697,7 @@
 
 			try{
 				return sel.getRangeAt(0).toString();
-			}catch(e){
+			}catch(e){ // possibly no range exists
 				node.focus();
 
 				return win.getSelection()
@@ -705,10 +705,9 @@
 			}
 		}
 		// textarea
-		else{
+		else
 			return getHTML(node)
 						.substring(node.selectionStart, node.selectionEnd);
-		}
 	}
 
 	// classArray for CodeMirror and ace editors
@@ -779,7 +778,7 @@
 				});
 				// replace for % operator
 				result = eval(result.replace(/%/g, "/100"));
-			}catch(e){
+			}catch(e){ // possible syntax error on `eval`
 				result = expression;
 			}
 			
@@ -1171,7 +1170,7 @@
 			
 			// when user updates snippet data, reloading page is not required
 			if(typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE){
-				Data.snippets = Folder.fromArray(request);	
+				Data.snippets = Folder.fromArray(request.snippetList);	
 				Folder.setIndices();
 			}				
 			
