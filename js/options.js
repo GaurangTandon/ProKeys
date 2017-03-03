@@ -1676,7 +1676,6 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				$caveatParagraph = $preserveCheckboxesLI.querySelector("p"),
 				selectedRevision;
 
-
 			function setUpPastRevisions(){
 				var revisions = JSON.parse(localStorage[LS_REVISIONS_PROP]);
 
@@ -1822,8 +1821,8 @@ Or you may try refreshing the page. ");
 		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
 	function setEssentialItemsOnDBLoad(){
-		Data.matchDelimitedWord = false;
-		Data.snipNameDelimiterList = ORG_DELIMITER_LIST;
+		Data.matchDelimitedWord = Data.matchDelimitedWord || false;
+		Data.snipNameDelimiterList = Data.snipNameDelimiterList || ORG_DELIMITER_LIST;
 		
 		if(!isObject(Data.snippets))
 			Data.snippets = Folder.fromArray(Data.snippets);
