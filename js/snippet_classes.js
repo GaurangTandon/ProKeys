@@ -1112,7 +1112,7 @@ window.DualTextbox = function($container, isTryItEditor){
 
 		if(transferContentsToShownEditor){
 			// <b> tags get converted to bold formatted text (and vc-vs)
-			if(isCurrModePlain)				
+			if(isCurrModePlain)	
 				this.setPlainText(this.getRichText());			
 			else this.setRichText(convertBetweenHTMLTags(this.getPlainText(), true));
 		}			
@@ -1155,6 +1155,8 @@ window.DualTextbox = function($container, isTryItEditor){
 		$nav.trigger("click", {
 			target: detected ? $pRich : $pTextarea
 		});
+		
+		return this;
 	};
 
 	this.setPlainText = function(text){
@@ -1164,10 +1166,8 @@ window.DualTextbox = function($container, isTryItEditor){
 	
 	// NOTE: also used by Tryit editor which does not have Quill
 	this.setRichText = function(html){
-		console.log(html);
-		console.trace();
-		$richEditor.innerHTML = 
-			quillObj ? Snip.makeHTMLSuitableForQuill(html) : html;
+		if(quillObj) quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(html));
+		else $richEditor.innerHTML = html;
 		return this;
 	};
 	
@@ -1175,7 +1175,8 @@ window.DualTextbox = function($container, isTryItEditor){
 	// the custom styles for font-size/-family
 	this.setShownText = function(text){
 		if(isCurrModePlain)	$textarea.value = text;
-		else $richEditor.innerHTML = Snip.makeHTMLSuitableForQuill(text);
+		else quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(text));
+		return this;
 	};	
 	
 	this.getPlainText = function(){

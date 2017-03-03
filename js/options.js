@@ -879,8 +879,8 @@
 			nameElm.text(object.name).focus();
 			nameElm.dataset.name = object.name;
 			if(isSnip){
-				dualSnippetEditorObj.switchToDefaultView(object.body);
-				dualSnippetEditorObj.setShownText(object.body);
+				dualSnippetEditorObj.switchToDefaultView(object.body)
+									.setShownText(object.body);
 			}
 		};
 	}
