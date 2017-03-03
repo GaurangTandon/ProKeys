@@ -1,5 +1,9 @@
 *{
-	margin: 0; padding: 0; box-sizing: border-box;
+	margin: 0; box-sizing: border-box;
+}
+/* setting padding 0 in ol,ul removes the list indentation*/
+*:not(ul, ol){
+	padding: 0;
 }
 html, body{
 	width: 100%;
@@ -26,7 +30,7 @@ h2{
 h3{
 	font-size: 22px;
 }
-ul, ol, li{
+ul, ol, li{	
 	border: 0;
 	font-size: 100%;
 	font: inherit;
@@ -202,7 +206,7 @@ footer {
 }
 
 .box.team-info{
-	padding: 0; border: 0;	
+	padding: 0; border: 0;
 }
 
 #about .box.team-info .heading{ /*keep #about to maintain precedence*/
