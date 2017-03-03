@@ -159,7 +159,11 @@ window.Snip = function(name, body, timestamp){
 	this.getDOMElement = function(objectNamesToHighlight){
 		function toggleDivBodyText(snip){
 			if(divMain.hasClass(Snip.DOMContractedClass)){
-				divBody.html(snip.body.replace(/\n/g, " "));
+				// snip.body contains HTML tags,
+				// insert a space whenever \n or closing tag occurs
+				// so (1) set the html, (2) grab and set the text back
+				divBody.html(snip.body.replace(/\n|<\/[a-z]+>/gi, " "));
+				divBody.text(divBody.text());
 
 				// during this call is going on, divName has't been shown on screen yet
 				// so clientWidth returns zero, hence, wait for a short duration before
@@ -168,10 +172,7 @@ window.Snip = function(name, body, timestamp){
 					divBody.style.width = "calc(100% - 90px - " + divName.clientWidth + "px)";
 				}, 1);
 			}
-			else{
-				divBody.html(snip.body);				
-				divBody.style.width = "";				
-			}
+			else divBody.html(snip.body).style.width = "";
 		}
 		
 		var divMain = Generic.getDOMElement.call(this, objectNamesToHighlight),
@@ -248,6 +249,11 @@ Snip.getTimestampString = function(snip){
 3. leaves pre, blockquote, u, etc. as it is (since they're useful in markdown) 
 4. replaces br element with \n
 */
+Snip.makeHTMLSuitableForTextareaThroughString = function(html){
+	var htmlNode = $.new("DIV");
+	htmlNode.innerHTML = html;
+	return Snip.makeHTMLSuitableForTextarea(htmlNode);
+};
 Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	function getProperTagPair(elm){
 		var map = {
@@ -450,7 +456,7 @@ Snip.makeHTMLSuitableForQuill = function(html){
 	
 	var $container = $.new("DIV");	
 	$container.innerHTML = html;
-	console.log($container.innerHTML);
+	
 	var fontSizesEm = {"0.75em" : "small", "1.5em": "large", "2.5em": "huge"},
 		fontFamilies = ["monospace", "serif"];
 	
@@ -462,7 +468,7 @@ Snip.makeHTMLSuitableForQuill = function(html){
 	
 	
 	replacerThroughArray(fontFamilies, "font-family");
-	console.log($container.innerHTML);
+
 	return $container.innerHTML;
 };
 // if we set divMain.click, then .body gets clicked
@@ -1174,7 +1180,8 @@ window.DualTextbox = function($container, isTryItEditor){
 	// NOTE: do not use .html()/dangerouslyPasteHTML since it loses
 	// the custom styles for font-size/-family
 	this.setShownText = function(text){
-		if(isCurrModePlain)	$textarea.value = text;
+		if(isCurrModePlain)
+			$textarea.value = Snip.makeHTMLSuitableForTextareaThroughString(text);
 		else quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(text));
 		return this;
 	};	
@@ -1184,7 +1191,7 @@ window.DualTextbox = function($container, isTryItEditor){
 	};
 
 	this.getRichText = function(){
-		return Snip.makeHTMLSuitableForTextarea($richEditor);		
+		return Snip.makeHTMLSuitableForTextarea($richEditor);
 	};
 	
 	this.getShownTextForSaving = function(){
