@@ -135,7 +135,7 @@ function setNodeListProp(prop, func){
 		/*console.dir(node);
 		console.dir(node.nodeType);console.dir(node.textContent.replace(/\u00a0/g, " "));*/
 		
-		if(node.nodeType == 3)
+		if(isTextNode(node))
 			return node.textContent.replace(/\u00a0/g, " ");
 		
 		switch(node.tagName){
@@ -151,7 +151,7 @@ function setNodeListProp(prop, func){
 		// in case number is passed; .replace won't work
 		newVal = newVal.toString();
 		
-		if(node.nodeType === 3){
+		if(isTextNode(node)){
 			node.textContent = newVal.replace(/ /g, "\u00a0");
 			return node;
 		}
@@ -242,7 +242,7 @@ function setNodeListProp(prop, func){
 			elm = unnecessaryBRs[i];
 			elm.parentNode.removeChild(elm);
 		}
-		
+
 		return container.innerHTML.replace(/&nbsp; ?&nbsp;<li>/g, "<li>");
 	};
 	
@@ -284,6 +284,10 @@ function setNodeListProp(prop, func){
 		// Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
 		var m = encodeURIComponent(str).match(/%[89ABab]/g);
 		return str.length + (m ? m.length : 0);
+	};
+
+	window.isTextNode = function(node){
+		return node.nodeType === 3;
 	};
 	
 	// if it is a callForParent, means that a child node wants 

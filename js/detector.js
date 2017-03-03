@@ -415,15 +415,13 @@
 		}
 	}
 
-	function insertSnippetInNode(start, caretPos, snipBody, nodeText, node){
-		// value before snip name start
-		var beginValue = nodeText.substring(0, start),
-			// value after snip name end
-			endValue = nodeText.substring(caretPos);
+	function insertSnippetInTextarea(start, caretPos, snipBody, nodeText, node){		
+		var textBeforeSnipName = nodeText.substring(0, start),
+			textAfterSnipName = nodeText.substring(caretPos);
 
-		// format the macros first
-		formatMacros(snipBody, function(snipBody){			
-			Placeholder.node = node.html(beginValue + snipBody + endValue);
+		formatMacros(snipBody, function(snipBody){
+			snipBody = Snip.makeHTMLSuitableForTextareaThroughString(snipBody);
+			Placeholder.node = node.html(textBeforeSnipName + snipBody + textAfterSnipName);
 			
 			testPlaceholderPresence(node, snipBody, start);
 		});	
@@ -448,7 +446,7 @@
 			// for placeholder.fromIndex
 			start = caretPos - snip.name.length;
 			
-			setTimeout(insertSnippetInNode, 10, start, caretPos, snip.body, node.value, node);
+			setTimeout(insertSnippetInTextarea, 10, start, caretPos, snip.body, node.value, node);
 			
 			// first prevent space from being inserted
 			return true;
@@ -581,7 +579,7 @@
 		if(caretPos !== node.selectionEnd)
 			val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
 		
-		insertSnippetInNode(caretPos, caretPos, snip.body, val, node);
+		insertSnippetInTextarea(caretPos, caretPos, snip.body, val, node);
 	}
 	
 	// fired by insertSnippetFromCtx
@@ -691,7 +689,7 @@
 	function getUserSelection(node){
 		var win, sel;
 
-		if(node.nodeType === 3 || isContentEditable(node)){
+		if(isTextNode(node) || isContentEditable(node)){
 			win = getNodeWindow(node);
 			sel = win.getSelection();
 

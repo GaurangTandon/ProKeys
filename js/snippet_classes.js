@@ -159,10 +159,12 @@ window.Snip = function(name, body, timestamp){
 	this.getDOMElement = function(objectNamesToHighlight){
 		function toggleDivBodyText(snip){
 			if(divMain.hasClass(Snip.DOMContractedClass)){
-				// snip.body contains HTML tags,
-				// insert a space whenever \n or closing tag occurs
+				// snip.body contains HTML tags/or \n as well
+				// insert a space whenever line break or closing tag occurs
 				// so (1) set the html, (2) grab and set the text back
-				divBody.html(snip.body.replace(/\n|<\/[a-z]+>/gi, " "));
+				divBody.html(snip.body
+								.replace(/\n|<br>/g, " ")
+								.replace(/(<\/[a-z]+>)/gi, "$1 "));
 				divBody.text(divBody.text());
 
 				// during this call is going on, divName has't been shown on screen yet
@@ -250,8 +252,12 @@ Snip.getTimestampString = function(snip){
 4. replaces br element with \n
 */
 Snip.makeHTMLSuitableForTextareaThroughString = function(html){
+	if(!Snip.hasFormattedLossyContentWoQuillCls(html))
+		return html;
+	
 	var htmlNode = $.new("DIV");
 	htmlNode.innerHTML = html;
+	
 	return Snip.makeHTMLSuitableForTextarea(htmlNode);
 };
 Snip.makeHTMLSuitableForTextarea = function(htmlNode){
@@ -288,6 +294,9 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		-----
 		Alignment classes are applied on the <p> element only
 		*/
+		if(isTextNode(node))
+			return node.textContent;
+		
 		var tagName = node.tagName,
 			resultString = "", elm, tags,
 			children = node.childNodes, // returns [] for no nodes
@@ -335,8 +344,9 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		}
 	}
 	
-	var children = htmlNode.children, // concerned with element nodes only (not text nodes)
+	var children = htmlNode.childNodes, // concerned with element nodes only (not text nodes)
 		finalString = "";
+	console.dir(children);
 	
 	/*
 	the container consists of top-level elements - p, pre, blockquote, ul, ol (more?)
@@ -355,8 +365,7 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	-----
 	inside pre element, absolutely NO formatting is allowed. hence, it is copied as it is.
 	*/
-	// possibly it was only an <input> element
-	if(children.length === 0) return htmlNode.value;
+
 	var len = children.length, i = 0, elm; 
 	
 	while(i < len){
@@ -462,14 +471,31 @@ Snip.makeHTMLSuitableForQuill = function(html){
 	
 	for(var fontSize in fontSizesEm)
 		if(fontSizesEm.hasOwnProperty(fontSize)){
-			replacer("span[style*=\"font-size: " + fontSize + "\"]", 
+			replacer("[style*=\"font-size: " + fontSize + "\"]", 
 					"font-size", "size", fontSizesEm[fontSize]);
 		}
-	
 	
 	replacerThroughArray(fontFamilies, "font-family");
 
 	return $container.innerHTML;
+};
+Snip.hasFormattedLossyContentWoQuillCls = function(html){
+	var reqElms = [/background-color: /, /color: /, /text-align: /, /font-size: /, /font-family: /];
+		
+	for(var i = 0, len = reqElms.length; i < len; i++)
+		if(reqElms[i].test(html)) return true;
+	
+	return false;
+};
+Snip.getQuillClsForFormattedLossyContent = function(html){
+	var reqElms = [[/ql-font/, "font"], [/ql-align/, "alignment"], 
+					[/ql-size/, "size"], [/color: /, "color"], 
+					[/background-color: /, "background color"]];
+		
+	for(var i = 0, len = reqElms.length; i < len; i++)
+		if(reqElms[i][0].test(html)) return reqElms[i][1];
+	
+	return null;
 };
 // if we set divMain.click, then .body gets clicked
 // even when user is selecting text in it
@@ -1125,30 +1151,12 @@ window.DualTextbox = function($container, isTryItEditor){
 	}.bind(this));
 	
 	// without quill classes
-	this.hasFormattedLossyContentWoQuillCls = function(html){
-		var reqElms = [/background-color: /, /color: /, /ql-align/, /ql-size/, /ql-font/];
-			
-		for(var i = 0, len = reqElms.length; i < len; i++)
-			if(reqElms[i].test(html)) return true;
-		
-		return false;
-	};
 	
-	this.getQuillClsForFormattedLossyContent = function(html){
-		var reqElms = [[/ql-font/, "font"], [/ql-align/, "alignment"], 
-						[/ql-size/, "size"], [/color: /, "color"], 
-						[/background-color: /, "background color"]];
-			
-		for(var i = 0, len = reqElms.length; i < len; i++)
-			if(reqElms[i][0].test(html)) return reqElms[i][1];
-		
-		return null;
-	};
 	
 	// if user did NOT set alignment, font color, size, family, returns true
 	// else gives a confirm box
 	this.userAllowsToLoseFormattingOnSwapToTextarea = function(){
-		var detected = this.getQuillClsForFormattedLossyContent($richEditor.innerHTML);
+		var detected = Snip.getQuillClsForFormattedLossyContent($richEditor.innerHTML);
 		
 		if(detected && !confirm("We detected formatted text " + detected + " in your expansion. You will lose it after this swap. Are you sure you wish to continue?"))
 			return false;
@@ -1156,7 +1164,7 @@ window.DualTextbox = function($container, isTryItEditor){
 	};
 	
 	this.switchToDefaultView = function(textToSet){		
-		var detected = this.hasFormattedLossyContentWoQuillCls(textToSet);
+		var detected = Snip.hasFormattedLossyContentWoQuillCls(textToSet);
 	
 		$nav.trigger("click", {
 			target: detected ? $pRich : $pTextarea
