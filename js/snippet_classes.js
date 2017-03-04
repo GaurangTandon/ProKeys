@@ -228,15 +228,9 @@ Snip.fromObject = function(snip){
 	return nSnip;
 };
 Snip.isValidName = function(name){
-	var vld = Generic.isValidName(name, Generic.SNIP_TYPE),
-		delimiterMatchExists  = name.match(window.snipNameDelimiterListRegex);
+	var vld = Generic.isValidName(name, Generic.SNIP_TYPE);
 	
-	return  Data.matchDelimiterWord &&
-				delimiterMatchExists ? "Name contains delimiter - '" + delimiterMatchExists[0] + 
-									"' Please change delimiters in Settings page or remove this character from snip name.":
-			vld !== "true"       ? vld :
-			/^%.+%$/.test(name)  ? "Name cannot be of the form '%abc%'" :
-			"true";
+	return  /^%.+%$/.test(name)  ? "Name cannot be of the form '%abc%'" : vld;
 };
 Snip.isValidBody = function (body){
 	return body.length ? "true" : "Empty body field";
@@ -344,9 +338,8 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		}
 	}
 	
-	var children = htmlNode.childNodes, // concerned with element nodes only (not text nodes)
+	var children = htmlNode.childNodes,
 		finalString = "";
-	console.dir(children);
 	
 	/*
 	the container consists of top-level elements - p, pre, blockquote, ul, ol (more?)
