@@ -1,4 +1,4 @@
-/* global $, isObject, getFormattedDate, chrome */
+/* global $, isObject, getFormattedDate, chrome, isTextNode */
 /* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData, OBJECT_NAME_LIMIT*/
 /* global convertBetweenHTMLTags, Quill, $containerFolderPath, $containerSnippets, listOfSnippetCtxIDs, latestRevisionLabel */
 
@@ -10,57 +10,57 @@ window.Generic = function(){
 	this.matchesUnique = function(name){
 		return this.name.toLowerCase() === name.toLowerCase();
 	};
-	
-	this.matchesLazy = function(text){		
+
+	this.matchesLazy = function(text){
 		// searching is case-insensitive
 		return new RegExp(text, "i").test(this.name + this.body);
 	};
-	
+
 	this.matchesWord = function(text){
 		return new RegExp("\\b" + text + "\\b", "i").test(this.name + this.body);
 	};
-	
+
 	// deletes `this` from parent folder
 	this.remove = function(){
 		var index = Data.snippets.getUniqueObjectIndex(this.name, this.type),
 			thisIndex = index.pop();
-		
+
 		var folder = Data.snippets;
 		while(index.length > 0)
 			folder = folder.list[index.shift()];
 
-		folder.list.splice(thisIndex, 1);		
+		folder.list.splice(thisIndex, 1);
 	};
 
 	this.getParentFolder = function(){
 		var index = Data.snippets.getUniqueObjectIndex(this.name, this.type),
 			parent = Data.snippets;
-		
+
 		// last element is `this` index, we want parent so -1
 		for(var i = 0, lim = index.length - 1; i < lim; i++)
 			parent = parent.list[index[i]];
-		
+
 		return parent;
-	};		
+	};
 
 	this.moveTo = function(newFolder){
 		var x = this.clone();
 		this.remove();
-		Folder.insertObject(x, newFolder);			
+		Folder.insertObject(x, newFolder);
 	};
-	
+
 	// a folder cannot be nested under its subfolders, hence a check
 	this.canNestUnder = function(newFolder){
 		if(Folder.isFolder(this)){
 			while(newFolder.name !== Folder.MAIN_SNIPPETS_NAME){
 				if(this.name === newFolder.name)
 					return false;
-				
+
 				newFolder = newFolder.getParentFolder();
 			}
-		}				
-		
-		// no need to check for snippets		
+		}
+
+		// no need to check for snippets
 		return true;
 	};
 };
@@ -69,17 +69,17 @@ window.Generic = function(){
 Generic.HIGHLIGHTING_CLASS = "highlighting";
 // returns the DOM element for edit and delete button
 Generic.getButtonsDOMElm = function(){
-	var divButtons = $.new("div").addClass("buttons");	
+	var divButtons = $.new("div").addClass("buttons");
 	divButtons.appendChild($.new("div").addClass("edit_btn"))
 		.setAttribute("title", "Edit");
 	divButtons.appendChild($.new("div").addClass("delete_btn"))
 		.setAttribute("title", "Delete");
 	return divButtons;
-};	
+};
 
 Generic.getDOMElement = function(objectNamesToHighlight){
 	var divMain, divName, img;
-	
+
 	// security checks
 	objectNamesToHighlight = objectNamesToHighlight === undefined ? [] :
 							!Array.isArray(objectNamesToHighlight) ? [objectNamesToHighlight] :
@@ -87,19 +87,19 @@ Generic.getDOMElement = function(objectNamesToHighlight){
 
 	divMain = $.new("div")
 				.addClass([this.type, "generic", Snip.DOMContractedClass]);
-	
+
 	img = $.new("img");
 	img.src = "../imgs/" + this.type + ".png";
 	divMain.appendChild(img);
-	
+
 	// creating the short `div` element
 	divName = $.new("div");
 	// text with newlines does not fit in one line
 	divName.text(this.name).addClass("name");
 	divMain.appendChild(divName);
-	
+
 	divMain.appendChild(Generic.getButtonsDOMElm());
-	
+
 	if(objectNamesToHighlight.indexOf(this.name) > -1){
 		divMain.removeClass(Snip.DOMContractedClass);
 		// highlight so the user may notice it #ux
@@ -110,7 +110,7 @@ Generic.getDOMElement = function(objectNamesToHighlight){
 			divMain.removeClass(Generic.HIGHLIGHTING_CLASS);
 		}, 3000); 
 	}
-	
+
 	return divMain;
 };
 
@@ -143,7 +143,7 @@ Generic.CTX_START = {};
 Generic.CTX_START[Generic.SNIP_TYPE] = Generic.SNIP_TYPE + "_";
 Generic.CTX_START[Generic.FOLDER_TYPE] = Generic.FOLDER_TYPE + "_";
 Generic.CTX_SNIP_REGEX = new RegExp(Generic.CTX_START[Generic.SNIP_TYPE]);
-	
+
 window.Snip = function(name, body, timestamp){
 	this.name = name;
 	this.body = body;
@@ -154,7 +154,7 @@ window.Snip = function(name, body, timestamp){
 		this.name = newName;
 		this.body = newBody;
 	};
-			
+
 	// "index" is index of this snip in Data.snippets
 	this.getDOMElement = function(objectNamesToHighlight){
 		function toggleDivBodyText(snip){
@@ -163,6 +163,7 @@ window.Snip = function(name, body, timestamp){
 				// insert a space whenever line break or closing tag occurs
 				// so (1) set the html, (2) grab and set the text back
 				divBody.html(snip.body
+								.substring(0, Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED)
 								.replace(/\n|<br>/g, " ")
 								.replace(/(<\/[a-z]+>)/gi, "$1 "));
 				divBody.text(divBody.text());
@@ -176,27 +177,27 @@ window.Snip = function(name, body, timestamp){
 			}
 			else divBody.html(snip.body).style.width = "";
 		}
-		
+
 		var divMain = Generic.getDOMElement.call(this, objectNamesToHighlight),
 			divName = divMain.querySelector(".name"), divBody;
-		
+
 		// our `div` body element; with Snip body
 		divBody = $.new("div").addClass("body");
 		toggleDivBodyText(this);
-		divMain.appendChild(divBody);		
-		
+		divMain.appendChild(divBody);
+
 		divMain.appendChild(Snip.getClickableDOMElm())
 			.on("click", 
 			Generic.preventButtonClickOverride(function(){
 				divMain.toggleClass(Snip.DOMContractedClass);
 				toggleDivBodyText(this);
 			}.bind(this)));
-					
+
 		var timestampElm = $.new("div")
 							.addClass("timestamp")
-							.html(Snip.getTimestampString(this));			
+							.html(Snip.getTimestampString(this));
 		divMain.appendChild(timestampElm);
-		
+
 		return divMain;
 	};
 
@@ -214,22 +215,22 @@ window.Snip = function(name, body, timestamp){
 	};
 };
 Snip.prototype = new Generic();
-
+Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED = 200; // issues#67
 Snip.fromObject = function(snip){
 	var nSnip = new Snip(snip.name, snip.body);
-	
+
 	// remove "Created on " part from timestamp
 	nSnip.timestamp = 
 				!snip.timestamp ? Date.now() : // can be undefined
 					typeof snip.timestamp === "number" ? 
 						snip.timestamp :
 						Date.parse(snip.timestamp.substring(11));
-	
+
 	return nSnip;
 };
 Snip.isValidName = function(name){
 	var vld = Generic.isValidName(name, Generic.SNIP_TYPE);
-	
+
 	return  /^%.+%$/.test(name)  ? "Name cannot be of the form '%abc%'" : vld;
 };
 Snip.isValidBody = function (body){
@@ -248,10 +249,10 @@ Snip.getTimestampString = function(snip){
 Snip.makeHTMLSuitableForTextareaThroughString = function(html){
 	if(!Snip.hasFormattedLossyContentWoQuillCls(html))
 		return html;
-	
+
 	var htmlNode = $.new("DIV");
 	htmlNode.innerHTML = html;
-	
+
 	return Snip.makeHTMLSuitableForTextarea(htmlNode);
 };
 Snip.makeHTMLSuitableForTextarea = function(htmlNode){
@@ -261,21 +262,21 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 				"em": "i"
 			}, returnArray,
 			tag = elm.tagName.toLowerCase();
-		
+
 		if(map[tag]) tag = map[tag];
-		
+
 		returnArray = ["<" + tag + ">", "</" + tag + ">"];
-		
+
 		if(tag === "a")
 			returnArray[0] = "<a href='" + elm.href + "'>";
-		
+
 		// span is used for font family, sizes, color
 		// and is therefore not shown  
 		return 	tag !== "span" ? returnArray : ["", ""];
 	}
-	
+
 	// sanitizes top-level elements
-	function topLevelElementSanitize(node){		
+	function topLevelElementSanitize(node){
 		/*
 		WORKING of container:
 		Consecutive structures like this can be achieved:
@@ -290,20 +291,20 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		*/
 		if(isTextNode(node))
 			return node.textContent;
-		
+
 		var tagName = node.tagName,
 			resultString = "", elm, tags,
 			children = node.childNodes, // returns [] for no nodes
 			i = 0, childrenCount = children.length,
 			content;
-		
+
 		if(tagName === "PRE"){
 			// can't use outerHTML since it includes atributes
 			// (like spellcheck=false) 
 			tags = getProperTagPair(node);
 			return tags[0] + node.innerHTML + tags[1];
 		}
-		
+
 		if(tagName === "P" &&
 			childrenCount === 1 && 
 			children[0].tagName === "BR")
@@ -311,25 +312,25 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 
 		for(; i < childrenCount; i++){
 			elm = children[i];
-			
+
 			// element node
 			if(elm.nodeType == 1){
-				tags = getProperTagPair(elm);					
-				
+				tags = getProperTagPair(elm);
+
 				content = tags[0]
 						+ topLevelElementSanitize(elm)
 						+ tags[1];
-				
-				if(elm.tagName === "LI") {					
+
+				if(elm.tagName === "LI") {
 					resultString += "    " + content + "\n";
 				}
 				else
 					resultString += content;
-				
+
 			}
 			else resultString += elm.textContent;
 		}
-		
+
 		switch(tagName){
 			case "BLOCKQUOTE": return "<blockquote>" + resultString + "</blockquote>";
 			case "OL": return "<ol>\n" + resultString + "</ol>";
@@ -337,10 +338,10 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 			default: return resultString;
 		}
 	}
-	
+
 	var children = htmlNode.childNodes,
 		finalString = "";
-	
+
 	/*
 	the container consists of top-level elements - p, pre, blockquote, ul, ol (more?)
 	hence, we keep looping while there exist top-level children of container
@@ -360,13 +361,13 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	*/
 
 	var len = children.length, i = 0, elm; 
-	
+
 	while(i < len){
 		elm = children[i];
 		finalString += topLevelElementSanitize(elm) + "\n";
 		i++;
 	}
-	
+
 	finalString = finalString.replace(/&nbsp;/g, " ");
 	// quilljs auto inserts a \n in the end; remove it
 	finalString = finalString.substring(0, finalString.length - 1);
@@ -379,7 +380,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 	// as in font size
 	function replacer(cls, prop, val){
 		elms = $container.querySelectorAll("." + cls);
-			
+
 		if(elms){
 			elms.removeClass(cls);
 			elms.forEach(function(elm){
@@ -387,7 +388,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 			});
 		}
 	}
-	
+
 	// when both class name and property value share same text
 	// as in align and font family
 	function replacerThroughArray(clsList, clsPrefix, prop){
@@ -403,7 +404,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 	3. .ql-align-(justify|center|right) to style="text-align: (same)"
 	4. existing 'style="color/background-color: rgb(...);"' 
 		remains as is
-	
+
 	Note that these classes aren't necessarily on span elms
 	they might also be present on sub/sup/etc.
 	*/
@@ -411,20 +412,20 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 	var fontSizesEm = {"small": 0.75, "large": 1.5, "huge": 2.5},
 		fontFamilies = ["monospace", "serif"],
 		textAligns = ["justify", "center", "right"];
-	
+
 	// messy area; don't use built-in .html() here
 	var $container = $.new("div");
 	$container.innerHTML = html;
-	
+
 	var cls, elms;
-	
+
 	// 1. font size
 	for(var fontSize in fontSizesEm)
 		if(fontSizesEm.hasOwnProperty(fontSize)){
 			cls = "ql-size-" + fontSize;
 			replacer(cls, "font-size", fontSizesEm[fontSize] + "em");
 		}
-	
+
 	// others
 	replacerThroughArray(fontFamilies, "ql-font-", "font-family");
 	replacerThroughArray(textAligns, "ql-align-", "text-align");
@@ -437,10 +438,10 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 // WHY? since Quill editor collapses unrecognized span elements
 // (which we were using to insert font size, family)
 // NOTE: alignment set on `p` elements = unaffected
-Snip.makeHTMLSuitableForQuill = function(html){	
+Snip.makeHTMLSuitableForQuill = function(html){
 	function replacer(sel, prop, cls, val){
 		var elms = $container.querySelectorAll(sel);
-		
+
 		if(elms){
 			elms.forEach(function(e){
 				e.style[prop] = "";
@@ -448,46 +449,46 @@ Snip.makeHTMLSuitableForQuill = function(html){
 			});
 		}
 	}
-	
+
 	function replacerThroughArray(values, prop){
 		for(var i = 0, len = values.length; i < len; i++){
 			replacer("span[style*=\"" + prop + ": " + values[i] + "\"]", 
 					prop, "font", values[i]);
 		}
 	}
-	
-	var $container = $.new("DIV");	
+
+	var $container = $.new("DIV");
 	$container.innerHTML = html;
-	
+
 	var fontSizesEm = {"0.75em" : "small", "1.5em": "large", "2.5em": "huge"},
 		fontFamilies = ["monospace", "serif"];
-	
+
 	for(var fontSize in fontSizesEm)
 		if(fontSizesEm.hasOwnProperty(fontSize)){
 			replacer("[style*=\"font-size: " + fontSize + "\"]", 
 					"font-size", "size", fontSizesEm[fontSize]);
 		}
-	
+
 	replacerThroughArray(fontFamilies, "font-family");
 
 	return $container.innerHTML;
 };
 Snip.hasFormattedLossyContentWoQuillCls = function(html){
 	var reqElms = [/background-color: /, /color: /, /text-align: /, /font-size: /, /font-family: /];
-		
+
 	for(var i = 0, len = reqElms.length; i < len; i++)
 		if(reqElms[i].test(html)) return true;
-	
+
 	return false;
 };
 Snip.getQuillClsForFormattedLossyContent = function(html){
 	var reqElms = [[/ql-font/, "font"], [/ql-align/, "alignment"], 
 					[/ql-size/, "size"], [/color: /, "color"], 
 					[/background-color: /, "background color"]];
-		
+
 	for(var i = 0, len = reqElms.length; i < len; i++)
 		if(reqElms[i][0].test(html)) return reqElms[i][1];
-	
+
 	return null;
 };
 // if we set divMain.click, then .body gets clicked
@@ -508,10 +509,10 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 	this.timestamp = timestamp || Date.now();
 	this.list = (list || []).slice(0);
 	this.isSearchResultFolder = !!isSearchResultFolder;
-	
+
 	// only options page mutates list
 	if(window.IN_OPTIONS_PAGE) observeList(this.list);
-	
+
 	function getObjectCount(type){
 		return function(){
 			return this.list.reduce(function(count, object){
@@ -519,53 +520,53 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 			}, 0);
 		};
 	}
-	
+
 	this.getSnippetCount = getObjectCount(Generic.SNIP_TYPE);
 	this.getFolderCount = getObjectCount(Generic.FOLDER_TYPE);
-	
+
 	this.getLastFolderIndex = function(){
 		var i = 0, len = this.list.length;
-		
+
 		while(i < len && Folder.isFolder(this.list[i]))
 			i++;
-		
+
 		return i - 1;
 	};
-	
+
 	function adder(isSnippet){
 		return function(name, body, timestamp){
 			var folderName = this.name, newObj;
-			
+
 			newObj = isSnippet ?
 						new Snip(name, body, timestamp) :
 						new Folder(name);
-			
+
 			Folder.insertObject(newObj, this);
-			
+
 			latestRevisionLabel = "created " + newObj.type + " \"" + newObj.name + "\"";
-			
+
 			saveSnippetData(undefined, folderName, newObj.name);
 		};
 	}
-	
+
 	this.addSnip = adder(true);
-	
+
 	function editer(type){
 		return function(oldName, newName, body){
 			var object = Data.snippets.getUniqueObject(oldName, type),
 				parent = object.getParentFolder();
-			
+
 			object.edit(newName, body);
 			latestRevisionLabel = "edited " + type + " \"" + oldName + "\"";
-			
+
 			saveSnippetData(undefined, parent.name, newName);
 		};
 	}
-	
+
 	this.editSnip = editer(Generic.SNIP_TYPE);
 
 	this.addFolder = adder(false);
-	
+
 	this.editFolder = editer(Generic.FOLDER_TYPE);
 
 	this.edit = function(newName){
@@ -575,14 +576,14 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 	this.getDOMElement = function(objectNamesToHighlight){
 		// get prepared divMain from Generic class
 		// and add click handler to the divMain and then return it
-		return Generic.getDOMElement.call(this, objectNamesToHighlight)					
+		return Generic.getDOMElement.call(this, objectNamesToHighlight)
 			.on("click", Generic.preventButtonClickOverride(this.listSnippets.bind(this)));
 	};
 
 	this.getDOMElementFull = function(objectNamesToHighlight) {
 		var div = $.new("div"),
 			listElm, htmlElm, emptyDiv;
-		
+
 		for(var i = 0, len = this.list.length; i < len; i++){
 			listElm = this.list[i];
 			htmlElm = listElm.getDOMElement(objectNamesToHighlight);
@@ -599,48 +600,48 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 
 		return div;
 	};
-		
+
 	this.getUniqueObject = function(name, type){
 		var index = this.getUniqueObjectIndex(name, type);
-		
+
 		if(!index) return null;
-		
+
 		var	folder = this;
-		
-		for(var i = 0, len = index.length; i < len; i++)		
+
+		for(var i = 0, len = index.length; i < len; i++)
 			folder = folder.list[index[i]];
-		
+
 		return folder;
 	};
-	
+
 	this.getUniqueObjectIndex = function(name, type){
 		return Folder.indices[type][name.toLowerCase()];
 	};
-	
+
 	function getUniqueObjectFn(type){
-		return function(name){				
+		return function(name){
 			return this.getUniqueObject(name, type);
 		};
 	}
-	
+
 	function getUniqueObjectIndexFn(type){
 		return function(name){
 			return this.getUniqueObjectIndex(name, type);
 		};
 	}
-	
+
 	this.getUniqueSnip = getUniqueObjectFn(Generic.SNIP_TYPE);
-	
+
 	// return value of index is a n-length array of indexes
 	// where each int from 0 to n-2 index in array
 	// is the index of folder (0=outermost; n-2=innermost)
 	// and (n-1)th value is index of snippet in innnermost folder
 	this.getUniqueSnipIndex = getUniqueObjectIndexFn(Generic.SNIP_TYPE);
-	
+
 	this.getUniqueFolder = getUniqueObjectFn(Generic.FOLDER_TYPE);
-	
+
 	this.getUniqueFolderIndex = getUniqueObjectIndexFn(Generic.FOLDER_TYPE);
-	
+
 	this.searchSnippets = function(text){
 		text = escapeRegExp(text);
 
@@ -648,21 +649,21 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 				this.list.reduce(function(result, listElm){
 					if(Folder.isFolder(listElm))
 						result = result.concat(listElm.searchSnippets(text).list);
-					
+
 					if(listElm.matchesLazy(text))
 						result.push(listElm);
-					
+
 					return result;
 				}, []).sort(function(a, b){
 					return  b.matchesUnique(text) ? 1 :
 							!a.matchesUnique(text) &&
 								b.matchesWord(text) ? 1 :
 							-1;
-							
+
 				}), undefined, true
 			);
 	};
-	
+
 	this.sort = function(filterType, descendingFlag){
 		function sort(arr){
 			arr.sort(function(a, b){
@@ -671,22 +672,22 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 					// default to alphabetical sort in case timestamps are same
 					(a.timestamp - b.timestamp || a.name.localeCompare(b.name));
 			});
-			
+
 			return descendingFlag ? arr.reverse() : arr;
 		}
-		
+
 		// sort folders&snippets separately so that
 		// folders are always above snippets
-		var isAlphabeticSort = filterType === "alphabetic",			
+		var isAlphabeticSort = filterType === "alphabetic",
 			firstSnippetIndex = this.getLastFolderIndex() + 1,
 			folders = this.list.slice(0, firstSnippetIndex),
 			snippets = this.list.slice(firstSnippetIndex);
-				
-		this.list = sort(folders).concat(sort(snippets));			
-		
+
+		this.list = sort(folders).concat(sort(snippets));
+
 		saveSnippetData(undefined, this.name);
 	};
-	
+
 	this.listSnippets = function(objectNamesToHighlight){
 		// can also be a MouseEvent (generated on click)
 		objectNamesToHighlight = isObject(objectNamesToHighlight) ? 
@@ -695,39 +696,39 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 			.appendChild(this.getDOMElementFull(objectNamesToHighlight));
 		this.insertFolderPathDOM();
 	};
-	
+
 	function insertPathPartDivs(name){
 		var pathPart = $.new("div").addClass("path_part"),
 			rightArrow = $.new("div").addClass("right_arrow");
-			
+
 		$containerFolderPath.appendChild(pathPart.html(name));
 		$containerFolderPath.appendChild(rightArrow);
 	}
-	
+
 	this.insertFolderPathDOM = function(){
-		$containerFolderPath.html(""); // clear previous data			
-		
+		$containerFolderPath.html(""); // clear previous data
+
 		if(this.isSearchResultFolder){
 			insertPathPartDivs(this.name); return;
 		}
-		
+
 		insertPathPartDivs(Folder.MAIN_SNIPPETS_NAME);
-		
+
 		var index = Data.snippets.getUniqueFolderIndex(this.name),
 			i = 0, len = index.length, folder = Data.snippets;
-		
+
 		for(; i < len; i++){
 			folder = folder.list[index[i]];
 			insertPathPartDivs(folder.name);
 		}
-		
+
 		Folder.implementChevronInFolderPath();
 	};
 
 	// returns array representation of this Folder object
 	this.toArray = function(){
 		return [this.name, this.timestamp]
-				.concat(this.list.map(function(listElm){				
+				.concat(this.list.map(function(listElm){
 					return listElm.toArray();
 				}));
 	};
@@ -736,12 +737,12 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 		var mainContainer = $.new("div"),
 			$folderName = $.new("p").html(this.name),
 			childContainer, hasChildFolder = false;
-		
+
 		mainContainer.appendChild($folderName);
-		
+
 		if(this.name !== Folder.MAIN_SNIPPETS_NAME)
 			mainContainer.addClass("collapsed");
-		
+
 		this.list.forEach(function(e){
 			if(Folder.isFolder(e) && e.name !== nameToNotShow){
 				hasChildFolder = true;
@@ -750,32 +751,32 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 				mainContainer.appendChild(childContainer);
 			}
 		});
-		
+
 		if(!hasChildFolder)
 			mainContainer.addClass("empty");
-		
+
 		return mainContainer;
 	};
 
 	this.clone = function(){
 		return new Folder(this.name, this.list, this.timestamp);
 	};
-	
+
 	this.getUniqueSnippetAtCaretPos = function (node, pos){
 		var val = getText(node), snip, stringToCheck = "",
 			foundSnip = null, delimiterChar = val[pos - 1],
 			lim = pos < OBJECT_NAME_LIMIT ? pos : OBJECT_NAME_LIMIT;
-		
+
 		for(var i = 1; i <= lim; i++){
 			// the previous delimiter char gets added to the
-			// string to check as we move towards left			
+			// string to check as we move towards left
 			stringToCheck = delimiterChar + stringToCheck;
 			delimiterChar = val[pos - 1 - i];
-			
+
 			if((snip = this.getUniqueSnip(stringToCheck))){
 				if(Data.matchDelimitedWord && window.snipNameDelimiterListRegex){
 					// delimiter char may not exist if snip name
-					// is at the beginning of the textbox					
+					// is at the beginning of the textbox
 					if(!delimiterChar ||
 						window.snipNameDelimiterListRegex.test(delimiterChar) ||
 						delimiterChar === "\n") // a new line character is always a delimiter
@@ -787,30 +788,32 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 
 		return foundSnip;
 	};
-	
+
 	// parentID (optional) - if undefined, defaults to top-level
 	this.createCtxMenuEntry = function(parentId){
 		var id, emptyFolderText = "Empty folder ";
-		
+
 		this.list.forEach(function(object){
 			id = Generic.CTX_START[object.type] + object.name;
-			
+
 			chrome.contextMenus.create({
 				contexts: ["editable"],
 				id: id, // unique id
 				title: object.name,
 				parentId: parentId
 			}, function(){
-				if(chrome.runtime.lastError)
-					console.log("Error while creating context menu: " + chrome.runtime.lastError);
+				if(chrome.runtime.lastError){
+					console.log("Error while creating context menu: ");
+					console.log(chrome.runtime.lastError);
+				}
 				// do nothing
 			});
 
 			listOfSnippetCtxIDs.push(id);
-			
+
 			if(Folder.isFolder(object)) object.createCtxMenuEntry(id);
 		});
-		
+
 		if(this.list.length === 0){
 			id = emptyFolderText + this.name;
 
@@ -824,10 +827,10 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 				if(chrome.runtime.lastError);
 				// do nothing
 			});
-			
+
 			listOfSnippetCtxIDs.push(id);
 		}
-	};	
+	};
 };
 Folder.prototype = new Generic();
 
@@ -837,24 +840,24 @@ Folder.fromArray = function(arr){
 	// was not the name of folder
 	if(typeof arr[0] !== "string")
 		arr.unshift(Folder.MAIN_SNIPPETS_NAME);
-	
+
 	// 2nd elm is timestamp
 	if(typeof arr[1] !== "number")
 		arr.splice(1, 0, Date.now());
-	
+
 	// name of folder is arr's first element
 	var folder = new Folder(arr.shift(), undefined, arr.shift());
-	
+
 	folder.list = arr.map(function(listElm){
 		return Array.isArray(listElm) ? 
 				Folder.fromArray(listElm) :
 				Snip.fromObject(listElm);
 	});
-	
+
 	// only options page mutates list
 	if(window.IN_OPTIONS_PAGE)
 		observeList(folder.list);
-	
+
 	return folder;
 };
 Folder.isValidName = function(name){
@@ -871,30 +874,30 @@ Folder.setIndices = function(){
 	function set(type, name, indexArray){
 		Folder.indices[type][name.toLowerCase()] = indexArray;
 	}
-	
+
 	// mainIndexArray - denotes indexArray of parent folder
 	// currIndexArray - denotes indexArray of current object
 	function repeat(folder, mainIndexArray){
 		var indexCounter = 0, currIndexArray;
-		
+
 		set(folder.type, folder.name, mainIndexArray);
-	
-		folder.list.forEach(function(elm){	
+
+		folder.list.forEach(function(elm){
 			// using concat to clone arrays and hence avoid mutation
 			currIndexArray = mainIndexArray.concat(indexCounter);
-			
+
 			if(Folder.isFolder(elm)) repeat(elm, currIndexArray);
 			else set(elm.type, elm.name, currIndexArray);
-			
+
 			indexCounter++;
-		});		
+		});
 	}
 
 	// reset
 	Folder.indices = {};
 	Folder.indices[Generic.FOLDER_TYPE] = {};
 	Folder.indices[Generic.SNIP_TYPE] = {};
-	
+
 	repeat(Data.snippets, []);
 };
 Folder.copyContents = function(fromFolder, toFolder){
@@ -908,39 +911,39 @@ Folder.insertObject = function(object, folder){
 };
 Folder.insertBulkActionDOM = function(listedFolder){
 	var	container = $.new("div");
-	
+
 	listedFolder.list.forEach(function(listElm){
 		var $generic = $.new("div").addClass("generic"),
 			checkbox = $.new("input"),
 			img = $.new("img"),
 			div = $.new("div").addClass("name").html(listElm.name);
-			
-		checkbox.type = "checkbox";			
+
+		checkbox.type = "checkbox";
 		img.src = "../imgs/" + listElm.type + ".png";
 		div.on("click", function(){
 			checkbox.checked = !checkbox.checked;
 		});
-		
+
 		$generic.appendChild(checkbox);
-		$generic.appendChild(img);			
+		$generic.appendChild(img);
 		$generic.appendChild(div);
 		container.appendChild($generic);
 	});
-	
+
 	$containerSnippets.html("") // first remove previous content
-		.appendChild(container);		
-	
+		.appendChild(container);
+
 	return container;
 };
 Folder.getSelectedFolderInSelectList = function(selectList){
 	var selectFolderName = selectList.querySelector(".selected").html();
-	
+
 	return Data.snippets.getUniqueFolder(selectFolderName);
 };
 Folder.refreshSelectList = function(selectList){
 	selectList.html("")
 		.appendChild(Data.snippets.getFolderSelectList());
-	
+
 	// select top-most "Snippets" folder; do not use fistChild as it may
 	// count text nodes
 	selectList.children[0].children[0].addClass("selected");
@@ -949,30 +952,30 @@ Folder.refreshSelectList = function(selectList){
 // width causing recursion
 Folder.implementChevronInFolderPath = function(notRemoveChevron){
 	var ACTUAL_ARROW_WIDTH = 15;
-	
-	function computeTotalWidth(){			
+
+	function computeTotalWidth(){
 		var arrowCount = 0,
 			totalWidth =
 				[].slice.call($containerFolderPath.children, 0).reduce(function(sum, elm){
 					var isArrow = elm.hasClass("right_arrow");
 					return isArrow ? (arrowCount++, sum) : sum + elm.offsetWidth;
 				}, 0);
-			
+
 		// arrows, being titled, actually take up less space (falf their width)
 		totalWidth += arrowCount * ACTUAL_ARROW_WIDTH;
-		
+
 		return totalWidth;
 	}
-	
+
 	var width = $containerFolderPath.offsetWidth,
 		totalWidth = computeTotalWidth(),
 		lastPathPart = $containerFolderPath.lastChild.previousElementSibling,
 		pathPart, doesChevronExist,
 		folderObj = Folder.getListedFolder();
-	
+
 	if(totalWidth > width){
 		pathPart = $containerFolderPath.querySelector(".path_part:not(.chevron)");
-		
+
 		if(pathPart === lastPathPart){
 			pathPart.style.width = $containerFolderPath.offsetWidth
 									- ACTUAL_ARROW_WIDTH - 50 // for the chevron
@@ -981,14 +984,14 @@ Folder.implementChevronInFolderPath = function(notRemoveChevron){
 		}
 		else{
 			doesChevronExist = !!$containerFolderPath.querySelector(".chevron");
-			
+
 			// remove the right arrow
 			$containerFolderPath.removeChild(pathPart.nextElementSibling);
-			
+
 			// only one chevron allowed
 			if(doesChevronExist) $containerFolderPath.removeChild(pathPart);
 			else pathPart.addClass("chevron").html(Folder.CHEVRON_TEXT);
-			
+
 			// recheck if width fits correctly now
 			Folder.implementChevronInFolderPath(true);
 		}
@@ -1003,9 +1006,9 @@ Folder.getListedFolderName = function(){
 Folder.getListedFolder = function(){
 	var name = Folder.getListedFolderName(),
 		idx = name.indexOf(Folder.SEARCH_RESULTS_NAME);
-	
+
 	if(idx != -1) name = name.substring(Folder.SEARCH_RESULTS_NAME.length);
-	
+
 	return Data.snippets.getUniqueFolder(name);
 };
 
@@ -1015,53 +1018,53 @@ Folder.getListedFolder = function(){
 /* "transferContents" - in case user switches from rich to plain view, he'll
 lose all his formatting, so show alert box for a warning and then accordingly transfer contents
 to the new shown box */
-window.DualTextbox = function($container, isTryItEditor){	
+window.DualTextbox = function($container, isTryItEditor){
 	// contants/flags
 	var SHOW_CLASS = "show",
 		RICH_EDITOR_CONTAINER_CLASS = "rich_editor_container",
 		RICH_EDITOR_CLASS = isTryItEditor ? "normal-editor" : "ql-editor",
 		isCurrModePlain = true, // default is textarea
 		transferContentsToShownEditor = !isTryItEditor;
-	
+
 	// create navbar
 	var $nav = $.new("DIV").addClass("nav"),
 		$span = $.new("SPAN").text("Swap editor mode: "),
 		$pTextarea = $.new("P").text("Textarea").addClass(SHOW_CLASS),
-		$pRich = $.new("P").text("Styled textbox");		
+		$pRich = $.new("P").text("Styled textbox");
 	$pTextarea.dataset.containerSelector = "textarea";
 	$pRich.dataset.containerSelector = "." + RICH_EDITOR_CONTAINER_CLASS;
 	$pTextarea.dataset.editorSelector = "textarea";
 	$pRich.dataset.editorSelector = "." + RICH_EDITOR_CLASS;
-	
+
 	$nav.appendChild($span);
 	$nav.appendChild($pTextarea);
 	$nav.appendChild($pRich);
 	$container.appendChild($nav);
 	$container.addClass("dualBoxContainer"); // for css styling
-	
+
 	// create rich/plain boxes
 	// (textarea doesn't need a container; so assume itself to be the container)
 	var $textarea = $.new("TEXTAREA").addClass([SHOW_CLASS, $pTextarea.dataset.containerSelector]),
 		$richEditorContainer = $.new("DIV").addClass(RICH_EDITOR_CONTAINER_CLASS),
 		$richEditor = $.new("DIV"),
 		quillObj;
-		
+
 	$container.appendChild($textarea);
 	$richEditorContainer.appendChild($richEditor);
 	$container.appendChild($richEditorContainer);
-	
+
 	// issues#115
 	if(isTryItEditor){
 		$richEditor
 			.addClass(RICH_EDITOR_CLASS)
 			.setAttribute("contenteditable", "true");
-	}		
+	}
 	else{
 		quillObj = initializeQuill($richEditor, $richEditorContainer);
 		$richEditor = $container.querySelector($pRich.dataset.editorSelector);
 	}
-	
-	function initializeQuill($editor, $container){		
+
+	function initializeQuill($editor, $container){
 		var toolbarOptions = [
 			["bold", "italic", "underline", "strike"],        // toggled buttons
 			["blockquote", "code-block", "link"],
@@ -1089,22 +1092,22 @@ window.DualTextbox = function($container, isTryItEditor){
 
 			return builtInFunc.call(this, val);
 		};
-		
+
 		return new Quill($editor, {
 			modules: {
-				toolbar: toolbarOptions,				
-				history: true,		
+				toolbar: toolbarOptions,
+				history: true,
 				clipboard: true
 			},
 			placeholder: "Expansion text goes here...",
 			theme: "snow",
 			bounds: $container
 		});
-		
+
 		// cannot modify dangerouslyPasteHTML to have custom matcher
 		// for font-size/-family. It's as much work as making Snip.makeHTMLSuitableForQuill
 	}
-	
+
 	// implement swapping of textbox and richEditor
 	$nav.on("click", function(e){
 		var node =
@@ -1112,16 +1115,16 @@ window.DualTextbox = function($container, isTryItEditor){
 
 		if(!(node.tagName == "P") ||
 			// only show if not already shown
-			node.hasClass(SHOW_CLASS)) return true;	
-		
+			node.hasClass(SHOW_CLASS)) return true;
+
 		// from rte to textarea
 		if(transferContentsToShownEditor && !isCurrModePlain &&
 			!this.userAllowsToLoseFormattingOnSwapToTextarea())
 			return false;
-		
+
 		var currShown = $container.querySelectorAll("." + SHOW_CLASS),
 			currShownEditor = currShown[1],
-			$newlyShownContainer, $newlyShownEditor;			
+			$newlyShownContainer, $newlyShownEditor;
 		currShown.removeClass(SHOW_CLASS);
 		currShownEditor.removeAttribute("tab-index");
 
@@ -1132,37 +1135,37 @@ window.DualTextbox = function($container, isTryItEditor){
 		$newlyShownContainer.addClass(SHOW_CLASS);
 		$newlyShownEditor.setAttribute("tab-index", 20);
 		$newlyShownEditor.focus();
-		
+
 		isCurrModePlain = !isCurrModePlain; // reverse
 
 		if(transferContentsToShownEditor){
 			// <b> tags get converted to bold formatted text (and vc-vs)
-			if(isCurrModePlain)	
-				this.setPlainText(this.getRichText());			
+			if(isCurrModePlain)
+				this.setPlainText(this.getRichText());
 			else this.setRichText(convertBetweenHTMLTags(this.getPlainText(), true));
-		}			
+		}
 	}.bind(this));
-	
+
 	// without quill classes
-	
-	
+
+
 	// if user did NOT set alignment, font color, size, family, returns true
 	// else gives a confirm box
 	this.userAllowsToLoseFormattingOnSwapToTextarea = function(){
 		var detected = Snip.getQuillClsForFormattedLossyContent($richEditor.innerHTML);
-		
+
 		if(detected && !confirm("We detected formatted text " + detected + " in your expansion. You will lose it after this swap. Are you sure you wish to continue?"))
 			return false;
 		else return true;
 	};
-	
-	this.switchToDefaultView = function(textToSet){		
+
+	this.switchToDefaultView = function(textToSet){
 		var detected = Snip.hasFormattedLossyContentWoQuillCls(textToSet);
-	
+
 		$nav.trigger("click", {
 			target: detected ? $pRich : $pTextarea
 		});
-		
+
 		return this;
 	};
 
@@ -1170,14 +1173,14 @@ window.DualTextbox = function($container, isTryItEditor){
 		$textarea.text(text);
 		return this;
 	};
-	
+
 	// NOTE: also used by Tryit editor which does not have Quill
 	this.setRichText = function(html){
 		if(quillObj) quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(html));
 		else $richEditor.innerHTML = html;
 		return this;
 	};
-	
+
 	// NOTE: do not use .html()/dangerouslyPasteHTML since it loses
 	// the custom styles for font-size/-family
 	this.setShownText = function(text){
@@ -1185,8 +1188,8 @@ window.DualTextbox = function($container, isTryItEditor){
 			$textarea.value = Snip.makeHTMLSuitableForTextareaThroughString(text);
 		else quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(text));
 		return this;
-	};	
-	
+	};
+
 	this.getPlainText = function(){
 		return $textarea.value;
 	};
@@ -1194,7 +1197,7 @@ window.DualTextbox = function($container, isTryItEditor){
 	this.getRichText = function(){
 		return Snip.makeHTMLSuitableForTextarea($richEditor);
 	};
-	
+
 	this.getShownTextForSaving = function(){
 		if(isCurrModePlain) return this.getPlainText();
 		// can't use Snip.makeHTMLSuitableForTextarea here
@@ -1206,10 +1209,10 @@ window.DualTextbox = function($container, isTryItEditor){
 function observeList(list){
 	var watchProperties = ["push", "pop", "shift", "unshift", "splice"],
 		i = 0, len = watchProperties.length, prop;
-	
+
 	for(; i < len; i++){
 		prop = watchProperties[i];
-		
+
 		Object.defineProperty(list, prop, {
 			configurable: false,
 			enumerable: false,
@@ -1217,11 +1220,11 @@ function observeList(list){
 			value: (function(prop){
 				return function(){
 					// do not use list[prop] because it is already overwritten
-					// and so will lead to inifinite recursion						
-					var ret = [][prop].apply(list, [].slice.call(arguments, 0));												
+					// and so will lead to inifinite recursion
+					var ret = [][prop].apply(list, [].slice.call(arguments, 0));
 					Folder.setIndices();
 					return ret; 
-				};					
+				};
 			})(prop)
 		});
 	}
