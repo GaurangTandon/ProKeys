@@ -3,9 +3,17 @@
 
 Helps organize exactly what things happened in which version.
 
-### [**Upcoming**](https://github.com/GaurangTandon/ProKeys/projects/1)
+### [**Upcoming**](https://github.com/GaurangTandon/ProKeys/projects/1) 
+<sup>(kanban board for next updates)</sup>
 
 ------
+
+**3.1.1** - 13/Feb/2017
+- Added Sync troubleshooting section in Help page
+- Added survey form for uninstalls
+- Added significant support for rich text usage (YAY!)
+- Console.log error in webpages after update.
+- other minor issues
 
 **3.1.0** - 13/Feb/2017
 - Added completely new rich text editor (YAY!) in snippets page.  
