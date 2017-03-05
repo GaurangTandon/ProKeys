@@ -6,7 +6,7 @@
 4. Minify all the files.   
 5. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)  
 6. Make sure that the update fixes all the bugs listed for its milestone number.  
-7. Check for an update to quill version, and replace the "min.js" and "snow.css" files in our codebase.
+7. Check for an [update](http://quilljs.com/docs/download/) to quill version, and replace the "min.js" and "snow.css" files in our codebase.
 
 **After updating the extension**  
 0. Make sure to reply to all people on the [support page](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support) as well as on the official email (prokeys.feedback@gmail.com), whose errors have been fixed in this updated version.  
