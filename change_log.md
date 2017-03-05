@@ -59,7 +59,7 @@ Helps organize exactly what things happened in which version.
 - remove blocking of ReactJS elements
 - removed the condition [][word] in Generic.isValidName which made special fixes for snippet names like "constructor"
 
-<details><summary>Old versions (click to expand)</summary><p>
+<details><summary><h3>Old versions (click to expand)</h3></summary><p>
 **2.7.0** - 24/01/2015
 - block site access in context menu
 - insert snippet from context menu
