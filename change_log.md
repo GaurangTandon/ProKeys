@@ -3,8 +3,7 @@
 
 Helps organize exactly what things happened in which version.
 
-### [**Upcoming**](https://github.com/GaurangTandon/ProKeys/projects/1) 
-<sup>(kanban board for next updates)</sup>
+### [**Upcoming**](https://github.com/GaurangTandon/ProKeys/projects/1)  <sup>(kanban board for next updates)</sup>
 
 ------
 
@@ -13,6 +12,7 @@ Helps organize exactly what things happened in which version.
 - Added survey form for uninstalls
 - Added significant support for rich text usage (YAY!)
 - Console.log error in webpages after update.
+- made export/backup popup concise
 - other minor issues
 
 **3.1.0** - 13/Feb/2017
