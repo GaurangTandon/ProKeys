@@ -56,7 +56,7 @@
 	window.$containerSnippets = null;
 	window.$panelSnippets = null;
 	window.$containerFolderPath = null;
-	window.latestRevisionLabel = "data created (5 defaut snippets)";	
+	window.latestRevisionLabel = "data created (5 defaut snippets)";
 	window.OLD_DATA_STORAGE_KEY = "UserSnippets";
 	window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
 	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
@@ -143,7 +143,7 @@
 		DB_save(function(){
 			saveRevision(Data.snippets.toArray()); 
 			notifySnippetDataChanges();
-			
+
 			Folder.setIndices();
 			var folderToList = folderNameToList ? 
 									Data.snippets.getUniqueFolder(folderNameToList) :
@@ -154,7 +154,7 @@
 
 			if(callback) callback();
 		});
-		
+
 		Data.snippets = Folder.fromArray(Data.snippets);
 	};
 
@@ -172,7 +172,7 @@
 
 			if(callback) callback();
 		});
-		
+
 		// once DB_save has been called, doesn't matter
 		// if this prop is object/array since storage.clear/set
 		// methods are using a separate storageObj
@@ -189,15 +189,15 @@
 			if(callback) callback();
 		});
 	}
-	
+
 	function DB_load(callback) {
 		storage.get(OLD_DATA_STORAGE_KEY, function(r) {
 			var req = r[OLD_DATA_STORAGE_KEY];
-			console.dir(req);
-			
+			//console.dir(req);
+
 			if (isEmpty(req) || req.dataVersion != Data.dataVersion)
 				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
-			else {				
+			else {
 				Data = req;
 				if (callback) callback();
 			}
@@ -526,7 +526,6 @@
 						// by calling handler and then moved
 						// the corrected contents to toFolder (keptFolder)
 						if(duplicateSnippetToKeep === "imported"){
-							console.dir(duplicateObj.list);
 							Folder.copyContents(duplicateObj, importedObj);
 						}
 						else Folder.copyContents(importedObj, duplicateObj);
@@ -845,12 +844,12 @@
 			$panel.toggleClass(SHOW_CLASS);
 			if(isEditing) $panel.removeClass("creating-new");
 			else $panel.addClass("creating-new");
-			
+
 			/* cleanup  (otherwise abnormal rte swap alerts are received from 
 					userAllowsToLoseFormattingOnSwapToTextarea method when we
 					later would load another snippet)*/
 			dualSnippetEditorObj.setPlainText("").setRichText("");
-			
+
 			// had clicked the tick btn
 			if(isSavingSnippet)	return;
 
@@ -870,12 +869,12 @@
 
 			headerSpan.html((isEditing ? "Edit " : "Create new ") + type);
 
-			$(".error").removeClass(SHOW_CLASS);				
-			
+			$(".error").removeClass(SHOW_CLASS);
+
 			// defaults
 			if(!isEditing)
 				object = {name: "", body: ""};
-			
+
 			nameElm.text(object.name).focus();
 			nameElm.dataset.name = object.name;
 			if(isSnip){
@@ -982,11 +981,11 @@
 		$snipMatchDelimitedWordInput = $(".snippet_match_whole_word input[type=checkbox]");
 		$tabKeyInput = $("#tabKey");
 		$snipNameDelimiterListDIV = $(".delimiter_list");
-				
+
 		if(!DB_loaded){
 			setTimeout(DB_load, 100, DBLoadCallback); return;
 		}
-		console.log(Data.snippets);
+		//console.log(Data.snippets);
 
 		// should only be called when DB has loaded
 		// and page has been initialized
@@ -1142,10 +1141,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					if(stringList.match(escapeRegExp(reservedDelimiter)))
 						return reservedDelimiter;
 				}
-				
+
 				return true;
 			}
-			
+
 			$delimiterCharsInput.on("keyup", function(e){
 				if(e.keyCode === 13){
 					var vld = validateDelimiterList(this.value);
@@ -1487,7 +1486,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 			(function checkIfFirstTimeUser(){
 				var $button = $(".change-log button"),
-					$changeLog = $(".change-log"),					
+					$changeLog = $(".change-log"),
 					// ls set by background page
 					isUpdate = localStorage.extensionUpdated === "true";
 
@@ -1502,7 +1501,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			})();
 
 			Data.snippets.listSnippets();
-			
+
 			/* executed in the very end since saveOtherData async and 
 				stringifies data.snippets*/
 			// till now, we don't have any use for data.visited
@@ -1588,23 +1587,13 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			});
 
 			function showDataForExport(){
-				var dataType = $(".export .steps :first-child input:checked").value,
-					data, dataUse = $(".export .steps :nth-child(2) input:checked").value,
+				var data, dataUse = $(".export .steps :first-child input:checked").value,
 					downloadLink = $(".export a"), blob;
 
-				if(dataUse === "print"){
-					if(dataType === "data"){
-						alert("Sorry! Entire data cannot be printed. Only snippets can be printed. Choose \"only snippets\"" + 
-								" in the first step if you want to print.");
-						return;
-					}
-					else data = getSnippetPrintData(Data.snippets);
-				}
+				if(dataUse === "print") data = getSnippetPrintData(Data.snippets);
 				else {
-					// proper stringification requires conversion to array
 					Data.snippets = Data.snippets.toArray();
-					data = JSON.stringify(dataType === "data" ? Data : Data.snippets, undefined, 2);
-					// convert back to normal after work finishes
+					data = JSON.stringify(dataUse === "data" ? Data : Data.snippets, undefined, 2);
 					Data.snippets = Folder.fromArray(Data.snippets);
 				}
 
@@ -1612,8 +1601,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 				downloadLink.href = URL.createObjectURL(blob);
 				downloadLink.download = (dataUse === "print" ?
-											"ProKeys snippets print data" :
-											"ProKeys " + dataType)
+											"ProKeys print snippets" :
+											"ProKeys " + dataUse)
 											+ " " + getFormattedDate() + ".txt";
 			}
 
@@ -1803,7 +1792,7 @@ Or you may try refreshing the page. ");
 			When I migrate data on PC1 to sync. The other PC's local data remains.
 			And then it overrides the sync storage. The following lines
 			manage that*/
-		console.dir(Data.snippets);
+		//console.dir(Data.snippets);
 		// wrong storage mode
 		if(Data.snippets === false){
 			// change storage to other type
@@ -1821,9 +1810,10 @@ Or you may try refreshing the page. ");
 		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
 	function setEssentialItemsOnDBLoad(){
+		// issues#111
 		Data.matchDelimitedWord = Data.matchDelimitedWord || false;
 		Data.snipNameDelimiterList = Data.snipNameDelimiterList || ORG_DELIMITER_LIST;
-		
+
 		if(!isObject(Data.snippets))
 			Data.snippets = Folder.fromArray(Data.snippets);
 
