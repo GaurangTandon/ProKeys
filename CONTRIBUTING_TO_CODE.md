@@ -3,10 +3,10 @@
 1. ESLint all the JS files/W3Clint all HTML/CSS files.  
 2. Update the version number in options.html and manifest to the latest version number.  
 3. Remove/comment `console.log`s/`console.dir`s from all JS files. <s>Run Replace function to remove all tab chars at the end of lines - `\t+$` Can cause problems like [this one](https://github.com/GaurangTandon/ProKeys/commit/3ece14b5aa09c08cd283a1cc1d736ceb178fa3f3)</s>  
-4. Minify all the files.   
-5. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)  
-6. Make sure that the update fixes all the bugs listed for its milestone number.  
-7. Check for an [update](http://quilljs.com/docs/download/) to quill version, and replace the "min.js" and "snow.css" files in our codebase.
+4. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)  
+5. Make sure that the update fixes all the bugs listed for its milestone number.  
+6. Check for an [update](http://quilljs.com/docs/download/) to quill version, and replace the "min.js" and "snow.css" files in our codebase.  
+7. Minify all the files.   
 
 **After updating the extension**  
 0. Make sure to reply to all people on the [support page](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support) as well as on the official email (prokeys.feedback@gmail.com), whose errors have been fixed in this updated version.  
