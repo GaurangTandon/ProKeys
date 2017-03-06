@@ -1,8 +1,8 @@
 ProKeys needs the following permissions for corresponding reasons:
 
-## Chrome
+## Chrome and Opera
 
-1. "Read and change all your data on the websites you visit" - this makes sure that Prokeys is able to perform its functions: snippet   expansion, auto-inserts, mathomania, etc.
+1. "Read and change all your data on the websites you visit/Access your data on all websites" - this makes sure that Prokeys is able to perform its functions: snippet   expansion, auto-inserts, mathomania, etc.
 2. "Display notifications" - only when the app is installed or updated, to notify you of latest developments.
 3. "Read data that you copy and paste" - to accomplish the clipboard paste feature inside of snippets.
 
