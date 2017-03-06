@@ -11,8 +11,10 @@ Helps organize exactly what things happened in which version.
 - Added FAQ section and Sync troubleshooting section in Help page
 - Added survey form for uninstalls
 - Added significant support for rich text usage (YAY!)
-- Console.log error in webpages after update.
-- made export/backup popup concise
+- Console.log error in webpages after update.  
+- made export/backup popup concise  
+- added `debounce` to search field, window resize handler  
+- searching ignores tags that might overlap with matching text
 - other minor issues
 
 **3.1.0** - 13/Feb/2017
