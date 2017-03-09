@@ -15,3 +15,8 @@ The above steps result in: %describe%
 
 **Expected behavior**
 The following was supposed to happen/should have happened: %describe%
+
+-------
+
+- [ ] - I have confirmed the issue occurs even after reinstall (and data backup) of ProKeys  
+_(ignore if not applicable)_
