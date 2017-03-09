@@ -1,3 +1,5 @@
+Hi user! Please use this template to easily file your issue:
+
 ### Data
 **Browser name:** - %YOUR_BROWSER_NAME%
 **OS name:** - %YOUR_OS_NAME%
