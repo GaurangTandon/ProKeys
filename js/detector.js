@@ -1,5 +1,5 @@
-/* global $, getHTML, DB_loaded, Folder, showBlockSiteModal */
-/* global setHTML, MONTHS, chrome, Data, setText, getFormattedDate */
+/* global $, getHTML, DB_loaded, Folder, Snip, showBlockSiteModal*/
+/* global setHTML, MONTHS, chrome, Data, setText, getFormattedDate, isTextNode */
 /* global escapeRegExp, getText, isContentEditable, DAYS, padNumber*/
 
 /* #quickNotes
@@ -106,7 +106,7 @@
 		docIsIframeKey = "PROKEYS_ON_IFRAME",
 		ctxElm = null, ctxTimestamp = 0,
 		PASTE_REGEX = /\[\[%p\]\]/ig;
-	
+
 	/*
 	Helper functions for iframe related work
 		- initiateIframeCheckForSpecialWebpages
@@ -114,8 +114,8 @@
 	*/
 
 	function initiateIframeCheck(doc){
-		var iframes = doc.querySelectorAll("iframe");		
-		
+		var iframes = doc.querySelectorAll("iframe");
+
 		iframes.forEach(function(iframe){
 			try{
 				doc = iframe.contentDocument;
@@ -151,7 +151,7 @@
 		- getFormattedDate
 		- getTimestamp
 	*/
-	
+
 	// receives 24 hour; comverts to 12 hour
 	// return [12hour, "am/pm"]
 	function to12Hrs(hour){
@@ -311,11 +311,11 @@
 
 			return subs;
 		});
-		
+
 		if(PASTE_REGEX.test(snipBody)){
-			chrome.extension.sendMessage("givePasteData", function(pasteData){				
+			chrome.extension.sendMessage("givePasteData", function(pasteData){
 				callback(snipBody.replace(PASTE_REGEX, pasteData));
-			});			
+			});
 		}
 		else callback(snipBody);
 	}
@@ -325,7 +325,7 @@
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0);
 
-		if(isProKeysNode(node)){			
+		if(isProKeysNode(node)){
 			range.selectNodeContents(node);
 			range.collapse(false);
 			sel.removeAllRanges();
@@ -347,54 +347,57 @@
 		}
 	}
 
-	function prepareSnippetBody(snipBody, node, callback){		
+	function prepareSnippetBodyForCENode(snipBody, node, callback){
 		// on disqus thread the line break
 		// is represented by </p>
 		var	isDisqusThread = isParent(node, "#disqus_thread"),
 			lineSeparator = "<br>" + (isDisqusThread ? "</p>" : "");
-			
+
 		formatMacros(snipBody, function(snipBody){
 			snipBody = 
-					snipBody.replace(/\n/g, lineSeparator)
+					Snip.makeHTMLValidForExternalEmbed(snipBody)
+						.replace(/\n/g, lineSeparator)
 						.replace(/(%[_A-Za-z0-9]+%)/g, function(w, $1){
 							return "<span class='" + PLACE_CLASS + "'>" + $1 + "</span>";
 						});
 			callback(snipBody);
 		});
 	}
-	
-	function populatePlaceholderObject(snipElmNode){			
+
+	function populatePlaceholderObject(snipElmNode){
 		Placeholder.mode = true;
 		Placeholder.node = snipElmNode;
 		Placeholder.isCENode = true;
 		// convert the NodeList of <span.prokeys-placeholder> to array and store
 		Placeholder.array = [].slice.call(snipElmNode.querySelectorAll("." + PLACE_CLASS) || [], 0);
 	}
-	
-	function insertSnippetInContentEditableNode(range, snipBody, node){
-		prepareSnippetBody(snipBody, node, function(snipBody){
+
+	function insertSnippetInContentEditableNode(range, snipBody, node){		
+		prepareSnippetBodyForCENode(snipBody, node, function(snipBody){
 			var snipElmNode = $.new(TAGNAME_SNIPPET_HOLDER_ELM);
 			snipElmNode.html(snipBody)
 				.addClass(SPAN_CLASS); // identification
-
+			console.log(snipBody);
+			console.log(snipElmNode.innerHTML);
+			
 			range.insertNode(snipElmNode);
 
 			populatePlaceholderObject(snipElmNode);
-			
+
 			checkPlaceholdersInContentEditableNode();
-		});	
+		});
 	}
-	
-	function checkSnippetPresenceContentEditable(node){		
+
+	function checkSnippetPresenceContentEditable(node){
 		function onSnipFound(){
 			// remove snippet name from container
 			range.setStart(container, caretPos - snip.name.length);
 			range.setEnd(container, caretPos);
 			range.deleteContents();
-			
+
 			insertSnippetInContentEditableNode(range, snip.body, node);
 		}
-		
+
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0);
@@ -409,24 +412,28 @@
 		// snippet found
 		if(snip !== null) {
 			setTimeout(onSnipFound, 10);
-			
+
 			// first prevent space from being inserted
 			return true;
 		}
 	}
 
-	function insertSnippetInTextarea(start, caretPos, snipBody, nodeText, node){		
+	function insertSnippetInTextarea(start, caretPos, snipBody, nodeText, node){
 		var textBeforeSnipName = nodeText.substring(0, start),
 			textAfterSnipName = nodeText.substring(caretPos);
 
 		formatMacros(snipBody, function(snipBody){
+			// snipBody can be both textarea-saved or rte-saved
+			// if it is textarea-saved => nothing needs to be done
+			// else callt his method
+			// it is textarea-saved IF it does not have any quill classes
 			snipBody = Snip.makeHTMLSuitableForTextareaThroughString(snipBody);
 			Placeholder.node = node.html(textBeforeSnipName + snipBody + textAfterSnipName);
-			
+
 			testPlaceholderPresence(node, snipBody, start);
-		});	
+		});
 	}
-	
+
 	// check snippet's presence and intiate
 	// another function to insert snippet body
 	function checkSnippetPresence(node){
@@ -434,20 +441,20 @@
 			return checkSnippetPresenceContentEditable(node);
 
 		var caretPos = node.selectionStart,
-			snip = Data.snippets.getUniqueSnippetAtCaretPos(node, caretPos), // holds current snippet object			
+			snip = Data.snippets.getUniqueSnippetAtCaretPos(node, caretPos), // holds current snippet object
 			start;
 
 		// if the start and end points are not the same
 		// break and insert some character there
 		if(caretPos !== node.selectionEnd) return false;
 
-		if(snip !== null){			
+		if(snip !== null){
 			// start of snippet body
 			// for placeholder.fromIndex
 			start = caretPos - snip.name.length;
-			
+
 			setTimeout(insertSnippetInTextarea, 10, start, caretPos, snip.body, node.value, node);
-			
+
 			// first prevent space from being inserted
 			return true;
 		}
@@ -456,7 +463,7 @@
 	// only used by textarea
 	function testPlaceholderPresence(node, snipBody, start){
 		var endLength = start + snipBody.length;
-		
+
 		if(Placeholder.regexAnywhere.test(snipBody)){
 			Placeholder.mode = true;
 			Placeholder.fromIndex = start; // this is the org. length just before snip name
@@ -504,7 +511,7 @@
 				return false;
 			}
 		}
-		
+
 		bool = setPlaceholderSelection(node, from, to);
 
 		// now probably the end of the snippet's placeholders has been reached
@@ -569,30 +576,30 @@
 	}
 
 	// fired by the window.contextmenu event
-	function insertSnippetFromCtx(snip, node){		
+	function insertSnippetFromCtx(snip, node){
 		if(isContentEditable(node))
 			return insertSnippetFromCtxContentEditable(snip, node);
-		
+
 		var caretPos = node.selectionStart,
 			val = node.value;
-		
+
 		if(caretPos !== node.selectionEnd)
 			val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
-		
+
 		insertSnippetInTextarea(caretPos, caretPos, snip.body, val, node);
 	}
-	
+
 	// fired by insertSnippetFromCtx
 	function insertSnippetFromCtxContentEditable(snip, node){
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0);
-		
+
 		if(!range.collapsed) range.deleteContents();
-		
+
 		insertSnippetInContentEditableNode(range, snip.body, node);
-	}	
-	
+	}
+
 	/*
 		Auto-Insert Character functions
 		- searchAutoInsertChars
@@ -616,11 +623,11 @@
 	function insertCharacter(node, character){
 		// if some text was selected at this time
 		// then that text would be deleted
-		
+
 		if(isContentEditable(node)) insertCharacterContentEditable(node, character);
 		else {
 			deleteSelectionTextarea(node);
-		
+
 			var text = node.value,
 				caretPos = node.selectionEnd;
 
@@ -633,17 +640,17 @@
 			node.selectionStart = node.selectionEnd = caretPos;
 		}
 	}
-	
+
 	function insertCharacterContentEditable(node, character){
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0);
-		
-		// first delete exising selection		
+
+		// first delete exising selection
 		range.deleteContents();
-		
+
 		var	rangeNode = range.startContainer,
-			//originalNode = rangeNode,			
+			//originalNode = rangeNode,
 			isCENode = rangeNode.nodeType === 1,
 			caretPos = range.startOffset;
 		/*console.dir(range);
@@ -653,18 +660,18 @@
 			textAfter = text.substring(caretPos),
 			textToSet = textBefore + character + textAfter,
 			$caretSetElm;
-		
+
 		setHTML(rangeNode, textToSet);
-		
+
 		$caretSetElm = isCENode ? rangeNode.firstChild : rangeNode;
 
 		/*console.log(text + "\n--\n" + caretPos + "\n--\n" + textBefore + "\n--\n" + textAfter + "\n--\n" + caretPosToSet + "\n--\n" + textToSet);
-		
+
 		console.dir(workElm.firstChild); 
 		console.dir(workElm); 
 		console.log(workElm); 
 		console.log("---------"); */
-		
+
 		range.setStart($caretSetElm, caretPos);
 		range.setEnd($caretSetElm, caretPos);
 		sel.removeAllRanges();
@@ -714,14 +721,14 @@
 	function isParent(node, parentSelector, classArray, searchLimit) {
 		function classMatch(classToMatch){
 			var c = node.className;
-			
+
 			if(!c) return false;
 			c = c.split(" ");
-			
+
 			for(var i = 0, len = c.length; i < len; i++)
 				if(c[i].search(classToMatch) === 0)
 					return true;
-			
+
 			return false;
 		}
 
@@ -747,7 +754,7 @@
 		return false;
 	}
 
-	function formatVariable(str){	
+	function formatVariable(str){
 		return  /date/i.test(str)     ? getFormattedDate() :
 				/time/i.test(str)     ? getTimestamp() :
 				/version/i.test(str) ?
@@ -757,7 +764,7 @@
 
 	function insertTabChar(node){
 		var tabValue = "    ";
-		
+
 		insertCharacter(node, tabValue);
 		shiftCursor(node, tabValue.length);
 	}
@@ -779,9 +786,9 @@
 			}catch(e){ // possible syntax error on `eval`
 				result = expression;
 			}
-			
+
 			result = parseFloat(result);
-			
+
 			// if number has decimal digits
 			if(result % 1 !== 0){
 				// convert to float of 5 point precision and to string
@@ -793,7 +800,7 @@
 				// remove the dot if no digits are there after it
 				result = result.replace(/\.$/, "");
 			}
-			
+
 			return isNaN(result) ? expression : result.toString();
 		}
 	}
@@ -807,7 +814,7 @@
 
 		if(result === orgValue)
 			result = "[[ERROR! Check ProKeys help to properly operate Mathomania/Variables]]";
-			
+
 		// replace the `[[expression]]` with rValue
 		wholeValue = wholeValue.substring(0, startOfText - 2) +
 					result + wholeValue.substring(endOfText + 2);
@@ -823,33 +830,33 @@
 		var sel = win.getSelection(),
 			range = sel.getRangeAt(0), // get the new range
 			isCENode = isContentEditable(node);
-			
+
 		if(isCENode) node = range.endContainer;
-		
+
 		var	caretPos = isCENode ? range.endOffset : node.selectionEnd,
 			value = isCENode ? node.textContent : getHTML(node),
 			operate = true,
 			returnValue, valueToSet, caretPosToSet;
-	
+
 		// check if closing brackets are there
 		if(value.substr(caretPos, 2) !== "]]")
 			operate = false;
-		
+
 		// check if opening brackets are present
 		if(operate){
 			for(var i = caretPos; 
 				i >= 0 && value[i] !== "["; i--);
-				
+
 			// bracket not found
 			if(i === -1) operate = false;
 		}
-	
+
 		if(operate){
 			returnValue = evaluateDoubleBrackets(value, i + 1, caretPos);
 			valueToSet = returnValue[0]; caretPosToSet = returnValue[1];
-			
+
 			setText(node, valueToSet);
-			
+
 			if(isCENode){
 				range.setStart(node, caretPosToSet);
 				range.setEnd(node, caretPosToSet);
@@ -866,7 +873,7 @@
 	*/ 
 	function shiftCursor(node, shiftAmount){
 		var win, sel, range, loc;
-		
+
 		if(isContentEditable(node)){
 			win = getNodeWindow(node);
 			sel = win.getSelection(); range = sel.getRangeAt(0);
@@ -876,14 +883,14 @@
 			range.setEnd(range.endContainer, loc);
 			sel.removeAllRanges();
 			sel.addRange(range);
-		}			
+		}
 		else node.selectionStart = node.selectionEnd = node.selectionEnd + shiftAmount;
 	}
-	
+
 	/*
 		Keyboard handling functions
 	*/
-	
+
 	function isNotMetaKey(event){
 		return !event.ctrlKey && !event.shiftKey && 
 				!event.metaKey && !event.altKey;
@@ -894,44 +901,44 @@
 	function isUsableNode(node){
 		var tgN = node.tagName,
 			inputNodeType, data, retVal;
-			
+
 		if(!node.dataset) node.dataset = {};
-		
+
 		data = node.dataset;
-		
+
 		if(data && typeof data[CACHE_DATASET_STRING] !== "undefined")
 			retVal = data[CACHE_DATASET_STRING] === "true";
-		
+
 		else if(isParent(node, null, ["CodeMirror", "ace"], 3))
 			retVal = false;
-		
+
 		else if(tgN === "TEXTAREA" || isContentEditable(node))
 			retVal = true;
-		
+
 		else if(tgN === "INPUT"){
-			inputNodeType = node.getAttribute("type");
+			inputNodeType = node.attr("type");
 			// "!inputNodeType" -> github issue #40
 			retVal = !inputNodeType ||
 						allowedInputElms.indexOf(inputNodeType) > -1;
 		}
 		else retVal = false;
-		
+
 		node.dataset[CACHE_DATASET_STRING] = retVal;
-				
+
 		return retVal;
 	}
 
 	function getCharFollowingCaret(node){
 		var win, sel, range, container, text, caretPos;
-		
+
 		if(isContentEditable(node)){
 			win = getNodeWindow(node);
 			sel = win.getSelection();
 			range = sel.getRangeAt(0);
 			container = range.startContainer;
 			caretPos = range.startOffset;
-			text = getHTML(container); // no .html() as can be text node			
-			
+			text = getHTML(container); // no .html() as can be text node
+
 			if(caretPos < text.length)
 				return text[caretPos];
 			else{ // caretPos was at the end of container
@@ -942,22 +949,22 @@
 					if(text.length !== 0) return text[0];
 				}
 			}
-			
+
 			return "";
 		}
 		else return node.value[node.selectionStart] || "";
 	}
-	
+
 	var handleKeyPress, handleKeyDown;
 	(function(){
 		// need a variable specific to keypress/down, hence using closure
-		
+
 		// boolean variable: if user types first letter of any auto-insert combo, like `(`,
 		// then variable is set to true; now, if user types `)` out of habit, it will not become
 		// `())` but rather `()` only. Variable is set to false on any keypress that is not
 		// the first letter of any auto-insert combo and when autoInsertTyped's value is true.
 		var autoInsertTyped = false;
-		
+
 		handleKeyPress = function(e){
 			var node = e.target,
 				// holds integer on how much to increase
@@ -980,25 +987,25 @@
 			var charTyped = String.fromCharCode(e.keyCode),
 				autoInsertPair = searchAutoInsertChars(charTyped, 0);
 
-			if (autoInsertPair !== null){			
+			if (autoInsertPair !== null){
 				insertCharacter(node, autoInsertPair[1]);
 
 				toIndexIncrease = 2;
-				
+
 				autoInsertTyped = true;
 			}
 			else if(autoInsertTyped){
 				autoInsertPair = searchAutoInsertChars(charTyped, 1);
 
 				// if charTyped is a valid second part in auto-inserts
-				if(autoInsertPair !== null &&					
+				if(autoInsertPair !== null &&
 					getCharFollowingCaret(node) === charTyped){
 					e.preventDefault();
-				
+
 					shiftCursor(node, 1);
-					
+
 					autoInsertTyped = false;
-				}			
+				}
 			}
 
 			// Char insertion technique end
@@ -1016,30 +1023,30 @@
 				var caretPos = node.selectionStart;
 
 				if( Placeholder.mode &&
-					caretPos >= Placeholder.fromIndex && caretPos <= Placeholder.toIndex){				
-					
+					caretPos >= Placeholder.fromIndex && caretPos <= Placeholder.toIndex){
+
 					// when you select text of length 10, and press one key
 					// I have to subtract 9 chars in toIndex
 					if(Placeholder.justSelected){
 						Placeholder.justSelected = false;
 						toIndexIncrease -= Placeholder.selectionLength;
 					}
-					
-					Placeholder.toIndex += toIndexIncrease;				
+
+					Placeholder.toIndex += toIndexIncrease;
 				}
 			}
 		};
-		
+
 		handleKeyDown = function(e) {
 			var keyCode = e.keyCode,
 				node = e.target,
 				// do not use `this` instead of node; `this` can be document iframe
 				tgN = node.tagName,
 				metaKeyNotPressed = isNotMetaKey(e);
-				
+
 			// possibly document iframe
 			if(!tgN) return;
-			
+
 			// [Tab] key for tab spacing/placeholder shifting
 			if(keyCode === 9 && metaKeyNotPressed){
 				if((isGmail || isGoogle) && isParent(node, "form"))
@@ -1055,7 +1062,7 @@
 				if(Placeholder.mode){
 					e.stopPropagation();
 					e.preventDefault();
-					
+
 					if(Placeholder.isCENode)
 						checkPlaceholdersInContentEditableNode();
 					else{
@@ -1078,9 +1085,9 @@
 			// snippet substitution hotkey
 			else if(isSnippetSubstitutionKey(e, keyCode)){
 				if(checkSnippetPresence(node)){
-					e.preventDefault();				
+					e.preventDefault();
 					e.stopPropagation();
-				}			
+				}
 			}
 			// pressing up/down arrows breaks out of placeholder mode
 			// and prevents proper-bracket functionality (issues#5)
@@ -1089,16 +1096,16 @@
 				resetPlaceholderVariables();
 			}
 		};
-	})();	
+	})();
 
 	// attaches event to document receives
 	// `this` as the function to call on event
 	function keyEventAttacher(handler){
 		return function(event){
 			var node = event.target;
-			
+
 			if(isUsableNode(node))
-				handler.call(node, event);			
+				handler.call(node, event);
 		};
 	}
 
@@ -1112,68 +1119,68 @@
 		return hk1 ? event[hk0] && keyCode === hk1 :
 				keyCode === hk0;
 	}
-	
+
 	function attachNecessaryHandlers(win, isBlocked){
 		win.oncontextmenu = function(event){
 			ctxElm = event.target;
 			ctxTimestamp =  Date.now();
 			chrome.runtime.sendMessage({ctxTimestamp: ctxTimestamp});
 		};
-		
+
 		win.onerror = function(){
 			console.log("Error occurred in ProKeys. Mail a screen shot to prokeys.feedback@gmail.com to help me fix it! Thanks!");
 		};
-		
+
 		if(isBlocked) return;
-		
+
 		// attaching listeners to `document` to listen to
 		// both normal and dynamically attached input boxes
 		win.document.on("keydown", onKeyDownFunc, true);
 		win.document.on("keypress", onKeyPressFunc, true);
 	}
-	
+
 	/*
 		called when document.readyState is "complete"
 		to initialize work
 	*/
-	
+
 	function init(){
 		// if DB is not loaded then
 		// try again after 1 second
-		if(!DB_loaded){ setTimeout(init, 1000); return; }		
+		if(!DB_loaded){ setTimeout(init, 1000); return; }
 		// another instance is already running, time to escape
 		if(document[uniqCSKey] === true) return;
-		
+
 		// in case of iframes, to avoid multiple detector.js instances
 		// in one same document, see initiateIframeCheck function
 		document[uniqCSKey] = true;
-		
-		// url of page		
+
+		// url of page
 		var URL;
-		
+
 		try{
 			PAGE_IS_IFRAME = window.location != window.parent.location;
-			
-			URL =  PAGE_IS_IFRAME ? document.referrer : window.location.href;		
+
+			URL =  PAGE_IS_IFRAME ? document.referrer : window.location.href;
 		}
 		// CORS :(
 		catch(e){
 			URL = window.location.href;
 		}
-		
-		var isBlocked = isBlockedSite(URL);		
-		
+
+		var isBlocked = isBlockedSite(URL);
+
 		chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			var timestamp;
-			
+
 			// when user updates snippet data, reloading page is not required
 			if(typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE){
-				Data.snippets = Folder.fromArray(request.snippetList);	
+				Data.snippets = Folder.fromArray(request.snippetList);
 				Folder.setIndices();
-			}				
-			
+			}
+
 			else if(request.checkBlockedYourself)
-				sendResponse(isBlocked);			
+				sendResponse(isBlocked);
 			// ctxElm condition just to make sure that
 			// the modal only appears in the window from where the block form intiated
 			else if(request.task === "showModal" && ctxElm){
@@ -1181,19 +1188,19 @@
 					chrome.runtime.sendMessage({openBlockSiteModalInParent: true, data: request});
 				else showBlockSiteModal(request);
 			}
-			
+
 			else if(typeof request.clickedSnippet !== "undefined"){
 				timestamp = parseInt(request.ctxTimestamp, 10);
-				
+
 				if(ctxTimestamp === timestamp){
 					if(isUsableNode(ctxElm)) insertSnippetFromCtx(request.clickedSnippet, ctxElm);
 					else alert("Unsupported textbox! Snippet cannot be inserted.");
 				}
 			}
-			
+
 			else if(request.giveSnippetList)
 				sendResponse(Data.snippets.toArray());
-			
+
 			// when "Block this site" is called in iframe, iframe sends message
 			// to background.js to send msg to show dialog in parent window
 			// cannot access parent window directly due to CORS
@@ -1202,13 +1209,13 @@
 		});
 
 		attachNecessaryHandlers(window, isBlocked);
-		
+
 		// do not operate on blocked sites
 		if(isBlocked) return true;
-		
+
 		setInterval(initiateIframeCheck, 500, document);
-		
+
 		window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
-		window.isGmail = /mail\.google/.test(window.location.href);		
+		window.isGmail = /mail\.google/.test(window.location.href);
 	}
 })();

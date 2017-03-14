@@ -11,13 +11,19 @@ window.Generic = function(){
 		return this.name.toLowerCase() === name.toLowerCase();
 	};
 
+	this.matchesNameLazy = function(text){
+		return new RegExp(text, "i").test(this.name);
+	};
+	
+	// CAUTION: used only by searchField (since `strippedBody` set)
 	this.matchesLazy = function(text){
 		// searching is case-insensitive
-		return new RegExp(text, "i").test(this.name + this.body);
+		return new RegExp(text, "i").test(this.name + this.strippedBody);
 	};
 
+	// CAUTION: used only by searchField (since `strippedBody` set)
 	this.matchesWord = function(text){
-		return new RegExp("\\b" + text + "\\b", "i").test(this.name + this.body);
+		return new RegExp("\\b" + text + "\\b", "i").test(this.name + this.strippedBody);
 	};
 
 	// deletes `this` from parent folder
@@ -71,9 +77,9 @@ Generic.HIGHLIGHTING_CLASS = "highlighting";
 Generic.getButtonsDOMElm = function(){
 	var divButtons = $.new("div").addClass("buttons");
 	divButtons.appendChild($.new("div").addClass("edit_btn"))
-		.setAttribute("title", "Edit");
+		.attr("title", "Edit");
 	divButtons.appendChild($.new("div").addClass("delete_btn"))
-		.setAttribute("title", "Delete");
+		.attr("title", "Delete");
 	return divButtons;
 };
 
@@ -157,15 +163,20 @@ window.Snip = function(name, body, timestamp){
 
 	// "index" is index of this snip in Data.snippets
 	this.getDOMElement = function(objectNamesToHighlight){
+		function makeSuitableCollapsedDisplay(body){
+			var replacer = " ";
+							
+			return body.substring(0, Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED)
+								.replace(/\n|<br>/g, replacer)
+								.replace(/(<\/[a-z]+>)/gi, "$1" + replacer);
+		}
+		
 		function toggleDivBodyText(snip){
 			if(divMain.hasClass(Snip.DOMContractedClass)){
 				// snip.body contains HTML tags/or \n as well
 				// insert a space whenever line break or closing tag occurs
 				// so (1) set the html, (2) grab and set the text back
-				divBody.html(snip.body
-								.substring(0, Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED)
-								.replace(/\n|<br>/g, " ")
-								.replace(/(<\/[a-z]+>)/gi, "$1 "));
+				divBody.html(makeSuitableCollapsedDisplay(snip.body));
 				divBody.text(divBody.text());
 
 				// during this call is going on, divName has't been shown on screen yet
@@ -175,9 +186,22 @@ window.Snip = function(name, body, timestamp){
 					divBody.style.width = "calc(100% - 90px - " + divName.clientWidth + "px)";
 				}, 1);
 			}
-			else divBody.html(snip.body).style.width = "";
+			else divBody.html(snip.body, "", true).style.width = "";
 		}
 
+		// if we set divMain.click, then .body gets clicked
+		// even when user is selecting text in it
+		// hence we should put a selectable but transparent
+		// element at the top
+		function getClickableElm(){
+			return $.new("div").addClass("clickable")
+					.on("click", 
+						Generic.preventButtonClickOverride(function(){
+							divMain.toggleClass(Snip.DOMContractedClass);
+							toggleDivBodyText(this);
+						}.bind(this)));
+		}
+		
 		var divMain = Generic.getDOMElement.call(this, objectNamesToHighlight),
 			divName = divMain.querySelector(".name"), divBody;
 
@@ -186,18 +210,13 @@ window.Snip = function(name, body, timestamp){
 		toggleDivBodyText(this);
 		divMain.appendChild(divBody);
 
-		divMain.appendChild(Snip.getClickableDOMElm())
-			.on("click", 
-			Generic.preventButtonClickOverride(function(){
-				divMain.toggleClass(Snip.DOMContractedClass);
-				toggleDivBodyText(this);
-			}.bind(this)));
+		divMain.appendChild(getClickableElm.call(this));
 
 		var timestampElm = $.new("div")
 							.addClass("timestamp")
 							.html(Snip.getTimestampString(this));
 		divMain.appendChild(timestampElm);
-
+		
 		return divMain;
 	};
 
@@ -216,6 +235,7 @@ window.Snip = function(name, body, timestamp){
 };
 Snip.prototype = new Generic();
 Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED = 200; // issues#67
+Snip.DOMContractedClass = "contracted"; // to show with ellipsis
 Snip.fromObject = function(snip){
 	var nSnip = new Snip(snip.name, snip.body);
 
@@ -239,7 +259,6 @@ Snip.isValidBody = function (body){
 Snip.getTimestampString = function(snip){
 	return "Created on " + getFormattedDate(snip.timestamp);
 };
-
 /*
 1. removes and replaces the spammy p nodes with \n
 2. replaces <strong>,<em> with <b>,<i>
@@ -247,25 +266,75 @@ Snip.getTimestampString = function(snip){
 4. replaces br element with \n
 */
 Snip.makeHTMLSuitableForTextareaThroughString = function(html){
-	if(!Snip.hasFormattedLossyContentWoQuillCls(html))
-		return html;
+	if(Snip.isSuitableForPastingInTextareaAsIs(html)){
+		var $ref = $.new("DIV");
+		$ref.innerHTML = html;
+		
+		var listParents = $ref.querySelectorAll("OL, UL");
 
+		listParents.forEach(Snip.formatOLULInListParentForTextarea);
+
+		return $ref.innerHTML;
+	}
+
+	function preProcessTopLevelElement(tle){
+		var tgN = tle.tagName, replaced, child;
+		
+		switch(tgN){
+			case "PRE": case "BLOCKQUOTE": case "P":
+				break;
+			case "OL": case "UL":				
+				Snip.removeTextNodesFromOLUL(tle);
+				break;
+			// these top-level elements are inserted by user
+			default:
+				replaced = $.new("P");
+				// issues#156
+				if(tgN === "A")
+					tle.href = Snip.defaultLinkSanitize(tle.href);
+				
+				replaced.innerHTML = tle.outerHTML;
+				console.log(replaced);
+				htmlNode.replaceChild(replaced, tle);
+		}
+	}
+	function preProcessTopLevelElements(){
+		// top-level elements can only be p, pre, blockquote, ul, ol
+		// which `makeHTMLSuitableForTextarea` expects
+		// our top-level elements might be textnodes or <a> elements
+		var children = htmlNode.childNodes, child, childText;
+		
+		for(var i = 0, len = children.length; i < len; i++)	{
+			child = children[i];
+			
+			if(child.nodeType === 3){
+				// presence of ONE newline is automated by the presence of
+				// separate top-level elements
+				childText = child.textContent.replace(/\n/, "").replace(/\n/, "<br>");			
+				replaced = $.new("P").html(child.textContent);
+				console.log(childText);
+				if(childText.length !== 0)
+					htmlNode.replaceChild(replaced, child);
+				else {htmlNode.removeChild(child);len--;i--;}
+			}
+			else preProcessTopLevelElement(child);
+			
+		}
+	}
+	
 	var htmlNode = $.new("DIV");
 	htmlNode.innerHTML = html;
 
+	preProcessTopLevelElements();
+	
 	return Snip.makeHTMLSuitableForTextarea(htmlNode);
 };
 Snip.makeHTMLSuitableForTextarea = function(htmlNode){
+	var DELETE_NEWLINE_SYMBOL = "<!!>";
+	console.dir(htmlNode);
 	function getProperTagPair(elm){
-		var map = {
-				"strong": "b",
-				"em": "i"
-			}, returnArray,
-			tag = elm.tagName.toLowerCase();
-
-		if(map[tag]) tag = map[tag];
-
-		returnArray = ["<" + tag + ">", "</" + tag + ">"];
+		var tag = elm.tagName.toLowerCase(),
+			returnArray = ["<" + tag + ">", "</" + tag + ">"];
 
 		if(tag === "a")
 			returnArray[0] = "<a href='" + elm.href + "'>";
@@ -275,8 +344,8 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		return 	tag !== "span" ? returnArray : ["", ""];
 	}
 
-	// sanitizes top-level elements
-	function topLevelElementSanitize(node){
+	// sanitizes elements (starting from top-level and then recursize)
+	function elementSanitize(node, isTopLevel){
 		/*
 		WORKING of container:
 		Consecutive structures like this can be achieved:
@@ -289,14 +358,17 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		-----
 		Alignment classes are applied on the <p> element only
 		*/
+		
 		if(isTextNode(node))
+			// if textnode already contains ONE NEWLINE,
+			// then remove it as caller is going to add one
 			return node.textContent;
 
 		var tagName = node.tagName,
 			resultString = "", elm, tags,
 			children = node.childNodes, // returns [] for no nodes
 			i = 0, childrenCount = children.length,
-			content;
+			content, firstChild, firstChildText;
 
 		if(tagName === "PRE"){
 			// can't use outerHTML since it includes atributes
@@ -306,27 +378,31 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		}
 
 		if(tagName === "P" &&
-			childrenCount === 1 && 
-			children[0].tagName === "BR")
-			return "";
+			childrenCount === 1){
+			firstChild = children[0];
+			firstChildText = firstChild.innerText || firstChild.textContent;
+			console.log("caught!!!" + firstChild.tagName);
+			if(firstChild.tagName === "BR")
+				return "";
+			// issues#55
+			else if(firstChildText.length === 0)
+				return "";
+		}		
 
 		for(; i < childrenCount; i++){
 			elm = children[i];
 
-			// element node
+			console.dir(!isTopLevel && elm);
 			if(elm.nodeType == 1){
 				tags = getProperTagPair(elm);
 
 				content = tags[0]
-						+ topLevelElementSanitize(elm)
+						+ elementSanitize(elm)
 						+ tags[1];
 
-				if(elm.tagName === "LI") {
-					resultString += "    " + content + "\n";
-				}
-				else
-					resultString += content;
-
+				if(elm.tagName === "LI")
+					resultString += "    " + content + "\n";				
+				else resultString += content;
 			}
 			else resultString += elm.textContent;
 		}
@@ -359,12 +435,15 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	-----
 	inside pre element, absolutely NO formatting is allowed. hence, it is copied as it is.
 	*/
-
-	var len = children.length, i = 0, elm; 
-
+	
+	var len = children.length, i = 0, elm,
+		sanitizedText; 
+	
 	while(i < len){
 		elm = children[i];
-		finalString += topLevelElementSanitize(elm) + "\n";
+		console.dir(elm);
+		sanitizedText = elementSanitize(elm, true);
+		finalString += sanitizedText === DELETE_NEWLINE_SYMBOL ? "" : sanitizedText + "\n";
 		i++;
 	}
 
@@ -375,7 +454,7 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 };
 // replaces all the "ql-size-huge" types of classes with 
 // proper tags that render as expected in external websites
-Snip.makeHTMLValidForExternalEmbed = function(html){
+Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets){
 	// when both class name and property value share diff text
 	// as in font size
 	function replacer(cls, prop, val){
@@ -392,9 +471,28 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 	// when both class name and property value share same text
 	// as in align and font family
 	function replacerThroughArray(clsList, clsPrefix, prop){
-		for(var i = 0, len = clsList.length; i < len; i++){
-			replacer(clsPrefix + clsList[i], prop, clsList[i]);
-		}
+		for(var i = 0, len = clsList.length; i < len; i++)
+			replacer(clsPrefix + clsList[i], prop, clsList[i]);		
+	}
+
+	// only called when NOT listing snippets
+	function processPElm(pElm){
+		var content;
+		// replace pElm with its text node and inline elements
+		// and insert a br in the end
+		// but don't do it if it's an alignment class
+		if(!/text-align:/.test(pElm.attr("style"))){
+			content = pElm.innerHTML;
+			// <p>Hi</p> becomes Hi<br> (insert <br> only in this case)
+			// <p><br></p> becomes <br>			
+			// <p>Hi</p> if is last child remains "Hi" 
+			// <p><br></p> if is last child remains <br>
+			if(content !== "<br>" && !(pElm == $container.lastChild))
+				content += "<br>";
+			
+			pElm.outerHTML = content;
+			console.log("found ");
+		}		
 	}
 	/*DETAILS:
 		it should remove the given class names and
@@ -409,15 +507,20 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 	they might also be present on sub/sup/etc.
 	*/
 
-	var fontSizesEm = {"small": 0.75, "large": 1.5, "huge": 2.5},
-		fontFamilies = ["monospace", "serif"],
-		textAligns = ["justify", "center", "right"];
-
 	// messy area; don't use built-in .html() here
 	var $container = $.new("div");
 	$container.innerHTML = html;
 
-	var cls, elms;
+	var cls, elms,
+		fontSizesEm = {"small": 0.75, "large": 1.5, "huge": 2.5},
+		fontFamilies = ["monospace", "serif"],
+		textAligns = ["justify", "center", "right"];
+
+	// problem5 issues#153
+	// remove <p> tags when this method is called by
+	// detector.js; don't remove them when 
+	if(!isListingSnippets)
+		$container.querySelectorAll("p").forEach(processPElm);
 
 	// 1. font size
 	for(var fontSize in fontSizesEm)
@@ -430,8 +533,45 @@ Snip.makeHTMLValidForExternalEmbed = function(html){
 	replacerThroughArray(fontFamilies, "ql-font-", "font-family");
 	replacerThroughArray(textAligns, "ql-align-", "text-align");
 
+	$container.querySelectorAll("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
+
+	// access by window to get `undefined` and not any error
+	// problem 9 issues#153
+	if(window.isGmail){
+		$container.querySelectorAll("blockquote")
+			.addClass("gmail_quote")
+			.attr("style", "margin: 0px 0px 0px 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;");
+	}
+
+	console.log($container.innerHTML);
+	
 	return $container.innerHTML;
 };
+// contains extra top-level <p></p> due to 
+// makeHTMLSuitableForTextareaThroughString; so replace
+// them with textnodes and a line break instead
+Snip.makeTextareaTextValidForExternalEmbed = function(text){
+	var htmlNode = $.new("DIV");
+	htmlNode.innerHTML = text;
+	
+	var children = htmlNode.childNodes, child, tgN, replaced;
+	
+	for(var i = 0, len = children.length; i < len; i++)	{
+		child = children[i];
+		tgN = child.tagName;
+		console.dir(child);
+		
+		if(tgN === "P"){
+			replaced = document.createTextNode(child.innerHTML + "\n");
+			console.dir(replaced);
+			console.dir(child);
+			htmlNode.replaceChild(replaced, child);
+		}
+	}
+	
+	return htmlNode.innerHTML;
+};
+
 // replace `style`s of font-size, font-family earlier obtained
 // from `Snip.makeHTMLValidForExternalEmbed` into
 // required quill classes
@@ -457,6 +597,17 @@ Snip.makeHTMLSuitableForQuill = function(html){
 		}
 	}
 
+	// problem6 issues#153	
+	function replaceTrailingBRsWithPElms(){
+		var lastBR = $container.lastChild, $pContainer;
+		while(lastBR && lastBR.tagName === "BR"){
+			$pContainer = $.new("P");
+			$pContainer.innerHTML = "<br>";
+			$container.replaceChild($pContainer, lastBR);			
+			lastBR = $pContainer.previousElementSibling;
+		}
+	}
+
 	var $container = $.new("DIV");
 	$container.innerHTML = html;
 
@@ -470,14 +621,31 @@ Snip.makeHTMLSuitableForQuill = function(html){
 		}
 
 	replacerThroughArray(fontFamilies, "font-family");
-
+	replaceTrailingBRsWithPElms();	
+	
 	return $container.innerHTML;
 };
+// has anything except bold, italics, underline, strike, sup, sub
+/* TODO:remove
+Snip.hasAnyRichContentAtAll = function(html){
+	var regElms = [/<pre>/, /<li>/, /<a /, /<blockquote>/];
+	
+	for(var i = 0, len = regElms.length; i < len; i++)
+		if(regElms[i].test(html)) return true;
+	
+	return Snip.hasFormattedLossyContentWoQuillCls(html);
+};*/
+Snip.isSuitableForPastingInTextareaAsIs = function(html){
+	return !(Snip.hasFormattedLossyContentWoQuillCls(html) ||
+			// imported snippet body might have no fonts but lots of paragraphs
+			// which make it unsuitable for a textarea
+			/\<p\>/.test(html));
+};
 Snip.hasFormattedLossyContentWoQuillCls = function(html){
-	var reqElms = [/background-color: /, /color: /, /text-align: /, /font-size: /, /font-family: /];
+	var regElms = [/background-color: /, /color: /, /text-align: /, /font-size: /, /font-family: /];
 
-	for(var i = 0, len = reqElms.length; i < len; i++)
-		if(reqElms[i].test(html)) return true;
+	for(var i = 0, len = regElms.length; i < len; i++)
+		if(regElms[i].test(html)) return true;
 
 	return false;
 };
@@ -491,18 +659,108 @@ Snip.getQuillClsForFormattedLossyContent = function(html){
 
 	return null;
 };
-// if we set divMain.click, then .body gets clicked
-// even when user is selecting text in it
-// hence we should put a selectable but transparent
-// element at the top
-Snip.getClickableDOMElm = function(){
-	return $.new("div").addClass("clickable");
+Snip.stripAllTags = function(html, $refDiv){
+	if(!$refDiv) $refDiv = $.new("DIV");
+	if(html) $refDiv.innerHTML = html;
+	// otherwise that elm's html is already set (nested calls)
+	
+	var tagName = $refDiv.tagName;
+
+	switch(tagName){
+		case "DIV":  // when not a recursive call
+		case "OL": case "UL": break;
+		// for all other elements
+		default:
+			return $refDiv.innerText || $refDiv.textContent;
+	}
+	
+	var children = $refDiv.childNodes, result = "",
+		i = 0, len = children.length;
+	
+	if(len === 0)
+		return $refDiv.innerText || $refDiv.textContent;
+	
+	for(; i < len; i++)
+		result += Snip.stripAllTags("", children[i]) + "\n";
+
+	return result;
 };
+Snip.defaultLinkSanitize = function(linkVal){
+	console.log(linkVal);
+	// remove the default extension protocol just in case it was
+	// prepended by Chrome
+	linkVal = linkVal.replace(/^chrome-extension:\/\/[a-z]+\/html\//, "");
+	
+	// do nothing, since this implies user's already using a custom protocol
+	if(/^\w+:/.test(linkVal)); // TODO: why's this semicolon unnecessary
+	else if(!/^https?:/.test(linkVal))
+		linkVal = "http:" + linkVal;
+	console.log(linkVal);
+	return linkVal;
+};
+/**
+ * add indents to `<li>`s; it is NOT innerHTML;
+ * content is obtained through regex
+ */
+(function (){
+	function genericFormatterCreator(sep0, sep1){
+		return function(listParent){
+			var	resultString = sep1;		
 
-// class added to .snip when it is contracted
-// i.e., .body is shown with ellipsis
-Snip.DOMContractedClass = "contracted";
+			listParent.querySelectorAll("LI").forEach(function(li){
+				resultString += sep0 + "<li>" + li.innerHTML + "</li>" + sep1;
+			});
 
+			listParent.innerHTML = resultString;
+		};	
+	}
+
+	Snip.formatOLULInListParentForTextarea = genericFormatterCreator("    ", "\n");
+
+	// CE node does not have indentation otherwise
+	// &nbsp; will occupy the place and mess up display
+	Snip.formatOLULInListParentForCEnode = genericFormatterCreator("", "");
+})();
+
+// strip all textnodes; only <li> should remain
+// as per proper html; textnodes are causing problem in
+// newline insertion
+Snip.removeTextNodesFromOLUL = function(listParent){
+	var child, i = 0, children = listParent.childNodes, len = children.length;
+	for(; i < len; i++){
+		child = children[i];
+		if(child.nodeType === 3){
+			listParent.removeChild(child);
+			len--;i--;
+		}
+	}
+};
+/*
+  main motto here is to leave the text "as is"
+  albeit with some necessary modifications
+1. sanitize links
+2. remove spaces between consecutive <li>s as they're
+	converted into &nbsp; by setHTML
+*/
+Snip.sanitizeTextareaTextForSave = function(text){
+	var htmlNode = $.new("div");
+	htmlNode.innerHTML = text;
+	// textarea text does not have ANY &nbsp; but adding innerHTML
+	// inserts &nbsp; for some unknown reason
+	// refer problem4 issue#153
+	htmlNode.innerHTML = htmlNode.innerHTML.replace(/&nbsp;/g, " ");
+	console.log(text);
+	console.dir(htmlNode);
+	var aHREFs = htmlNode.querySelectorAll("a");
+	aHREFs.forEach(function(a){
+		a.href = Snip.defaultLinkSanitize(a.href);
+	});
+	
+	var listParents = htmlNode.querySelectorAll("ol, ul"); 
+	listParents.forEach(Snip.formatOLULInListParentForTextarea);
+	
+	return htmlNode.innerHTML;
+};
 window.Folder = function(name, list, timestamp, isSearchResultFolder){
 	this.name = name;
 	this.type = Generic.FOLDER_TYPE;
@@ -642,23 +900,42 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 
 	this.getUniqueFolderIndex = getUniqueObjectIndexFn(Generic.FOLDER_TYPE);
 
+	// called whens searching starts
+	// removes all tags from text and stores as new prperty
+	// tags present in snippets might interfere with search
+	// we only should work with plaintext
+	this.stripAllSnippetsTags = function($refDiv){
+		$refDiv = $refDiv || $.new("DIV"); // reuse existing DOM
+		this.hasStrippedSnippets = true;
+		
+		this.list.forEach(function stripSnippetsOfTags(elm){
+			if(Folder.isFolder(elm))
+				elm.stripAllSnippetsTags($refDiv);
+			else elm.strippedBody = Snip.stripAllTags(elm.body, $refDiv);
+		});
+	};
+	
 	this.searchSnippets = function(text){
-		text = escapeRegExp(text);
+		text = escapeRegExp(text);		
 
+		if(!this.hasStrippedSnippets)
+			this.stripAllSnippetsTags();
+		
 		return new Folder(Folder.SEARCH_RESULTS_NAME + this.name,
 				this.list.reduce(function(result, listElm){
 					if(Folder.isFolder(listElm))
 						result = result.concat(listElm.searchSnippets(text).list);
-
+					
 					if(listElm.matchesLazy(text))
 						result.push(listElm);
 
 					return result;
 				}, []).sort(function(a, b){
 					return  b.matchesUnique(text) ? 1 :
-							!a.matchesUnique(text) &&
-								b.matchesWord(text) ? 1 :
-							-1;
+							!a.matchesUnique(text) ? 
+								(b.matchesNameLazy(text) ? 1 : 
+									!a.matchesNameLazy(text) && b.matchesWord(text) ? 1 : -1)
+							: -1;
 
 				}), undefined, true
 			);
@@ -1008,7 +1285,7 @@ Folder.getListedFolder = function(){
 		idx = name.indexOf(Folder.SEARCH_RESULTS_NAME);
 
 	if(idx != -1) name = name.substring(Folder.SEARCH_RESULTS_NAME.length);
-
+	
 	return Data.snippets.getUniqueFolder(name);
 };
 
@@ -1057,7 +1334,7 @@ window.DualTextbox = function($container, isTryItEditor){
 	if(isTryItEditor){
 		$richEditor
 			.addClass(RICH_EDITOR_CLASS)
-			.setAttribute("contenteditable", "true");
+			.attr("contenteditable", "true");
 	}
 	else{
 		quillObj = initializeQuill($richEditor, $richEditorContainer);
@@ -1084,13 +1361,7 @@ window.DualTextbox = function($container, isTryItEditor){
 		var Link = Quill.import("formats/link");
 		var builtInFunc = Link.sanitize;
 		Link.sanitize = function sanitizeLinkInput(linkValueInput){
-			var val = linkValueInput;
-			// do nothing, since this implies user's already using a custom protocol
-			if(/^\w+:/.test(val)); // TODO: why's this semicolon unnecessary
-			else if(!/^https?:/.test(val))
-				val = "http:" + val;
-
-			return builtInFunc.call(this, val);
+			return builtInFunc.call(this, Snip.defaultLinkSanitize(linkValueInput));
 		};
 
 		return new Quill($editor, {
@@ -1132,9 +1403,8 @@ window.DualTextbox = function($container, isTryItEditor){
 		node.addClass(SHOW_CLASS);
 		$newlyShownContainer = $container.querySelector(node.dataset.containerSelector);
 		$newlyShownEditor = $container.querySelector(node.dataset.editorSelector);
-		$newlyShownContainer.addClass(SHOW_CLASS);
-		$newlyShownEditor.setAttribute("tab-index", 20);
-		$newlyShownEditor.focus();
+		$newlyShownContainer
+			.addClass(SHOW_CLASS).attr("tab-index", 20).focus();
 
 		isCurrModePlain = !isCurrModePlain; // reverse
 
@@ -1145,9 +1415,6 @@ window.DualTextbox = function($container, isTryItEditor){
 			else this.setRichText(convertBetweenHTMLTags(this.getPlainText(), true));
 		}
 	}.bind(this));
-
-	// without quill classes
-
 
 	// if user did NOT set alignment, font color, size, family, returns true
 	// else gives a confirm box
@@ -1160,10 +1427,8 @@ window.DualTextbox = function($container, isTryItEditor){
 	};
 
 	this.switchToDefaultView = function(textToSet){
-		var detected = Snip.hasFormattedLossyContentWoQuillCls(textToSet);
-
 		$nav.trigger("click", {
-			target: detected ? $pRich : $pTextarea
+			target: Snip.isSuitableForPastingInTextareaAsIs(textToSet) ? $pTextarea : $pRich
 		});
 
 		return this;
@@ -1181,12 +1446,22 @@ window.DualTextbox = function($container, isTryItEditor){
 		return this;
 	};
 
-	// NOTE: do not use .html()/dangerouslyPasteHTML since it loses
+	// NOTE: do not use .html() since it loses
 	// the custom styles for font-size/-family
-	this.setShownText = function(text){
+	// PRECONDITION: default view has been decided beforehand	
+	// and has been switched to
+	this.setShownText = function(text){	
 		if(isCurrModePlain)
+			// since we've switched to default view
+			// we're already in textarea and saving a textarea suitable snippet
+			// no need to preprocess or do anything to it.
+			// BUT BUT BUT we need to format the OL and UL with indentation
 			$textarea.value = Snip.makeHTMLSuitableForTextareaThroughString(text);
-		else quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(text));
+		else 
+			// without dangerouslyPasteHTML we end up having lots
+			// of <p> elements at unwarranted locations
+			quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(text));
+		
 		return this;
 	};
 
@@ -1199,10 +1474,12 @@ window.DualTextbox = function($container, isTryItEditor){
 	};
 
 	this.getShownTextForSaving = function(){
-		if(isCurrModePlain) return this.getPlainText();
-		// can't use Snip.makeHTMLSuitableForTextarea here
-		// otherwise font color, alignment, etc. is lost
-		else return Snip.makeHTMLValidForExternalEmbed($richEditor.innerHTML);
+		// calling makeHTMLSuitableForTextareaThroughString for
+		// making the string well-formatted for display in website textareas
+		if(isCurrModePlain) {
+			return Snip.sanitizeTextareaTextForSave(this.getPlainText());
+		}		
+		else return Snip.makeHTMLValidForExternalEmbed($richEditor.innerHTML, true);
 	};
 };
 

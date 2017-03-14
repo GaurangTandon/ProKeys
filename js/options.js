@@ -2,7 +2,7 @@
 /* global $, getHTML, DualTextbox, OLD_DATA_STORAGE_KEY, OBJECT_NAME_LIMIT */
 /* global chrome, DB_loaded, NEW_DATA_STORAGE_KEY, saveSnippetData */
 /* global escapeRegExp, Folder, Data, Snip, Generic, $containerFolderPath */
-/* global latestRevisionLabel, $containerSnippets, $panelSnippets*/
+/* global latestRevisionLabel, $containerSnippets, $panelSnippets, debounce */
 // above are defined in window. format
 
 // TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
@@ -62,7 +62,7 @@
 	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
 
 	// stored in global Data variable
-	(function createBuiltInSnippets(){
+	function createBuiltInSnippets(){
 		var name = "README-New_UI_Details",
 			body = 
 				// using + operator avoids the inadvertently introduced tab characters
@@ -109,8 +109,8 @@
 		];
 
 		Data.snippets = snips;
-	})();
-
+	}
+	
 	// when we restore one revision, we have to remove it from its
 	// previous position; saveSnippetData will automatically insert it 
 	// back at the top of the list again
@@ -370,7 +370,7 @@
 
 			inp.type = "text";
 			inp.addClass(mainClass)
-				.setAttribute("placeholder", "Type " + attribute);
+				.attr("placeholder", "Type " + attribute);
 
 			append(inp);
 
@@ -893,7 +893,7 @@
 				textVld = validateFunc(text),
 				isTextValid = textVld === "true",
 				textErrorElm = errorElm || elm.nextElementSibling;
-
+			
 			// when we are editing snippet/folder it does
 			// not matter if the name remains same
 			if(textVld === Generic.getDuplicateObjectsText(text, panelName)
@@ -1271,10 +1271,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			});
 
 			function deleteOnClick(name){
-				var type = /snip/.test(this.className) ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
+				var isSnip = /snip/.test(this.className),
+					type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
+					warning = isSnip ? "" : " (and ALL its contents)",
 					object, folder;
 
-				if(confirm("Delete '" + name + "' " + type + "?")){
+				if(confirm("Delete '" + name + "' " + type + warning + "?")){
 					object = Data.snippets
 							.getUniqueObject(name, type);
 					folder = object.getParentFolder();
@@ -1368,15 +1370,15 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					Folder.getListedFolder().listSnippets();
 			});
 
-			$searchBtn.setAttribute("title", "Search for folders or snips");
+			$searchBtn
+				.attr("title", "Search for folders or snips")
+				.on("keyup", debounce(function searchFieldHandler(){
+					var searchText = this.value,
+						listedFolder = Folder.getListedFolder(),
+						searchResult = listedFolder.searchSnippets(searchText);
 
-			$searchField.on("keyup", function(){
-				var searchText = this.value,
-					listedFolder = Folder.getListedFolder(),
-					searchResult = listedFolder.searchSnippets(searchText);
-
-				searchResult.listSnippets();
-			});
+					searchResult.listSnippets();
+				}, 150));
 
 			(function bulkActionsWork(){
 				var selectedObjects, DOMcontainer,
@@ -1812,21 +1814,23 @@ Or you may try refreshing the page. ");
 	function setEssentialItemsOnDBLoad(){
 		// issues#111
 		Data.matchDelimitedWord = Data.matchDelimitedWord || false;
-		Data.snipNameDelimiterList = Data.snipNameDelimiterList || ORG_DELIMITER_LIST;
-
+		Data.snipNameDelimiterList = Data.snipNameDelimiterList || ORG_DELIMITER_LIST;		
+				
+		// user installs extension; set ls prop		
+		if(!localStorage[LS_REVISIONS_PROP]){
+			// refer github issues#4
+			Data.dataUpdateVariable = !Data.dataUpdateVariable;
+			createBuiltInSnippets();
+			localStorage[LS_REVISIONS_PROP] = "[]";
+			saveRevision(Data.snippets);
+		}
+		
 		if(!isObject(Data.snippets))
 			Data.snippets = Folder.fromArray(Data.snippets);
-
-		// user installs extension; set ls prop
-		if(!localStorage[LS_REVISIONS_PROP]){
-			localStorage[LS_REVISIONS_PROP] = "[]";
-			saveRevision(Data.snippets.toArray());
-
-			// refer github issues#4
-			Data.dataUpdateVariable = false;
-		}
-		saveOtherData();
+		
+		saveSnippetData();
 		Folder.setIndices();
+		
 		// on load; set checkbox state to user preference
 		$tabKeyInput.checked = Data.tabKey;
 		$snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
@@ -1857,9 +1861,9 @@ Or you may try refreshing the page. ");
 		// we need to set height of logo equal to width
 		// but css can't detect height so we need js hack
 		var logo = $(".logo");
-		window.onresize = function(){
+		window.onresize = debounce(function windowResizeHandler(){
 			logo.style.width = logo.clientHeight + "px";
 			Folder.implementChevronInFolderPath();
-		};
+		}, 300);
 	}
 })();
