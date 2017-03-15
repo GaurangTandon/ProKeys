@@ -7,6 +7,7 @@
 5. Make sure that the update fixes all the bugs listed for its milestone number.  
 6. Check for an [update](http://quilljs.com/docs/download/) to quill version, and replace the "min.js" and "snow.css" files in our codebase.  
 7. Minify all the files.   
+8. Copy all `imgs` from `Uncompressed` to `Compressed` in case they were updated.
 
 **After updating the extension**  
 0. Make sure to reply to all people on the [support page](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support) as well as on the official email (prokeys.feedback@gmail.com), whose errors have been fixed in this updated version.  
