@@ -7,7 +7,14 @@ Helps organize exactly what things happened in which version.
 
 ------
 
-**3.1.1** - 13/Feb/2017
+**3.1.2** - 15/Mar/2017
+- Links added by user without any protocol get "http://" prepended by default (as Chrome expects all links to have protocols).
+- Bold and italics now retain tag used by user.
+- Links are now properly displayed in textarea.
+- Nice formatted display of lists, blockquotes, and `<pre>` blocks in snippet list.
+- Further significant improvement to rich text usage (#153)
+
+**3.1.1** - 06/Mar/2017
 - Added FAQ section and Sync troubleshooting section in Help page
 - Added survey form for uninstalls
 - Added significant support for rich text usage (YAY!)
