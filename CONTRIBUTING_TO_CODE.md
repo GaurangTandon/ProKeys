@@ -1,6 +1,6 @@
 **Before uploading your files**  
 0. Check all "TODO" comments and for each, resolve it/raise an issue about it and then remove it's comment.  
-1. ESLint all the JS files/W3Clint all HTML/CSS files.  
+1. ESLint all the JS files (Cut `editor.min.js` to desktop; open `cmd` in `/js/` folder; type `eslint *.js`; when finished, cut the `editor.min.js` back into the folder)/W3Clint all HTML/CSS files.  
 2. Update the version number in options.html and manifest to the latest version number.  
 3. Remove/comment `console.log`s/`console.dir`s from all JS files. <s>Run Replace function to remove all tab chars at the end of lines - `\t+$` Can cause problems like [this one](https://github.com/GaurangTandon/ProKeys/commit/3ece14b5aa09c08cd283a1cc1d736ceb178fa3f3)</s>  
 4. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)  
