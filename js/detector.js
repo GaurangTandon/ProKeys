@@ -100,10 +100,11 @@
 		// the others don't support caret manipulation
 		allowedInputElms = ["", "text", "search", "tel", "url"],
 		CACHE_DATASET_STRING = "prokeyscachednode",
-		PAGE_IS_IFRAME = false,
-		// unique key to tell content script running in document		
-		docIsIframeKey = "PROKEYS_ON_IFRAME",
-		uniqCSKey = "PROKEYS_RUNNING",
+		PAGE_IS_IFRAME = false,		
+		DOC_IS_IFRAME_KEY = "PROKEYS_ON_IFRAME",
+		// unique key to tell content script running in document
+		UNIQ_CS_KEY = "PROKEYS_RUNNING",
+		IFRAME_CHECK_TIMER = 500,
 		ctxElm = null, ctxTimestamp = 0,
 		PASTE_REGEX = /\[\[%p\]\]/ig;
 	
@@ -118,22 +119,20 @@
 			win, doc;
 
 		iframes.forEach(function(iframe){		
-			try{
+			try{				
 				doc = iframe.contentDocument;
 				win = iframe.contentWindow;
 				
 				// make sure handler's not already attached
-				if(!doc[uniqCSKey]){
-					doc[uniqCSKey] = true;
-					doc[docIsIframeKey] = true;
-					attachNecessaryHandlers(win);
-					console.log("Doc found at 'looper'");
-					console.log(doc);
+				if(!doc[UNIQ_CS_KEY]){
+					doc[UNIQ_CS_KEY] = true;
+					doc[DOC_IS_IFRAME_KEY] = true;
 					updateAllValuesPerWin(win);
-					setInterval(initiateIframeCheck, 5000, doc);
+					attachNecessaryHandlers(win);		
+					setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
 				}
 			}catch(e){
-				// CORS :(
+				//console.dir(e);				
 			}
 		});
 	}
@@ -1173,13 +1172,11 @@
 		// try again after 1 second
 		if(!DB_loaded){ setTimeout(init, 1000); return; }
 		// another instance is already running, time to escape
-		if(document[uniqCSKey] === true) return;
+		if(document[UNIQ_CS_KEY] === true) return;
 
-		console.log("Doc found at 'init'");
-		console.log(document);
 		// in case of iframes, to avoid multiple detector.js instances
 		// in one same document, see initiateIframeCheck function
-		document[uniqCSKey] = true;
+		document[UNIQ_CS_KEY] = true;
 
 		// url of page
 		var URL;
@@ -1236,12 +1233,10 @@
 
 		attachNecessaryHandlers(window, isBlocked);
 
-		console.log(window.document.documentElement);
-
 		// do not operate on blocked sites
 		if(isBlocked) return true;
 
-		setInterval(initiateIframeCheck, 5000, document);		
+		setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);		
 		updateAllValuesPerWin(window);
 
 		window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
