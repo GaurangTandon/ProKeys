@@ -7,6 +7,9 @@ Helps organize exactly what things happened in which version.
 
 ------
 
+**3.1.3** - 17/Mar/2017
+- NodeList prorotype modification now works across iframes - by attaching props to them individually (see [SO](http://stackoverflow.com/questions/42825990/extending-prototype-of-dom-elements-inside-iframes) question)
+- Hence the bug for Evernote, Salesforce, Lithium, and all other iframe elements is fixed
 **3.1.2** - 15/Mar/2017
 - Links added by user without any protocol get "http://" prepended by default (as Chrome expects all links to have protocols).
 - Bold and italics now retain tag used by user.
