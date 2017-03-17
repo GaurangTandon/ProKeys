@@ -1,9 +1,14 @@
-##My experiences based off debugging files
+## My experiences based off debugging files
 
 These golden rules help you narrow down the code subset in which your issue is.  
 We'll be looking for the set of consecutive lines inside one file that cause a issue. We'll call them "culprits".
 
-####When you're uncertain in which file the culprit is present
+#### General tipcs
+
+1. Add `console.dir(error);` to all try-catch blocks. And note the error that is occurring.
+2. Use `debugger;` or `console.log` statements in your code. Avoid adding `console.log`s for obvious things (for example, if the condition `typeof val !== "undefined"` is false implies `val` _is_ undefined, no use `log`ging it.
+
+#### When you're uncertain in which file the culprit is present
 Suppose your `<head>` of html looks like:
 
 ```
