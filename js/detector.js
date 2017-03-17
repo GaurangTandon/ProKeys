@@ -101,30 +101,36 @@
 		allowedInputElms = ["", "text", "search", "tel", "url"],
 		CACHE_DATASET_STRING = "prokeyscachednode",
 		PAGE_IS_IFRAME = false,
-		// unique key to tell content script running in document
-		uniqCSKey = "PROKEYS_RUNNING",
+		// unique key to tell content script running in document		
 		docIsIframeKey = "PROKEYS_ON_IFRAME",
+		uniqCSKey = "PROKEYS_RUNNING",
 		ctxElm = null, ctxTimestamp = 0,
 		PASTE_REGEX = /\[\[%p\]\]/ig;
-
+	
 	/*
 	Helper functions for iframe related work
 		- initiateIframeCheckForSpecialWebpages
 		- getNodeWindow
 	*/
+	
+	function initiateIframeCheck(parentDoc){
+		var iframes = parentDoc.querySelectorAll("iframe"),
+			win, doc;
 
-	function initiateIframeCheck(doc){
-		var iframes = doc.querySelectorAll("iframe");
-
-		iframes.forEach(function(iframe){
+		iframes.forEach(function(iframe){		
 			try{
 				doc = iframe.contentDocument;
+				win = iframe.contentWindow;
+				
 				// make sure handler's not already attached
 				if(!doc[uniqCSKey]){
 					doc[uniqCSKey] = true;
 					doc[docIsIframeKey] = true;
-					attachNecessaryHandlers(iframe.contentWindow);
-					setInterval(initiateIframeCheck, 500, doc);
+					attachNecessaryHandlers(win);
+					console.log("Doc found at 'looper'");
+					console.log(doc);
+					updateAllValuesPerWin(win);
+					setInterval(initiateIframeCheck, 5000, doc);
 				}
 			}catch(e){
 				// CORS :(
@@ -235,16 +241,6 @@
 
 	/*
 		Snippet/Placeholder functions
-		- resetPlaceholderVariables
-		- isProKeysNode
-		- formatMacros
-		- insertSpace
-		- checkPlaceholdersInNode
-		- checkSnippetPresence
-		- formatNextTextNode
-		- insertTextContentEditable
-		- testPlaceholderPresence
-		- setPlaceholderSelection
 	*/
 
 	function resetPlaceholderVariables(){
@@ -255,7 +251,11 @@
 		Placeholder.array = null;
 	}
 
-	// checks if the span node is added by prokeys
+	/**
+	 * A ProKeys node is a span node added by prokeys
+	 * in CE nodes to keep track of snippet texts
+	 * @param {Element} node to check 
+	 */
 	function isProKeysNode(node){
 		return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM &&
 				(node && node.hasClass(SPAN_CLASS) || isGoogle);
@@ -330,9 +330,13 @@
 			range.collapse(false);
 			sel.removeAllRanges();
 			sel.addRange(range);
+			//simulateCEKeydown(node);
 		}
 		// textarea
-		else node.selectionEnd = node.selectionStart = pos || Placeholder.toIndex;
+		else {
+			node.selectionEnd = node.selectionStart = pos || Placeholder.toIndex;
+			//simulateTextareaKeydown(node);
+		}
 	}
 
 	function deleteSelectionTextarea(node){
@@ -377,8 +381,6 @@
 			var snipElmNode = $.new(TAGNAME_SNIPPET_HOLDER_ELM);
 			snipElmNode.html(snipBody)
 				.addClass(SPAN_CLASS); // identification
-			console.log(snipBody);
-			console.log(snipElmNode.innerHTML);
 			
 			range.insertNode(snipElmNode);
 
@@ -460,7 +462,11 @@
 		}
 	}
 
-	// only used by textarea
+	/**
+	 * @param {Element} node a textarea
+	 * @param {String} snipBody text
+	 * @param {Integer} start index of snippet
+	 */
 	function testPlaceholderPresence(node, snipBody, start){
 		var endLength = start + snipBody.length;
 
@@ -715,6 +721,24 @@
 						.substring(node.selectionStart, node.selectionEnd);
 	}
 
+	/**
+	 * issues#106
+	 * @param {Element} textarea in which keydown is simulated
+	 */
+	function simulateTextareaKeydown(textarea){
+		textarea.focus();
+		textarea.trigger("keydown");
+	}
+
+	/**
+	 * issues#106
+	 * @param {Element} node in which keydown is simulated
+	 */
+	function simulateCEKeydown(node){
+		node.focus();
+		node.trigger("keydown");
+	}
+
 	// classArray for CodeMirror and ace editors
 	// parentSelector for others
 	// max search upto 10 parent nodes (searchLimit)
@@ -905,7 +929,7 @@
 		if(!node.dataset) node.dataset = {};
 
 		data = node.dataset;
-
+		
 		if(data && typeof data[CACHE_DATASET_STRING] !== "undefined")
 			retVal = data[CACHE_DATASET_STRING] === "true";
 
@@ -1103,7 +1127,7 @@
 	function keyEventAttacher(handler){
 		return function(event){
 			var node = event.target;
-
+			
 			if(isUsableNode(node))
 				handler.call(node, event);
 		};
@@ -1151,6 +1175,8 @@
 		// another instance is already running, time to escape
 		if(document[uniqCSKey] === true) return;
 
+		console.log("Doc found at 'init'");
+		console.log(document);
 		// in case of iframes, to avoid multiple detector.js instances
 		// in one same document, see initiateIframeCheck function
 		document[uniqCSKey] = true;
@@ -1210,10 +1236,13 @@
 
 		attachNecessaryHandlers(window, isBlocked);
 
+		console.log(window.document.documentElement);
+
 		// do not operate on blocked sites
 		if(isBlocked) return true;
 
-		setInterval(initiateIframeCheck, 500, document);
+		setInterval(initiateIframeCheck, 5000, document);		
+		updateAllValuesPerWin(window);
 
 		window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
 		window.isGmail = /mail\.google/.test(window.location.href);

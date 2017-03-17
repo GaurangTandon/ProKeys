@@ -1,21 +1,44 @@
-/* global $, getHTML triggerEvent, setHTML, isContentEditable, isTextNode */
+/* global $, getHTML triggerEvent, setHTML, isContentEditable, isTextNode, Snip */
 
 // custom functions inspired from jQuery
 // special thanks to
 // bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32 
 
-function setNodeListProp(prop, func){
-	// in case of custom created array of Nodes, Array.prototype is necessary
-	Array.prototype[prop] = NodeList.prototype[prop] = function() {
-		var args = [].slice.call(arguments, 0);
-		this.forEach(function(node) {
-			func.apply(node, args);
-		});
-		return this;
+/**
+ * extends NodeList prototype per iframe present in the webpage
+ * calls itself every 500ms to capture any newly added iframes as well
+ * @param {String} prop 
+ * @param {Function} func 
+ */
+// only one method exposed to user
+var extendNodePrototype;
+(function protoExtensionWork(){
+	// called by detector.js
+	// to be able to reuse the existing interval
+	window.updateAllValuesPerWin = function(win){		
+		for(var i = 0, count = protoExtensionNames.length; i < count; i++)
+			setNodeListPropPerWindow(protoExtensionNames[i], protoExtensionFunctions[i], win);
 	};
 
-	Node.prototype[prop] = func;
-}
+	var protoExtensionNames = [], protoExtensionFunctions = [];
+	extendNodePrototype = function(prop, func){
+		protoExtensionNames.push(prop);
+		protoExtensionFunctions.push(func);
+	};
+
+	function setNodeListPropPerWindow(prop, func, win){
+		// in case of custom created array of Nodes, Array.prototype is necessary
+		win.Array.prototype[prop] = win.NodeList.prototype[prop] = function() {
+			var args = [].slice.call(arguments, 0);
+			this.forEach(function(node) {
+				func.apply(node, args);
+			});
+			return this;
+		};
+
+		win.Node.prototype[prop] = func;	
+	}
+})();
 
 (function(){
 	window.OBJECT_NAME_LIMIT = 30;
@@ -43,7 +66,7 @@ function setNodeListProp(prop, func){
 		node.dispatchEvent(ev);
 	};
 
-	setNodeListProp("trigger", function(eventName, obj){
+	extendNodePrototype("trigger", function(eventName, obj){
 		triggerEvent(this, eventName, obj);
 	});
 
@@ -67,7 +90,7 @@ function setNodeListProp(prop, func){
 		return document.createElement(tagName);
 	};
 
-	setNodeListProp("on", window.on = function (name, fn, useCapture) {
+	extendNodePrototype("on", window.on = function (name, fn, useCapture) {
 		var names = name.split(/,\s*/g);
 
 		for(var i = 0, len = names.length; i < len; i++)
@@ -77,22 +100,22 @@ function setNodeListProp(prop, func){
 	});
 
 	// inserts the newNode after `this`
-	setNodeListProp("insertAfter", function(newNode){
+	extendNodePrototype("insertAfter", function(newNode){
 		this.parentNode.insertBefore(newNode, this.nextSibling);
 		return this;
 	});
 
 	// returns true if element has class; usage: Element.hasClass("class")
-	setNodeListProp("hasClass", function(className) {
+	extendNodePrototype("hasClass", function(className) {
 		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
 	});
 
-	setNodeListProp("toggleClass", function(cls){
+	extendNodePrototype("toggleClass", function(cls){
 		this.classList.toggle(cls);
 		return this;
 	});
 
-	setNodeListProp("addClass", function(cls){
+	extendNodePrototype("addClass", function(cls){
 		// multiple classes to add
 		if(!Array.isArray(cls))
 			cls = [cls];
@@ -104,7 +127,7 @@ function setNodeListProp(prop, func){
 		return this;
 	});
 
-	setNodeListProp("removeClass", function(cls){
+	extendNodePrototype("removeClass", function(cls){
 		// multiple classes to remove
 		if(!Array.isArray(cls))
 			cls = [cls];
@@ -116,11 +139,11 @@ function setNodeListProp(prop, func){
 		return this;
 	});
 
-	setNodeListProp("isTextBox", function(){
+	extendNodePrototype("isTextBox", function(){
 		return this.tagName === "INPUT" || this.tagName === "TEXTAREA";
 	});
 
-	setNodeListProp("attr", function(name, val){
+	extendNodePrototype("attr", function(name, val){
 		if(typeof val != "undefined"){
 			this.setAttribute(name, val);
 			return this;
@@ -140,8 +163,6 @@ function setNodeListProp(prop, func){
 
 	window.getHTML = function(node, prop){
 		if(!node) return;
-		/*console.dir(node);
-		console.dir(node.nodeType);console.dir(node.textContent.replace(/\u00a0/g, " "));*/
 
 		if(isTextNode(node))
 			return node.textContent.replace(/\u00a0/g, " ");
@@ -216,7 +237,6 @@ function setNodeListProp(prop, func){
 		
 		for(; count < childCount; count++){
 			child = list[count];
-			//console.dir(child);
 			
 			// if a textnode has a single newline
 			// => it is present between two element nodes
@@ -225,7 +245,6 @@ function setNodeListProp(prop, func){
 			// BUT BUT this leads to loss of newline after
 			// a simpler element node like <a> or <b>
 			// hence, DO NOT do this
-			console.dir(child);
 			
 			textNodes = child.textContent.split(/\n/g);
 			i = 0; len = textNodes.length;
@@ -244,7 +263,6 @@ function setNodeListProp(prop, func){
 			// hence have to remove the LAST newline that we've inserted
 			node.removeChild($br);
 			node.removeChild(child);
-			console.log(node.innerHTML);
 		}
 
 		// block level elements already occupy a full line, hence, remove 
@@ -254,12 +272,12 @@ function setNodeListProp(prop, func){
 			if(br && br.tagName === "BR") br.parentNode.removeChild(br);
 		});
 
-		node.querySelectorAll("ol, ul").forEach(Snip.removeTextNodesFromOLUL);
+		node.querySelectorAll("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
 	}
 
 	// prototype alternative for setHTML/getHTML
 	// use only when sure that Node is "not undefined"
-	setNodeListProp("html", function(textToSet, prop, isListSnippets){
+	extendNodePrototype("html", function(textToSet, prop, isListSnippets){
 		// can be zero/empty string; make sure it's undefined
 		return typeof textToSet !== "undefined" ?
 				setHTML(this, textToSet, prop, isListSnippets) :
@@ -268,12 +286,12 @@ function setNodeListProp(prop, func){
 
 	// prototype alternative for setText/getText
 	// use only when sure that Node is "not undefined"
-	setNodeListProp("text", function(textToSet){
+	extendNodePrototype("text", function(textToSet){
 		// can be zero/empty string; make sure it's undefined
 		return this.html(textToSet, "innerText");
 	});
 
-	setNodeListProp("unwrap", function(){
+	extendNodePrototype("unwrap", function(){
 		var children = this.childNodes,
 			nextSibling = this.nextSibling, child,
 			len = children.length,
@@ -292,6 +310,8 @@ function setNodeListProp(prop, func){
 
 		parent.removeChild(this);
 	});
+
+	updateAllValuesPerWin(window);
 
 	// replaces string's `\n` with `<br>` or reverse
 	// `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
@@ -373,7 +393,8 @@ function setNodeListProp(prop, func){
 		if(!node || tgN === "TEXTAREA" || tgN === "INPUT" || !node.getAttribute)
 			return false;
 		
-		attr = node.attr("contenteditable");
+		// can also be a textnode
+		attr = node.attr ? node.attr("contenteditable") : null;
 
 		// empty string to support <element contenteditable> markup
 		if(attr === "" || attr === "true" || attr === "plaintext-only")
