@@ -1,4 +1,4 @@
-/* global $, getHTML, DB_loaded, Folder, Snip, showBlockSiteModal*/
+/* global $, getHTML, DB_loaded, Folder, Snip, showBlockSiteModal, updateAllValuesPerWin*/
 /* global setHTML, MONTHS, chrome, Data, setText, getFormattedDate, isTextNode */
 /* global escapeRegExp, getText, isContentEditable, DAYS, padNumber*/
 
@@ -329,12 +329,12 @@
 			range.collapse(false);
 			sel.removeAllRanges();
 			sel.addRange(range);
-			//simulateCEKeydown(node);
+			simulateCEKeydown(node);
 		}
 		// textarea
 		else {
 			node.selectionEnd = node.selectionStart = pos || Placeholder.toIndex;
-			//simulateTextareaKeydown(node);
+			simulateTextareaKeydown(node);
 		}
 	}
 
