@@ -6,8 +6,8 @@
 4. Update the change log in options.html as well as on [github](https://github.com/GaurangTandon/ProKeys/edit/master/change_log.md)  
 5. Make sure that the update fixes all the bugs listed for its milestone number.  
 6. Check for an [update](http://quilljs.com/docs/download/) to quill version, and replace the "min.js" and "snow.css" files in our codebase.  
-7. Minify all the files.   
-8. Copy all `imgs` from `Uncompressed` to `Compressed` in case they were updated.
+7. Minify all the files **except editor.min.js** (cut-paste it separately - it is a >200KB file, takes a _lot of time_ to minify).   
+8. Copy all `imgs` from `Uncompressed` to `Compressed` in case they were updated.  
 9. [**Testing**](https://github.com/GaurangTandon/ProKeys/blob/master/HOW_TO_TESTING.md)
 
 **After updating the extension**  
