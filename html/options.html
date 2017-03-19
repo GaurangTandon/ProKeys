@@ -447,6 +447,17 @@
 								</table>
 							</dd>
 
+							<dt>What is the URL macro?</dt>
+							<dd><p>The URL macro can be used to retrieve data from a web address.</p>
+								<strong>Usage</strong>
+								<p>The URL macro is to be placed inside a snippet body while <em><strong>creating</strong> the snippet</em>.</p>
+								<ol class="steps">
+									<li>Place "[[%f()]]" (without quotes) inside the snippet body.</li>
+									<li>Place the URL inside the parentheses. For example: [[%f(http://.../)]]</li>
+									<li>When you use the snippet, this entire string of `[[%f(...)]]` would be replaced by the response returned by the web request.</li>
+								</ol>
+							</dd>
+
 							<dt>What is Date/Time arithmetic?</dt>
 							<dd><p>Date and Time arithmetic lets you move forward or backward in time in the Date/Time macros. It is of <b>two types:</b></p>
 								<p><b>1. Relative: </b>All the macro symbols inside a parentheses perform calculations relative to the same date, and have a single shared copy of the date. So, calculations on one symbol change that same shared copy, and could affect result of another symbol. Like, on forwarding a date by 10 days (using <span class="code">[[%d(D+10)]]</span>), if the date is caused to move into another month, then <i>that changed month</i> would be used as the current month for any calculation on any month symbol further inside the parentheses. Similar rules apply for changing minutes (causing the hour to change), etc.<br>

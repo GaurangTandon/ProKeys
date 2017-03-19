@@ -238,6 +238,11 @@
 		return hours + ":" + minutes + ":" + seconds;
 	}
 
+    // get a unique ID
+	function uniqid(){
+		return (new Date().getTime() + Math.floor((Math.random()*10000)+1)).toString(16);
+	}
+
 	/*
 		Snippet/Placeholder functions
 	*/
@@ -311,12 +316,45 @@
 			return subs;
 		});
 
-		if(PASTE_REGEX.test(snipBody)){
-			chrome.extension.sendMessage("givePasteData", function(pasteData){
-				callback(snipBody.replace(PASTE_REGEX, pasteData));
-			});
+		// flag to decide whether to invoke the callback immediately or wait for async requests to complete
+		var async = false;
+		// get the number of requests to be made
+		var requestsNumber = (snipBody.match(/\[\[\%f\((.*?)\)\]\]/g) || []).length;
+		var currentRequestIndex = 0;
+		snipBody = snipBody.replace(/\[\[\%f\((.*?)\)\]\]/g, function(wholeMatch, url){
+			// set the async flag to prevent invoking the callback before requests complete
+			async = true;
+			// create a unique placeholder for this request
+			var uniqueId = 'xhr' + uniqid();
+			var httpRequest = new XMLHttpRequest();
+			httpRequest.onreadystatechange = function(){
+				if (httpRequest.readyState === XMLHttpRequest.DONE) {
+					// replace the unique id with the request response
+					snipBody = snipBody.replace(uniqueId, httpRequest.responseText);
+					// if all requests are done, invoke the callback
+					if (++currentRequestIndex == requestsNumber) {
+						respond(snipBody, callback);
+					}
+				}
+			};
+			httpRequest.open('GET', url, true);
+			httpRequest.send(null);
+			// return the unique placeholder for this request
+			return uniqueId;
+		});
+
+		if (!async) {
+			respond(snipBody, callback);
 		}
-		else callback(snipBody);
+
+		function respond(snipBody, callback){
+			if(PASTE_REGEX.test(snipBody)){
+				chrome.extension.sendMessage("givePasteData", function(pasteData){
+					callback(snipBody.replace(PASTE_REGEX, pasteData));
+				});
+			}
+			else callback(snipBody);
+		}
 	}
 
 	function setCaretAtEndOf(node, pos){
