@@ -56,7 +56,7 @@
 	window.$containerSnippets = null;
 	window.$panelSnippets = null;
 	window.$containerFolderPath = null;
-	window.latestRevisionLabel = "data created (5 defaut snippets)";
+	window.latestRevisionLabel = "data created (added defaut snippets)";
 	window.OLD_DATA_STORAGE_KEY = "UserSnippets";
 	window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
 	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
@@ -133,7 +133,9 @@
 		localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
 	}
 
-	// objectNamesToHighlight - when you add snippet/folder, it gets highlighted
+	/**
+	 * PRECONDITION: Data.snippets is a Folder object
+	 */
 	window.saveSnippetData = function(callback, folderNameToList, objectNamesToHighlight){
 		Data.snippets = Data.snippets.toArray();
 
@@ -193,7 +195,6 @@
 	function DB_load(callback) {
 		storage.get(OLD_DATA_STORAGE_KEY, function(r) {
 			var req = r[OLD_DATA_STORAGE_KEY];
-			//console.dir(req);
 
 			if (isEmpty(req) || req.dataVersion != Data.dataVersion)
 				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
@@ -366,11 +367,11 @@
 		}
 
 		function configureTextInputElm(attribute){
-			var inp = $.new("input");
-
+			var inp = 
+				$.new("input")
+					.addClass(mainClass)
+					.attr("placeholder", "Type " + attribute);
 			inp.type = "text";
-			inp.addClass(mainClass)
-				.attr("placeholder", "Type " + attribute);
 
 			append(inp);
 
@@ -504,7 +505,6 @@
 					shouldKeepBothFolders = duplicateSnippetToKeep === "both";
 
 				if(duplicateObj){
-					//console.log("DUPLICATE - " + duplicateObj.name);
 					switch(duplicateSnippetToKeep){
 						case "both":
 							both(importedObj); break;
@@ -994,10 +994,6 @@
 		var changeHotkeyBtn = $(".change_hotkey"),
 			hotkeyListener = $(".hotkey_listener");
 
-		$(".bytesAvailable").on("click", function(){
-			window.open("https://developer.chrome.com/extensions/storage#properties");
-		});
-
 		chrome.storage.onChanged.addListener(updateStorageAmount);
 
 		// panels are - #content div
@@ -1192,8 +1188,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				$bulkActionPanel = $(".panel_snippets .panel_bulk_action"),
 				folderPath = $(".folder_path"),
 				$selectList = $(".selectList");
-
-			// functions
+			
 			toggleSnippetEditPanel = editPanel(Generic.SNIP_TYPE);
 			toggleFolderEditPanel = editPanel(Generic.FOLDER_TYPE);
 			validateSnippetData = commonValidation(Generic.SNIP_TYPE);
@@ -1201,24 +1196,25 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 			dualSnippetEditorObj = new DualTextbox($("#body-editor"));
 
+			/**
+			 * Delegated handler for edit, delete, clone buttons
+			 */
 			$containerSnippets.on("click", function(e){
 				var node = e.target,
-					objectElm = node.parentNode.parentNode;
+					container = node.parentNode,
+					objectElm = container.parentNode, obj;
 
-				if(!objectElm) return true;
-
-				var $name = objectElm.querySelector(".name"), name;
-
-				if(!$name) return true;
-				name = $name.html();
+				if(!objectElm || !/buttons/.test(container.className)) return true;
 
 				if(node.matches("#snippets .panel_content .edit_btn")){
-					if(/snip/.test(objectElm.className))
-						toggleSnippetEditPanel(Data.snippets.getUniqueSnip(name));
-					else
-						toggleFolderEditPanel(Data.snippets.getUniqueFolder(name));
-				}else if(node.matches("#snippets .panel_content .delete_btn"))
-					deleteOnClick.call(objectElm, name);
+					obj = Folder.getObjectThroughDOMListElm(objectElm);
+					if(Folder.isFolder(obj)) toggleFolderEditPanel(obj);
+					else toggleSnippetEditPanel(obj);
+				}
+				else if(node.matches("#snippets .panel_content .delete_btn"))
+					deleteOnClick.call(objectElm);
+				else if(node.matches("#snippets .panel_content .clone_btn"))
+					cloneBtnOnClick.call(objectElm);				
 			});
 
 			folderPath.on("click", function(e){
@@ -1270,24 +1266,30 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				validateFolderData(objectSaver("Folder"));
 			});
 
-			function deleteOnClick(name){
-				var isSnip = /snip/.test(this.className),
-					type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
+			function deleteOnClick(){
+				var object = Folder.getObjectThroughDOMListElm(this),
+					name = object.name, type = object.type,
+					isSnip = type === Generic.SNIP_TYPE,
 					warning = isSnip ? "" : " (and ALL its contents)",
 					object, folder;
 
 				if(confirm("Delete '" + name + "' " + type + warning + "?")){
-					object = Data.snippets
-							.getUniqueObject(name, type);
 					folder = object.getParentFolder();
 
 					object.remove();
 					this.parentNode.removeChild(this);
 
-					latestRevisionLabel = "deleted " + object.type + " \"" + object.name + "\"";
+					latestRevisionLabel = "deleted " + type + " \"" + name + "\"";
 
 					saveSnippetData(undefined, folder.name);
 				}
+			}
+
+			function cloneBtnOnClick(){
+				var object = Folder.getObjectThroughDOMListElm(this),
+					newObject = object.clone();
+				latestRevisionLabel = "cloned " + object.type + " \"" + object.name + "\"";
+				saveSnippetData(undefined, undefined, newObject.name);
 			}
 
 			$selectList.on("click", function(e){
@@ -1304,7 +1306,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					if(others) others.removeClass(classSel);
 					node.addClass(classSel);
 				}
-			});
+			});		
 
 			// for searchBtn and $searchPanel
 			// $addNewBtn and $addNewPanel
@@ -1370,15 +1372,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					Folder.getListedFolder().listSnippets();
 			});
 
-			$searchBtn
-				.attr("title", "Search for folders or snips")
-				.on("keyup", debounce(function searchFieldHandler(){
-					var searchText = this.value,
-						listedFolder = Folder.getListedFolder(),
-						searchResult = listedFolder.searchSnippets(searchText);
+			$searchBtn.attr("title", "Search for folders or snips");
+			$searchField.on("keyup", debounce(function searchFieldHandler(){
+				var searchText = this.value,
+					listedFolder = Folder.getListedFolder(),
+					searchResult = listedFolder.searchSnippets(searchText);
 
-					searchResult.listSnippets();
-				}, 150));
+				searchResult.listSnippets();
+			}, 150));
 
 			(function bulkActionsWork(){
 				var selectedObjects, DOMcontainer,
@@ -1810,25 +1811,28 @@ Or you may try refreshing the page. ");
 		sync1 = "<label for=\"sync\"><input type=\"radio\" id=\"sync\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage",
 		sync2 = "<label for=\"sync2\"><input type=\"radio\" id=\"sync2\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.",
 		sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
-
-	function setEssentialItemsOnDBLoad(){
+	
+	function setEssentialItemsOnDBLoad(){		
 		// issues#111
 		Data.matchDelimitedWord = Data.matchDelimitedWord || false;
 		Data.snipNameDelimiterList = Data.snipNameDelimiterList || ORG_DELIMITER_LIST;		
 				
-		// user installs extension; set ls prop		
-		if(!localStorage[LS_REVISIONS_PROP]){
+		// user installs extension; set ls prop	
+		var firstInstall = !localStorage[LS_REVISIONS_PROP];
+		if(firstInstall){
 			// refer github issues#4
 			Data.dataUpdateVariable = !Data.dataUpdateVariable;
 			createBuiltInSnippets();
 			localStorage[LS_REVISIONS_PROP] = "[]";
-			saveRevision(Data.snippets);
+			saveRevision(Data.snippets);			
 		}
 		
 		if(!isObject(Data.snippets))
 			Data.snippets = Folder.fromArray(Data.snippets);
 		
-		saveSnippetData();
+		// save the default snippets
+		if(firstInstall) saveSnippetData();
+		
 		Folder.setIndices();
 		
 		// on load; set checkbox state to user preference
