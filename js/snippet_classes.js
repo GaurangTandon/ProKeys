@@ -29,28 +29,24 @@ window.Generic = function(){
 	// deletes `this` from parent folder
 	this.remove = function(){
 		var index = Data.snippets.getUniqueObjectIndex(this.name, this.type),
-			thisIndex = index.pop();
-
-		var folder = Data.snippets;
-		while(index.length > 0)
-			folder = folder.list[index.shift()];
-
-		folder.list.splice(thisIndex, 1);
+			thisIndex = index[index.length - 1];
+		
+		this.getParentFolder().list.splice(thisIndex, 1);
 	};
 
 	this.getParentFolder = function(){
 		var index = Data.snippets.getUniqueObjectIndex(this.name, this.type),
 			parent = Data.snippets;
-
+		
 		// last element is `this` index, we want parent so -1
 		for(var i = 0, lim = index.length - 1; i < lim; i++)
 			parent = parent.list[index[i]];
-
+		
 		return parent;
 	};
 
 	this.moveTo = function(newFolder){
-		var x = this.clone();
+		var x = this.getDuplicatedObject();
 		this.remove();
 		Folder.insertObject(x, newFolder);
 	};
@@ -69,13 +65,88 @@ window.Generic = function(){
 		// no need to check for snippets
 		return true;
 	};
+
+	this.clone = function(){
+		/**
+		 * Mechanism: if a folder X that has objects a, b, c is cloned
+		 * then new folder is X (1) with objects a (1), b (1), c (1)
+		 * @param {*} folder 
+		 */
+		function cloneIndividualSnippetsOfFolder(folder){
+			var i = 0, len = folder.list.length;
+
+			for(; i < len; i++)
+				folder.list[i] = getClone(folder.list[i]);					
+		}
+
+
+		/**
+		 * secondary name to be assigned to a cloned object
+		 * that has a name like "name (1)"
+		 * @param {String} name : to use as primary name
+		 */
+		function generateSecondaryName(name, type){
+			var counter = 0, found = true, newName;
+		
+			while(found){
+				newName = name + " (" + (++counter) + ")";
+				// we are only concerned whether the object exists
+				// and NOT what its index is
+				found = Data.snippets.getUniqueObjectIndex(newName, type);			
+			}
+
+			return newName;
+		}
+
+		/**
+		 * Returns the clone of given object
+		 * @param {Generic} object to clone
+		 */
+		function getClone(object){
+			var newName = generateSecondaryName(object.name, object.type),
+				newObject;
+
+			if(Folder.isFolder(object)){
+				newObject = new Folder(newName, object.list);
+				cloneIndividualSnippetsOfFolder(newObject);
+			}
+			else newObject = new Snip(newName, object.body);
+
+			return newObject;
+		}
+
+		function insertCloneOf(object){
+			var parentFolder = object.getParentFolder(),
+				name = object.name, type = object.type,
+				index = Data.snippets.getUniqueObjectIndex(name, type),
+				thisIndex = index.pop(), posToInsertObject,
+				newObject = getClone(object),
+				countersMatch = newObject.name.match(/\d+/g),
+				counter = countersMatch[countersMatch.length - 1];
+			
+			// second clone of same object should insert it after the 1st clone
+			posToInsertObject = thisIndex + (+counter);
+			
+			parentFolder.list.splice(posToInsertObject, 0, newObject);
+			
+			return newObject;
+		}
+		
+		return insertCloneOf(this);
+	};
 };
-// class added to newly created snip/folder
-// to highlight it
+/**
+ * class added to newly created snip/folder
+* to highlight it
+ */
 Generic.HIGHLIGHTING_CLASS = "highlighting";
-// returns the DOM element for edit and delete button
+/**
+ * returns the DOM element for edit and delete button
+ */
 Generic.getButtonsDOMElm = function(){
 	var divButtons = $.new("div").addClass("buttons");
+	divButtons.appendChild($.new("div").addClass("clone_btn"))
+		.attr("title", "Clone");
 	divButtons.appendChild($.new("div").addClass("edit_btn"))
 		.attr("title", "Edit");
 	divButtons.appendChild($.new("div").addClass("delete_btn"))
@@ -85,8 +156,7 @@ Generic.getButtonsDOMElm = function(){
 
 Generic.getDOMElement = function(objectNamesToHighlight){
 	var divMain, divName, img;
-
-	// security checks
+	
 	objectNamesToHighlight = objectNamesToHighlight === undefined ? [] :
 							!Array.isArray(objectNamesToHighlight) ? [objectNamesToHighlight] :
 							objectNamesToHighlight;
@@ -183,7 +253,7 @@ window.Snip = function(name, body, timestamp){
 				// so clientWidth returns zero, hence, wait for a short duration before
 				// setting style.width
 				setTimeout(function(){
-					divBody.style.width = "calc(100% - 90px - " + divName.clientWidth + "px)";
+					divBody.style.width = "calc(100% - 100px - " + divName.clientWidth + "px)";
 				}, 1);
 			}
 			else divBody.html(snip.body, "", true).style.width = "";
@@ -220,7 +290,7 @@ window.Snip = function(name, body, timestamp){
 		return divMain;
 	};
 
-	this.clone = function(){
+	this.getDuplicatedObject = function(){
 		return new Snip(this.name, this.body, this.timestamp);
 	};
 
@@ -261,30 +331,18 @@ Snip.getTimestampString = function(snip){
 };
 /*
 1. removes and replaces the spammy p nodes with \n
-2. replaces <strong>,<em> with <b>,<i>
-3. leaves pre, blockquote, u, etc. as it is (since they're useful in markdown) 
-4. replaces br element with \n
+2. leaves pre, blockquote, u, etc. as it is (since they're useful in markdown) 
+3. replaces br element with \n
 */
 Snip.makeHTMLSuitableForTextareaThroughString = function(html){
-	if(Snip.isSuitableForPastingInTextareaAsIs(html)){
-		var $ref = $.new("DIV");
-		$ref.innerHTML = html;
-		
-		var listParents = $ref.querySelectorAll("OL, UL");
-
-		listParents.forEach(Snip.formatOLULInListParentForTextarea);
-
-		return $ref.innerHTML;
-	}
-
 	function preProcessTopLevelElement(tle){
-		var tgN = tle.tagName, replaced, child;
+		var tgN = tle.tagName, replaced;
 		
 		switch(tgN){
 			case "PRE": case "BLOCKQUOTE": case "P":
 				break;
 			case "OL": case "UL":				
-				Snip.removeTextNodesFromOLUL(tle);
+				Snip.formatOLULInListParentForCEnode(tle);
 				break;
 			// these top-level elements are inserted by user
 			default:
@@ -294,7 +352,6 @@ Snip.makeHTMLSuitableForTextareaThroughString = function(html){
 					tle.href = Snip.defaultLinkSanitize(tle.href);
 				
 				replaced.innerHTML = tle.outerHTML;
-				console.log(replaced);
 				htmlNode.replaceChild(replaced, tle);
 		}
 	}
@@ -302,36 +359,45 @@ Snip.makeHTMLSuitableForTextareaThroughString = function(html){
 		// top-level elements can only be p, pre, blockquote, ul, ol
 		// which `makeHTMLSuitableForTextarea` expects
 		// our top-level elements might be textnodes or <a> elements
-		var children = htmlNode.childNodes, child, childText;
+		var children = htmlNode.childNodes, child, childText, replaced;
 		
 		for(var i = 0, len = children.length; i < len; i++)	{
 			child = children[i];
 			
-			if(child.nodeType === 3){
-				// presence of ONE newline is automated by the presence of
-				// separate top-level elements
-				childText = child.textContent.replace(/\n/, "").replace(/\n/, "<br>");			
-				replaced = $.new("P").html(child.textContent);
-				console.log(childText);
-				if(childText.length !== 0)
-					htmlNode.replaceChild(replaced, child);
-				else {htmlNode.removeChild(child);len--;i--;}
+			if(child.nodeType !== 3){
+				preProcessTopLevelElement(child); continue;
 			}
-			else preProcessTopLevelElement(child);
-			
+
+			// deal with textnodes here
+			// presence of ONE newline is automated by the presence of
+			// separate top-level elements
+			childText = child.textContent.replace(/\n/, "").replace(/\n/, "<br>");			
+			replaced = $.new("P").html(child.textContent);
+
+			if(childText.length !== 0)
+				htmlNode.replaceChild(replaced, child);
+			else {htmlNode.removeChild(child);len--;i--;}			
 		}
 	}
 	
 	var htmlNode = $.new("DIV");
 	htmlNode.innerHTML = html;
 
-	preProcessTopLevelElements();
-	
-	return Snip.makeHTMLSuitableForTextarea(htmlNode);
+	if(Snip.isSuitableForPastingInTextareaAsIs(html)){		
+		htmlNode.querySelectorAll("OL, UL")
+			.forEach(Snip.formatOLULInListParentForTextarea);
+
+		return htmlNode.innerHTML;
+	}
+	else{
+		preProcessTopLevelElements();
+		
+		return Snip.makeHTMLSuitableForTextarea(htmlNode);
+	}
 };
 Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	var DELETE_NEWLINE_SYMBOL = "<!!>";
-	console.dir(htmlNode);
+
 	function getProperTagPair(elm){
 		var tag = elm.tagName.toLowerCase(),
 			returnArray = ["<" + tag + ">", "</" + tag + ">"];
@@ -345,7 +411,7 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	}
 
 	// sanitizes elements (starting from top-level and then recursize)
-	function elementSanitize(node, isTopLevel){
+	function elementSanitize(node){
 		/*
 		WORKING of container:
 		Consecutive structures like this can be achieved:
@@ -381,7 +447,7 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 			childrenCount === 1){
 			firstChild = children[0];
 			firstChildText = firstChild.innerText || firstChild.textContent;
-			console.log("caught!!!" + firstChild.tagName);
+
 			if(firstChild.tagName === "BR")
 				return "";
 			// issues#55
@@ -392,7 +458,6 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 		for(; i < childrenCount; i++){
 			elm = children[i];
 
-			console.dir(!isTopLevel && elm);
 			if(elm.nodeType == 1){
 				tags = getProperTagPair(elm);
 
@@ -441,8 +506,7 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	
 	while(i < len){
 		elm = children[i];
-		console.dir(elm);
-		sanitizedText = elementSanitize(elm, true);
+		sanitizedText = elementSanitize(elm);
 		finalString += sanitizedText === DELETE_NEWLINE_SYMBOL ? "" : sanitizedText + "\n";
 		i++;
 	}
@@ -452,8 +516,10 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode){
 	finalString = finalString.substring(0, finalString.length - 1);
 	return finalString;
 };
-// replaces all the "ql-size-huge" types of classes with 
-// proper tags that render as expected in external websites
+/**
+ * replaces all the "ql-size-huge" types of classes with 
+ * proper tags that render as expected in external websites
+ */ 
 Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets){
 	// when both class name and property value share diff text
 	// as in font size
@@ -491,7 +557,6 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets){
 				content += "<br>";
 			
 			pElm.outerHTML = content;
-			console.log("found ");
 		}		
 	}
 	/*DETAILS:
@@ -537,47 +602,22 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets){
 
 	// access by window to get `undefined` and not any error
 	// problem 9 issues#153
-	if(window.isGmail){
+	if(window.isGmail)
 		$container.querySelectorAll("blockquote")
 			.addClass("gmail_quote")
 			.attr("style", "margin: 0px 0px 0px 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;");
-	}
-
-	console.log($container.innerHTML);
 	
 	return $container.innerHTML;
 };
-// contains extra top-level <p></p> due to 
-// makeHTMLSuitableForTextareaThroughString; so replace
-// them with textnodes and a line break instead
-Snip.makeTextareaTextValidForExternalEmbed = function(text){
-	var htmlNode = $.new("DIV");
-	htmlNode.innerHTML = text;
-	
-	var children = htmlNode.childNodes, child, tgN, replaced;
-	
-	for(var i = 0, len = children.length; i < len; i++)	{
-		child = children[i];
-		tgN = child.tagName;
-		console.dir(child);
-		
-		if(tgN === "P"){
-			replaced = document.createTextNode(child.innerHTML + "\n");
-			console.dir(replaced);
-			console.dir(child);
-			htmlNode.replaceChild(replaced, child);
-		}
-	}
-	
-	return htmlNode.innerHTML;
-};
 
-// replace `style`s of font-size, font-family earlier obtained
-// from `Snip.makeHTMLValidForExternalEmbed` into
-// required quill classes
-// WHY? since Quill editor collapses unrecognized span elements
-// (which we were using to insert font size, family)
-// NOTE: alignment set on `p` elements = unaffected
+/**
+ * replace `style`s of font-size, font-family earlier obtained
+ * from `Snip.makeHTMLValidForExternalEmbed` into
+ * required quill classes
+ * WHY? since Quill editor collapses unrecognized span elements
+ * (which we were using to insert font size, family)
+ * NOTE: alignment set on `p` elements = unaffected
+ */
 Snip.makeHTMLSuitableForQuill = function(html){
 	function replacer(sel, prop, cls, val){
 		var elms = $container.querySelectorAll(sel);
@@ -598,6 +638,7 @@ Snip.makeHTMLSuitableForQuill = function(html){
 	}
 
 	// problem6 issues#153	
+	// substitute <br> for <p><br></p>
 	function replaceTrailingBRsWithPElms(){
 		var lastBR = $container.lastChild, $pContainer;
 		while(lastBR && lastBR.tagName === "BR"){
@@ -625,21 +666,11 @@ Snip.makeHTMLSuitableForQuill = function(html){
 	
 	return $container.innerHTML;
 };
-// has anything except bold, italics, underline, strike, sup, sub
-/* TODO:remove
-Snip.hasAnyRichContentAtAll = function(html){
-	var regElms = [/<pre>/, /<li>/, /<a /, /<blockquote>/];
-	
-	for(var i = 0, len = regElms.length; i < len; i++)
-		if(regElms[i].test(html)) return true;
-	
-	return Snip.hasFormattedLossyContentWoQuillCls(html);
-};*/
 Snip.isSuitableForPastingInTextareaAsIs = function(html){
 	return !(Snip.hasFormattedLossyContentWoQuillCls(html) ||
 			// imported snippet body might have no fonts but lots of paragraphs
 			// which make it unsuitable for a textarea
-			/\<p\>/.test(html));
+			/\<p\>|\<br\>/.test(html));
 };
 Snip.hasFormattedLossyContentWoQuillCls = function(html){
 	var regElms = [/background-color: /, /color: /, /text-align: /, /font-size: /, /font-family: /];
@@ -686,7 +717,6 @@ Snip.stripAllTags = function(html, $refDiv){
 	return result;
 };
 Snip.defaultLinkSanitize = function(linkVal){
-	console.log(linkVal);
 	// remove the default extension protocol just in case it was
 	// prepended by Chrome
 	linkVal = linkVal.replace(/^chrome-extension:\/\/[a-z]+\/html\//, "");
@@ -695,7 +725,7 @@ Snip.defaultLinkSanitize = function(linkVal){
 	if(/^\w+:/.test(linkVal)); // TODO: why's this semicolon unnecessary
 	else if(!/^https?:/.test(linkVal))
 		linkVal = "http:" + linkVal;
-	console.log(linkVal);
+
 	return linkVal;
 };
 /**
@@ -722,19 +752,6 @@ Snip.defaultLinkSanitize = function(linkVal){
 	Snip.formatOLULInListParentForCEnode = genericFormatterCreator("", "");
 })();
 
-// strip all textnodes; only <li> should remain
-// as per proper html; textnodes are causing problem in
-// newline insertion
-Snip.removeTextNodesFromOLUL = function(listParent){
-	var child, i = 0, children = listParent.childNodes, len = children.length;
-	for(; i < len; i++){
-		child = children[i];
-		if(child.nodeType === 3){
-			listParent.removeChild(child);
-			len--;i--;
-		}
-	}
-};
 /*
   main motto here is to leave the text "as is"
   albeit with some necessary modifications
@@ -749,14 +766,13 @@ Snip.sanitizeTextareaTextForSave = function(text){
 	// inserts &nbsp; for some unknown reason
 	// refer problem4 issue#153
 	htmlNode.innerHTML = htmlNode.innerHTML.replace(/&nbsp;/g, " ");
-	console.log(text);
-	console.dir(htmlNode);
+
 	var aHREFs = htmlNode.querySelectorAll("a");
 	aHREFs.forEach(function(a){
 		a.href = Snip.defaultLinkSanitize(a.href);
 	});
 	
-	var listParents = htmlNode.querySelectorAll("ol, ul"); 
+	var listParents = htmlNode.querySelectorAll("ol, ul");
 	listParents.forEach(Snip.formatOLULInListParentForTextarea);
 	
 	return htmlNode.innerHTML;
@@ -1020,14 +1036,14 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 		if(this.name !== Folder.MAIN_SNIPPETS_NAME)
 			mainContainer.addClass("collapsed");
 
-		this.list.forEach(function(e){
-			if(Folder.isFolder(e) && e.name !== nameToNotShow){
+		this.forEachFolder(function(e){
+			if(e.name !== nameToNotShow){
 				hasChildFolder = true;
 				childContainer = e.getFolderSelectList(nameToNotShow);
 				childContainer.style.marginLeft = "15px";
 				mainContainer.appendChild(childContainer);
 			}
-		});
+		}, true);
 
 		if(!hasChildFolder)
 			mainContainer.addClass("empty");
@@ -1035,7 +1051,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 		return mainContainer;
 	};
 
-	this.clone = function(){
+	this.getDuplicatedObject = function(){
 		return new Folder(this.name, this.list, this.timestamp);
 	};
 
@@ -1108,6 +1124,27 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 			listOfSnippetCtxIDs.push(id);
 		}
 	};
+
+	function genericLooper(type){
+		/**
+		 * @param {Function} fn : function to execute on matching list elm; doesn't retain `this` context
+		 * @param {boolean} shouldNotNest : calls `fn` on snippets/folders inside `this.list` by default
+		 */
+		var ret = function(fn, shouldNotNest){
+			this.list.forEach(function(listElm){
+				if(!shouldNotNest && Folder.isFolder(listElm))
+					ret.call(listElm, fn, false);
+
+				if(listElm.type === type)					
+					fn(listElm);
+			});
+		};
+
+		return ret;
+	}
+
+	this.forEachSnippet = genericLooper(Generic.SNIP_TYPE);
+	this.forEachFolder = genericLooper(Generic.FOLDER_TYPE);
 };
 Folder.prototype = new Generic();
 
@@ -1179,7 +1216,7 @@ Folder.setIndices = function(){
 };
 Folder.copyContents = function(fromFolder, toFolder){
 	fromFolder.list.forEach(function(e){
-		Folder.insertObject(e.clone(), toFolder);
+		Folder.insertObject(e.getDuplicatedObject(), toFolder);
 	});
 };
 Folder.insertObject = function(object, folder){
@@ -1287,6 +1324,17 @@ Folder.getListedFolder = function(){
 	if(idx != -1) name = name.substring(Folder.SEARCH_RESULTS_NAME.length);
 	
 	return Data.snippets.getUniqueFolder(name);
+};
+/**
+ * it returns the snip/folder object associated with the listElm
+ * @param: listElm: The DOM element .snip or .folder, whose buttons or anything are clicked
+ */
+Folder.getObjectThroughDOMListElm = function(listElm){
+	var isSnip = /snip/.test(listElm.className),
+		type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
+		name = listElm.querySelector(".name").innerText;
+	
+	return Data.snippets.getUniqueObject(name, type);
 };
 
 // inserts a combo rich (quill) and plain (textarea) textbox (default)
@@ -1403,8 +1451,8 @@ window.DualTextbox = function($container, isTryItEditor){
 		node.addClass(SHOW_CLASS);
 		$newlyShownContainer = $container.querySelector(node.dataset.containerSelector);
 		$newlyShownEditor = $container.querySelector(node.dataset.editorSelector);
-		$newlyShownContainer
-			.addClass(SHOW_CLASS).attr("tab-index", 20).focus();
+		$newlyShownContainer.addClass(SHOW_CLASS);
+		$newlyShownEditor.attr("tab-index", 20).focus();
 
 		isCurrModePlain = !isCurrModePlain; // reverse
 
@@ -1439,18 +1487,20 @@ window.DualTextbox = function($container, isTryItEditor){
 		return this;
 	};
 
-	// NOTE: also used by Tryit editor which does not have Quill
 	this.setRichText = function(html){
+		// NOTE: also used by Tryit editor which does not have Quill
 		if(quillObj) quillObj.clipboard.dangerouslyPasteHTML(Snip.makeHTMLSuitableForQuill(html));
 		else $richEditor.innerHTML = html;
 		return this;
 	};
 
-	// NOTE: do not use .html() since it loses
-	// the custom styles for font-size/-family
-	// PRECONDITION: default view has been decided beforehand	
-	// and has been switched to
+	/**	 
+	 * PRECONDITION: default view has been decided beforehand	
+	 * and has been switched to
+	 */
 	this.setShownText = function(text){	
+		// NOTE: do not use .html() since it loses
+		// the custom styles for font-size/-family
 		if(isCurrModePlain)
 			// since we've switched to default view
 			// we're already in textarea and saving a textarea suitable snippet

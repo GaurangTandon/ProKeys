@@ -1289,7 +1289,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				var object = Folder.getObjectThroughDOMListElm(this),
 					newObject = object.clone();
 				latestRevisionLabel = "cloned " + object.type + " \"" + object.name + "\"";
-				saveSnippetData(undefined, undefined, newObject.name);
+
+				// keep the same snippet highlighted as well (object.name)
+				// so that user can press clone button repeatedly
+				saveSnippetData(undefined, newObject.getParentFolder().name, [object.name, newObject.name]);
 			}
 
 			$selectList.on("click", function(e){
@@ -1830,7 +1833,7 @@ Or you may try refreshing the page. ");
 		if(!isObject(Data.snippets))
 			Data.snippets = Folder.fromArray(Data.snippets);
 		
-		// save the default snippets
+		// save the default snippets ONLY
 		if(firstInstall) saveSnippetData();
 		
 		Folder.setIndices();
