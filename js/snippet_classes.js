@@ -49,6 +49,7 @@ window.Generic = function(){
 		var x = this.getDuplicatedObject();
 		this.remove();
 		Folder.insertObject(x, newFolder);
+		return x;
 	};
 
 	// a folder cannot be nested under its subfolders, hence a check
@@ -607,7 +608,13 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets){
 			.addClass("gmail_quote")
 			.attr("style", "margin: 0px 0px 0px 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;");
 	
-	return $container.innerHTML;
+	// issues#161
+	var DEFAULT_EMPTY_QUILL_TEXT = "<p><br></p>";
+	html = $container.innerHTML;
+	if(html === DEFAULT_EMPTY_QUILL_TEXT)
+		return "";
+
+	return html;
 };
 
 /**
@@ -808,15 +815,18 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder){
 	};
 
 	function adder(isSnippet){
+		/**
+		 * body is actually .list in case of folder
+		 */
 		return function(name, body, timestamp){
 			var folderName = this.name, newObj;
 
 			newObj = isSnippet ?
 						new Snip(name, body, timestamp) :
-						new Folder(name);
-
+						new Folder(name, body, timestamp);
+			
 			Folder.insertObject(newObj, this);
-
+			
 			latestRevisionLabel = "created " + newObj.type + " \"" + newObj.name + "\"";
 
 			saveSnippetData(undefined, folderName, newObj.name);
@@ -1526,9 +1536,8 @@ window.DualTextbox = function($container, isTryItEditor){
 	this.getShownTextForSaving = function(){
 		// calling makeHTMLSuitableForTextareaThroughString for
 		// making the string well-formatted for display in website textareas
-		if(isCurrModePlain) {
+		if(isCurrModePlain) 
 			return Snip.sanitizeTextareaTextForSave(this.getPlainText());
-		}		
 		else return Snip.makeHTMLValidForExternalEmbed($richEditor.innerHTML, true);
 	};
 };
