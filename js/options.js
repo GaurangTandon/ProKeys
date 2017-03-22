@@ -1238,6 +1238,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				$panelSnippets.addClass(SHOW_CLASS);
 			});
 
+			/**
+			 * 
+			 * @param {String} type NOT the Generic type, but rather "Snip"/"Folder" instead
+			 */
 			function objectSaver(type){
 				return function(oldName, name, body, newParentfolder){
 					var object, oldParentFolder, timestamp;
@@ -1248,9 +1252,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						timestamp = object.timestamp;
 
 						if(newParentfolder.name !== oldParentFolder.name) {
-							object.remove();
-							if(type === "Snip") newParentfolder.addSnip(name, body, timestamp);
-							else newParentfolder.addFolder(name, timestamp);
+							object.name = name;
+							if(type === "Snip") object.body = body;
+
+							object.moveTo(newParentfolder);							
+							latestRevisionLabel = "moved \"" + name + "\" " + object.type + " to \"" + newParentfolder.name + "\"";
+							saveSnippetData(undefined, newParentfolder.name, name);
 						}
 						else oldParentFolder["edit" + type](oldName, name, body);
 					}
