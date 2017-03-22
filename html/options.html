@@ -22,10 +22,10 @@
 		</div>		
 		<div class="buttons">
 			<!-- actually it's divID but HTML won't allow upcase names here :(-->
-			<button id="snippetsButton" data-divid="snippets">Snippets</button>
-			<button id="settingButton" data-divid="settings">Settings</button>
-			<button id="helpButton" data-divid="help">Help</button>
-			<button id="aboutButton" data-divid="about">About</button>
+			<button data-divid="snippets">Snippets</button>
+			<button data-divid="settings">Settings</button>
+			<button data-divid="help">Help</button>
+			<button data-divid="about">About</button>
 		</div>
 	</div>
 
@@ -35,32 +35,41 @@
 		<div id="faded"></div>
 
 		<div class="change-log box">
-			<p class="heading">ProKeys v3.1.0<span>Changelog</span></p>
+			<p class="heading">ProKeys v3.1.4<span>Changelog</span></p>
 			<div class="content">
 				<p><i>We've made some changes. Here's what you need to know:</i></p>
-				<h2>&#x25cf; UI changes</h2>
+				<!--<h2>&#x25cf; UI changes</h2>
 				<ul>
 					<li>Help page has been redone.</li>
 					<li>Blocked sites display has been redone.</li>
-				</ul>
-				<h2>&#x25cf; Functional changes</h2>
+				</ul>-->
+				<!--<h2>&#x25cf; Content changes</h2>
 				<ul>
-					<li>Added completely new rich text editor (YAY!) in snippets page.</li>
-					<li>Added option to match snippet name by whole word (separated by delimiters), in Settings.</li>
-					<li>Added option to handle duplicate snippets during import/restore.</li>
-					<li>Added folder expansion/contraction facility in folder select list.</li>
-					<li>Compressed all images to save 50KB!</li>
+					<li>Added FAQ and Sync troubleshooting section in Help page.</li>
+					<li>Made the export/backup popup more concise.</li>
+				</ul>-->
+				<h2>&#x25cf; Functional changes</h2>
+				<ul>					
+					<li>Text expansions are now registered in website textboxes (enabling live updates, markdown previews, etc.)</li>
 				</ul>
 				<h2>&#x25cf; Bugs squashed</h2>
 				<ul>
-					<li>Removing all auto-inserts lost the UI to create new.</li>
-					<li>Storage bytes (under Snippets heading) were shown as "906.0B" instead of "906B"</li>
-					<li>Selectors in site block modal css were interfering with normal webpages.</li>
-					<li>"Choose file" link in Restore popup was non-functional.</li>
-					<li>No feature was working in Gmail subject field</li>
-					<li>Context menu snippet insertion was non-functional.</li>
-				</ul>
-				<button>Got it!</button>
+					<li>Fixed ProKeys not working in Evernote, Salesforce, Lithium forums, etc.</li>					
+				</ul>	
+			</div>
+			<!--<div class="notice">
+				<img src="../imgs/warn.png">
+				<b>We've slightly adapted your snippets to enhance support for rich text editors. The latest version of your snippets was saved as a revision.</b><br>
+				In case you find the current snippet texts unusable/improperly formatted, please click the "Past Data Versions" button to bring back your earlier snippets. <br>Thank you!
+			</div>-->
+			<div class="appeal">
+				<!--<p><i>Please support free software! We really appreciate it! :-D</i></p>-->
+				<div class="btn-group buttons">
+					<button>Close</button>
+					<!--LAST ASKED in v3.1.1
+					<a target="_blank" href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews">Leave a review!</a>					
+					<a target="_blank" href="https://www.paypal.me/GaurangTandon">Donate money!</a>-->
+				</div>
 			</div>
 		</div>
 		
@@ -68,7 +77,7 @@
 			<div id="snippets">
 				<h1>Snippets</h1>
 				<p class="storageBytes">
-					<span class="currentBytes"></span> out of <a href="https://developer.chrome.com/extensions/storage#properties">
+					<span class="currentBytes"></span> out of <a target="_blank" href="https://developer.chrome.com/extensions/storage#properties">
 					<span class="bytesAvailable"></span> used</a> 
 				</p>				
 				
@@ -188,15 +197,11 @@
 					</div>
 					<div class="panel_content">
 						<ol class="steps">
-							<li>								
-								Choose data to export:<br>
-								<label><input type="radio" name="data_export" value="data" checked>Entire data</label>
-								<label><input type="radio" name="data_export" value="snippets">Only snippets</label>
-							</li>
 							<li>
-								Choose use of exported data:<br>
-								<label><input type="radio" name="data_export_use" value="backup" checked>To backup data</label>
-								<label><input type="radio" name="data_export_use" value="print">To use in printing snippets</label>							
+								Choose use of exported data:<br>							
+								<label><input type="radio" name="data_use" value="data" checked>Backup data</label>
+								<label><input type="radio" name="data_use" value="snippets">Backup only snippets</label>
+								<label><input type="radio" name="data_use" value="print">Print snippets</label>							
 							</li>
 							<li>						
 								<a href="" download="">Download your data</a>							
@@ -339,8 +344,21 @@
 				<h1>Help</h1>
 
 				<section>
+					<i>This is a sample editor to try out all ProKeys' features :-)</i>
 					<div id="tryit"></div>
 
+					<div class="box">
+						<h2>FAQ</h2>
+						<dl>
+							<dt>Why won't this work in Google Docs?</dt>
+							<dd>Google Docs by itself is a very powerful rich text editor. It is built in a very complex manner, which makes it difficult for ProKeys to recognize the caret position and perform relevant functions. Sorry for the trouble!</dd>
+							<dt>I deleted a snippet/made changes by mistake! What do I do?</dt>
+							<dd>Each of your edits/deletions/etc. are saved up carefully and listed in the "Past data versions" on the 
+								<a target="_blank" href="options.html#snippets">Snippets</a> tab. You can restore your data from there :-)</dd>
+							<dt>Why doesn't ProKeys work in email and password fields?</dt>
+							<dd>Email field doesn't support caret manipulation, so ProKeys can't detect caret movements there, and hence can't function. ProKeys is disabled on password fields for obvious privacy reasons.</dd>
+						</dl>
+					</div>
 					<div class="box">
 						<h2>Info</h2>
 						<dl>
@@ -350,13 +368,9 @@
 								Typing "brb" and pressing the hotkey, would replace it with the snippet body, which here is "be right back".
 								Snippets can be created in the popup box.</p>
 								<a href="#tryit">Try snippets in editor</a> - you can view the snippets in the popup box</dd>
-
-							<dt>Can a deleted snippet be restored?</dt>
-							<dd>Yes, if your snippet is listed in the "Past data revisions" on the 
-								<a href="options.html#snippets">Snippets</a> tab, you can easily recover it.</dd>
 								
 							<dt>How do I recover deleted snippets?</dt>
-							<dd>Click the "Past data revisions" button on the <a href="options.html#snippets">Snippets</a> page, there the steps to revert are mentioned.</dd>
+							<dd>Click the "Past data versions" button on the <a target="_blank" href="options.html#snippets">Snippets</a> page, there the steps to revert are mentioned.</dd>
 
 							<dt>What are Placeholders?</dt>
 							<dd><p>Placeholders are fields in the snippet body which are populated with dynamic values provided by you while using the snippet.<br>A placeholder has the format `%text%` such that the <b>text can only contain alphabets, digits and the underscore symbol</b>.</p>
@@ -505,7 +519,8 @@
 					<div class="box">
 						<h2>Troubleshoot</h2>
 						<i>Try reloading the page before anything else. That fixes most issues.</i>
-						<dl>
+						
+						<dl>							
 							<dt>ProKeys works improperly/does not work on XYZ site</dt>
 							<dd>
 								<ol class="steps">
@@ -519,8 +534,18 @@
 										features and prevent ProKeys from working properly.</li>
 									<li>In case of snippets, make sure your caret(cursor) is placed just after the snippet name. Example: If your snippet name is "abcd", place your caret after "d"</li>
 									<li>Check that the site is not blocked in <a target="_blank" href="options.html">Settings</a>.</li>
-									<li>If nothing works, take a backup of your data and reinstall ProKeys. Restore your data back and try again.</li>
-									<li>If it <em>still</em> does not work, contact me at prokeys.feedback@gmail.com</li>
+									<li>If nothing works, <b>take a backup of your data and reinstall ProKeys</b>. Restore your data back and try again.</li>
+									<li>If it <em>still</em> does not work, contact us at prokeys.feedback@gmail.com</li>
+								</ol>
+							</dd>
+							<dt>Sync storage does not work</dt>
+							<dd>
+								<ol class="steps">
+									<li>Make sure that you're signed into Chrome. The tab on the upper-right corner of the title bar should <b>not</b> read "Guest".</li>									
+									<li>Data can be synced across one Google account only. Both your Chrome browsers must be signed in with the <b>same Google account</b>.</li>
+									<li>Click the two sync buttons in the right order - use the first button when you're setting up sync for the first time; the second button when you already have sync set up on another PC.</li>
+									<li>In case you use multiple email accounts, make sure you're not confusing the ones which you use to sign-in to Chrome.</li>
+									<li>If it <i>still</i> doesn't work, contact us at prokeys.feedback@gmail.com</li>
 								</ol>
 							</dd>
 						</dl>
@@ -585,8 +610,8 @@
 							<a href="https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form" target="_blank">Anonymous Feedback</a>
 						</div>
 						
-						<p class="heading2">Donate money!</p>
-						Monetary donations are gratefully accepted at email 1gaurangtandon@gmail.com using <a href="https://www.paypal.com/myaccount/transfer/buy">PayPal</a>
+						<p class="heading2"><a href="https://www.paypal.me/GaurangTandon">Donate money!</a></p>
+						Monetary donations are gratefully accepted using <a href="https://www.paypal.me/GaurangTandon">PayPal</a>. (Paypal is a secure way to accept international payments, you can sign up for free)
 						<br><br>
 						<p class="heading2">Found a bug?</p>
 						Contact with relevant information: <strong>prokeys.feedback@gmail.com</strong> Please check <a target="_blank" href="options.html#help">the troubleshooting guide</a> and <a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known bugs list</a> before reporting.
@@ -596,17 +621,18 @@
 				<div class="box">
 					<p class="heading">Disclaimer:</p>
 					<div class="content">
-						Every effort has been made to avoid bugs in this extension. The developers are not liable for any loss or corruption of the users' data due to glitches/misuse.<br>
-						No information regarding the users, their snippets, and settings is stored anywhere but the browser (except in case of Sync storage which then gets synced across user's signed-in Chrome browsers).
-						Neither is the aforementioned information sent to any external server.<br>
-						User feedback at prokeys.feedback@gmail.com (regarding bugs, security concerns, help using ProKeys, etc.) is encouraged.
+						<ol class="steps">
+							<li>Every effort has been made to avoid bugs in this extension. The developers are not liable for any loss or corruption of the users' data due to glitches/misuse.</li>
+							<li>Information regarding user data storage, its handling, etc. can be found in the <a href="https://github.com/GaurangTandon/ProKeys/blob/master/PRIVACY_POLICY.md">privacy policy</a>.</li>
+							<li>User feedback at prokeys.feedback@gmail.com (regarding bugs, security concerns, help using ProKeys, etc.) is encouraged.</li>
+						</ol>
 					</div>
 				</div>
 			</div>
 		</div>
 		
 		<footer>
-			Version: 3.1.0 - Gaurang Tandon, Varun Singh &copy; 2017<br>
+			Version: 3.1.4 - Gaurang Tandon, Varun Singh &copy; 2017<br>
 			Check out the <a href="https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md">change log</a> and <a href="https://github.com/GaurangTandon/ProKeys">source code on GitHub!</a><br><br>
 		</footer>
 	</main>
