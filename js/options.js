@@ -1244,7 +1244,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			 */
 			function objectSaver(type){
 				return function(oldName, name, body, newParentfolder){
-					var object, oldParentFolder, timestamp;
+					var object, oldParentFolder, timestamp, movedObject;
 
 					if(oldName) {
 						object = Data.snippets["getUnique" + type](oldName);
@@ -1252,11 +1252,13 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						timestamp = object.timestamp;
 
 						if(newParentfolder.name !== oldParentFolder.name) {
-							object.name = name;
-							if(type === "Snip") object.body = body;
-
-							object.moveTo(newParentfolder);							
-							latestRevisionLabel = "moved \"" + name + "\" " + object.type + " to \"" + newParentfolder.name + "\"";
+							// first move that object; before changing its name/body
+							movedObject = object.moveTo(newParentfolder);
+							
+							movedObject.name = name;
+							if(type === "Snip") movedObject.body = body;
+							
+							latestRevisionLabel = "moved \"" + name + "\" " + movedObject.type + " to \"" + newParentfolder.name + "\"";
 							saveSnippetData(undefined, newParentfolder.name, name);
 						}
 						else oldParentFolder["edit" + type](oldName, name, body);
