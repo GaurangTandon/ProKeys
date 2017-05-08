@@ -36,5 +36,5 @@ You need to delink the files one by one and keep checking if the issue repeats.
 
 If you've found in which file the culprit lies, head to the next section. If not, the force is not with you! Sigh!
 
-####After you're certain in which file the culprit is present
+#### After you're certain in which file the culprit is present
 1. Be sure to add back the EventTarget.addEventListener prototype modification that I had commented in v3.1.0 over integration issues with QuillJS. It could be possible that the code is attaching duplicate event listeners to the same elm which are clashing.
