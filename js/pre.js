@@ -1,4 +1,5 @@
-/* global $, getHTML triggerEvent, setHTML, isContentEditable, isTextNode, Snip */
+/* global $, getHTML, triggerEvent, setHTML, isContentEditable, isTextNode, Snip */
+/* global updateAllValuesPerWin */
 
 // custom functions inspired from jQuery
 // special thanks to
@@ -6,77 +7,104 @@
 
 /**
  * extends NodeList prototype per iframe present in the webpage
- * calls itself every 500ms to capture any newly added iframes as well
- * @param {String} prop 
- * @param {Function} func 
  */
 // only one method exposed to user
 var extendNodePrototype;
-(function protoExtensionWork(){
+(function protoExtensionWork() {
 	// called by detector.js
 	// to be able to reuse the existing interval
-	window.updateAllValuesPerWin = function(win){		
-		for(var i = 0, count = protoExtensionNames.length; i < count; i++)
+	window.updateAllValuesPerWin = function (win) {
+		for (var i = 0, count = protoExtensionNames.length; i < count; i++)
 			setNodeListPropPerWindow(protoExtensionNames[i], protoExtensionFunctions[i], win);
 	};
 
 	var protoExtensionNames = [], protoExtensionFunctions = [];
-	extendNodePrototype = function(prop, func){
+	extendNodePrototype = function (prop, func) {
 		protoExtensionNames.push(prop);
 		protoExtensionFunctions.push(func);
 	};
 
-	function setNodeListPropPerWindow(prop, func, win){
+	function setNodeListPropPerWindow(prop, func, win) {
 		// in case of custom created array of Nodes, Array.prototype is necessary
-		win.Array.prototype[prop] = win.NodeList.prototype[prop] = function() {
+		win.Array.prototype[prop] = win.NodeList.prototype[prop] = function () {
 			var args = [].slice.call(arguments, 0);
-			this.forEach(function(node) {
+			this.forEach(function (node) {
 				func.apply(node, args);
 			});
 			return this;
 		};
 
-		win.Node.prototype[prop] = func;	
+		win.Node.prototype[prop] = func;
 	}
 })();
 
-(function(){
+(function () {
+	var DEBUGGING = true;
+
 	window.OBJECT_NAME_LIMIT = 30;
 	window.MONTHS = ["January", "February", "March",
-					"April", "May", "June", "July", "August", "September",
-					"October", "November", "December"];
+		"April", "May", "June", "July", "August", "September",
+		"October", "November", "December"];
 	window.DAYS = ["Sunday", "Monday", "Tuesday",
-							"Wednesday", "Thursday", 
-							"Friday", "Saturday"];
+		"Wednesday", "Thursday",
+		"Friday", "Saturday"];
 
 	NodeList.prototype.__proto__ = Array.prototype;
 
-	// used for triggering context menu event
-	// on window object
-	window.triggerEvent = function(node, eventName, obj){
-		var ev = new CustomEvent(eventName, {
-			detail: obj || null
-		});
-		// those functions which need to access
-		// the custom values will need to separately
-		// access the "detail" property, in such a way:
-		// (ev.detail && ev.detail[requiredProperty]) || ev[requiredProperty]
-		// because if detail is not passed it's always null
-
-		node.dispatchEvent(ev);
+	Date.prototype.isLeapYear = function () {
+		var year = this.getFullYear();
+		return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 	};
 
-	extendNodePrototype("trigger", function(eventName, obj){
-		triggerEvent(this, eventName, obj);
+	Date.prototype.getDayOfYear = function () {
+		var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334],
+			mn = this.getMonth(),
+			dn = this.getDate(),
+			dayOfYear = dayCount[mn] + dn;
+
+		if (mn > 1 && this.isLeapYear()) dayOfYear++;
+
+		return dayOfYear;
+	};
+
+	window.debugLog = function () {
+		if (DEBUGGING)
+			console.log.apply(console, arguments);
+	};
+
+	window.debugDir = function () {
+		if (DEBUGGING)
+			console.dir.apply(console, arguments);
+	};
+
+	// Why do we need this fn?
+	window.triggerEvent =
+		extendNodePrototype("trigger", function (eventName, obj) {
+			var ev = new CustomEvent(eventName, {
+				detail: obj || null
+			});
+			// those functions which need to access
+			// the custom values will need to separately
+			// access the "detail" property, in such a way:
+			// (ev.detail && ev.detail[requiredProperty]) || ev[requiredProperty]
+			// because if detail is not passed it's always null
+
+			this.dispatchEvent(ev);
+		});
+
+	extendNodePrototype("triggerKeypress", function (keyCode) {
+		var ev = new Event("input");
+		ev.keyCode = keyCode;
+		this.dispatchEvent(ev);
 	});
 
-	window.$ = function(selector){
+	window.$ = function (selector) {
 		var elms = document.querySelectorAll(selector), elm;
 
 		// cannot always return a NodeList/Array
 		// as properties like firstChild, lastChild will only be able
 		// to be accessed by elms[0].lastChild which is too cumbersome
-		if(elms.length === 1){
+		if (elms.length === 1) {
 			elm = elms[0];
 			// so that I can access the length of the returned
 			// value else length if undefined
@@ -86,65 +114,65 @@ var extendNodePrototype;
 		else return elms;
 	};
 
-	$.new = function(tagName){
+	$.new = function (tagName) {
 		return document.createElement(tagName);
 	};
 
 	extendNodePrototype("on", window.on = function (name, fn, useCapture) {
 		var names = name.split(/,\s*/g);
 
-		for(var i = 0, len = names.length; i < len; i++)
+		for (var i = 0, len = names.length; i < len; i++)
 			this.addEventListener(names[i], fn, useCapture);
 
 		return this;
 	});
 
 	// inserts the newNode after `this`
-	extendNodePrototype("insertAfter", function(newNode){
+	extendNodePrototype("insertAfter", function (newNode) {
 		this.parentNode.insertBefore(newNode, this.nextSibling);
 		return this;
 	});
 
 	// returns true if element has class; usage: Element.hasClass("class")
-	extendNodePrototype("hasClass", function(className) {
+	extendNodePrototype("hasClass", function (className) {
 		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
 	});
 
-	extendNodePrototype("toggleClass", function(cls){
+	extendNodePrototype("toggleClass", function (cls) {
 		this.classList.toggle(cls);
 		return this;
 	});
 
-	extendNodePrototype("addClass", function(cls){
+	extendNodePrototype("addClass", function (cls) {
 		// multiple classes to add
-		if(!Array.isArray(cls))
+		if (!Array.isArray(cls))
 			cls = [cls];
 
-		cls.forEach(function(e){
+		cls.forEach(function (e) {
 			this.classList.add(e);
 		}.bind(this));
 
 		return this;
 	});
 
-	extendNodePrototype("removeClass", function(cls){
+	extendNodePrototype("removeClass", function (cls) {
 		// multiple classes to remove
-		if(!Array.isArray(cls))
+		if (!Array.isArray(cls))
 			cls = [cls];
 
-		cls.forEach(function(e){
+		cls.forEach(function (e) {
 			this.classList.remove(e);
 		}.bind(this));
 
 		return this;
 	});
 
-	extendNodePrototype("isTextBox", function(){
+	extendNodePrototype("isTextBox", function () {
 		return this.tagName === "INPUT" || this.tagName === "TEXTAREA";
 	});
 
-	extendNodePrototype("attr", function(name, val){
-		if(typeof val != "undefined"){
+	extendNodePrototype("attr", function (name, val) {
+		if (typeof val != "undefined") {
 			this.setAttribute(name, val);
 			return this;
 		}
@@ -152,22 +180,22 @@ var extendNodePrototype;
 	});
 
 	// returns innerText
-	window.getText = function(node){
+	window.getText = function (node) {
 		return getHTML(node, "innerText");
 	};
 
 	// sets innerText
-	window.setText = function(node, newVal){
+	window.setText = function (node, newVal) {
 		return setHTML(node, newVal, "innerText");
 	};
 
-	window.getHTML = function(node, prop){
-		if(!node) return;
+	window.getHTML = function (node, prop) {
+		if (!node) return;
 
-		if(isTextNode(node))
+		if (isTextNode(node))
 			return node.textContent.replace(/\u00a0/g, " ");
 
-		switch(node.tagName){
+		switch (node.tagName) {
 			case "TEXTAREA":
 			case "INPUT":
 				return node.value;
@@ -176,39 +204,40 @@ var extendNodePrototype;
 		}
 	};
 
-	window.setHTML = function(node, newVal, prop, isListSnippets){
+	window.setHTML = function (node, newVal, prop, isListSnippets) {
 		// in case number is passed; .replace won't work
 		newVal = newVal.toString();
 
-		if(isTextNode(node)){
+		if (isTextNode(node)) {
 			node.textContent = newVal.replace(/ /g, "\u00a0");
 			return node;
 		}
 
 
-		switch(node.tagName){
+		switch (node.tagName) {
 			case "TEXTAREA":
 			case "INPUT":
 				node.value = newVal.replace("<br>", "\n")
-									.replace("&nbsp;", " "); break;
+					.replace("&nbsp;", " "); break;
 			default:
-//				console.log(newVal);
-				if(prop === "innerText")
+				if (prop === "innerText")
 					// but innertext will collapse consecutive spaces
 					// do not use textContent as it will collapse even single newlines
 					node.innerText = newVal.replace("<br>", "\n")
-											.replace("&nbsp;", " ");
+						.replace("&nbsp;", " ");
 				// first .replace is required as at the end of any text
 				// as gmail will not display single space for unknown reason
-				else {					
-					try{
+				else {
+					try {
 						node.innerHTML = newVal.replace(/ $/g, "&nbsp;")
-											.replace(/ {2}/g, " &nbsp;");
-
-						if(!isListSnippets)
-							node.innerHTML = node.innerHTML.replace(/\n/g, "<br>");						
+							.replace(/ {2}/g, " &nbsp;");
+						console.log(newVal.replace(/ $/g, "&nbsp;")
+							.replace(/ {2}/g, " &nbsp;")
+							.replace(/\n/g, "<br>"));
+						if (!isListSnippets)
+							node.innerHTML = node.innerHTML.replace(/\n/g, "<br>");
 						else setHTMLPurificationForListSnippets(node);
-					}catch(e){
+					} catch (e) {
 						console.log("From setHTML: `node` argment is undefined");
 					}
 				}
@@ -217,15 +246,15 @@ var extendNodePrototype;
 		return node;
 	};
 
-	function setHTMLPurificationForListSnippets(node){
+	function setHTMLPurificationForListSnippets(node) {
 		// after we start splitting these text nodes and insert <br>s
 		// the original text nodes and their count gets lost
-		function getCurrentTextNodes(){
+		function getCurrentTextNodes() {
 			var textNodesInNode = [], child;
 
-			for(var i = 0, len = node.childNodes.length; i < len; i++){
+			for (var i = 0, len = node.childNodes.length; i < len; i++) {
 				child = node.childNodes[i];
-				if(isTextNode(child))
+				if (isTextNode(child))
 					textNodesInNode.push(child);
 			}
 
@@ -234,10 +263,10 @@ var extendNodePrototype;
 		var list = getCurrentTextNodes(), childCount = list.length,
 			count = 0, child,
 			textNodes, i, len, tNode, $br, text;
-		
-		for(; count < childCount; count++){
+
+		for (; count < childCount; count++) {
 			child = list[count];
-			
+
 			// if a textnode has a single newline
 			// => it is present between two element nodes
 			// otherwise it would have had some text as well
@@ -245,11 +274,11 @@ var extendNodePrototype;
 			// BUT BUT this leads to loss of newline after
 			// a simpler element node like <a> or <b>
 			// hence, DO NOT do this
-			
+
 			textNodes = child.textContent.split(/\n/g);
 			i = 0; len = textNodes.length;
-			
-			for(; i < len; i++){
+
+			for (; i < len; i++) {
 				text = textNodes[i];
 				tNode = document.createTextNode(text);
 				$br = $.new("br");
@@ -267,9 +296,9 @@ var extendNodePrototype;
 
 		// block level elements already occupy a full line, hence, remove 
 		// ONE <br> after them
-		node.querySelectorAll("pre, blockquote, ol, ul").forEach(function(elm){			
+		node.querySelectorAll("pre, blockquote, ol, ul").forEach(function (elm) {
 			var br = elm.nextElementSibling;
-			if(br && br.tagName === "BR") br.parentNode.removeChild(br);
+			if (br && br.tagName === "BR") br.parentNode.removeChild(br);
 		});
 
 		node.querySelectorAll("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
@@ -277,30 +306,30 @@ var extendNodePrototype;
 
 	// prototype alternative for setHTML/getHTML
 	// use only when sure that Node is "not undefined"
-	extendNodePrototype("html", function(textToSet, prop, isListSnippets){
+	extendNodePrototype("html", function (textToSet, prop, isListSnippets) {
 		// can be zero/empty string; make sure it's undefined
 		return typeof textToSet !== "undefined" ?
-				setHTML(this, textToSet, prop, isListSnippets) :
-				getHTML(this, prop);
+			setHTML(this, textToSet, prop, isListSnippets) :
+			getHTML(this, prop);
 	});
 
 	// prototype alternative for setText/getText
 	// use only when sure that Node is "not undefined"
-	extendNodePrototype("text", function(textToSet){
+	extendNodePrototype("text", function (textToSet) {
 		// can be zero/empty string; make sure it's undefined
 		return this.html(textToSet, "innerText");
 	});
 
-	extendNodePrototype("unwrap", function(){
+	extendNodePrototype("unwrap", function () {
 		var children = this.childNodes,
 			nextSibling = this.nextSibling, child,
 			len = children.length,
 			parent = this.parentNode;
 
-		while(len > 0){
+		while (len > 0) {
 			child = children[len - 1];
 
-			if(nextSibling) 
+			if (nextSibling)
 				parent.insertBefore(child, nextSibling);
 			else parent.appendChild(child);
 
@@ -311,17 +340,15 @@ var extendNodePrototype;
 		parent.removeChild(this);
 	});
 
-	updateAllValuesPerWin(window);
-
 	// replaces string's `\n` with `<br>` or reverse
 	// `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
 	// false => convrt text for dislplay in text area (`.value`)
-	window.convertBetweenHTMLTags = function(string, convertForHTML){
+	window.convertBetweenHTMLTags = function (string, convertForHTML) {
 		var map = [["<br>", "\\n"], [" &nbsp;", "  "]],
 			regexIndex = +convertForHTML, replacerIdx = +!convertForHTML, elm,
 			i = 0, len = map.length;
 
-		for(; i < len; i++){
+		for (; i < len; i++) {
 			elm = map[i];
 			string = string.replace(new RegExp(elm[regexIndex], "g"), elm[replacerIdx]);
 		}
@@ -331,7 +358,7 @@ var extendNodePrototype;
 			unnecessaryBRs = container.querySelectorAll(selector),
 			count = unnecessaryBRs.length;
 
-		for(i = 0; i < count; i++){
+		for (i = 0; i < count; i++) {
 			elm = unnecessaryBRs[i];
 			elm.parentNode.removeChild(elm);
 		}
@@ -339,27 +366,30 @@ var extendNodePrototype;
 		return container.innerHTML.replace(/&nbsp; ?&nbsp;<li>/g, "<li>");
 	};
 
-	window.isEmpty = function(obj) {
-		for(var prop in obj)
-			if(obj.hasOwnProperty(prop))
+	window.isEmpty = function (obj) {
+		for (var prop in obj)
+			if (obj.hasOwnProperty(prop))
 				return false;
 
 		return true;
 	};
 
-	window.escapeRegExp = function(str) {
+	window.escapeRegExp = function (str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	};
 
 	// prepends 0 to single digit num and returns it
 	// as a string
-	window.padNumber = function(num){
+	window.padNumber = function (num) {
 		num = parseInt(num, 10);
 
 		return (num <= 9 ? "0" : "") + num;
 	};
 
-	window.getFormattedDate = function(timestamp){
+	/**
+	 * @param: timestamp: optional
+	 */
+	window.getFormattedDate = function (timestamp) {
 		var d = (timestamp ? new Date(timestamp) : new Date()).toString();
 
 		// sample date would be:
@@ -367,37 +397,37 @@ var extendNodePrototype;
 		return d.substring(4, 15);
 	};
 
-	window.isObject = function(o){
+	window.isObject = function (o) {
 		return Object.prototype.toString.call(o) === "[object Object]";
 	};
 
 	// should use this since users may use foreign language
 	// characters which use up more than two bytes
-	window.lengthInUtf8Bytes = function(str) {
+	window.lengthInUtf8Bytes = function (str) {
 		// Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
 		var m = encodeURIComponent(str).match(/%[89ABab]/g);
 		return str.length + (m ? m.length : 0);
 	};
 
-	window.isTextNode = function(node){
+	window.isTextNode = function (node) {
 		return node.nodeType === 3;
 	};
 
 	// if it is a callForParent, means that a child node wants 
 	// to get its parents checked
 	// callForParent: flag to prevent infinite recursion
-	window.isContentEditable = function(node, callForParent){
+	window.isContentEditable = function (node, callForParent) {
 		var tgN = node && node.tagName, attr, parent;
 
 		// insanity checks first
-		if(!node || tgN === "TEXTAREA" || tgN === "INPUT" || !node.getAttribute)
+		if (!node || tgN === "TEXTAREA" || tgN === "INPUT" || !node.getAttribute)
 			return false;
-		
+
 		// can also be a textnode
 		attr = node.attr ? node.attr("contenteditable") : null;
 
 		// empty string to support <element contenteditable> markup
-		if(attr === "" || attr === "true" || attr === "plaintext-only")
+		if (attr === "" || attr === "true" || attr === "plaintext-only")
 			return true;
 
 		// important part below
@@ -409,22 +439,22 @@ var extendNodePrototype;
 		// but only do this if the current node is not a textarea
 		// which we have checked above
 
-		if(callForParent) return false;
-		
-		parent = node;		
-		do{
+		if (callForParent) return false;
+
+		parent = node;
+		do {
 			parent = parent.parentNode;
 
-			if(!parent) return false;
-			
-			if(isContentEditable(parent, true)) return true;
-		}while(parent !== window.document);
-		
+			if (!parent) return false;
+
+			if (isContentEditable(parent, true)) return true;
+		} while (parent !== window.document);
+
 		return false;
 	};
 
-	window.checkRuntimeError = function(){
-		if(chrome.runtime.lastError){
+	window.checkRuntimeError = function () {
+		if (chrome.runtime.lastError) {
 			alert("An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!");
 			console.log(chrome.runtime.lastError);
 			return true;
@@ -435,11 +465,11 @@ var extendNodePrototype;
 	// be triggered. The function will be called after it stops being called for
 	// N milliseconds. If `immediate` is passed, trigger the function on the
 	// leading edge, instead of the trailing.
-	window.debounce = function(func, wait, immediate) {
+	window.debounce = function (func, wait, immediate) {
 		var timeout;
-		return function() {
+		return function () {
 			var context = this, args = arguments,
-				later = function() {
+				later = function () {
 					timeout = null;
 					if (!immediate) func.apply(context, args);
 				},
@@ -449,4 +479,6 @@ var extendNodePrototype;
 			if (callNow) func.apply(context, args);
 		};
 	};
+
+	updateAllValuesPerWin(window);
 })();
