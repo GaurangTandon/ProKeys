@@ -16,7 +16,6 @@
 		// global functions defined in init
 		toggleSnippetEditPanel, toggleFolderEditPanel,
 		validateSnippetData, validateFolderData,
-		// property name of localStorage item that stores past snippets versions
 		LS_REVISIONS_PROP = "prokeys_revisions",
 		MAX_REVISIONS_STORED = 20,
 		MAX_SYNC_DATA_SIZE = 102400,
@@ -1398,7 +1397,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				var selectedObjects, DOMcontainer,
 					moveToBtn = $bulkActionPanel.querySelector(".bulk_actions input:first-child"),
 					deleteBtn = $bulkActionPanel.querySelector(".bulk_actions input:last-child"),
-					selectAllBtn = $bulkActionPanel.querySelector(".selection_count input"),
+					toggleAllButton = $bulkActionPanel.querySelector(".selection_count input"),
 					folderSelect = $bulkActionPanel.querySelector(".folderSelect"),
 					selectList = $bulkActionPanel.querySelector(".selectList");
 
@@ -1446,10 +1445,22 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					}
 				});
 
-				// select all button
-				selectAllBtn.on("click", function () {
-					DOMcontainer.querySelectorAll("input").forEach(function (elm) {
-						elm.checked = true;
+				toggleAllButton.on("click", function () {
+					var checkboxes = DOMcontainer.querySelectorAll("input"),
+						allCheckedBoxesChecked = true,
+						finalCheckState;
+
+					checkboxes.some(function (checkbox) {
+						if (!checkbox.checked) {
+							allCheckedBoxesChecked = false;
+							return true;
+						}
+					});
+
+					finalCheckState = !allCheckedBoxesChecked;
+
+					checkboxes.forEach(function (checkbox) {
+						checkbox.checked = finalCheckState;
 					});
 
 					updateSelectionCount();
