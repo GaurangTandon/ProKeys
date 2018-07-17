@@ -1055,30 +1055,25 @@
 			////////////////////////////////
 			// Char insertion technique start
 			var charTyped = String.fromCharCode(e.keyCode),
-				autoInsertPair = searchAutoInsertChars(charTyped, 0);
+				autoInsertPairFirstChar = searchAutoInsertChars(charTyped, 0),
+				autoInsertPairSecondChar = searchAutoInsertChars(charTyped, 1);
 
-			if (autoInsertPair !== null) {
+			if (autoInsertTyped && autoInsertPairSecondChar !== null &&
+				getCharFollowingCaret(node) === charTyped) {
+				e.preventDefault();
+
+				shiftCursor(node, 1);
+
+				autoInsertTyped = false;
+			} else if (autoInsertPairFirstChar !== null) {
 				// #197: disable auto-inserts for emojis
-				if (!("({".indexOf(autoInsertPair[0]) > -1 && previousCharactersForEmoji(node))) {
+				if (!("({".indexOf(autoInsertPairFirstChar[0]) > -1 && previousCharactersForEmoji(node))) {
 					e.preventDefault();
-					insertCharacter(node, autoInsertPair[0], autoInsertPair[1]);
+					insertCharacter(node, autoInsertPairFirstChar[0], autoInsertPairFirstChar[1]);
 
 					toIndexIncrease = 2;
 
 					autoInsertTyped = true;
-				}
-			}
-			else if (autoInsertTyped) {
-				autoInsertPair = searchAutoInsertChars(charTyped, 1);
-
-				// if charTyped is a valid second part in auto-inserts
-				if (autoInsertPair !== null &&
-					getCharFollowingCaret(node) === charTyped) {
-					e.preventDefault();
-
-					shiftCursor(node, 1);
-
-					autoInsertTyped = false;
 				}
 			}
 
