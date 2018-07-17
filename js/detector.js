@@ -115,7 +115,8 @@
 		UNIQ_CS_KEY = "PROKEYS_RUNNING",
 		IFRAME_CHECK_TIMER = 500,
 		ctxElm = null, ctxTimestamp = 0,
-		PASTE_REGEX = /\[\[%p\]\]/ig;
+		PASTE_REGEX = /\[\[%p\]\]/ig,
+		TAB_INSERTION_VALUE = "    ";
 
 	/*
 	Helper functions for iframe related work
@@ -637,7 +638,7 @@
 			textMid = trimmedSelection[2];
 
 			textMid = Data.wrapSelectionAutoInsert ? textMid : "";
-			startPos = textBefore.length + 1;
+			startPos = textBefore.length + (+!!characterEnd);
 			endPos = startPos + textMid.length;
 
 			node.value = textBefore + characterStart + textMid + (characterEnd || "") + textAfter;
@@ -658,15 +659,18 @@
 		var value = rangeNode.textContent,
 			len = value.length;
 
-		if (isStart) {
-			while (/\s/.test(value[position]) && position < len) position++;
-		}
-		else {
-			// value[position] corresponds to one character out of the current selection
-			while (/\s/.test(value[position - 1]) && position >= 1) position--;
+		if (Data.wrapSelectionAutoInsert) {
+			if (isStart) {
+				while (/\s/.test(value[position]) && position < len) position++;
+			}
+			else {
+				// value[position] corresponds to one character out of the current selection
+				while (/\s/.test(value[position - 1]) && position >= 1) position--;
+			}
 		}
 
-		rangeNode.textContent = value.substring(0, position) + singleCharacter + value.substring(position);
+		// HTML entities are for HTML, so use \xA0 to insert &nbsp;
+		rangeNode.textContent = value.substring(0, position) + singleCharacter.replace(/ /g, "\xA0") + value.substring(position);
 
 		return [position + positionIncrement, rangeNode];
 	}
@@ -675,19 +679,22 @@
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0),
-			startNode = range.startContainer,
+			startNode, endNode,
+			startPosition, endPosition,
 			newStartNode, newEndNode,
-			singleCharacterReturnValue,
-			endNode = range.endContainer,
-			startPosition = range.startOffset,
-			endPosition = range.endOffset;
+			singleCharacterReturnValue;
 
 		if (!Data.wrapSelectionAutoInsert) {
 			range.deleteContents();
 		}
 
+		startNode = range.startContainer;
+		endNode = range.endContainer;
+		startPosition = range.startOffset;
+		endPosition = range.endOffset;
+
 		// the rangeNode is a textnode EXCEPT when the node has no text
-		// eg:https://stackoverflow.com/a/5258024 how to handle this case?
+		// eg:https://stackoverflow.com/a/5258024
 		singleCharacterReturnValue = insertSingleCharacterContentEditable(startNode, startPosition, characterStart, true);
 		startPosition = singleCharacterReturnValue[0];
 		newStartNode = singleCharacterReturnValue[1];
@@ -701,10 +708,13 @@
 			singleCharacterReturnValue = insertSingleCharacterContentEditable(endNode, endPosition, characterEnd, false);
 			endPosition = singleCharacterReturnValue[0];
 			newEndNode = singleCharacterReturnValue[1];
+		} else {
+			startPosition--;
 		}
 
 		range.setStart(newStartNode, startPosition);
-		range.setEnd(newEndNode, endPosition);
+		if (characterEnd)
+			range.setEnd(newEndNode, endPosition);
 		sel.removeAllRanges();
 		sel.addRange(range);
 	}
@@ -816,10 +826,8 @@
 	}
 
 	function insertTabChar(node) {
-		var tabValue = "    ";
-
-		insertCharacter(node, tabValue);
-		shiftCursor(node, tabValue.length);
+		insertCharacter(node, TAB_INSERTION_VALUE);
+		shiftCursor(node, TAB_INSERTION_VALUE.length);
 	}
 
 	function evaluateMathExpression(expression) {
