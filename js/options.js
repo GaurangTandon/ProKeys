@@ -642,13 +642,14 @@
 				// the list of the correct items
 				correctProps = ["blockedSites", "charsToAutoInsertUserList", "dataVersion",
 					"language", "snippets", "tabKey", "visited", "hotKey", "dataUpdateVariable",
-					"matchDelimitedWord", "snipNameDelimiterList"],
+					"matchDelimitedWord", "snipNameDelimiterList", "wrapSelectionAutoInsert"],
 				msg = "Data had invalid property: ";
 
 			// ensure backwards compatibility
 			data.dataUpdateVariable = false; // #backwardscompatibility
 			setPropIfUndefined("matchDelimitedWord");// #backwardscompatibility
 			setPropIfUndefined("snipNameDelimiterList");// #backwardscompatibility
+			setPropIfUndefined("wrapSelectionAutoInsert");// #backwardscompatibility
 
 			for (var prop in data) {
 				if (correctProps.indexOf(prop) > -1) {
@@ -676,6 +677,7 @@
 							break;
 						case "matchDelimitedWord":
 						case "tabKey":
+						case "wrapSelectionAutoInsert":
 							if (typeof data[prop] !== "boolean")
 								data[prop] = false;
 							break;
