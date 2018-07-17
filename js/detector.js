@@ -2,16 +2,6 @@
 /* global setHTML, MONTHS, chrome, Data, setText, getFormattedDate, isTextNode */
 /* global escapeRegExp, getText, isContentEditable, DAYS, padNumber, debugDir, debugLog */
 
-/* #quickNotes
-1. http://stackoverflow.com/questions/15980898/why-doesnt-this-jquery-event-to-fire-in-gmail
-2. http://stackoverflow.com/questions/27893300/gmail-chrome-extension-and-document-readystate
-3. with reference to tab key problems:
-	look, binding the event straight to the element
-	whose tab you want to avoid and then using e.preventDef() won't work
-	instead, bind the event to the container (div or document) of the elm
-	and then use preventDefault
-	see http://stackoverflow.com/questions/5961333/prevent-default-action-for-tab-key-in-chrome
-*/
 (function () {
 	var windowLoadChecker = setInterval(function () {
 		if (window.document.readyState === "complete") {
@@ -1014,10 +1004,31 @@
 		else return node.value[node.selectionStart] || "";
 	}
 
+	function previousCharactersForEmoji(node) {
+		var emojisChars = [":", ":-"],
+			previousChars,
+			win, sel, range,
+			rangeNode, position, nodeValue;
+
+		if (isContentEditable(node)) {
+			win = getNodeWindow(node);
+			sel = win.getSelection();
+			range = sel.getRangeAt(0);
+			rangeNode = range.startContainer;
+			position = range.startOffset;
+			nodeValue = rangeNode.textContent;
+		} else {
+			nodeValue = node.value;
+			position = node.selectionStart;
+		}
+
+		previousChars = nodeValue.substring(position - 2, position);
+
+		return previousChars[1] === emojisChars[0] || previousChars === emojisChars[1];
+	}
+
 	var handleKeyPress, handleKeyDown;
 	(function () {
-		// need a variable specific to keypress/down, hence using closure
-
 		// boolean variable: if user types first letter of any auto-insert combo, like `(`,
 		// then variable is set to true; now, if user types `)` out of habit, it will not become
 		// `())` but rather `()` only. Variable is set to false on any keypress that is not
@@ -1047,12 +1058,15 @@
 				autoInsertPair = searchAutoInsertChars(charTyped, 0);
 
 			if (autoInsertPair !== null) {
-				e.preventDefault();
-				insertCharacter(node, autoInsertPair[0], autoInsertPair[1]);
+				// #197: disable auto-inserts for emojis
+				if (!("({".indexOf(autoInsertPair[0]) > -1 && previousCharactersForEmoji(node))) {
+					e.preventDefault();
+					insertCharacter(node, autoInsertPair[0], autoInsertPair[1]);
 
-				toIndexIncrease = 2;
+					toIndexIncrease = 2;
 
-				autoInsertTyped = true;
+					autoInsertTyped = true;
+				}
 			}
 			else if (autoInsertTyped) {
 				autoInsertPair = searchAutoInsertChars(charTyped, 1);
