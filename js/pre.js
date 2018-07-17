@@ -1,4 +1,4 @@
-/* global $, getHTML, triggerEvent, setHTML, isContentEditable, isTextNode, Snip */
+/* global $, getHTML, setHTML, isContentEditable, isTextNode, Snip */
 /* global updateAllValuesPerWin */
 
 // custom functions inspired from jQuery
@@ -77,20 +77,18 @@ var extendNodePrototype;
 			console.dir.apply(console, arguments);
 	};
 
-	// Why do we need this fn?
-	window.triggerEvent =
-		extendNodePrototype("trigger", function (eventName, obj) {
-			var ev = new CustomEvent(eventName, {
-				detail: obj || null
-			});
-			// those functions which need to access
-			// the custom values will need to separately
-			// access the "detail" property, in such a way:
-			// (ev.detail && ev.detail[requiredProperty]) || ev[requiredProperty]
-			// because if detail is not passed it's always null
-
-			this.dispatchEvent(ev);
+	extendNodePrototype("trigger", function (eventName, obj) {
+		var ev = new CustomEvent(eventName, {
+			detail: obj || null
 		});
+		// those functions which need to access
+		// the custom values will need to separately
+		// access the "detail" property, in such a way:
+		// (ev.detail && ev.detail[requiredProperty]) || ev[requiredProperty]
+		// because if detail is not passed it's always null
+
+		this.dispatchEvent(ev);
+	});
 
 	extendNodePrototype("triggerKeypress", function (keyCode) {
 		var ev = new Event("input");
