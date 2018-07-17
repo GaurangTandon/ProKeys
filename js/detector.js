@@ -345,18 +345,6 @@
 		}
 	}
 
-	function deleteSelectionTextarea(node) {
-		var nSS = node.selectionStart,
-			nSE = node.selectionEnd, val;
-
-		if (nSS !== nSE) {
-			val = node.value;
-
-			node.value = val.substring(0, nSS) + val.substring(nSE);
-			node.selectionStart = node.selectionEnd = nSS;
-		}
-	}
-
 	function prepareSnippetBodyForCENode(snipBody, node, callback) {
 		// on disqus thread the line break
 		// is represented by </p>
@@ -632,47 +620,91 @@
 	}
 
 	// auto-insert character functionality
-	function insertCharacter(node, character) {
-		if (isContentEditable(node)) insertCharacterContentEditable(node, character);
+	function insertCharacter(node, characterStart, characterEnd) {
+		if (isContentEditable(node)) insertCharacterContentEditable(node, characterStart, characterEnd);
 		else {
-			deleteSelectionTextarea(node);
-
 			var text = node.value,
-				caretPos = node.selectionEnd;
+				startPos = node.selectionStart,
+				endPos = node.selectionEnd,
+				textBefore = text.substring(0, startPos),
+				textMid = text.substring(startPos, endPos),
+				textAfter = text.substring(endPos),
+				// handle trailing spaces
+				trimmedSelection = textMid.match(/^(\s*)(\S?(?:.|\n|\r)*\S)(\s*)$/) || ["", "", "", ""];
 
-			text = text.substring(0, caretPos) + character + text.substring(caretPos);
+			textBefore += trimmedSelection[1];
+			textAfter = trimmedSelection[3] + textAfter;
+			textMid = trimmedSelection[2];
 
-			node.value = text;
-			node.selectionStart = node.selectionEnd = caretPos;
+			textMid = Data.wrapSelectionAutoInsert ? textMid : "";
+			startPos = textBefore.length + 1;
+			endPos = startPos + textMid.length;
+
+			node.value = textBefore + characterStart + textMid + (characterEnd || "") + textAfter;
+			node.selectionStart = startPos;
+			node.selectionEnd = endPos;
 		}
 	}
 
-	function insertCharacterContentEditable(node, character) {
+	function insertSingleCharacterContentEditable(rangeNode, position, singleCharacter, isStart) {
+		var textNode, positionIncrement = (isStart ? 1 : 0);
+
+		if (rangeNode.nodeType !== 3) {
+			textNode = document.createTextNode(singleCharacter);
+			rangeNode.insertBefore(textNode, rangeNode.childNodes[position]);
+			return [positionIncrement, textNode];
+		}
+
+		var value = rangeNode.textContent,
+			len = value.length;
+
+		if (isStart) {
+			while (/\s/.test(value[position]) && position < len) position++;
+		}
+		else {
+			// value[position] corresponds to one character out of the current selection
+			while (/\s/.test(value[position - 1]) && position >= 1) position--;
+		}
+
+		rangeNode.textContent = value.substring(0, position) + singleCharacter + value.substring(position);
+
+		return [position + positionIncrement, rangeNode];
+	}
+
+	function insertCharacterContentEditable(node, characterStart, characterEnd) {
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
-			range = sel.getRangeAt(0);
+			range = sel.getRangeAt(0),
+			startNode = range.startContainer,
+			newStartNode, newEndNode,
+			singleCharacterReturnValue,
+			endNode = range.endContainer,
+			startPosition = range.startOffset,
+			endPosition = range.endOffset;
 
-		range.deleteContents();
+		if (!Data.wrapSelectionAutoInsert) {
+			range.deleteContents();
+		}
 
 		// the rangeNode is a textnode EXCEPT when the node has no text
-		var rangeNode = range.startContainer,
-			isCENode = rangeNode.nodeType === 1,
-			caretPos = range.startOffset;
+		// eg:https://stackoverflow.com/a/5258024 how to handle this case?
+		singleCharacterReturnValue = insertSingleCharacterContentEditable(startNode, startPosition, characterStart, true);
+		startPosition = singleCharacterReturnValue[0];
+		newStartNode = singleCharacterReturnValue[1];
 
-		debugDir(range);
-		debugDir(rangeNode);
-		debugDir(caretPos);
+		// because this method is also used for inserting single tabkey
+		if (characterEnd) {
+			// they just inserted a character above
+			if (startNode === endNode)
+				endPosition++;
 
-		var text = rangeNode.innerText || rangeNode.textContent,
-			textBefore = text.substring(0, caretPos),
-			textAfter = text.substring(caretPos),
-			textToSet = textBefore + character + textAfter;
+			singleCharacterReturnValue = insertSingleCharacterContentEditable(endNode, endPosition, characterEnd, false);
+			endPosition = singleCharacterReturnValue[0];
+			newEndNode = singleCharacterReturnValue[1];
+		}
 
-		if (isCENode) rangeNode.innerHTML = textToSet;
-		else rangeNode.textContent = textToSet;
-
-		range.setStart(rangeNode, caretPos);
-		range.setEnd(rangeNode, caretPos);
+		range.setStart(newStartNode, startPosition);
+		range.setEnd(newEndNode, endPosition);
 		sel.removeAllRanges();
 		sel.addRange(range);
 	}
@@ -1007,7 +1039,8 @@
 				autoInsertPair = searchAutoInsertChars(charTyped, 0);
 
 			if (autoInsertPair !== null) {
-				insertCharacter(node, autoInsertPair[1]);
+				e.preventDefault();
+				insertCharacter(node, autoInsertPair[0], autoInsertPair[1]);
 
 				toIndexIncrease = 2;
 
