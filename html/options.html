@@ -488,106 +488,108 @@
 
 								<strong>Symbol list</strong>
 								<table>
-									<tr>
+									<thead>
 										<td>Symbol to insert</td>
 										<td>Remarks</td>
 										<td>Sample output</td>
-									</tr>
-									<tr>
-										<td>s</td>
-										<td>seconds</td>
-										<td>40</td>
-									</tr>
-									<tr>
-										<td>m</td>
-										<td>minutes</td>
-										<td>56</td>
-									</tr>
-									<tr>
-										<td>hh</td>
-										<td>hour (in 24 hour format)</td>
-										<td>23</td>
-									</tr>
-									<tr>
-										<td>h</td>
-										<td>hour (in 12 hour format)</td>
-										<td>11</td>
-									</tr>
-									<tr>
-										<td>a</td>
-										<td>am or pm, as per time</td>
-										<td>am</td>
-									</tr>
-									<tr>
-										<td>Do</td>
-										<td>date with suffix</td>
-										<td>14th</td>
-									</tr>
-									<tr>
-										<td>D</td>
-										<td>date</td>
-										<td>14</td>
-									</tr>
-									<tr>
-										<td>dddd</td>
-										<td>day of the week</td>
-										<td>Sunday</td>
-									</tr>
-									<tr>
-										<td>ddd</td>
-										<td>day of the week (short name)</td>
-										<td>Sun</td>
-									</tr>
-									<tr>
-										<td>MMMM</td>
-										<td>full month name</td>
-										<td>March</td>
-									</tr>
-									<tr>
-										<td>MMM</td>
-										<td>short month name</td>
-										<td>Mar</td>
-									</tr>
-									<tr>
-										<td>MM</td>
-										<td>numeric month</td>
-										<td>03</td>
-									</tr>
-									<tr>
-										<td>YYYY</td>
-										<td>year (four digit)</td>
-										<td>2015</td>
-									</tr>
-									<tr>
-										<td>YY</td>
-										<td>year (two digit)</td>
-										<td>15</td>
-									</tr>
-									<tr>
-										<td>ZZ</td>
-										<td>complete timezone</td>
-										<td>India Standard Time</td>
-									</tr>
-									<tr>
-										<td>Z</td>
-										<td>abbreviated timezone</td>
-										<td>IST</td>
-									</tr>
-									<tr>
-										<td>z</td>
-										<td>timezone offset wrt GMT</td>
-										<td>+0530</td>
-									</tr>
-									<tr>
-										<td>date</td>
-										<td>complete current date</td>
-										<td>March 05, 2015</td>
-									</tr>
-									<tr>
-										<td>time</td>
-										<td>complete current time (24hour format)</td>
-										<td>01:29:55</td>
-									</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>s</td>
+											<td>seconds</td>
+											<td>40</td>
+										</tr>
+										<tr>
+											<td>m</td>
+											<td>minutes</td>
+											<td>56</td>
+										</tr>
+										<tr>
+											<td>hh</td>
+											<td>hour (in 24 hour format)</td>
+											<td>23</td>
+										</tr>
+										<tr>
+											<td>h</td>
+											<td>hour (in 12 hour format)</td>
+											<td>11</td>
+										</tr>
+										<tr>
+											<td>a</td>
+											<td>am or pm, as per time</td>
+											<td>am</td>
+										</tr>
+										<tr>
+											<td>Do</td>
+											<td>date with suffix</td>
+											<td>14th</td>
+										</tr>
+										<tr>
+											<td>D</td>
+											<td>date</td>
+											<td>14</td>
+										</tr>
+										<tr>
+											<td>dddd</td>
+											<td>day of the week</td>
+											<td>Sunday</td>
+										</tr>
+										<tr>
+											<td>ddd</td>
+											<td>day of the week (short name)</td>
+											<td>Sun</td>
+										</tr>
+										<tr>
+											<td>MMMM</td>
+											<td>full month name</td>
+											<td>March</td>
+										</tr>
+										<tr>
+											<td>MMM</td>
+											<td>short month name</td>
+											<td>Mar</td>
+										</tr>
+										<tr>
+											<td>MM</td>
+											<td>numeric month</td>
+											<td>03</td>
+										</tr>
+										<tr>
+											<td>YYYY</td>
+											<td>year (four digit)</td>
+											<td>2015</td>
+										</tr>
+										<tr>
+											<td>YY</td>
+											<td>year (two digit)</td>
+											<td>15</td>
+										</tr>
+										<tr>
+											<td>ZZ</td>
+											<td>complete timezone</td>
+											<td>India Standard Time</td>
+										</tr>
+										<tr>
+											<td>Z</td>
+											<td>abbreviated timezone</td>
+											<td>IST</td>
+										</tr>
+										<tr>
+											<td>z</td>
+											<td>timezone offset wrt GMT</td>
+											<td>+0530</td>
+										</tr>
+										<tr>
+											<td>date</td>
+											<td>complete current date</td>
+											<td>March 05, 2015</td>
+										</tr>
+										<tr>
+											<td>time</td>
+											<td>complete current time (24hour format)</td>
+											<td>01:29:55</td>
+										</tr>
+									</tbody>
 								</table>
 							</dd>
 
@@ -644,6 +646,50 @@
 								your clipboard data to be pasted.
 							</dd>
 
+							<dt>How do I use Browser URL macro?</dt>
+							<dd>
+								The Browser URL macro is used to insert the URL (or parts of the URL) of the current webpage into the snippet. Assuming the
+								URL to be "https://www.website.com/path1/path2/path3", these are the sample outputs:
+								<table>
+									<thead>
+										<td>Macro code</td>
+										<td>Remarks</td>
+										<td>Sample output</td>
+									</thead>
+									<tbody>
+										<tr>
+											<td>(empty)</td>
+											<td>Full URL excluding protocol and www</td>
+											<td>website.com/path1/path2/path3</td>
+										</tr>
+										<tr>
+											<td>(any number)</td>
+											<td>Path till which URL is output</td>
+											<td>website.com/path1/path2 (for n = 2)</td>
+										</tr>
+										<tr>
+											<td>(p)</td>
+											<td>Includes the protocol in the output</td>
+											<td>https://website.com/path1/path2/path3</td>
+										</tr>
+										<tr>
+											<td>(w)</td>
+											<td>Includes the www in the output</td>
+											<td>www.website.com/path1/path2/path3</td>
+										</tr>
+										<tr>
+											<td>{p}</td>
+											<td>Outputs only the protocol</td>
+											<td>https</td>
+										</tr>
+										<tr>
+											<td>{3}</td>
+											<td>Outputs only the n-th path of the URL</td>
+											<td>path3</td>
+										</tr>
+									</tbody>
+								</table>
+							</dd>
 
 							<dt>What are Variables?</dt>
 							<dd>
