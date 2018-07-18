@@ -1,6 +1,6 @@
 /* global $, getHTML, DB_loaded, Folder, Snip, showBlockSiteModal, updateAllValuesPerWin*/
-/* global setHTML, MONTHS, chrome, Data, setText, getFormattedDate, isTextNode */
-/* global escapeRegExp, getText, isContentEditable, DAYS, padNumber, debugDir, debugLog */
+/* global chrome, Data, getFormattedDate, isTextNode */
+/* global escapeRegExp, isContentEditable, debugDir, debugLog */
 
 (function () {
 	var windowLoadChecker = setInterval(function () {
@@ -23,64 +23,7 @@
 		SPAN_CLASS = "prokeys-snippet-text",
 		// class of span element holding placeholders
 		PLACE_CLASS = "prokeys-placeholder",
-		macros = [
-			["\\bs([+-]\\d+)?\\b", [function (date) {
-				return padNumber(date.getSeconds());
-			}, 1000]],
-			["\\bm([+-]\\d+)?\\b", [function (date) {
-				return padNumber(date.getMinutes());
-			}, 60000]],
-			["\\bhh([+-]\\d+)?\\b", [function (date) {
-				return padNumber(date.getHours());
-			}, 3600000]],
-			["\\bh([+-]\\d+)?\\b", [function (date) {
-				return padNumber(to12Hrs(date.getHours())[0]);
-			}, 3600000]],
-			["\\ba\\b", [function (date) {
-				return to12Hrs(date.getHours())[1];
-			}, 86400000]],
-			["\\bDo([+-]\\d+)?\\b", [function (date) {
-				return formatDate(date.getDate());
-			}, 86400000]],
-			["\\bD([+-]\\d+)?\\b", [function (date) {
-				return padNumber(date.getDate());
-			}, 86400000]],
-			["\\bdddd([+-]\\d+)?\\b", [function (date) {
-				return parseDay(date.getDay(), "full");
-			}, 86400000]],
-			["\\bddd([+-]\\d+)?\\b", [function (date) {
-				return parseDay(date.getDay(), "half");
-			}, 86400000]],
-			["\\bMMMM([+-]\\d+)?\\b", [function (date) {
-				return parseMonth(date.getMonth(), "full");
-			}, 86400000 * 30]],
-			["\\bMMM([+-]\\d+)?\\b", [function (date) {
-				return parseMonth(date.getMonth(), "half");
-			}, 86400000 * 30]],
-			["\\bMM([+-]\\d+)?\\b", [function (date) {
-				return padNumber(date.getMonth() + 1);
-			}, 86400000 * 30]],
-			["\\bYYYY([+-]\\d+)?\\b", [function (date) {
-				return date.getFullYear();
-			}, 86400000 * 365]],
-			["\\bYY([+-]\\d+)?\\b", [function (date) {
-				return date.getFullYear() % 100;
-			}, 86400000 * 365]],
-			["\\bZZ\\b", [function (date) {
-				return date.toString().match(/\((.*)\)/)[1];
-			}, 0]],
-			["\\bZ\\b", [function (date) {
-				return date.toString().match(/\((.*)\)/)[1].split(" ").reduce(function (a, b) { return a + b[0]; }, "");
-			}, 0]],
-			["\\bz\\b", [function (date) {
-				return date.toString().match(/GMT(.*?) /)[1];
-			}, 0]],
-			["\\bJ\\b", [function (date) {
-				return date.getDayOfYear();
-			}, 0]],
-			["\\bdate\\b", [getFormattedDate, 0]],
-			["\\btime\\b", [getTimestamp, 0]]
-		],
+
 		// contains all Placeholder related variables
 		Placeholder = {
 			// from is where the snippet starts; to is where it ends;
@@ -105,7 +48,6 @@
 		UNIQ_CS_KEY = "PROKEYS_RUNNING",
 		IFRAME_CHECK_TIMER = 500,
 		ctxElm = null, ctxTimestamp = 0,
-		PASTE_REGEX = /\[\[%p\]\]/ig,
 		TAB_INSERTION_VALUE = "    ";
 
 	/*
@@ -157,83 +99,12 @@
 		- getTimestamp
 	*/
 
-	// receives 24 hour; comverts to 12 hour
-	// return [12hour, "am/pm"]
-	function to12Hrs(hour) {
-		if (hour === 0) return [12, "am"];
-		else if (hour == 12) return [12, "pm"];
-		else if (hour >= 1 && hour < 12) return [hour, "am"];
-		else return [hour - 12, "pm"];
-	}
-
-	function parseDay(day_num, type) {
-		return type === "full" ? DAYS[day_num] : DAYS[day_num].slice(0, 3);
-	}
-
-	// accepts num (0-11); returns month
-	// type means full, or half
-	function parseMonth(month, type) {
-		return type === "full" ? MONTHS[month] : MONTHS[month].slice(0, 3);
-	}
-
-	// appends th, st, nd, to date
-	function formatDate(date) {
-		var rem = date % 10, str = "th";
-
-		if (rem === 1 && date !== 11) str = "st";
-		else if (rem === 2 && date !== 12) str = "nd";
-		else if (rem === 3 && date !== 13) str = "rd";
-
-		return date + str;
-	}
-
-	// get number of 31st days starting from
-	// next month until `num` months
-	// subtracting 1/2 for february (account for leap year)
-	function get31stDays(num) {
-		var d = new Date(),
-			count = 0,
-			curr = d.getMonth(),
-			year = d.getFullYear(),
-			i = 0,
-			lim = Math.abs(num),
-			isNegative = num < 0,
-			incr = isNegative ? 1 : -1;
-
-		while (i <= lim) {
-			curr += incr;
-
-			if (curr > 11) { curr = 0; year++; }
-			else if (curr < 0) { curr = 11; year--; }
-
-			switch (MONTHS[curr]) {
-				case "January":
-				case "March":
-				case "May":
-				case "July":
-				case "August":
-				case "October":
-				case "December":
-					count++; break;
-				case "February":
-					// leap year 29 days; one less than 30 days
-					if (year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0))
-						count--;
-					else count -= 2;
-			}
-
-			i++;
-		}
-
-		return isNegative ? -count : count;
-	}
-
 	function getTimestamp() {
 		var date = new Date();
 
-		var hours = padNumber(date.getHours()),
-			minutes = padNumber(date.getMinutes()),
-			seconds = padNumber(date.getSeconds());
+		var hours = Number.padNumber(date.getHours()),
+			minutes = Number.padNumber(date.getMinutes()),
+			seconds = Number.padNumber(date.getSeconds());
 
 		return hours + ":" + minutes + ":" + seconds;
 	}
@@ -264,61 +135,6 @@
 		// SPAN_CLASS no matter what I do
 	}
 
-	// formats macros present in snipBody
-	function formatMacros(snipBody, callback) {
-		// find the %d macro text and call replace function on it
-		// sameTimeFlag: indicates whether all calculations will be dependent (true)
-		// on each other or independent (false) of each other
-		snipBody = snipBody.replace(/\[\[\%d\((!?)(.*?)\)\]\]/g, function (wholeMatch, sameTimeFlag, text) {
-			var reg, regex, elm, date = new Date(),
-				// `text` was earlier modifying itself
-				// due to this, numbers which became shown after
-				// replacement got involved in dateTime arithmetic
-				// to avoid it; we take a `subs`titute
-				subs = text;
-
-			sameTimeFlag = !!sameTimeFlag;
-
-			// operate on text (it is the one inside brackets of %d)
-			for (var i = 0, len = macros.length; i < len; i++) { // macros has regex-function pairs
-				regex = macros[i][0];
-				elm = macros[i][1];
-				reg = new RegExp(regex, "g");
-
-				text.replace(reg, function (match, $1) {
-					var change = 0;
-
-					// date arithmetic
-					if ($1) {
-						$1 = parseInt($1, 10);
-
-						// if it is a month
-						if (/M/.test(regex))
-							change += get31stDays($1) * 86400000;
-
-						// in milliseonds
-						change += elm[1] * $1;
-					}
-					else regex = regex.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
-
-					if (sameTimeFlag)
-						date.setTime(date.getTime() + change);
-
-					subs = subs.replace(new RegExp(regex), elm[0](sameTimeFlag ? date : new Date(Date.now() + change)));
-				});
-			}
-
-			return subs;
-		});
-
-		if (PASTE_REGEX.test(snipBody)) {
-			chrome.extension.sendMessage("givePasteData", function (pasteData) {
-				callback(snipBody.replace(PASTE_REGEX, pasteData));
-			});
-		}
-		else callback(snipBody);
-	}
-
 	function setCaretAtEndOf(node, pos) {
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
@@ -342,7 +158,7 @@
 		var isDisqusThread = isParent(node, "#disqus_thread"),
 			lineSeparator = "<br>" + (isDisqusThread ? "</p>" : "");
 
-		formatMacros(snipBody, function (snipBody) {
+		Snip.formatMacros(snipBody, function (snipBody) {
 			snipBody =
 				Snip.makeHTMLValidForExternalEmbed(snipBody)
 					.replace(/\n/g, lineSeparator)
@@ -409,7 +225,7 @@
 		var textBeforeSnipName = nodeText.substring(0, start),
 			textAfterSnipName = nodeText.substring(caretPos);
 
-		formatMacros(snipBody, function (snipBody) {
+		Snip.formatMacros(snipBody, function (snipBody) {
 			// snipBody can be both textarea-saved or rte-saved
 			// if it is textarea-saved => nothing needs to be done
 			// else callt his method
