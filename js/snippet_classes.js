@@ -843,9 +843,9 @@ Snip.formatMacros = function (snipBody, callback) {
 
 	snipBody = snipBody.replace(/\[\[\%u\((.*?)\)\]\]/g, function (wholeMatch, query) {
 		var output = "", pathLength = query.match(/\d+/),
-			pathString = window.location.pathname,
-			// remove the first element which happens to be an empty string
-			pathArray = pathString.split(/\//g).slice(1),
+			// remove the first character which happens to be a /
+			pathString = window.location.pathname.replace(/^\//, ""),
+			pathArray = pathString.split(/\//g),
 			usefulPathArray;
 
 		pathLength = !pathLength ? pathArray.length : +pathLength[0];
@@ -861,6 +861,16 @@ Snip.formatMacros = function (snipBody, callback) {
 		}
 
 		return output;
+	});
+
+	snipBody = snipBody.replace(/\[\[\%u\{(\w|\d+)\}\]\]/g, function (wholeMatch, query) {
+		if (Number.isInteger(+query)) {
+			return window.location.pathname.replace(/^\//, "").split("/")[+query - 1];
+		} else if (query === "p") {
+			return window.location.protocol.replace(/:$/, "");
+		} else if (query === "w") {
+			return "www";
+		}
 	});
 
 	if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
