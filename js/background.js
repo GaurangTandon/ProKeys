@@ -16,7 +16,8 @@ var contextMenuActionBlockSite,
 	// this helps remove the ambiguity as to which one was latest
 	// storing it in background.js so as to provide a global one-stop center
 	// content scripts, which cannot interact among themselves
-	latestCtxTimestamp;
+	latestCtxTimestamp,
+	URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 
 // for pre.js
 window.IN_BG_PAGE = true;
@@ -27,6 +28,11 @@ Data.snippets = new Folder("Snippets");
 window.listOfSnippetCtxIDs = [];
 
 Folder.setIndices();
+
+function isURL(text) {
+
+	return URL_REGEX.test(text.trim());
+}
 
 function getDomain(url) {
 	url = url.replace(/^(ht|f)tps?(:\/\/)?(www\.)?/, "").split("/");
@@ -88,6 +94,38 @@ function openSnippetsPage(version, reason) {
 	if (reason === "update")
 		localStorage.extensionUpdated = true;
 }
+
+var currentOmniboxQuery, defaultOmniboxSuggestion;
+
+chrome.omnibox.onInputChanged.addListener(function (text, suggestCallback) {
+	currentOmniboxQuery = text;
+
+	Data.snippets.filterSnippetsForOmnibox(text, function (listOfSuggestionObjects) {
+		defaultOmniboxSuggestion = listOfSuggestionObjects[0];
+
+		chrome.omnibox.setDefaultSuggestion({
+			description: defaultOmniboxSuggestion.description
+		});
+
+		suggestCallback(listOfSuggestionObjects.slice(1));
+	});
+});
+
+chrome.omnibox.onInputEntered.addListener(function (omniboxText, disposition) {
+	var URL, query;
+
+	if (omniboxText === currentOmniboxQuery)
+		query = defaultOmniboxSuggestion.content;
+
+	if (isURL(query)) URL = query;
+	else URL = localStorage.omniboxSearchURL.replace("SEARCH", encodeURIComponent(query));
+
+	chrome.tabs.query({ currentWindow: true, active: true }, function (tabs) {
+		chrome.tabs.update(tabs[0].id, {
+			url: URL
+		});
+	});
+});
 
 // create modal dialog for blocking site by detector.js
 (function createBlockSiteModal() {
