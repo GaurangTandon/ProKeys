@@ -55,7 +55,7 @@ pre{
 	font-size: 75%;
 }
 
-button, #about .buttons a{
+button, .buttons a{
 	font-size: 20px;
     font-family: Calibri;
     color: white;
@@ -63,11 +63,11 @@ button, #about .buttons a{
     cursor: pointer;
     outline: none;
     border: none;
-	padding: 5px;
+	padding: 5px 15px;
 	transition: .5s ease;
 }
 
-button:hover, #about .buttons a:hover{
+button:hover, .buttons a:hover{
 	background: #18C470;
 }
 
@@ -233,6 +233,24 @@ footer {
 	padding: 15px;
 }
 
+.box.change-log .appeal, .box.change-log .notice{
+	padding: 10px;
+}
+
+.box.change-log .notice-icon{/*
+	width: 10px;
+	height: 10px;*/
+}
+
+.btn-group {
+	width: 100%;
+}
+
+.btn-group button, .btn-group a{
+	width: 30%;
+	margin-right: 10px;
+}
+
 .box.hotkey .change_hotkey{
 	padding: 10px;
 	font-size: 20px;
@@ -258,18 +276,19 @@ footer {
 }
 
 .box.change-log h2{
-	font-size: 25px;
+	font-size: 20px;
 	margin-top: 10px;
 	color: #18C470;
 }
 
-.box.change-log p:not(.heading){
+.box.change-log .content p{
 	margin-bottom: 10px;
 }
 
-.box.change-log p i{
-	color: #18C470;	
+.box.change-log p i{	
 	font-size: 18px;
+	font-weight: bold;
+	color: #18c470;
 }
 
 .box.change-log .heading span{
@@ -368,11 +387,15 @@ footer {
 	text-align: center;
 }
 
-.siteBlockInput {
+.siteBlockInput, .search-provider input {
 	width: 200px;
 	height: 25px;
 	font-size: 16px;
 	margin: 15px 0 0 0;
+}
+
+.search-provider input{
+	width: 400px;
 }
 
 .blocked-sites ul.empty{
@@ -491,6 +514,10 @@ footer {
 	font-family: monospace;
 }
 
+#help section > i{
+	margin-left: 20px;
+}
+
 .code{
 	font-family: monospace;
 	background: #E8E8E8;
@@ -498,7 +525,7 @@ footer {
 }
 
 #tryit{
-	margin: 0 auto 20px auto;
+	margin: 5px auto 20px auto;
     width: 95%;
     /*height: 210px;*/
     border: 1px solid grey;
@@ -689,8 +716,7 @@ footer {
 
 .snip .buttons, .folder .buttons{
 	margin-top: 5px;
-	height: 20px;
-	width: 55px;
+	height: 20px;	
     position: absolute;
 	right: 5px;
 	top: 5px;
@@ -705,12 +731,16 @@ footer {
 
 .snip .clickable{
 	height: 45px; /*~ .snip's height*/
-	width: calc(100% - 60px);
+	width: calc(100% - 80px);
 	opacity: 0;
     position: absolute;
 	left: 0;
 	top: 0;
 	cursor: pointer;
+}
+
+.snip.contracted .clickable{
+	width: calc(100% - 60px);
 }
 
 .snip .timestamp{
@@ -723,8 +753,8 @@ footer {
 	display: none;
 }
 
-/*class set on li.snip when user makes a new snippet*/
-/*we need to highlight that snippet*/
+/*class set on li.snip when user makes a new snip*/
+/*we need to highlight that snip*/
 .generic.highlighting{
 	background: #75E275;
 	/*slowly fade away the gold background*/
@@ -796,7 +826,7 @@ footer {
 	}
 	
 	.panel_popup{		
-		left: 10% !important; 
+		left: 20% !important; 
 	}
 	
 	#about .buttons a{
@@ -1068,7 +1098,7 @@ footer {
 	position: absolute;	
 	top: 50px;
     left: 28%;
-    min-height: 220px;
+    min-height: 180px;
 	max-width: 550px;
 }
 
@@ -1170,6 +1200,14 @@ footer {
 
 .tick_btn{	
 	background: url("../imgs/tick.png") no-repeat no-repeat center;
+}
+
+.clone_btn{
+	background: url("../imgs/clone.png") no-repeat no-repeat center;
+}
+
+.snip.contracted .clone_btn{
+	display: none;
 }
 
 .edit_btn{	
