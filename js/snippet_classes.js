@@ -841,6 +841,28 @@ Snip.formatMacros = function (snipBody, callback) {
 		return subs;
 	});
 
+	snipBody = snipBody.replace(/\[\[\%u\((.*?)\)\]\]/g, function (wholeMatch, query) {
+		var output = "", pathLength = query.match(/\d+/),
+			pathString = window.location.pathname,
+			// remove the first element which happens to be an empty string
+			pathArray = pathString.split(/\//g).slice(1),
+			usefulPathArray;
+
+		pathLength = !pathLength ? pathArray.length : +pathLength[0];
+		usefulPathArray = pathArray.slice(0, pathLength);
+
+		if (/p/i.test(query)) output += window.location.protocol + "//";
+		if (/w/i.test(query)) output += "www.";
+
+		output += window.location.host;
+
+		if (usefulPathArray.length) {
+			output += "/" + usefulPathArray.join("/");
+		}
+
+		return output;
+	});
+
 	if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
 		chrome.extension.sendMessage("givePasteData", function (pasteData) {
 			callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
