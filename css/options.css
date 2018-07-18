@@ -506,7 +506,7 @@ footer {
 	text-align: center;
 }
 
-#help table tr:first-child td{
+#help table thead{
 	font-weight: bold;
 }
 
