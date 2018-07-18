@@ -27,7 +27,8 @@
 		RESERVED_DELIMITER_LIST = "`~|\\^",
 		ORG_DELIMITER_LIST = "@#$%&*+-=(){}[]:\"'/_<>?!., ",
 		dualSnippetEditorObj,
-		autoInsertWrapSelectionInput;
+		autoInsertWrapSelectionInput,
+		omniboxSearchURLInput;
 
 	// these variables are accessed by multiple files
 	window.DB_loaded = false;
@@ -51,7 +52,8 @@
 		dataUpdateVariable: true,
 		matchDelimitedWord: false,
 		snipNameDelimiterList: ORG_DELIMITER_LIST,
-		wrapSelectionAutoInsert: true // added in v3.1.4
+		wrapSelectionAutoInsert: true, // added in v3.2.0
+		omniboxSearchURL: "https://www.google.com/?q=SEARCH" // added in v3.2.0
 	};
 	window.IN_OPTIONS_PAGE = true;
 	window.$containerSnippets = null;
@@ -1883,9 +1885,24 @@ Or you may try refreshing the page. ");
 
 		autoInsertWrapSelectionInput = $("[name=\"wrapSelectionAutoInsert\"");
 		autoInsertWrapSelectionInput.checked = Data.wrapSelectionAutoInsert;
-		autoInsertWrapSelectionInput.addEventListener("click", function () {
+		autoInsertWrapSelectionInput.on("click", function () {
 			Data.wrapSelectionAutoInsert = autoInsertWrapSelectionInput.checked;
 			saveOtherData("Saved!");
+		});
+
+
+		if (typeof Data.omniboxSearchURL === "undefined") {
+			Data.omniboxSearchURL = "https://www.google.com/?q=SEARCH";
+			saveOtherData();
+		}
+		omniboxSearchURLInput = $(".search-provider input");
+		// localStorage shared with background page
+		localStorage.omniboxSearchURL = omniboxSearchURLInput.value = Data.omniboxSearchURL;
+		omniboxSearchURLInput.on("keydown", function (e) {
+			if (e.keyCode === 13) {
+				Data.omniboxSearchURL = this.value;
+				saveOtherData("Saved!");
+			}
 		});
 
 		// store text for each div
