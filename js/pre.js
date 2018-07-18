@@ -42,10 +42,10 @@ var extendNodePrototype;
 	var DEBUGGING = true;
 
 	window.OBJECT_NAME_LIMIT = 30;
-	window.MONTHS = ["January", "February", "March",
+	Date.MONTHS = ["January", "February", "March",
 		"April", "May", "June", "July", "August", "September",
 		"October", "November", "December"];
-	window.DAYS = ["Sunday", "Monday", "Tuesday",
+	Date.DAYS = ["Sunday", "Monday", "Tuesday",
 		"Wednesday", "Thursday",
 		"Friday", "Saturday"];
 
@@ -56,7 +56,7 @@ var extendNodePrototype;
 		return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 	};
 
-	Date.prototype.getDayOfYear = function () {
+	Date.getDayOfYear = function () {
 		var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334],
 			mn = this.getMonth(),
 			dn = this.getDate(),
@@ -65,6 +65,76 @@ var extendNodePrototype;
 		if (mn > 1 && this.isLeapYear()) dayOfYear++;
 
 		return dayOfYear;
+	};
+
+	// get number of 31st days starting from
+	// next month until `num` months
+	// subtracting 1/2 for february (account for leap year)
+	Date.get31stDays = function (num) {
+		var d = new Date(),
+			count = 0,
+			curr = d.getMonth(),
+			year = d.getFullYear(),
+			i = 0,
+			lim = Math.abs(num),
+			isNegative = num < 0,
+			incr = isNegative ? 1 : -1;
+
+		while (i <= lim) {
+			curr += incr;
+
+			if (curr > 11) { curr = 0; year++; }
+			else if (curr < 0) { curr = 11; year--; }
+
+			switch (Date.MONTHS[curr]) {
+				case "January":
+				case "March":
+				case "May":
+				case "July":
+				case "August":
+				case "October":
+				case "December":
+					count++; break;
+				case "February":
+					// leap year 29 days; one less than 30 days
+					if (year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0))
+						count--;
+					else count -= 2;
+			}
+
+			i++;
+		}
+
+		return isNegative ? -count : count;
+	};
+	// receives 24 hour; comverts to 12 hour
+	// return [12hour, "am/pm"]
+	Date.to12Hrs = function (hour) {
+		if (hour === 0) return [12, "am"];
+		else if (hour == 12) return [12, "pm"];
+		else if (hour >= 1 && hour < 12) return [hour, "am"];
+		else return [hour - 12, "pm"];
+	};
+
+	Date.parseDay = function (day_num, type) {
+		return type === "full" ? Date.DAYS[day_num] : Date.DAYS[day_num].slice(0, 3);
+	};
+
+	// accepts num (0-11); returns month
+	// type means full, or half
+	Date.parseMonth = function (month, type) {
+		return type === "full" ? Date.MONTHS[month] : Date.MONTHS[month].slice(0, 3);
+	};
+
+	// appends th, st, nd, to date
+	Date.formatDate = function (date) {
+		var rem = date % 10, str = "th";
+
+		if (rem === 1 && date !== 11) str = "st";
+		else if (rem === 2 && date !== 12) str = "nd";
+		else if (rem === 3 && date !== 13) str = "rd";
+
+		return date + str;
 	};
 
 	window.debugLog = function () {
@@ -378,7 +448,7 @@ var extendNodePrototype;
 
 	// prepends 0 to single digit num and returns it
 	// as a string
-	window.padNumber = function (num) {
+	Number.padNumber = function (num) {
 		num = parseInt(num, 10);
 
 		return (num <= 9 ? "0" : "") + num;
