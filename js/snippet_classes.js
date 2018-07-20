@@ -796,6 +796,22 @@ Snip.defaultLinkSanitize = function (linkVal) {
 };
 // formats macros present in snipBody
 Snip.formatMacros = function (snipBody, callback) {
+	var MAX_LENGTH = 100;
+
+	function getListTillN(string, delimiter, length, startReplacement) {
+		string = string.replace(new RegExp("^\\" + startReplacement), "");
+
+		var array = string.split(new RegExp("\\" + delimiter, "g")),
+			usefulArray = array.slice(0, length),
+			output = usefulArray.join(delimiter);
+
+		return output ? startReplacement + output : "";
+	}
+
+	function getExactlyNthItem(string, delimiter, index, startReplacement) {
+		return string.replace(new RegExp("^\\" + startReplacement), "").split(delimiter)[index - 1];
+	}
+
 	// find the %d macro text and call replace function on it
 	// sameTimeFlag: indicates whether all calculations will be dependent (true)
 	// on each other or independent (false) of each other
@@ -842,34 +858,40 @@ Snip.formatMacros = function (snipBody, callback) {
 	});
 
 	snipBody = snipBody.replace(/\[\[\%u\((.*?)\)\]\]/g, function (wholeMatch, query) {
-		var output = "", pathLength = query.match(/\d+/),
-			// remove the first character which happens to be a /
-			pathString = window.location.pathname.replace(/^\//, ""),
-			pathArray = pathString.split(/\//g),
-			usefulPathArray;
+		var output = "", pathLength = query.match(/(q?)\d+/),
+			searchParamLength = query.match(/q(\d+)/);
 
-		pathLength = !pathLength ? pathArray.length : +pathLength[0];
-		usefulPathArray = pathArray.slice(0, pathLength);
+		pathLength = !pathLength ? MAX_LENGTH : pathLength[1] ? 0 : +pathLength[0];
+		searchParamLength = !searchParamLength ? 0 : !searchParamLength[1] ? MAX_LENGTH : +searchParamLength[1];
 
 		if (/p/i.test(query)) output += window.location.protocol + "//";
 		if (/w/i.test(query)) output += "www.";
 
 		output += window.location.host;
 
-		if (usefulPathArray.length) {
-			output += "/" + usefulPathArray.join("/");
-		}
+		output += getListTillN(window.location.pathname, "/", pathLength, "/");
+
+		output += getListTillN(window.location.search, "&", searchParamLength, "?");
+
+		if (/h/i.test(query)) output += window.location.hash;
 
 		return output;
 	});
 
-	snipBody = snipBody.replace(/\[\[\%u\{(\w|\d+)\}\]\]/g, function (wholeMatch, query) {
+	snipBody = snipBody.replace(/\[\[\%u\{(\w|\d+|q\d+)\}\]\]/g, function (wholeMatch, query) {
+		var hash;
+
 		if (Number.isInteger(+query)) {
-			return window.location.pathname.replace(/^\//, "").split("/")[+query - 1];
+			return getExactlyNthItem(window.location.pathname, "/", +query, "/");
 		} else if (query === "p") {
 			return window.location.protocol.replace(/:$/, "");
 		} else if (query === "w") {
 			return "www";
+		} else if (query === "h") {
+			hash = window.location.hash;
+			return (hash && hash.substring(1)) || "";
+		} else if (query[0] === "q") {
+			return getExactlyNthItem(window.location.search, "&", +query.substring(1), "?");
 		}
 	});
 
