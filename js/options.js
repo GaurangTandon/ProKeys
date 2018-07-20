@@ -28,6 +28,7 @@
 		ORG_DELIMITER_LIST = "@#$%&*+-=(){}[]:\"'/_<>?!., ",
 		dualSnippetEditorObj,
 		autoInsertWrapSelectionInput,
+		DEFAULT_OMNIBOX_SEARCH_URL = "https://www.google.com/search?q=SEARCH",
 		omniboxSearchURLInput;
 
 	// these variables are accessed by multiple files
@@ -53,7 +54,7 @@
 		matchDelimitedWord: false,
 		snipNameDelimiterList: ORG_DELIMITER_LIST,
 		wrapSelectionAutoInsert: true, // added in v3.2.0
-		omniboxSearchURL: "https://www.google.com/search?q=SEARCH" // added in v3.2.0
+		omniboxSearchURL: DEFAULT_OMNIBOX_SEARCH_URL // added in v3.2.0
 	};
 	window.IN_OPTIONS_PAGE = true;
 	window.$containerSnippets = null;
@@ -625,10 +626,29 @@
 		// it has only those properties which are required
 		// and none other
 		validateRestoreData = function (data, snippets) {
-			function setPropIfUndefined(name) {
-				if (typeof data[name] === "undefined")
-					data[name] = name === "snipNameDelimiterList" ?
-						ORG_DELIMITER_LIST : false;
+			function ensureBackwardCompat(newProps) {
+				newProps.forEach(function (prop) {
+					var value;
+
+					if (typeof data[prop] === "undefined") {
+						switch (prop) {
+							case "snipNameDelimiterList":
+								value = ORG_DELIMITER_LIST;
+								break;
+							case "omniboxSearchURL":
+								value = DEFAULT_OMNIBOX_SEARCH_URL;
+								break;
+							case "wrapSelectionAutoInsert":
+								value = true;
+								break;
+							default:
+								value = false;
+
+						}
+					}
+
+					data[prop] = value;
+				});
 			}
 
 			// if data is of pre-3.0.0 times
@@ -644,14 +664,13 @@
 				// the list of the correct items
 				correctProps = ["blockedSites", "charsToAutoInsertUserList", "dataVersion",
 					"language", "snippets", "tabKey", "visited", "hotKey", "dataUpdateVariable",
-					"matchDelimitedWord", "snipNameDelimiterList", "wrapSelectionAutoInsert"],
+					"matchDelimitedWord", "snipNameDelimiterList", "wrapSelectionAutoInsert", "omniboxSearchURL"],
 				msg = "Data had invalid property: ";
 
-			// ensure backwards compatibility
-			data.dataUpdateVariable = false; // #backwardscompatibility
-			setPropIfUndefined("matchDelimitedWord");// #backwardscompatibility
-			setPropIfUndefined("snipNameDelimiterList");// #backwardscompatibility
-			setPropIfUndefined("wrapSelectionAutoInsert");// #backwardscompatibility
+			// ensure compatibility with old revision data
+			// that users still might have around on their files
+			data.dataUpdateVariable = false;
+			ensureBackwardCompat(["matchDelimitedWord", "snipNameDelimiterList", "wrapSelectionAutoInsert", "omniboxSearchURL"]);
 
 			for (var prop in data) {
 				if (correctProps.indexOf(prop) > -1) {
@@ -686,6 +705,10 @@
 						case "snipNameDelimiterList":
 							if (typeof data[prop] !== "string")
 								data[prop] = ORG_DELIMITER_LIST;
+							break;
+						case "omniboxSearchURL":
+							if (typeof data[prop] !== "string")
+								data[prop] = DEFAULT_OMNIBOX_SEARCH_URL;
 							break;
 						default: // possibly wrong property
 							return msg + prop;
