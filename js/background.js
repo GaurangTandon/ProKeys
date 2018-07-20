@@ -160,8 +160,8 @@ chrome.runtime.onInstalled.addListener(function (details) {
 		});
 	}
 	else if (reason === "update") {
-		title = "ProKeys successfully updated to v" + version;
-		text = "Please reload active tabs to use the new version.";
+		title = "ProKeys updated to v" + version;
+		text = "Hooray! Please reload active tabs to use the new version.";
 
 		openSnippetsPage(version, reason);
 		needToGetLatestData = true;
