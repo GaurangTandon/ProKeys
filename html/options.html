@@ -649,7 +649,7 @@
 							<dt>How do I use Browser URL macro?</dt>
 							<dd>
 								The Browser URL macro is used to insert the URL (or parts of the URL) of the current webpage into the snippet. Assuming the
-								URL to be "https://www.website.com/path1/path2/path3", these are the sample outputs:
+								URL to be "https://www.website.com/path1/path2/path3#hash?a=b&c=d", these are the sample outputs:
 								<table>
 									<thead>
 										<td>Macro code</td>
@@ -678,6 +678,16 @@
 											<td>www.website.com/path1/path2/path3</td>
 										</tr>
 										<tr>
+											<td>(q1)</td>
+											<td>Number of query parameters to be included</td>
+											<td>www.website.com/path1/path2/path3?a=b</td>
+										</tr>
+										<tr>
+											<td>(h)</td>
+											<td>Includes the location hash in the output</td>
+											<td>website.com/path1/path2/path3#hash</td>
+										</tr>
+										<tr>
 											<td>{p}</td>
 											<td>Outputs only the protocol</td>
 											<td>https</td>
@@ -686,6 +696,16 @@
 											<td>{3}</td>
 											<td>Outputs only the n-th path of the URL</td>
 											<td>path3</td>
+										</tr>
+										<tr>
+											<td>{q2}</td>
+											<td>Outputs only the 2nd query parameter of the URL</td>
+											<td>path3</td>
+										</tr>
+										<tr>
+											<td>{h}</td>
+											<td>Outputs only the location hash</td>
+											<td>hash</td>
 										</tr>
 									</tbody>
 								</table>
