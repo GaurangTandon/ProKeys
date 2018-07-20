@@ -53,7 +53,7 @@
 		matchDelimitedWord: false,
 		snipNameDelimiterList: ORG_DELIMITER_LIST,
 		wrapSelectionAutoInsert: true, // added in v3.2.0
-		omniboxSearchURL: "https://www.google.com/?q=SEARCH" // added in v3.2.0
+		omniboxSearchURL: "https://www.google.com/search?q=SEARCH" // added in v3.2.0
 	};
 	window.IN_OPTIONS_PAGE = true;
 	window.$containerSnippets = null;
@@ -1890,9 +1890,8 @@ Or you may try refreshing the page. ");
 			saveOtherData("Saved!");
 		});
 
-
 		if (typeof Data.omniboxSearchURL === "undefined") {
-			Data.omniboxSearchURL = "https://www.google.com/?q=SEARCH";
+			Data.omniboxSearchURL = "https://www.google.com/search?q=SEARCH";
 			saveOtherData();
 		}
 		omniboxSearchURLInput = $(".search-provider input");
