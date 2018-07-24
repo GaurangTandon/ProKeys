@@ -2,8 +2,8 @@
 /* global chrome, Data, getFormattedDate, isTextNode */
 /* global escapeRegExp, isContentEditable, debugDir, debugLog */
 
-(function () {
-	var windowLoadChecker = setInterval(function () {
+(function() {
+	var windowLoadChecker = setInterval(function() {
 		if (window.document.readyState === "complete") {
 			init();
 			clearInterval(windowLoadChecker);
@@ -14,7 +14,8 @@
 	// Global variables
 	////////////////////////
 
-	var isGoogle, isGmail,
+	var isGoogle,
+		isGmail,
 		/* should be "span"; if "p" is used, then it gets appended inside 
 			another "p" which the webpage was using. this can cause styling
 			problems for that rich editor */
@@ -23,13 +24,13 @@
 		SPAN_CLASS = "prokeys-snippet-text",
 		// class of span element holding placeholders
 		PLACE_CLASS = "prokeys-placeholder",
-
 		// contains all Placeholder related variables
 		Placeholder = {
 			// from is where the snippet starts; to is where it ends;
 			// used for specifying from where to where to search and place placeholders
-			fromIndex: 0, toIndex: 0,
-			mode: false,     // false initially, made true only by checkSnippetPresence function
+			fromIndex: 0,
+			toIndex: 0,
+			mode: false, // false initially, made true only by checkSnippetPresence function
 			node: null, // the text node containing the start placeholder
 			isCENode: false,
 			regex: /^%[A-Z0-9_]+%$/i,
@@ -47,7 +48,8 @@
 		// unique key to tell content script running in document
 		UNIQ_CS_KEY = "PROKEYS_RUNNING",
 		IFRAME_CHECK_TIMER = 500,
-		ctxElm = null, ctxTimestamp = 0,
+		ctxElm = null,
+		ctxTimestamp = 0,
 		TAB_INSERTION_VALUE = "    ";
 
 	/*
@@ -58,9 +60,10 @@
 
 	function initiateIframeCheck(parentDoc) {
 		var iframes = parentDoc.querySelectorAll("iframe"),
-			win, doc;
+			win,
+			doc;
 
-		iframes.forEach(function (iframe) {
+		iframes.forEach(function(iframe) {
 			try {
 				doc = iframe.contentDocument;
 				win = iframe.contentWindow;
@@ -74,7 +77,7 @@
 					setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
 				}
 			} catch (e) {
-				//debugDir(e);				
+				//debugDir(e);
 			}
 		});
 	}
@@ -124,11 +127,10 @@
 	/**
 	 * A ProKeys node is a span node added by prokeys
 	 * in CE nodes to keep track of snippet texts
-	 * @param {Element} node to check 
+	 * @param {Element} node to check
 	 */
 	function isProKeysNode(node) {
-		return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM &&
-			(node && node.hasClass(SPAN_CLASS) || isGoogle);
+		return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM && ((node && node.hasClass(SPAN_CLASS)) || isGoogle);
 
 		// in plus.google.com, the span elements which
 		// are added by prokeys do not retain their
@@ -152,19 +154,18 @@
 		}
 	}
 
-	function prepareSnippetBodyForCENode(snipBody, node, callback) {
+	function prepareSnippetBodyForCENode(snip, node, callback) {
 		// on disqus thread the line break
 		// is represented by </p>
 		var isDisqusThread = isParent(node, "#disqus_thread"),
 			lineSeparator = "<br>" + (isDisqusThread ? "</p>" : "");
 
-		Snip.formatMacros(snipBody, function (snipBody) {
-			snipBody =
-				Snip.makeHTMLValidForExternalEmbed(snipBody)
-					.replace(/\n/g, lineSeparator)
-					.replace(/(%[_A-Za-z0-9]+%)/g, function (w, $1) {
-						return "<span class='" + PLACE_CLASS + "'>" + $1 + "</span>";
-					});
+		snip.formatMacros(function(snipBody) {
+			snipBody = Snip.makeHTMLValidForExternalEmbed(snipBody)
+				.replace(/\n/g, lineSeparator)
+				.replace(/(%[_A-Za-z0-9]+%)/g, function(w, $1) {
+					return "<span class='" + PLACE_CLASS + "'>" + $1 + "</span>";
+				});
 			callback(snipBody);
 		});
 	}
@@ -177,11 +178,10 @@
 		Placeholder.array = [].slice.call(snipElmNode.querySelectorAll("." + PLACE_CLASS) || [], 0);
 	}
 
-	function insertSnippetInContentEditableNode(range, snipBody, node) {
-		prepareSnippetBodyForCENode(snipBody, node, function (snipBody) {
+	function insertSnippetInContentEditableNode(range, snip, node) {
+		prepareSnippetBodyForCENode(snip, node, function(snipBody) {
 			var snipElmNode = $.new(TAGNAME_SNIPPET_HOLDER_ELM);
-			snipElmNode.html(snipBody)
-				.addClass(SPAN_CLASS); // identification
+			snipElmNode.html(snipBody).addClass(SPAN_CLASS); // identification
 
 			range.insertNode(snipElmNode);
 
@@ -198,7 +198,7 @@
 			range.setEnd(container, caretPos);
 			range.deleteContents();
 
-			insertSnippetInContentEditableNode(range, snip.body, node);
+			insertSnippetInContentEditableNode(range, snip, node);
 		}
 
 		var win = getNodeWindow(node),
@@ -221,11 +221,11 @@
 		}
 	}
 
-	function insertSnippetInTextarea(start, caretPos, snipBody, nodeText, node) {
+	function insertSnippetInTextarea(start, caretPos, snip, nodeText, node) {
 		var textBeforeSnipName = nodeText.substring(0, start),
 			textAfterSnipName = nodeText.substring(caretPos);
 
-		Snip.formatMacros(snipBody, function (snipBody) {
+		snip.formatMacros(function(snipBody) {
 			// snipBody can be both textarea-saved or rte-saved
 			// if it is textarea-saved => nothing needs to be done
 			// else callt his method
@@ -240,8 +240,7 @@
 	// check snippet's presence and intiate
 	// another function to insert snippet body
 	function checkSnippetPresence(node) {
-		if (isContentEditable(node))
-			return checkSnippetPresenceContentEditable(node);
+		if (isContentEditable(node)) return checkSnippetPresenceContentEditable(node);
 
 		var caretPos = node.selectionStart,
 			snip = Data.snippets.getUniqueSnippetAtCaretPos(node, caretPos), // holds current snippet object
@@ -256,7 +255,7 @@
 			// for placeholder.fromIndex
 			start = caretPos - snip.name.length;
 
-			setTimeout(insertSnippetInTextarea, 10, start, caretPos, snip.body, node.value, node);
+			setTimeout(insertSnippetInTextarea, 10, start, caretPos, snip, node.value, node);
 
 			// first prevent space from being inserted
 			return true;
@@ -276,8 +275,7 @@
 			Placeholder.fromIndex = start; // this is the org. length just before snip name
 			Placeholder.toIndex = endLength; // this just after snip body
 			checkPlaceholdersInNode(node, Placeholder.fromIndex, Placeholder.toIndex, true);
-		}
-		else {
+		} else {
 			setCaretAtEndOf(node, endLength);
 
 			resetPlaceholderVariables();
@@ -285,7 +283,8 @@
 	}
 
 	function checkPlaceholdersInContentEditableNode() {
-		var pArr = Placeholder.array, currND;
+		var pArr = Placeholder.array,
+			currND;
 		//debugLog(Placeholder);
 		if (pArr && pArr.length > 0) {
 			currND = pArr[0];
@@ -384,16 +383,14 @@
 
 	// fired by the window.contextmenu event
 	function insertSnippetFromCtx(snip, node) {
-		if (isContentEditable(node))
-			return insertSnippetFromCtxContentEditable(snip, node);
+		if (isContentEditable(node)) return insertSnippetFromCtxContentEditable(snip, node);
 
 		var caretPos = node.selectionStart,
 			val = node.value;
 
-		if (caretPos !== node.selectionEnd)
-			val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
+		if (caretPos !== node.selectionEnd) val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
 
-		insertSnippetInTextarea(caretPos, caretPos, snip.body, val, node);
+		insertSnippetInTextarea(caretPos, caretPos, snip, val, node);
 	}
 
 	// fired by insertSnippetFromCtx
@@ -404,7 +401,7 @@
 
 		if (!range.collapsed) range.deleteContents();
 
-		insertSnippetInContentEditableNode(range, snip.body, node);
+		insertSnippetInContentEditableNode(range, snip, node);
 	}
 
 	/*
@@ -419,9 +416,7 @@
 	function searchAutoInsertChars(character, searchCharIndex) {
 		var arr = Data.charsToAutoInsertUserList;
 
-		for (var i = 0, len = arr.length; i < len; i++)
-			if (arr[i][searchCharIndex] === character)
-				return arr[i];
+		for (var i = 0, len = arr.length; i < len; i++) if (arr[i][searchCharIndex] === character) return arr[i];
 
 		return null;
 	}
@@ -444,7 +439,7 @@
 			textMid = trimmedSelection[2];
 
 			textMid = Data.wrapSelectionAutoInsert ? textMid : "";
-			startPos = textBefore.length + (+!!characterEnd);
+			startPos = textBefore.length + +!!characterEnd;
 			endPos = startPos + textMid.length;
 
 			node.value = textBefore + characterStart + textMid + (characterEnd || "") + textAfter;
@@ -454,7 +449,8 @@
 	}
 
 	function insertSingleCharacterContentEditable(rangeNode, position, singleCharacter, isStart) {
-		var textNode, positionIncrement = (isStart ? 1 : 0);
+		var textNode,
+			positionIncrement = isStart ? 1 : 0;
 
 		if (rangeNode.nodeType !== 3) {
 			textNode = document.createTextNode(singleCharacter);
@@ -468,15 +464,15 @@
 		if (Data.wrapSelectionAutoInsert) {
 			if (isStart) {
 				while (/\s/.test(value[position]) && position < len) position++;
-			}
-			else {
+			} else {
 				// value[position] corresponds to one character out of the current selection
 				while (/\s/.test(value[position - 1]) && position >= 1) position--;
 			}
 		}
 
 		// HTML entities are for HTML, so use \xA0 to insert &nbsp;
-		rangeNode.textContent = value.substring(0, position) + singleCharacter.replace(/ /g, "\xA0") + value.substring(position);
+		rangeNode.textContent =
+			value.substring(0, position) + singleCharacter.replace(/ /g, "\xA0") + value.substring(position);
 
 		return [position + positionIncrement, rangeNode];
 	}
@@ -485,9 +481,12 @@
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0),
-			startNode, endNode,
-			startPosition, endPosition,
-			newStartNode, newEndNode,
+			startNode,
+			endNode,
+			startPosition,
+			endPosition,
+			newStartNode,
+			newEndNode,
 			singleCharacterReturnValue;
 
 		if (!Data.wrapSelectionAutoInsert) {
@@ -501,17 +500,26 @@
 
 		// the rangeNode is a textnode EXCEPT when the node has no text
 		// eg:https://stackoverflow.com/a/5258024
-		singleCharacterReturnValue = insertSingleCharacterContentEditable(startNode, startPosition, characterStart, true);
+		singleCharacterReturnValue = insertSingleCharacterContentEditable(
+			startNode,
+			startPosition,
+			characterStart,
+			true
+		);
 		startPosition = singleCharacterReturnValue[0];
 		newStartNode = singleCharacterReturnValue[1];
 
 		// because this method is also used for inserting single tabkey
 		if (characterEnd) {
 			// they just inserted a character above
-			if (startNode === endNode)
-				endPosition++;
+			if (startNode === endNode) endPosition++;
 
-			singleCharacterReturnValue = insertSingleCharacterContentEditable(endNode, endPosition, characterEnd, false);
+			singleCharacterReturnValue = insertSingleCharacterContentEditable(
+				endNode,
+				endPosition,
+				characterEnd,
+				false
+			);
 			endPosition = singleCharacterReturnValue[0];
 			newEndNode = singleCharacterReturnValue[1];
 		} else {
@@ -519,8 +527,7 @@
 		}
 
 		range.setStart(newStartNode, startPosition);
-		if (characterEnd)
-			range.setEnd(newEndNode, endPosition);
+		if (characterEnd) range.setEnd(newEndNode, endPosition);
 		sel.removeAllRanges();
 		sel.addRange(range);
 	}
@@ -528,7 +535,8 @@
 	// returns whether site is blocked by user
 	function isBlockedSite(url) {
 		var domain = url.replace(/^(ht|f)tps?:\/\/(www\.)?/, ""),
-			arr = Data.blockedSites, regex;
+			arr = Data.blockedSites,
+			regex;
 
 		for (var i = 0, len = arr.length; i < len; i++) {
 			regex = new RegExp("^" + escapeRegExp(arr[i]));
@@ -549,17 +557,18 @@
 
 			try {
 				return sel.getRangeAt(0).toString();
-			} catch (e) { // possibly no range exists
+			} catch (e) {
+				// possibly no range exists
 				node.focus();
 
-				return win.getSelection()
-					.getRangeAt(0).toString();
+				return win
+					.getSelection()
+					.getRangeAt(0)
+					.toString();
 			}
 		}
 		// textarea
-		else
-			return getHTML(node)
-				.substring(node.selectionStart, node.selectionEnd);
+		else return getHTML(node).substring(node.selectionStart, node.selectionEnd);
 	}
 
 	/**
@@ -594,9 +603,7 @@
 			if (!c) return false;
 			c = c.split(" ");
 
-			for (var i = 0, len = c.length; i < len; i++)
-				if (c[i].search(classToMatch) === 0)
-					return true;
+			for (var i = 0, len = c.length; i < len; i++) if (c[i].search(classToMatch) === 0) return true;
 
 			return false;
 		}
@@ -612,9 +619,7 @@
 		while (node && count++ <= searchLimit) {
 			// 'node.matches' is important condition for MailChimp
 			// it shows "BODY" as node but doesn't allow match :/
-			if (parentSelector && node.matches &&
-				node.matches(parentSelector) ||
-				classArray.some(classMatch))
+			if ((parentSelector && node.matches && node.matches(parentSelector)) || classArray.some(classMatch))
 				return true;
 
 			node = node.parentNode;
@@ -624,11 +629,13 @@
 	}
 
 	function formatVariable(str) {
-		return /date/i.test(str) ? getFormattedDate() :
-			/time/i.test(str) ? getTimestamp() :
-				/version/i.test(str) ?
-					navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ") :
-					null;
+		return /date/i.test(str)
+			? getFormattedDate()
+			: /time/i.test(str)
+				? getTimestamp()
+				: /version/i.test(str)
+					? navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ")
+					: null;
 	}
 
 	function insertTabChar(node) {
@@ -645,12 +652,13 @@
 		else {
 			try {
 				// replace for ^ exponent operators
-				result = result.replace(/(\d+)\^(\d+)/g, function (wMatch, $1, $2) {
+				result = result.replace(/(\d+)\^(\d+)/g, function(wMatch, $1, $2) {
 					return "Math.pow(" + $1 + "," + $2 + ")";
 				});
 				// replace for % operator
 				result = eval(result.replace(/%/g, "/100"));
-			} catch (e) { // possible syntax error on `eval`
+			} catch (e) {
+				// possible syntax error on `eval`
 				result = expression;
 			}
 
@@ -676,14 +684,12 @@
 	function evaluateDoubleBrackets(wholeValue, startOfText, endOfText) {
 		var orgValue = wholeValue.substring(startOfText, endOfText),
 			// result is of String form
-			result = (formatVariable(orgValue) || evaluateMathExpression(orgValue));
+			result = formatVariable(orgValue) || evaluateMathExpression(orgValue);
 
-		if (result === orgValue)
-			result = "[[ERROR! Check ProKeys help to properly operate Mathomania/Variables]]";
+		if (result === orgValue) result = "[[ERROR! Check ProKeys help to properly operate Mathomania/Variables]]";
 
 		// replace the `[[expression]]` with rValue
-		wholeValue = wholeValue.substring(0, startOfText - 2) +
-			result + wholeValue.substring(endOfText + 2);
+		wholeValue = wholeValue.substring(0, startOfText - 2) + result + wholeValue.substring(endOfText + 2);
 
 		return [wholeValue, startOfText - 2 + result.length];
 	}
@@ -700,7 +706,9 @@
 		var caretPos = isCENode ? range.endOffset : node.selectionEnd,
 			value = isCENode ? rangeNode.textContent : node.value,
 			operate = true,
-			evaluatedValue, valueToSet, caretPosToSet;
+			evaluatedValue,
+			valueToSet,
+			caretPosToSet;
 
 		// check closing brackets are present
 		if (value.substr(caretPos, 2) !== "]]") {
@@ -708,15 +716,15 @@
 		}
 		// check opening brackets are present
 		else {
-			for (var i = caretPos;
-				i >= 0 && value[i] !== "["; i--);
+			for (var i = caretPos; i >= 0 && value[i] !== "["; i--);
 
 			if (i <= 0 || value[i - 1] !== "[") operate = false;
 		}
 
 		if (operate) {
 			evaluatedValue = evaluateDoubleBrackets(value, i + 1, caretPos);
-			valueToSet = evaluatedValue[0]; caretPosToSet = evaluatedValue[1];
+			valueToSet = evaluatedValue[0];
+			caretPosToSet = evaluatedValue[1];
 
 			if (isCENode) {
 				rangeNode.textContent = valueToSet;
@@ -724,8 +732,7 @@
 				range.setEnd(rangeNode, caretPosToSet);
 				sel.removeAllRanges();
 				sel.addRange(range);
-			}
-			else {
+			} else {
 				node.value = valueToSet;
 				node.selectionStart = node.selectionEnd = caretPosToSet;
 			}
@@ -741,15 +748,15 @@
 
 		if (isContentEditable(node)) {
 			win = getNodeWindow(node);
-			sel = win.getSelection(); range = sel.getRangeAt(0);
+			sel = win.getSelection();
+			range = sel.getRangeAt(0);
 			loc = range.startOffset + shiftAmount;
 			//debugDir(node);debugDir(range);
 			range.setStart(range.startContainer, loc);
 			range.setEnd(range.endContainer, loc);
 			sel.removeAllRanges();
 			sel.addRange(range);
-		}
-		else node.selectionStart = node.selectionEnd = node.selectionEnd + shiftAmount;
+		} else node.selectionStart = node.selectionEnd = node.selectionEnd + shiftAmount;
 	}
 
 	/*
@@ -757,36 +764,29 @@
 	*/
 
 	function isNotMetaKey(event) {
-		return !event.ctrlKey && !event.shiftKey &&
-			!event.metaKey && !event.altKey;
+		return !event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey;
 	}
 
 	// that is, where we can perform
 	// keypress, keydown functions
 	function isUsableNode(node) {
 		var tgN = node.tagName,
-			inputNodeType, data, retVal;
+			inputNodeType,
+			data,
+			retVal;
 
 		if (!node.dataset) node.dataset = {};
 
 		data = node.dataset;
 
-		if (data && typeof data[CACHE_DATASET_STRING] !== "undefined")
-			retVal = data[CACHE_DATASET_STRING] === "true";
-
-		else if (isParent(node, null, ["CodeMirror", "ace"], 3))
-			retVal = false;
-
-		else if (tgN === "TEXTAREA" || isContentEditable(node))
-			retVal = true;
-
+		if (data && typeof data[CACHE_DATASET_STRING] !== "undefined") retVal = data[CACHE_DATASET_STRING] === "true";
+		else if (isParent(node, null, ["CodeMirror", "ace"], 3)) retVal = false;
+		else if (tgN === "TEXTAREA" || isContentEditable(node)) retVal = true;
 		else if (tgN === "INPUT") {
 			inputNodeType = node.attr("type");
 			// "!inputNodeType" -> github issue #40
-			retVal = !inputNodeType ||
-				allowedInputElms.indexOf(inputNodeType) > -1;
-		}
-		else retVal = false;
+			retVal = !inputNodeType || allowedInputElms.indexOf(inputNodeType) > -1;
+		} else retVal = false;
 
 		node.dataset[CACHE_DATASET_STRING] = retVal;
 
@@ -804,9 +804,9 @@
 			caretPos = range.startOffset;
 			text = getHTML(container); // no .html() as can be text node
 
-			if (caretPos < text.length)
-				return text[caretPos];
-			else { // caretPos was at the end of container
+			if (caretPos < text.length) return text[caretPos];
+			else {
+				// caretPos was at the end of container
 				container = range.startContainer.nextSibling;
 				// so take the following node
 				if (container) {
@@ -816,15 +816,18 @@
 			}
 
 			return "";
-		}
-		else return node.value[node.selectionStart] || "";
+		} else return node.value[node.selectionStart] || "";
 	}
 
 	function previousCharactersForEmoji(node) {
 		var emojisChars = [":", ":-"],
 			previousChars,
-			win, sel, range,
-			rangeNode, position, nodeValue;
+			win,
+			sel,
+			range,
+			rangeNode,
+			position,
+			nodeValue;
 
 		if (isContentEditable(node)) {
 			win = getNodeWindow(node);
@@ -844,14 +847,14 @@
 	}
 
 	var handleKeyPress, handleKeyDown;
-	(function () {
+	(function() {
 		// boolean variable: if user types first letter of any auto-insert combo, like `(`,
 		// then variable is set to true; now, if user types `)` out of habit, it will not become
 		// `())` but rather `()` only. Variable is set to false on any keypress that is not
 		// the first letter of any auto-insert combo and when autoInsertTyped's value is true.
 		var autoInsertTyped = false;
 
-		handleKeyPress = function (e) {
+		handleKeyPress = function(e) {
 			var node = e.target,
 				// holds integer on how much to increase
 				// Placeholder.toIndex by during Placeholder.mode
@@ -874,8 +877,7 @@
 				autoInsertPairFirstChar = searchAutoInsertChars(charTyped, 0),
 				autoInsertPairSecondChar = searchAutoInsertChars(charTyped, 1);
 
-			if (autoInsertTyped && autoInsertPairSecondChar !== null &&
-				getCharFollowingCaret(node) === charTyped) {
+			if (autoInsertTyped && autoInsertPairSecondChar !== null && getCharFollowingCaret(node) === charTyped) {
 				e.preventDefault();
 
 				shiftCursor(node, 1);
@@ -907,9 +909,7 @@
 			if (!Placeholder.isCENode) {
 				var caretPos = node.selectionStart;
 
-				if (Placeholder.mode &&
-					caretPos >= Placeholder.fromIndex && caretPos <= Placeholder.toIndex) {
-
+				if (Placeholder.mode && caretPos >= Placeholder.fromIndex && caretPos <= Placeholder.toIndex) {
 					// when you select text of length 10, and press one key
 					// I have to subtract 9 chars in toIndex
 					if (Placeholder.justSelected) {
@@ -922,7 +922,7 @@
 			}
 		};
 
-		handleKeyDown = function (e) {
+		handleKeyDown = function(e) {
 			var keyCode = e.keyCode,
 				node = e.target,
 				// do not use `this` instead of node; `this` can be document iframe
@@ -948,8 +948,7 @@
 					e.stopPropagation();
 					e.preventDefault();
 
-					if (Placeholder.isCENode)
-						checkPlaceholdersInContentEditableNode();
+					if (Placeholder.isCENode) checkPlaceholdersInContentEditableNode();
 					else {
 						// when user has finished writing one placeholder
 						// the next placeholder lies beyond the caret position
@@ -964,8 +963,7 @@
 
 					insertTabChar(node);
 					resetPlaceholderVariables();
-				}
-				else resetPlaceholderVariables();
+				} else resetPlaceholderVariables();
 			}
 			// snippet substitution hotkey
 			else if (isSnippetSubstitutionKey(e, keyCode)) {
@@ -986,11 +984,10 @@
 	// attaches event to document receives
 	// `this` as the function to call on event
 	function keyEventAttacher(handler) {
-		return function (event) {
+		return function(event) {
 			var node = event.target;
 
-			if (isUsableNode(node))
-				handler.call(node, event);
+			if (isUsableNode(node)) handler.call(node, event);
 		};
 	}
 
@@ -1001,19 +998,20 @@
 		var hk0 = Data.hotKey[0],
 			hk1 = Data.hotKey[1];
 
-		return hk1 ? event[hk0] && keyCode === hk1 :
-			keyCode === hk0;
+		return hk1 ? event[hk0] && keyCode === hk1 : keyCode === hk0;
 	}
 
 	function attachNecessaryHandlers(win, isBlocked) {
-		win.oncontextmenu = function (event) {
+		win.oncontextmenu = function(event) {
 			ctxElm = event.target;
 			ctxTimestamp = Date.now();
 			chrome.runtime.sendMessage({ ctxTimestamp: ctxTimestamp });
 		};
 
-		win.onerror = function () {
-			console.log("Error occurred in ProKeys. Mail a screen shot to prokeys.feedback@gmail.com to help me fix it! Thanks!");
+		win.onerror = function() {
+			console.log(
+				"Error occurred in ProKeys. Mail a screen shot to prokeys.feedback@gmail.com to help me fix it! Thanks!"
+			);
 		};
 
 		if (isBlocked) return;
@@ -1032,7 +1030,10 @@
 	function init() {
 		// if DB is not loaded then
 		// try again after 1 second
-		if (!DB_loaded) { setTimeout(init, 1000); return; }
+		if (!DB_loaded) {
+			setTimeout(init, 1000);
+			return;
+		}
 		// another instance is already running, time to escape
 		if (document[UNIQ_CS_KEY] === true) return;
 
@@ -1047,50 +1048,38 @@
 			PAGE_IS_IFRAME = window.location != window.parent.location;
 
 			URL = PAGE_IS_IFRAME ? document.referrer : window.location.href;
-		}
-		// CORS :(
-		catch (e) {
+		} catch (e) {
+			// CORS :(
 			URL = window.location.href;
 		}
 
 		var isBlocked = isBlockedSite(URL);
 
-		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			var timestamp;
 
 			// when user updates snippet data, reloading page is not required
 			if (typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE) {
 				Data.snippets = Folder.fromArray(request.snippetList);
 				Folder.setIndices();
-			}
-
-			else if (request.checkBlockedYourself)
-				sendResponse(isBlocked);
+			} else if (request.checkBlockedYourself) sendResponse(isBlocked);
 			// ctxElm condition just to make sure that
 			// the modal only appears in the window from where the block form intiated
 			else if (request.task === "showModal" && ctxElm) {
-				if (PAGE_IS_IFRAME)
-					chrome.runtime.sendMessage({ openBlockSiteModalInParent: true, data: request });
+				if (PAGE_IS_IFRAME) chrome.runtime.sendMessage({ openBlockSiteModalInParent: true, data: request });
 				else showBlockSiteModal(request);
-			}
-
-			else if (typeof request.clickedSnippet !== "undefined") {
+			} else if (typeof request.clickedSnippet !== "undefined") {
 				timestamp = parseInt(request.ctxTimestamp, 10);
 
 				if (ctxTimestamp === timestamp) {
 					if (isUsableNode(ctxElm)) insertSnippetFromCtx(request.clickedSnippet, ctxElm);
 					else alert("Unsupported textbox! Snippet cannot be inserted.");
 				}
-			}
-
-			else if (request.giveSnippetList)
-				sendResponse(Data.snippets.toArray());
-
+			} else if (request.giveSnippetList) sendResponse(Data.snippets.toArray());
 			// when "Block this site" is called in iframe, iframe sends message
 			// to background.js to send msg to show dialog in parent window
 			// cannot access parent window directly due to CORS
-			else if (request.showBlockSiteModal && !PAGE_IS_IFRAME)
-				showBlockSiteModal(request.data);
+			else if (request.showBlockSiteModal && !PAGE_IS_IFRAME) showBlockSiteModal(request.data);
 		});
 
 		attachNecessaryHandlers(window, isBlocked);

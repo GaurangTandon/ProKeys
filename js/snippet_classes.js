@@ -315,6 +315,138 @@ window.Snip = function(name, body, timestamp) {
             timestamp: this.timestamp
         };
     };
+
+    this.formatMacros = function(callback) {        
+        var embeddedSnippetsList = [this.name];
+    
+        function embedSnippets(snipBody){
+            return snipBody.replace(/\[\[\%s\((.*?)\)\]\]/g, function(wholeMatch, snipName) {
+                // to avoid circular referencing
+                if(embeddedSnippetsList.indexOf(snipName) > -1) return wholeMatch;
+
+                var matchedSnip = Data.snippets.getUniqueSnip(snipName);
+        
+                if(matchedSnip) {
+                    embeddedSnippetsList.push(matchedSnip.name);
+                    return embedSnippets(matchedSnip.body);
+                }else {
+                    return wholeMatch;
+                }
+            });
+        }
+    
+        var MAX_LENGTH = 100;
+    
+        function getListTillN(string, delimiter, length, startReplacement) {
+            string = string.replace(new RegExp("^\\" + startReplacement), "");
+    
+            var array = string.split(new RegExp("\\" + delimiter, "g")),
+                usefulArray = array.slice(0, length),
+                output = usefulArray.join(delimiter);
+    
+            return output ? startReplacement + output : "";
+        }
+    
+        function getExactlyNthItem(string, delimiter, index, startReplacement) {
+            return string.replace(new RegExp("^\\" + startReplacement), "").split(delimiter)[index - 1];
+        }
+        
+        // snippet embedding shuold be performed first, so that if the newly embedded
+        // snippet body has some macros, they would be evaluated in the below replacements
+        var snipBody = embedSnippets(this.body);
+    
+        // find the %d macro text and call replace function on it
+        // sameTimeFlag: indicates whether all calculations will be dependent (true)
+        // on each other or independent (false) of each other
+        snipBody = snipBody.replace(/\[\[\%d\((!?)(.*?)\)\]\]/g, function(wholeMatch, sameTimeFlag, text) {
+            var reg,
+                regex,
+                elm,
+                date = new Date(),
+                // `text` was earlier modifying itself
+                // due to this, numbers which became shown after
+                // replacement got involved in dateTime arithmetic
+                // to avoid it; we take a `subs`titute
+                subs = text;
+    
+            sameTimeFlag = !!sameTimeFlag;
+    
+            // operate on text (it is the one inside brackets of %d)
+            for (var i = 0, len = Snip.MACROS.length; i < len; i++) {
+                // macros has regex-function pairs
+                regex = Snip.MACROS[i][0];
+                elm = Snip.MACROS[i][1];
+                reg = new RegExp(regex, "g");
+    
+                text.replace(reg, function(match, $1) {
+                    var change = 0;
+    
+                    // date arithmetic
+                    if ($1) {
+                        $1 = parseInt($1, 10);
+    
+                        // if it is a month
+                        if (/M/.test(regex)) change += Date.get31stDays($1) * 86400000;
+    
+                        // in milliseonds
+                        change += elm[1] * $1;
+                    } else regex = regex.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
+    
+                    if (sameTimeFlag) date.setTime(date.getTime() + change);
+    
+                    subs = subs.replace(new RegExp(regex), elm[0](sameTimeFlag ? date : new Date(Date.now() + change)));
+                });
+            }
+    
+            return subs;
+        });
+    
+        // browser URL macros
+        snipBody = snipBody.replace(/\[\[\%u\((.*?)\)\]\]/g, function(wholeMatch, query) {
+            var output = "",
+                pathLength = query.match(/(q?)\d+/),
+                searchParamLength = query.match(/q(\d+)/);
+    
+            pathLength = !pathLength ? MAX_LENGTH : pathLength[1] ? 0 : +pathLength[0];
+            searchParamLength = !searchParamLength ? 0 : !searchParamLength[1] ? MAX_LENGTH : +searchParamLength[1];
+    
+            if (/p/i.test(query)) output += window.location.protocol + "//";
+            if (/w/i.test(query)) output += "www.";
+    
+            output += window.location.host;
+    
+            output += getListTillN(window.location.pathname, "/", pathLength, "/");
+    
+            output += getListTillN(window.location.search, "&", searchParamLength, "?");
+    
+            if (/h/i.test(query)) output += window.location.hash;
+    
+            return output;
+        });
+    
+        snipBody = snipBody.replace(/\[\[\%u\{(\w|\d+|q\d+)\}\]\]/g, function(wholeMatch, query) {
+            var hash;
+    
+            if (Number.isInteger(+query)) {
+                return getExactlyNthItem(window.location.pathname, "/", +query, "/");
+            } else if (query === "p") {
+                return window.location.protocol.replace(/:$/, "");
+            } else if (query === "w") {
+                return "www";
+            } else if (query === "h") {
+                hash = window.location.hash;
+                return (hash && hash.substring(1)) || "";
+            } else if (query[0] === "q") {
+                return getExactlyNthItem(window.location.search, "&", +query.substring(1), "?");
+            }
+        });
+    
+        if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
+            chrome.extension.sendMessage("givePasteData", function(pasteData) {
+                callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
+            });
+        } else callback(snipBody);
+    };
 };
 Snip.prototype = new Generic();
 Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED = 200; // issues#67
@@ -935,115 +1067,6 @@ Snip.defaultLinkSanitize = function(linkVal) {
 
     return linkVal;
 };
-// formats macros present in snipBody
-Snip.formatMacros = function(snipBody, callback) {
-    var MAX_LENGTH = 100;
-
-    function getListTillN(string, delimiter, length, startReplacement) {
-        string = string.replace(new RegExp("^\\" + startReplacement), "");
-
-        var array = string.split(new RegExp("\\" + delimiter, "g")),
-            usefulArray = array.slice(0, length),
-            output = usefulArray.join(delimiter);
-
-        return output ? startReplacement + output : "";
-    }
-
-    function getExactlyNthItem(string, delimiter, index, startReplacement) {
-        return string.replace(new RegExp("^\\" + startReplacement), "").split(delimiter)[index - 1];
-    }
-
-    // find the %d macro text and call replace function on it
-    // sameTimeFlag: indicates whether all calculations will be dependent (true)
-    // on each other or independent (false) of each other
-    snipBody = snipBody.replace(/\[\[\%d\((!?)(.*?)\)\]\]/g, function(wholeMatch, sameTimeFlag, text) {
-        var reg,
-            regex,
-            elm,
-            date = new Date(),
-            // `text` was earlier modifying itself
-            // due to this, numbers which became shown after
-            // replacement got involved in dateTime arithmetic
-            // to avoid it; we take a `subs`titute
-            subs = text;
-
-        sameTimeFlag = !!sameTimeFlag;
-
-        // operate on text (it is the one inside brackets of %d)
-        for (var i = 0, len = Snip.MACROS.length; i < len; i++) {
-            // macros has regex-function pairs
-            regex = Snip.MACROS[i][0];
-            elm = Snip.MACROS[i][1];
-            reg = new RegExp(regex, "g");
-
-            text.replace(reg, function(match, $1) {
-                var change = 0;
-
-                // date arithmetic
-                if ($1) {
-                    $1 = parseInt($1, 10);
-
-                    // if it is a month
-                    if (/M/.test(regex)) change += Date.get31stDays($1) * 86400000;
-
-                    // in milliseonds
-                    change += elm[1] * $1;
-                } else regex = regex.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
-
-                if (sameTimeFlag) date.setTime(date.getTime() + change);
-
-                subs = subs.replace(new RegExp(regex), elm[0](sameTimeFlag ? date : new Date(Date.now() + change)));
-            });
-        }
-
-        return subs;
-    });
-
-    snipBody = snipBody.replace(/\[\[\%u\((.*?)\)\]\]/g, function(wholeMatch, query) {
-        var output = "",
-            pathLength = query.match(/(q?)\d+/),
-            searchParamLength = query.match(/q(\d+)/);
-
-        pathLength = !pathLength ? MAX_LENGTH : pathLength[1] ? 0 : +pathLength[0];
-        searchParamLength = !searchParamLength ? 0 : !searchParamLength[1] ? MAX_LENGTH : +searchParamLength[1];
-
-        if (/p/i.test(query)) output += window.location.protocol + "//";
-        if (/w/i.test(query)) output += "www.";
-
-        output += window.location.host;
-
-        output += getListTillN(window.location.pathname, "/", pathLength, "/");
-
-        output += getListTillN(window.location.search, "&", searchParamLength, "?");
-
-        if (/h/i.test(query)) output += window.location.hash;
-
-        return output;
-    });
-
-    snipBody = snipBody.replace(/\[\[\%u\{(\w|\d+|q\d+)\}\]\]/g, function(wholeMatch, query) {
-        var hash;
-
-        if (Number.isInteger(+query)) {
-            return getExactlyNthItem(window.location.pathname, "/", +query, "/");
-        } else if (query === "p") {
-            return window.location.protocol.replace(/:$/, "");
-        } else if (query === "w") {
-            return "www";
-        } else if (query === "h") {
-            hash = window.location.hash;
-            return (hash && hash.substring(1)) || "";
-        } else if (query[0] === "q") {
-            return getExactlyNthItem(window.location.search, "&", +query.substring(1), "?");
-        }
-    });
-
-    if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
-        chrome.extension.sendMessage("givePasteData", function(pasteData) {
-            callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
-        });
-    } else callback(snipBody);
-};
 /**
  * add indents to `<li>`s; it is NOT innerHTML;
  * content is obtained through regex
@@ -1442,7 +1465,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
             searchResults = this.searchSnippets(text);
 
         searchResults.forEachSnippet(function(snip) {
-            Snip.formatMacros(snip.body, function(snipBody) {
+            snip.formatMacros(function(snipBody) {
                 snipBody = stripHTMLTags(snipBody);
                 description = "<url>" + highlightMatchText(text, snip.name) + "</url> - ";
                 description += "<dim>" + highlightMatchText(text, snipBody) + "</dim>";

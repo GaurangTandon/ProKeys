@@ -3,7 +3,7 @@
 
 // custom functions inspired from jQuery
 // special thanks to
-// bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32 
+// bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32
 
 /**
  * extends NodeList prototype per iframe present in the webpage
@@ -13,22 +13,23 @@ var extendNodePrototype;
 (function protoExtensionWork() {
 	// called by detector.js
 	// to be able to reuse the existing interval
-	window.updateAllValuesPerWin = function (win) {
+	window.updateAllValuesPerWin = function(win) {
 		for (var i = 0, count = protoExtensionNames.length; i < count; i++)
 			setNodeListPropPerWindow(protoExtensionNames[i], protoExtensionFunctions[i], win);
 	};
 
-	var protoExtensionNames = [], protoExtensionFunctions = [];
-	extendNodePrototype = function (prop, func) {
+	var protoExtensionNames = [],
+		protoExtensionFunctions = [];
+	extendNodePrototype = function(prop, func) {
 		protoExtensionNames.push(prop);
 		protoExtensionFunctions.push(func);
 	};
 
 	function setNodeListPropPerWindow(prop, func, win) {
 		// in case of custom created array of Nodes, Array.prototype is necessary
-		win.Array.prototype[prop] = win.NodeList.prototype[prop] = function () {
+		win.Array.prototype[prop] = win.NodeList.prototype[prop] = function() {
 			var args = [].slice.call(arguments, 0);
-			this.forEach(function (node) {
+			this.forEach(function(node) {
 				func.apply(node, args);
 			});
 			return this;
@@ -38,25 +39,34 @@ var extendNodePrototype;
 	}
 })();
 
-(function () {
+(function() {
 	var DEBUGGING = true;
 
 	window.OBJECT_NAME_LIMIT = 30;
-	Date.MONTHS = ["January", "February", "March",
-		"April", "May", "June", "July", "August", "September",
-		"October", "November", "December"];
-	Date.DAYS = ["Sunday", "Monday", "Tuesday",
-		"Wednesday", "Thursday",
-		"Friday", "Saturday"];
+	Date.MONTHS = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December"
+	];
+	Date.DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 	NodeList.prototype.__proto__ = Array.prototype;
 
-	Date.prototype.isLeapYear = function () {
+	Date.prototype.isLeapYear = function() {
 		var year = this.getFullYear();
-		return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+		return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 	};
 
-	Date.getDayOfYear = function () {
+	Date.getDayOfYear = function() {
 		var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334],
 			mn = this.getMonth(),
 			dn = this.getDate(),
@@ -70,7 +80,7 @@ var extendNodePrototype;
 	// get number of 31st days starting from
 	// next month until `num` months
 	// subtracting 1/2 for february (account for leap year)
-	Date.get31stDays = function (num) {
+	Date.get31stDays = function(num) {
 		var d = new Date(),
 			count = 0,
 			curr = d.getMonth(),
@@ -83,8 +93,13 @@ var extendNodePrototype;
 		while (i <= lim) {
 			curr += incr;
 
-			if (curr > 11) { curr = 0; year++; }
-			else if (curr < 0) { curr = 11; year--; }
+			if (curr > 11) {
+				curr = 0;
+				year++;
+			} else if (curr < 0) {
+				curr = 11;
+				year--;
+			}
 
 			switch (Date.MONTHS[curr]) {
 				case "January":
@@ -94,11 +109,11 @@ var extendNodePrototype;
 				case "August":
 				case "October":
 				case "December":
-					count++; break;
+					count++;
+					break;
 				case "February":
 					// leap year 29 days; one less than 30 days
-					if (year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0))
-						count--;
+					if (year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0)) count--;
 					else count -= 2;
 			}
 
@@ -109,26 +124,27 @@ var extendNodePrototype;
 	};
 	// receives 24 hour; comverts to 12 hour
 	// return [12hour, "am/pm"]
-	Date.to12Hrs = function (hour) {
+	Date.to12Hrs = function(hour) {
 		if (hour === 0) return [12, "am"];
 		else if (hour == 12) return [12, "pm"];
 		else if (hour >= 1 && hour < 12) return [hour, "am"];
 		else return [hour - 12, "pm"];
 	};
 
-	Date.parseDay = function (day_num, type) {
+	Date.parseDay = function(day_num, type) {
 		return type === "full" ? Date.DAYS[day_num] : Date.DAYS[day_num].slice(0, 3);
 	};
 
 	// accepts num (0-11); returns month
 	// type means full, or half
-	Date.parseMonth = function (month, type) {
+	Date.parseMonth = function(month, type) {
 		return type === "full" ? Date.MONTHS[month] : Date.MONTHS[month].slice(0, 3);
 	};
 
 	// appends th, st, nd, to date
-	Date.formatDate = function (date) {
-		var rem = date % 10, str = "th";
+	Date.formatDate = function(date) {
+		var rem = date % 10,
+			str = "th";
 
 		if (rem === 1 && date !== 11) str = "st";
 		else if (rem === 2 && date !== 12) str = "nd";
@@ -137,17 +153,15 @@ var extendNodePrototype;
 		return date + str;
 	};
 
-	window.debugLog = function () {
-		if (DEBUGGING)
-			console.log.apply(console, arguments);
+	window.debugLog = function() {
+		if (DEBUGGING) console.log.apply(console, arguments);
 	};
 
-	window.debugDir = function () {
-		if (DEBUGGING)
-			console.dir.apply(console, arguments);
+	window.debugDir = function() {
+		if (DEBUGGING) console.dir.apply(console, arguments);
 	};
 
-	extendNodePrototype("trigger", function (eventName, obj) {
+	extendNodePrototype("trigger", function(eventName, obj) {
 		var ev = new CustomEvent(eventName, {
 			detail: obj || null
 		});
@@ -160,14 +174,15 @@ var extendNodePrototype;
 		this.dispatchEvent(ev);
 	});
 
-	extendNodePrototype("triggerKeypress", function (keyCode) {
+	extendNodePrototype("triggerKeypress", function(keyCode) {
 		var ev = new Event("input");
 		ev.keyCode = keyCode;
 		this.dispatchEvent(ev);
 	});
 
-	window.$ = function (selector) {
-		var elms = document.querySelectorAll(selector), elm;
+	window.$ = function(selector) {
+		var elms = document.querySelectorAll(selector),
+			elm;
 
 		// cannot always return a NodeList/Array
 		// as properties like firstChild, lastChild will only be able
@@ -178,90 +193,91 @@ var extendNodePrototype;
 			// value else length if undefined
 			elm.length = 1;
 			return elm;
-		}
-		else return elms;
+		} else return elms;
 	};
 
-	$.new = function (tagName) {
+	$.new = function(tagName) {
 		return document.createElement(tagName);
 	};
 
-	extendNodePrototype("on", window.on = function (name, fn, useCapture) {
-		var names = name.split(/,\s*/g);
+	extendNodePrototype(
+		"on",
+		(window.on = function(name, fn, useCapture) {
+			var names = name.split(/,\s*/g);
 
-		for (var i = 0, len = names.length; i < len; i++)
-			this.addEventListener(names[i], fn, useCapture);
+			for (var i = 0, len = names.length; i < len; i++) this.addEventListener(names[i], fn, useCapture);
 
-		return this;
-	});
+			return this;
+		})
+	);
 
 	// inserts the newNode after `this`
-	extendNodePrototype("insertAfter", function (newNode) {
+	extendNodePrototype("insertAfter", function(newNode) {
 		this.parentNode.insertBefore(newNode, this.nextSibling);
 		return this;
 	});
 
 	// returns true if element has class; usage: Element.hasClass("class")
-	extendNodePrototype("hasClass", function (className) {
+	extendNodePrototype("hasClass", function(className) {
 		return this.className && new RegExp("(^|\\s)" + className + "(\\s|$)").test(this.className);
 	});
 
-	extendNodePrototype("toggleClass", function (cls) {
+	extendNodePrototype("toggleClass", function(cls) {
 		this.classList.toggle(cls);
 		return this;
 	});
 
-	extendNodePrototype("addClass", function (cls) {
+	extendNodePrototype("addClass", function(cls) {
 		// multiple classes to add
-		if (!Array.isArray(cls))
-			cls = [cls];
+		if (!Array.isArray(cls)) cls = [cls];
 
-		cls.forEach(function (e) {
-			this.classList.add(e);
-		}.bind(this));
+		cls.forEach(
+			function(e) {
+				this.classList.add(e);
+			}.bind(this)
+		);
 
 		return this;
 	});
 
-	extendNodePrototype("removeClass", function (cls) {
+	extendNodePrototype("removeClass", function(cls) {
 		// multiple classes to remove
-		if (!Array.isArray(cls))
-			cls = [cls];
+		if (!Array.isArray(cls)) cls = [cls];
 
-		cls.forEach(function (e) {
-			this.classList.remove(e);
-		}.bind(this));
+		cls.forEach(
+			function(e) {
+				this.classList.remove(e);
+			}.bind(this)
+		);
 
 		return this;
 	});
 
-	extendNodePrototype("isTextBox", function () {
+	extendNodePrototype("isTextBox", function() {
 		return this.tagName === "INPUT" || this.tagName === "TEXTAREA";
 	});
 
-	extendNodePrototype("attr", function (name, val) {
+	extendNodePrototype("attr", function(name, val) {
 		if (typeof val != "undefined") {
 			this.setAttribute(name, val);
 			return this;
-		}
-		else return this.getAttribute(name);
+		} else return this.getAttribute(name);
 	});
 
 	// returns innerText
-	window.getText = function (node) {
+	window.getText = function(node) {
 		return getHTML(node, "innerText");
 	};
 
 	// sets innerText
-	window.setText = function (node, newVal) {
+	window.setText = function(node, newVal) {
 		return setHTML(node, newVal, "innerText");
 	};
 
-	window.getHTML = function (node, prop) {
+	window.getHTML = function(node, prop) {
 		if (!node) return;
 
-		if (isTextNode(node))
-			return node.textContent.replace(/\u00a0/g, " ");
+		if (isTextNode(node)) return node.textContent.replace(/\u00a0/g, " ");
 
 		switch (node.tagName) {
 			case "TEXTAREA":
@@ -272,7 +288,7 @@ var extendNodePrototype;
 		}
 	};
 
-	window.setHTML = function (node, newVal, prop, isListSnippets) {
+	window.setHTML = function(node, newVal, prop, isListSnippets) {
 		// in case number is passed; .replace won't work
 		newVal = newVal.toString();
 
@@ -281,29 +297,23 @@ var extendNodePrototype;
 			return node;
 		}
 
-
 		switch (node.tagName) {
 			case "TEXTAREA":
 			case "INPUT":
-				node.value = newVal.replace("<br>", "\n")
-					.replace("&nbsp;", " "); break;
+				node.value = newVal.replace("<br>", "\n").replace("&nbsp;", " ");
+				break;
 			default:
 				if (prop === "innerText")
 					// but innertext will collapse consecutive spaces
 					// do not use textContent as it will collapse even single newlines
-					node.innerText = newVal.replace("<br>", "\n")
-						.replace("&nbsp;", " ");
+					node.innerText = newVal.replace("<br>", "\n").replace("&nbsp;", " ");
 				// first .replace is required as at the end of any text
 				// as gmail will not display single space for unknown reason
 				else {
 					try {
-						node.innerHTML = newVal.replace(/ $/g, "&nbsp;")
-							.replace(/ {2}/g, " &nbsp;");
-						console.log(newVal.replace(/ $/g, "&nbsp;")
-							.replace(/ {2}/g, " &nbsp;")
-							.replace(/\n/g, "<br>"));
-						if (!isListSnippets)
-							node.innerHTML = node.innerHTML.replace(/\n/g, "<br>");
+						node.innerHTML = newVal.replace(/ $/g, "&nbsp;").replace(/ {2}/g, " &nbsp;");
+
+						if (!isListSnippets) node.innerHTML = node.innerHTML.replace(/\n/g, "<br>");
 						else setHTMLPurificationForListSnippets(node);
 					} catch (e) {
 						console.log("From setHTML: `node` argment is undefined");
@@ -318,19 +328,26 @@ var extendNodePrototype;
 		// after we start splitting these text nodes and insert <br>s
 		// the original text nodes and their count gets lost
 		function getCurrentTextNodes() {
-			var textNodesInNode = [], child;
+			var textNodesInNode = [],
+				child;
 
 			for (var i = 0, len = node.childNodes.length; i < len; i++) {
 				child = node.childNodes[i];
-				if (isTextNode(child))
-					textNodesInNode.push(child);
+				if (isTextNode(child)) textNodesInNode.push(child);
 			}
 
 			return textNodesInNode;
 		}
-		var list = getCurrentTextNodes(), childCount = list.length,
-			count = 0, child,
-			textNodes, i, len, tNode, $br, text;
+		var list = getCurrentTextNodes(),
+			childCount = list.length,
+			count = 0,
+			child,
+			textNodes,
+			i,
+			len,
+			tNode,
+			$br,
+			text;
 
 		for (; count < childCount; count++) {
 			child = list[count];
@@ -344,7 +361,8 @@ var extendNodePrototype;
 			// hence, DO NOT do this
 
 			textNodes = child.textContent.split(/\n/g);
-			i = 0; len = textNodes.length;
+			i = 0;
+			len = textNodes.length;
 
 			for (; i < len; i++) {
 				text = textNodes[i];
@@ -362,9 +380,9 @@ var extendNodePrototype;
 			node.removeChild(child);
 		}
 
-		// block level elements already occupy a full line, hence, remove 
+		// block level elements already occupy a full line, hence, remove
 		// ONE <br> after them
-		node.querySelectorAll("pre, blockquote, ol, ul").forEach(function (elm) {
+		node.querySelectorAll("pre, blockquote, ol, ul").forEach(function(elm) {
 			var br = elm.nextElementSibling;
 			if (br && br.tagName === "BR") br.parentNode.removeChild(br);
 		});
@@ -374,31 +392,29 @@ var extendNodePrototype;
 
 	// prototype alternative for setHTML/getHTML
 	// use only when sure that Node is "not undefined"
-	extendNodePrototype("html", function (textToSet, prop, isListSnippets) {
+	extendNodePrototype("html", function(textToSet, prop, isListSnippets) {
 		// can be zero/empty string; make sure it's undefined
-		return typeof textToSet !== "undefined" ?
-			setHTML(this, textToSet, prop, isListSnippets) :
-			getHTML(this, prop);
+		return typeof textToSet !== "undefined" ? setHTML(this, textToSet, prop, isListSnippets) : getHTML(this, prop);
 	});
 
 	// prototype alternative for setText/getText
 	// use only when sure that Node is "not undefined"
-	extendNodePrototype("text", function (textToSet) {
+	extendNodePrototype("text", function(textToSet) {
 		// can be zero/empty string; make sure it's undefined
 		return this.html(textToSet, "innerText");
 	});
 
-	extendNodePrototype("unwrap", function () {
+	extendNodePrototype("unwrap", function() {
 		var children = this.childNodes,
-			nextSibling = this.nextSibling, child,
+			nextSibling = this.nextSibling,
+			child,
 			len = children.length,
 			parent = this.parentNode;
 
 		while (len > 0) {
 			child = children[len - 1];
 
-			if (nextSibling)
-				parent.insertBefore(child, nextSibling);
+			if (nextSibling) parent.insertBefore(child, nextSibling);
 			else parent.appendChild(child);
 
 			nextSibling = child;
@@ -411,10 +427,13 @@ var extendNodePrototype;
 	// replaces string's `\n` with `<br>` or reverse
 	// `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
 	// false => convrt text for dislplay in text area (`.value`)
-	window.convertBetweenHTMLTags = function (string, convertForHTML) {
+	window.convertBetweenHTMLTags = function(string, convertForHTML) {
 		var map = [["<br>", "\\n"], [" &nbsp;", "  "]],
-			regexIndex = +convertForHTML, replacerIdx = +!convertForHTML, elm,
-			i = 0, len = map.length;
+			regexIndex = +convertForHTML,
+			replacerIdx = +!convertForHTML,
+			elm,
+			i = 0,
+			len = map.length;
 
 		for (; i < len; i++) {
 			elm = map[i];
@@ -434,21 +453,19 @@ var extendNodePrototype;
 		return container.innerHTML.replace(/&nbsp; ?&nbsp;<li>/g, "<li>");
 	};
 
-	window.isEmpty = function (obj) {
-		for (var prop in obj)
-			if (obj.hasOwnProperty(prop))
-				return false;
+	window.isEmpty = function(obj) {
+		for (var prop in obj) if (obj.hasOwnProperty(prop)) return false;
 
 		return true;
 	};
 
-	window.escapeRegExp = function (str) {
+	window.escapeRegExp = function(str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	};
 
 	// prepends 0 to single digit num and returns it
 	// as a string
-	Number.padNumber = function (num) {
+	Number.padNumber = function(num) {
 		num = parseInt(num, 10);
 
 		return (num <= 9 ? "0" : "") + num;
@@ -457,7 +474,7 @@ var extendNodePrototype;
 	/**
 	 * @param: timestamp: optional
 	 */
-	window.getFormattedDate = function (timestamp) {
+	window.getFormattedDate = function(timestamp) {
 		var d = (timestamp ? new Date(timestamp) : new Date()).toString();
 
 		// sample date would be:
@@ -465,38 +482,38 @@ var extendNodePrototype;
 		return d.substring(4, 15);
 	};
 
-	window.isObject = function (o) {
+	window.isObject = function(o) {
 		return Object.prototype.toString.call(o) === "[object Object]";
 	};
 
 	// should use this since users may use foreign language
 	// characters which use up more than two bytes
-	window.lengthInUtf8Bytes = function (str) {
+	window.lengthInUtf8Bytes = function(str) {
 		// Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
 		var m = encodeURIComponent(str).match(/%[89ABab]/g);
 		return str.length + (m ? m.length : 0);
 	};
 
-	window.isTextNode = function (node) {
+	window.isTextNode = function(node) {
 		return node.nodeType === 3;
 	};
 
-	// if it is a callForParent, means that a child node wants 
+	// if it is a callForParent, means that a child node wants
 	// to get its parents checked
 	// callForParent: flag to prevent infinite recursion
-	window.isContentEditable = function (node, callForParent) {
-		var tgN = node && node.tagName, attr, parent;
+	window.isContentEditable = function(node, callForParent) {
+		var tgN = node && node.tagName,
+			attr,
+			parent;
 
 		// insanity checks first
-		if (!node || tgN === "TEXTAREA" || tgN === "INPUT" || !node.getAttribute)
-			return false;
+		if (!node || tgN === "TEXTAREA" || tgN === "INPUT" || !node.getAttribute) return false;
 
 		// can also be a textnode
 		attr = node.attr ? node.attr("contenteditable") : null;
 
 		// empty string to support <element contenteditable> markup
-		if (attr === "" || attr === "true" || attr === "plaintext-only")
-			return true;
+		if (attr === "" || attr === "true" || attr === "plaintext-only") return true;
 
 		// important part below
 		// note that if we introduce a snippet
@@ -521,9 +538,11 @@ var extendNodePrototype;
 		return false;
 	};
 
-	window.checkRuntimeError = function () {
+	window.checkRuntimeError = function() {
 		if (chrome.runtime.lastError) {
-			alert("An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!");
+			alert(
+				"An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!"
+			);
 			console.log(chrome.runtime.lastError);
 			return true;
 		}
@@ -533,11 +552,12 @@ var extendNodePrototype;
 	// be triggered. The function will be called after it stops being called for
 	// N milliseconds. If `immediate` is passed, trigger the function on the
 	// leading edge, instead of the trailing.
-	window.debounce = function (func, wait, immediate) {
+	window.debounce = function(func, wait, immediate) {
 		var timeout;
-		return function () {
-			var context = this, args = arguments,
-				later = function () {
+		return function() {
+			var context = this,
+				args = arguments,
+				later = function() {
 					timeout = null;
 					if (!immediate) func.apply(context, args);
 				},

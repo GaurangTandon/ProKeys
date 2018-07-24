@@ -482,6 +482,17 @@
 								<a href="#tryit">Try math expressions in the editor</a> (like "[[5^3=]]")
 							</dd>
 
+							<dt>How to embed one snippet inside of another?</dt>
+							<dd>
+								Embedding one snippet inside of another allows you to pull the contents of one snippet into another. This is extremely useful
+								when you have a certain text repeated in several snippets. You can declare that certain text as a single separate
+								snippet, and then embed this new snippet inside the other snippets.
+								<br> All the placeholders and macros of the embedded snippet work as if they were a part of the parent snippet. You can
+								embed more than one snippet inside a parent snippet, and your embedded snippet can also contain other embedding references.
+								<br> To embed a snippet "snp" inside another snippet "main", you would simply type "[[%s(snp)]]" (without quotes) inside
+								the "main" snippet body.
+							</dd>
+
 							<dt>What are Date/Time macros?</dt>
 							<dd>
 								<p>Date-Time macros can be used to insert current date and time related data.</p>
