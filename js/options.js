@@ -13,6 +13,7 @@
 	window.onload = init;
 
 	var storage = chrome.storage.local,
+		VERSION = chrome.runtime.getManifest().version,
 		// global functions defined in init
 		toggleSnippetEditPanel, toggleFolderEditPanel,
 		validateSnippetData, validateFolderData,
@@ -1023,6 +1024,10 @@
 			hotkeyListener = $(".hotkey_listener");
 
 		chrome.storage.onChanged.addListener(updateStorageAmount);
+
+		$("span.version").forEach(function (span) {
+			span.innerHTML = VERSION;
+		});
 
 		// panels are - #content div
 		(function panelWork() {
