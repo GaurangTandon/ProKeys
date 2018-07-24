@@ -291,7 +291,7 @@ footer {
 	color: #18c470;
 }
 
-.box.change-log .heading span{
+.box.change-log .heading span:last-child{
 	float: right;
 }
 

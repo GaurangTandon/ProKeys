@@ -17,7 +17,7 @@
         SETTINGS_DEFAULTS = {
             snippets: Folder.getDefaultSnippetData(),
             blockedSites: [],
-            charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ['"', '"'], ["[", "]"]],
+            charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
             dataVersion: 1,
             language: "English",
             hotKey: ["shiftKey", 32],
@@ -62,71 +62,6 @@
     window.OLD_DATA_STORAGE_KEY = "UserSnippets";
     window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
     window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
-
-    // stored in global Data variable
-    function createBuiltInSnippets() {
-        var name = "README-New_UI_Details",
-            body =
-                // using + operator avoids the inadvertently introduced tab characters
-                "Dear user, here are some things you need to know in this new UI:\n\n" +
-                "1. You need to click on the name or body of the listed snippet to expand it completely. In the following image, " +
-                "the purple area shows where you can click to expand the snippet.\n\n<img src='../imgs/help1.png'>\n\n" +
-                "2. Click on the pencil icon to edit and the dustbin icon to delete a snippet/folder.\n" +
-                "3. Click on the folder, anywhere in the purple area denoted below, to view its contents.\n\n<img src='../imgs/help2.png'>\n\n" +
-                "4. Click on a folder name in the navbar to view its contents. In the example below, the navbar consists of 'Snippets', 'sampleFolder' and 'folder2', " +
-                " each nested within the previous.\n\n" +
-                "<img src='../imgs/help3.png'>",
-            name2 = "clipboard_macro",
-            body2 =
-                "Use this snippet anywhere and the following - [[%p]] - will be replaced by " +
-                " your clipboard data. Clipboard data includes text that you have previously copied or cut with intention to paste.",
-            ts = Date.now(),
-            snips = [
-                Folder.MAIN_SNIPPETS_NAME,
-                ts,
-                ["sampleFolder", ts],
-                {
-                    name: "sampleSnippet",
-                    body:
-                        "Hello new user! Thank you for using ProKeys!\n\nThis is a sample snippet. Try using it on any webpage by typing 'sampleSnippet' (snippet name; without quotes), and press the hotkey (default: Shift+Space), and this whole text would come in place of it.",
-                    timestamp: ts
-                },
-                {
-                    name: "letter",
-                    body:
-                        "(Sample snippet to demonstrate the power of ProKeys snippets; for more detail on Placeholders, see the Help section)\n\nHello %name%,\n\nYour complaint number %complaint% has been noted. We will work at our best pace to get this issue solved for you. If you experience any more problems, please feel free to contact at me@organization.com.\n\nRegards,\n%my_name%,\nDate: [[%d(D-MM-YYYY)]]",
-                    timestamp: ts
-                },
-                {
-                    name: "brb",
-                    body: "be right back",
-                    timestamp: ts
-                },
-                {
-                    name: "my_sign",
-                    body: "<b>Aquila Softworks ©</b>\n<i>Creator Of ProKeys</i>\n<u>prokeys.feedback@gmail.com</u>",
-                    timestamp: ts
-                },
-                {
-                    name: "dateArithmetic",
-                    body:
-                        "Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5 m-5 s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
-                    timestamp: ts
-                },
-                {
-                    name: name,
-                    body: body,
-                    timestamp: ts
-                },
-                {
-                    name: name2,
-                    body: body2,
-                    timestamp: ts
-                }
-            ];
-
-        Data.snippets = snips;
-    }
 
     // when we restore one revision, we have to remove it from its
     // previous position; saveSnippetData will automatically insert it
@@ -319,7 +254,7 @@
         }
 
         if (getAutoInsertCharIndex(firstChar) !== -1) {
-            alert('The character "' + firstChar + '" is already present.');
+            alert("The character \"" + firstChar + "\" is already present.");
             return;
         }
 
@@ -404,6 +339,23 @@
         append($.new("button").html("Save"));
 
         $autoInsertTable.appendChild(tr);
+    }
+
+    // goes through all default properties, and adds
+    // them to `data` if they are undefined
+    function ensureRobustCompat(data) {
+        var missingProperties = false;
+
+        for (var prop in SETTINGS_DEFAULTS) {
+            if (SETTINGS_DEFAULTS.hasOwnProperty(prop)) {
+                if (typeof data[prop] === "undefined") {
+                    data[prop] = SETTINGS_DEFAULTS[prop];
+                    missingProperties = true;
+                }
+            }
+        }
+
+        return missingProperties;
     }
 
     var validateRestoreData, initiateRestore;
@@ -562,18 +514,6 @@
         // it has only those properties which are required
         // and none other
         validateRestoreData = function(data, snippets) {
-            // goes through all default properties, and adds
-            // them to `data` if they are undefined
-            function ensureRobustCompat() {
-                for (var prop in SETTINGS_DEFAULTS) {
-                    if (SETTINGS_DEFAULTS.hasOwnProperty(prop)) {
-                        if (typeof data[prop] === "undefined") {
-                            data[prop] = SETTINGS_DEFAULTS[prop];
-                        }
-                    }
-                }
-            }
-
             // if data is of pre-3.0.0 times
             // it will not have folders and everything
             var snippetsValidation = Folder.validate(snippets);
@@ -583,7 +523,7 @@
             // all the checks following this line should be of "data" type
             if (typeOfData !== "data") return "true";
 
-            ensureRobustCompat();
+            ensureRobustCompat(data);
 
             // delete user-added properties that ProKeys doesn't recognize
             for (var prop in data) {
@@ -960,9 +900,9 @@ Textarea is the normal text editor mode. No support for bold, italics, etc. But 
 Think Notepad."
                 )
                 .setRichText(
-                    'This is a contenteditable or editable div. \
+                    "This is a contenteditable or editable div. \
 These editors are generally found in your email client like Gmail, Outlook, etc.<br><br><i>This editor \
-<u>supports</u></i><b> HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.'
+<u>supports</u></i><b> HTML formatting</b>. You can use the \"my_sign\" sample snippet here, and see the effect."
                 );
         })();
 
@@ -1058,9 +998,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     var vld = validateDelimiterList(this.value);
                     if (vld !== true) {
                         alert(
-                            'Input list contains reserved delimiter "' +
+                            "Input list contains reserved delimiter \"" +
                                 vld +
-                                '". Please remove it from the list. Thank you!'
+                                "\". Please remove it from the list. Thank you!"
                         );
                         return true;
                     }
@@ -1172,7 +1112,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                             if (type === "Snip") movedObject.body = body;
 
                             latestRevisionLabel =
-                                'moved "' + name + '" ' + movedObject.type + ' to "' + newParentfolder.name + '"';
+                                "moved \"" + name + "\" " + movedObject.type + " to \"" + newParentfolder.name + "\"";
                             saveSnippetData(undefined, newParentfolder.name, name);
                         } else oldParentFolder["edit" + type](oldName, name, body);
                     } else newParentfolder["add" + type](name, body);
@@ -1201,7 +1141,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     object.remove();
                     this.parentNode.removeChild(this);
 
-                    latestRevisionLabel = "deleted " + type + ' "' + name + '"';
+                    latestRevisionLabel = "deleted " + type + " \"" + name + "\"";
 
                     saveSnippetData(undefined, folder.name);
                 }
@@ -1210,7 +1150,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             function cloneBtnOnClick() {
                 var object = Folder.getObjectThroughDOMListElm(this),
                     newObject = object.clone();
-                latestRevisionLabel = "cloned " + object.type + ' "' + object.name + '"';
+                latestRevisionLabel = "cloned " + object.type + " \"" + object.name + "\"";
 
                 // keep the same snippet highlighted as well (object.name)
                 // so that user can press clone button repeatedly
@@ -1256,7 +1196,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
                 // if checkbox style list is still shown
                 if (
-                    $containerSnippets.querySelector('input[type="checkbox"]') &&
+                    $containerSnippets.querySelector("input[type=\"checkbox\"]") &&
                     !$bulkActionPanel.hasClass(SHOW_CLASS)
                 )
                     Data.snippets.getUniqueFolder($bulkActionPanel.dataset.originalShownFolderName).listSnippets();
@@ -1277,7 +1217,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
                 folder.sort(sortType, descendingFlag);
 
-                latestRevisionLabel = 'sorted folder "' + folder.name + '"';
+                latestRevisionLabel = "sorted folder \"" + folder.name + "\"";
             });
 
             $addNewBtn.on("click", function() {
@@ -1399,17 +1339,17 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                                 alert(
                                     "Cannot move " +
                                         e.type +
-                                        ' "' +
+                                        " \"" +
                                         e.name +
-                                        '" to "' +
+                                        "\" to \"" +
                                         selectedFolder.name +
-                                        '"' +
+                                        "\"" +
                                         "; as it is the same as (or a parent folder of) the destination folder"
                                 );
                         });
 
                         latestRevisionLabel =
-                            "moved " + selectedObjects.length + ' objects to folder "' + selectFolderName + '"';
+                            "moved " + selectedObjects.length + " objects to folder \"" + selectFolderName + "\"";
 
                         saveSnippetData(
                             function() {
@@ -1798,24 +1738,19 @@ Or you may try refreshing the page. "
 
     var local = "<b>Local</b> - storage only on one's own PC. More storage space than sync",
         localT =
-            '<label for="local"><input type="radio" id="local" data-storagetoset="local"/><b>Local</b></label> - storage only on one\'s own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.',
+            "<label for=\"local\"><input type=\"radio\" id=\"local\" data-storagetoset=\"local\"/><b>Local</b></label> - storage only on one's own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.",
         sync1 =
-            '<label for="sync"><input type="radio" id="sync" data-storagetoset="sync"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage',
+            "<label for=\"sync\"><input type=\"radio\" id=\"sync\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage",
         sync2 =
-            '<label for="sync2"><input type="radio" id="sync2" data-storagetoset="sync"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.',
+            "<label for=\"sync2\"><input type=\"radio\" id=\"sync2\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.",
         sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
     function setEssentialItemsOnDBLoad() {
-        // issues#111
-        Data.matchDelimitedWord = Data.matchDelimitedWord || false;
-        Data.snipNameDelimiterList = Data.snipNameDelimiterList || SETTINGS_DEFAULTS.snipNameDelimiterList;
-
         // user installs extension; set ls prop
         var firstInstall = !localStorage[LS_REVISIONS_PROP];
         if (firstInstall) {
             // refer github issues#4
             Data.dataUpdateVariable = !Data.dataUpdateVariable;
-            createBuiltInSnippets();
             localStorage[LS_REVISIONS_PROP] = "[]";
             saveRevision(Data.snippets);
         }
@@ -1827,6 +1762,10 @@ Or you may try refreshing the page. "
 
         Folder.setIndices();
 
+        var propertiesChanged = ensureRobustCompat(Data);
+        if(propertiesChanged)
+            saveOtherData();
+
         // on load; set checkbox state to user preference
         $tabKeyInput.checked = Data.tabKey;
         $snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
@@ -1835,27 +1774,16 @@ Or you may try refreshing the page. "
 
         listBlockedSites();
 
-        debugDir(Data);
-
-        if (typeof Data.wrapSelectionAutoInsert === "undefined") {
-            Data.wrapSelectionAutoInsert = SETTINGS_DEFAULTS.wrapSelectionAutoInsert;
-            saveOtherData();
-        }
-
         $autoInsertTable = $(".auto_insert");
         listAutoInsertChars();
 
-        autoInsertWrapSelectionInput = $('[name="wrapSelectionAutoInsert"');
+        autoInsertWrapSelectionInput = $("[name=\"wrapSelectionAutoInsert\"");
         autoInsertWrapSelectionInput.checked = Data.wrapSelectionAutoInsert;
         autoInsertWrapSelectionInput.on("click", function() {
             Data.wrapSelectionAutoInsert = autoInsertWrapSelectionInput.checked;
             saveOtherData("Saved!");
         });
 
-        if (typeof Data.omniboxSearchURL === "undefined") {
-            Data.omniboxSearchURL = SETTINGS_DEFAULTS.omniboxSearchURL;
-            saveOtherData();
-        }
         omniboxSearchURLInput = $(".search-provider input");
         // localStorage shared with background page
         localStorage.omniboxSearchURL = omniboxSearchURLInput.value = Data.omniboxSearchURL;
