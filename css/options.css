@@ -963,8 +963,12 @@ footer {
 	cursor: pointer;
 }
 
+.selectList p:hover{
+	background: rgb(229, 243, 255);
+}
+
 .selectList p.selected {
-    background: rgb(230, 230, 230);
+    background: rgb(204, 232, 255);
 }
 
 .selectList div.collapsed > div{
