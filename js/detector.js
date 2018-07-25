@@ -204,7 +204,7 @@
 		var textBeforeSnipName = nodeText.substring(0, start),
 			textAfterSnipName = nodeText.substring(caretPos);
 
-		Snip.fromObject(snip).formatMacros(function(snipBody) {
+		snip.formatMacros(function(snipBody) {
 			// snipBody can be both textarea-saved or rte-saved
 			// if it is textarea-saved => nothing needs to be done
 			// else callt his method
@@ -1054,10 +1054,9 @@
 				else showBlockSiteModal(request);
 			} else if (typeof request.clickedSnippet !== "undefined") {
 				timestamp = parseInt(request.ctxTimestamp, 10);
-				
 
 				if (ctxTimestamp === timestamp) {
-					if (isUsableNode(ctxElm)) insertSnippetFromCtx(request.clickedSnippet, ctxElm);
+					if (isUsableNode(ctxElm)) insertSnippetFromCtx(Snip.fromObject(request.clickedSnippet), ctxElm);
 					else alert("Unsupported textbox! Snippet cannot be inserted.");
 				}
 			} else if (request.giveSnippetList) sendResponse(Data.snippets.toArray());
