@@ -68,6 +68,7 @@
 				<ul>
 					<li>Regression of time function not working in date/time macros.</li>
 					<li>Regression of wrapping selection in auto-inserts in whitespace with no text selected.</li>
+					<li>Regression of snippet insertion not working through both hotkey and context menu.</li>
 				</ul>
 			</div>
 			<!--<div class="notice">
@@ -487,15 +488,16 @@
 
 							<dt>How to Embed one Snippet inside of another?</dt>
 							<dd>
-								<p>Embedding one snippet inside of another allows you to pull the contents of one snippet into another. This is extremely useful
-								when you have a certain text repeated in several snippets. You can declare that certain text as a single separate
-								snippet, and then embed this new snippet inside the other snippets.</p>
+								<p>Embedding one snippet inside of another allows you to pull the contents of one snippet into another. This is extremely
+									useful when you have a certain text repeated in several snippets. You can declare that certain text as a single
+									separate snippet, and then embed this new snippet inside the other snippets.</p>
 								<br>
 								<p>All the placeholders and macros of the embedded snippet work as if they were a part of the parent snippet. You can
-								embed more than one snippet inside a parent snippet, and your embedded snippet can also contain other embedding references.</p>
+									embed more than one snippet inside a parent snippet, and your embedded snippet can also contain other embedding
+									references.</p>
 								<br>
 								<p>To embed a snippet "snp2" inside another snippet "snp1", you would simply type "[[%s(snp2)]]" (without quotes) inside
-								the "snp1" snippet's body.</p>
+									the "snp1" snippet's body.</p>
 							</dd>
 
 							<dt>What are Date/Time macros?</dt>

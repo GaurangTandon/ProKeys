@@ -8,11 +8,12 @@ Helps organize exactly what things happened in which version.
 
 ---
 
-**3.3.0** - 25/Jul/2018
+**3.3.1** - 25/Jul/2018
 
 -   embed snippets support
 -   more robust data restore functionality (ignore unknown props/set to default known props if absent)
 -   fix regressions of time function not working and of auto-insert mis-wrapping in whitespace
+-   fix regression snippet insertion dead through both hotkey and ctx
 
 **3.2.1** - 21/Jul/2018
 
