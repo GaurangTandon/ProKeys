@@ -374,6 +374,7 @@ window.Snip = function(name, body, timestamp) {
                 macroFunc,
                 dateArithmeticChange,
                 date = new Date(),
+                operableDate,
                 // `text` was earlier modifying itself
                 // due to this, numbers which became shown after
                 // replacement got involved in dateTime arithmetic
@@ -405,8 +406,10 @@ window.Snip = function(name, body, timestamp) {
                     } else macroRegexString = macroRegexString.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
     
                     if (sameTimeFlag) date.setTime(date.getTime() + timeChange);
+
+                    operableDate = sameTimeFlag ? date : new Date(Date.now() + timeChange);
     
-                    replacementText = replacementText.replace(new RegExp(macroRegexString), macroFunc(sameTimeFlag ? date : new Date(Date.now() + timeChange)));
+                    replacementText = replacementText.replace(new RegExp(macroRegexString), macroFunc(operableDate));
                 });
             }
     
