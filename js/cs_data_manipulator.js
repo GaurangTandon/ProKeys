@@ -11,11 +11,25 @@
 		there
 */
 (function() {
-	var storage = chrome.storage.local;
-
+	var storage = chrome.storage.local,
+		SETTINGS_DEFAULTS = {
+			snippets: [],
+			blockedSites: [],
+			charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
+			dataVersion: 1,
+			language: "English",
+			hotKey: ["shiftKey", 32],
+			dataUpdateVariable: true,
+			matchDelimitedWord: false,
+			tabKey: false,
+			visited: false,
+			snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+			omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
+			wrapSelectionAutoInsert: true
+		};
 	// globals are: (used by detector.js)
 	window.DB_loaded = false;
-	window.Data = {};
+	window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
 	window.OLD_DATA_STORAGE_KEY = "UserSnippets";
 	window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
 	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
@@ -34,9 +48,10 @@
 
 	function DB_load(callback) {
 		storage.get(OLD_DATA_STORAGE_KEY, function(r) {
-			if (isEmpty(r[OLD_DATA_STORAGE_KEY]) || r[OLD_DATA_STORAGE_KEY].dataVersion != Data.dataVersion) {
-				console.log("Unknown value of Data. Please open the Options page");
-			} else {
+			if (isEmpty(r[OLD_DATA_STORAGE_KEY])) DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
+			else if (r[OLD_DATA_STORAGE_KEY].dataVersion != Data.dataVersion)
+				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
+			else {
 				//	console.dir(r);
 				Data = r[OLD_DATA_STORAGE_KEY];
 				if (callback) callback();

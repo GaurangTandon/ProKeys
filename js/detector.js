@@ -204,7 +204,7 @@
 		var textBeforeSnipName = nodeText.substring(0, start),
 			textAfterSnipName = nodeText.substring(caretPos);
 
-		snip.formatMacros(function(snipBody) {
+		Snip.fromObject(snip).formatMacros(function(snipBody) {
 			// snipBody can be both textarea-saved or rte-saved
 			// if it is textarea-saved => nothing needs to be done
 			// else callt his method
@@ -1017,6 +1017,7 @@
 			setTimeout(init, 1000);
 			return;
 		}
+
 		// another instance is already running, time to escape
 		if (document[UNIQ_CS_KEY] === true) return;
 
@@ -1053,6 +1054,7 @@
 				else showBlockSiteModal(request);
 			} else if (typeof request.clickedSnippet !== "undefined") {
 				timestamp = parseInt(request.ctxTimestamp, 10);
+				
 
 				if (ctxTimestamp === timestamp) {
 					if (isUsableNode(ctxElm)) insertSnippetFromCtx(request.clickedSnippet, ctxElm);
