@@ -366,49 +366,51 @@ window.Snip = function(name, body, timestamp) {
         // find the %d macro text and call replace function on it
         // sameTimeFlag: indicates whether all calculations will be dependent (true)
         // on each other or independent (false) of each other
-        snipBody = snipBody.replace(/\[\[\%d\((!?)(.*?)\)\]\]/g, function(wholeMatch, sameTimeFlag, macroText) {
-            var macroRegex,
+        snipBody = snipBody.replace(/\[\[\%d\((!?)(.*?)\)\]\]/g, function(wholeMatch, sameTimeFlag, userInputMacroText) {
+            var macro,
+                macroRegex,
                 macroRegexString,
                 elm,
                 macroFunc,
+                dateArithmeticChange,
                 date = new Date(),
                 // `text` was earlier modifying itself
                 // due to this, numbers which became shown after
                 // replacement got involved in dateTime arithmetic
-                // to avoid it; we take a `subs`titute
-                subs = macroText;
+                // to avoid it; we take a substitute
+                replacementText = userInputMacroText;
     
             sameTimeFlag = !!sameTimeFlag;
     
             // operate on text (it is the one inside brackets of %d)
             for (var i = 0, len = Snip.MACROS.length; i < len; i++) {
                 // macros has regex-function pairs
-                macroRegexString = Snip.MACROS[i][0];
-                elm = Snip.MACROS[i][1];
-                macroFunc = elm[0];
+                macro = Snip.MACROS[i];
+                macroRegexString = macro[0];
                 macroRegex = new RegExp(macroRegexString, "g");
+                elm = macro[1];
+                macroFunc = elm[0];
+                dateArithmeticChange = elm[1];
     
-                macroText.replace(macroRegex, function(match, dateArithmeticMatch) {
+                userInputMacroText.replace(macroRegex, function(match, dateArithmeticMatch) {
                     var timeChange = 0;
     
                     if (dateArithmeticMatch) {
                         dateArithmeticMatch = parseInt(dateArithmeticMatch, 10);
     
-                        // if the macro is a month, we need to calculate the exact days being changed
-                        // 86400 is number of seconds in a day
+                        // if the macro is a month, we need to account for the deviation days being changed
                         if (/M/.test(macroRegexString)) timeChange += Date.getTotalDeviationFrom30DaysMonth(dateArithmeticMatch) * Date.MILLISECONDS_IN_A_DAY;
     
-                        // in milliseonds
-                        timeChange += elm[1] * dateArithmeticMatch;
+                        timeChange += dateArithmeticChange * dateArithmeticMatch;
                     } else macroRegexString = macroRegexString.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
     
                     if (sameTimeFlag) date.setTime(date.getTime() + timeChange);
     
-                    subs = subs.replace(new RegExp(macroRegexString), macroFunc(sameTimeFlag ? date : new Date(Date.now() + timeChange)));
+                    replacementText = replacementText.replace(new RegExp(macroRegexString), macroFunc(sameTimeFlag ? date : new Date(Date.now() + timeChange)));
                 });
             }
     
-            return subs;
+            return replacementText;
         });
     
         // browser URL macros

@@ -112,6 +112,7 @@ var extendNodePrototype;
 			}
 
 			switch (currMonth) {
+				// months with 31 days
 				case 0:
 				case 2:
 				case 4:
@@ -121,10 +122,11 @@ var extendNodePrototype;
 				case 11:
 					totalDaysChange++;
 					break;
+				// february
 				case 1:
 					totalDaysChange--;
 					// leap year 29 days; one less than 30 days
-					if (! (currYear % 400 === 0 || (currYear % 100 !== 0 && currYear % 4 === 0)) ) totalDaysChange--;
+					if (!(currYear % 400 === 0 || (currYear % 100 !== 0 && currYear % 4 === 0))) totalDaysChange--;
 			}
 
 			monthIndex++;
