@@ -58,7 +58,7 @@ var extendNodePrototype;
 		"December"
 	];
 	Date.DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
+	Date.MILLISECONDS_IN_A_DAY = 86400 * 1000;
 	NodeList.prototype.__proto__ = Array.prototype;
 
 	Date.prototype.isLeapYear = function() {
@@ -87,50 +87,50 @@ var extendNodePrototype;
 		return dayOfYear;
 	};
 
-	// get number of 31st days starting from
-	// next month until `num` months
+	// starting from next month until `num` months
 	// subtracting 1/2 for february (account for leap year)
-	Date.get31stDays = function(num) {
-		var d = new Date(),
-			count = 0,
-			curr = d.getMonth(),
-			year = d.getFullYear(),
-			i = 0,
-			lim = Math.abs(num),
+	// adding 1 for 31st days
+	Date.getTotalDeviationFrom30DaysMonth = function(num) {
+		var currDate = new Date(),
+			totalDaysChange = 0,
+			currMonth = currDate.getMonth(),
+			currYear = currDate.getFullYear(),
+			monthIndex = 0,
+			maxMonth = Math.abs(num),
 			isNegative = num < 0,
-			incr = isNegative ? 1 : -1;
+			monthChange = isNegative ? 1 : -1;
 
-		while (i <= lim) {
-			curr += incr;
+		while (monthIndex <= maxMonth) {
+			currMonth += monthChange;
 
-			if (curr > 11) {
-				curr = 0;
-				year++;
-			} else if (curr < 0) {
-				curr = 11;
-				year--;
+			if (currMonth > 11) {
+				currMonth = 0;
+				currYear++;
+			} else if (currMonth < 0) {
+				currMonth = 11;
+				currYear--;
 			}
 
-			switch (Date.MONTHS[curr]) {
-				case "January":
-				case "March":
-				case "May":
-				case "July":
-				case "August":
-				case "October":
-				case "December":
-					count++;
+			switch (currMonth) {
+				case 0:
+				case 2:
+				case 4:
+				case 6:
+				case 7:
+				case 9:
+				case 11:
+					totalDaysChange++;
 					break;
-				case "February":
+				case 1:
+					totalDaysChange--;
 					// leap year 29 days; one less than 30 days
-					if (year % 400 === 0 || (year % 100 !== 0 && year % 4 === 0)) count--;
-					else count -= 2;
+					if (! (currYear % 400 === 0 || (currYear % 100 !== 0 && currYear % 4 === 0)) ) totalDaysChange--;
 			}
 
-			i++;
+			monthIndex++;
 		}
 
-		return isNegative ? -count : count;
+		return isNegative ? -totalDaysChange : totalDaysChange;
 	};
 	// receives 24 hour; comverts to 12 hour
 	// return [12hour, "am/pm"]
