@@ -427,7 +427,7 @@
 		}
 	}
 
-	function insertSingleCharacterContentEditable(rangeNode, position, singleCharacter, isStart) {
+	function insertSingleCharacterContentEditable(rangeNode, position, singleCharacter, isStart, wasRangeCollapsed) {
 		var textNode,
 			positionIncrement = isStart ? 1 : 0;
 
@@ -440,7 +440,8 @@
 		var value = rangeNode.textContent,
 			len = value.length;
 
-		if (Data.wrapSelectionAutoInsert) {
+		// do not shift whitespaces if there actually was no selection
+		if (Data.wrapSelectionAutoInsert && !wasRangeCollapsed) {
 			if (isStart) {
 				while (/\s/.test(value[position]) && position < len) position++;
 			} else {
@@ -466,6 +467,7 @@
 			endPosition,
 			newStartNode,
 			newEndNode,
+			rangeWasCollapsed = range.collapsed,
 			singleCharacterReturnValue;
 
 		if (!Data.wrapSelectionAutoInsert) {
@@ -483,7 +485,8 @@
 			startNode,
 			startPosition,
 			characterStart,
-			true
+			true,
+			rangeWasCollapsed
 		);
 		startPosition = singleCharacterReturnValue[0];
 		newStartNode = singleCharacterReturnValue[1];
@@ -497,7 +500,8 @@
 				endNode,
 				endPosition,
 				characterEnd,
-				false
+				false,
+				rangeWasCollapsed
 			);
 			endPosition = singleCharacterReturnValue[0];
 			newEndNode = singleCharacterReturnValue[1];
