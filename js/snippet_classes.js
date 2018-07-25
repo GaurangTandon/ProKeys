@@ -363,7 +363,7 @@ window.Snip = function(name, body, timestamp) {
         // snippet body has some macros, they would be evaluated in the below replacements
         var snipBody = embedSnippets(this.body);
     
-        // find the %d macro text and call replace function on it
+        // Date/Time macro replacement
         // sameTimeFlag: indicates whether all calculations will be dependent (true)
         // on each other or independent (false) of each other
         snipBody = snipBody.replace(/\[\[\%d\((!?)(.*?)\)\]\]/g, function(wholeMatch, sameTimeFlag, userInputMacroText) {
@@ -379,7 +379,7 @@ window.Snip = function(name, body, timestamp) {
                 // due to this, numbers which became shown after
                 // replacement got involved in dateTime arithmetic
                 // to avoid it; we take a substitute
-                replacementText = userInputMacroText;
+                replacedOutput = userInputMacroText;
     
             sameTimeFlag = !!sameTimeFlag;
     
@@ -409,11 +409,11 @@ window.Snip = function(name, body, timestamp) {
 
                     operableDate = sameTimeFlag ? date : new Date(Date.now() + timeChange);
     
-                    replacementText = replacementText.replace(new RegExp(macroRegexString), macroFunc(operableDate));
+                    replacedOutput = replacedOutput.replace(new RegExp(macroRegexString), macroFunc(operableDate));
                 });
             }
     
-            return replacementText;
+            return replacedOutput;
         });
     
         // browser URL macros
