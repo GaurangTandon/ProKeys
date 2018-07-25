@@ -317,18 +317,26 @@ window.Snip = function(name, body, timestamp) {
     };
 
     this.formatMacros = function(callback) {        
-        var embeddedSnippetsList = [this.name];
+        var embeddedSnippetsList = [this.name],
+            // optimization for more than one embeds of the same snippet
+            embeddingResultsCached = {};
     
         function embedSnippets(snipBody){
             return snipBody.replace(/\[\[\%s\((.*?)\)\]\]/g, function(wholeMatch, snipName) {
                 // to avoid circular referencing
                 if(embeddedSnippetsList.indexOf(snipName) > -1) return wholeMatch;
 
-                var matchedSnip = Data.snippets.getUniqueSnip(snipName);
+                var matchedSnip = Data.snippets.getUniqueSnip(snipName),
+                    matchedSnipName = matchedSnip && matchedSnip.name;
         
                 if(matchedSnip) {
-                    embeddedSnippetsList.push(matchedSnip.name);
-                    return embedSnippets(matchedSnip.body);
+                    embeddedSnippetsList.push(matchedSnipName);
+                    if(embeddingResultsCached[matchedSnipName]){
+                        return embeddingResultsCached[matchedSnipName];
+                    }else{
+                        embeddingResultsCached[matchedSnipName] = embedSnippets(matchedSnip.body);
+                        return embeddingResultsCached[matchedSnipName];
+                    }
                 }else {
                     return wholeMatch;
                 }
@@ -393,7 +401,7 @@ window.Snip = function(name, body, timestamp) {
                     } else regex = regex.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
     
                     if (sameTimeFlag) date.setTime(date.getTime() + change);
-    
+    debugger;
                     subs = subs.replace(new RegExp(regex), elm[0](sameTimeFlag ? date : new Date(Date.now() + change)));
                 });
             }
@@ -622,7 +630,7 @@ Snip.MACROS = [
         ]
     ],
     ["\\bdate\\b", [getFormattedDate, 0]],
-    ["\\btime\\b", [Date.getTimestamp, 0]]
+    ["\\btime\\b", [Date.getCurrentTimestamp, 0]]
 ];
 Snip.fromObject = function(snip) {
     var nSnip = new Snip(snip.name, snip.body);
@@ -1439,7 +1447,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
          * however my code doesn't work (gives "xml no name" error) on doing it, and actually works without doing it
          */
 
-        var div = document.createElement("div"),
+        var div = $.new("div"),
             output /*,
 			replacementMap = [["&", "&amp;"], ["<", "&lt;"], [">", "&gt;"], ["'", "&apos;"], ["\"", "&quot;"]]*/;
 

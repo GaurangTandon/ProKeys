@@ -92,27 +92,6 @@
 	}
 
 	/*
-		Date/Time Macro related helper functions
-		- to12Hrs
-		- parseDay
-		- parseMonth
-		- formatDate
-		- get31stDays
-		- getFormattedDate
-		- getTimestamp
-	*/
-
-	function getTimestamp() {
-		var date = new Date();
-
-		var hours = Number.padNumber(date.getHours()),
-			minutes = Number.padNumber(date.getMinutes()),
-			seconds = Number.padNumber(date.getSeconds());
-
-		return hours + ":" + minutes + ":" + seconds;
-	}
-
-	/*
 		Snippet/Placeholder functions
 	*/
 
@@ -632,7 +611,7 @@
 		return /date/i.test(str)
 			? getFormattedDate()
 			: /time/i.test(str)
-				? getTimestamp()
+				? Date.getCurrentTimestamp()
 				: /version/i.test(str)
 					? navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ")
 					: null;

@@ -66,6 +66,16 @@ var extendNodePrototype;
 		return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 	};
 
+	Date.getCurrentTimestamp = function() {
+		var date = new Date();
+
+		var hours = Number.padNumber(date.getHours()),
+			minutes = Number.padNumber(date.getMinutes()),
+			seconds = Number.padNumber(date.getSeconds());
+
+		return hours + ":" + minutes + ":" + seconds;
+	};
+
 	Date.getDayOfYear = function() {
 		var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334],
 			mn = this.getMonth(),
