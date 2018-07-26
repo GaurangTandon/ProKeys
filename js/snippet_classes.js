@@ -1694,9 +1694,14 @@ Folder.setIndices = function() {
     repeat(Data.snippets, []);
 };
 Folder.copyContents = function(fromFolder, toFolder) {
-    fromFolder.list.forEach(function(e) {
-        Folder.insertObject(e.getDuplicatedObject(), toFolder);
-    });
+    var list = fromFolder.list,
+        len = list.length,
+        i = len - 1;
+
+    // loop in reverse order, so that they are inserted in the correct order
+    for(; i >= 0; i--){
+        Folder.insertObject(list[i].getDuplicatedObject(), toFolder);
+    }
 };
 Folder.insertObject = function(object, folder) {
     if (Folder.isFolder(object)) folder.list.unshift(object);

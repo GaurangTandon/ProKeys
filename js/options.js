@@ -1458,26 +1458,21 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         })();
 
         (function backUpWork() {
+            // flattens all folders
+            /**
+             * prints the snippets inside the folder
+             * flattens the folder (to level 1) in case it is nested
+             * @param {Folder} folder folder whose snippets will be printed
+             */
             function getSnippetPrintData(folder) {
-                var list = folder.list,
-                    res = "",
-                    sn,
-                    folders = [];
+                var res = "";
 
-                for (var i = 0, len = list.length; i < len; i++) {
-                    sn = list[i];
-
-                    if (Folder.isFolder(sn)) folders.push(sn);
-                    else {
-                        res += sn.name;
-                        res += "\n\n";
-                        res += sn.body;
-                        res += "\n\n--\n\n";
-                    }
-                }
-                i = 0;
-                len = folders.length;
-                for (; i < len; i++) res += getSnippetPrintData(folders[i]);
+                folder.forEachSnippet(function(sn){
+                    res += sn.name;
+                    res += "\n\n";
+                    res += sn.body;
+                    res += "\n\n--\n\n";
+                }, false);
 
                 return res;
             }
