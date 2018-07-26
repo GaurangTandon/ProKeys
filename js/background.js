@@ -1,4 +1,4 @@
-/* global $, Folder, Data, Generic, chrome , modalHTML, listOfSnippetCtxIDs */
+/* global q, Folder, Data, Generic, chrome , modalHTML, listOfSnippetCtxIDs */
 console.log("Loaded once " + new Date());
 var contextMenuActionBlockSite,
 	wasOnBlockedSite = false,
@@ -52,7 +52,7 @@ function getDomain(url) {
 }
 
 function getPasteData() {
-	var $elm = $.new("textarea"),
+	var $elm = q.new("textarea"),
 		$actElm = document.activeElement.appendChild($elm).parentNode;
 
 	$elm.focus();

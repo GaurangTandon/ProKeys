@@ -1,4 +1,4 @@
-/* global $, isObject, getFormattedDate, chrome, isTextNode */
+/* global q, isObject, getFormattedDate, chrome, isTextNode */
 /* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData, OBJECT_NAME_LIMIT*/
 /* global convertBetweenHTMLTags, Quill, $containerFolderPath, $containerSnippets, listOfSnippetCtxIDs, latestRevisionLabel */
 
@@ -145,10 +145,10 @@ Generic.HIGHLIGHTING_CLASS = "highlighting";
  * returns the DOM element for edit and delete button
  */
 Generic.getButtonsDOMElm = function() {
-    var divButtons = $.new("div").addClass("buttons");
-    divButtons.appendChild($.new("div").addClass("clone_btn")).attr("title", "Clone");
-    divButtons.appendChild($.new("div").addClass("edit_btn")).attr("title", "Edit");
-    divButtons.appendChild($.new("div").addClass("delete_btn")).attr("title", "Delete");
+    var divButtons = q.new("div").addClass("buttons");
+    divButtons.appendChild(q.new("div").addClass("clone_btn")).attr("title", "Clone");
+    divButtons.appendChild(q.new("div").addClass("edit_btn")).attr("title", "Edit");
+    divButtons.appendChild(q.new("div").addClass("delete_btn")).attr("title", "Delete");
     return divButtons;
 };
 
@@ -162,14 +162,14 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
                 ? [objectNamesToHighlight]
                 : objectNamesToHighlight;
 
-    divMain = $.new("div").addClass([this.type, "generic", Snip.DOMContractedClass]);
+    divMain = q.new("div").addClass([this.type, "generic", Snip.DOMContractedClass]);
 
-    img = $.new("img");
+    img = q.new("img");
     img.src = "../imgs/" + this.type + ".png";
     divMain.appendChild(img);
 
     // creating the short `div` element
-    divName = $.new("div");
+    divName = q.new("div");
     // text with newlines does not fit in one line
     divName.text(this.name).addClass("name");
     divMain.appendChild(divName);
@@ -269,7 +269,7 @@ window.Snip = function(name, body, timestamp) {
         // hence we should put a selectable but transparent
         // element at the top
         function getClickableElm() {
-            return $
+            return q
                 .new("div")
                 .addClass("clickable")
                 .on(
@@ -288,13 +288,13 @@ window.Snip = function(name, body, timestamp) {
             divBody;
 
         // our `div` body element; with Snip body
-        divBody = $.new("div").addClass("body");
+        divBody = q.new("div").addClass("body");
         toggleDivBodyText(this);
         divMain.appendChild(divBody);
 
         divMain.appendChild(getClickableElm.call(this));
 
-        var timestampElm = $
+        var timestampElm = q
             .new("div")
             .addClass("timestamp")
             .html(Snip.getTimestampString(this));
@@ -683,7 +683,7 @@ Snip.makeHTMLSuitableForTextareaThroughString = function(html) {
                 break;
             // these top-level elements are inserted by user
             default:
-                replaced = $.new("P");
+                replaced = q.new("P");
                 // issues#156
                 if (tgN === "A") tle.href = Snip.defaultLinkSanitize(tle.href);
 
@@ -712,7 +712,7 @@ Snip.makeHTMLSuitableForTextareaThroughString = function(html) {
             // presence of ONE newline is automated by the presence of
             // separate top-level elements
             childText = child.textContent.replace(/\n/, "").replace(/\n/, "<br>");
-            replaced = $.new("P").html(child.textContent);
+            replaced = q.new("P").html(child.textContent);
 
             if (childText.length !== 0) htmlNode.replaceChild(replaced, child);
             else {
@@ -723,7 +723,7 @@ Snip.makeHTMLSuitableForTextareaThroughString = function(html) {
         }
     }
 
-    var htmlNode = $.new("DIV");
+    var htmlNode = q.new("DIV");
     htmlNode.innerHTML = html;
 
     if (Snip.isSuitableForPastingInTextareaAsIs(html)) {
@@ -915,7 +915,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets) {
 	*/
 
     // messy area; don't use built-in .html() here
-    var $container = $.new("div");
+    var $container = q.new("div");
     $container.innerHTML = html;
 
     var cls,
@@ -990,14 +990,14 @@ Snip.makeHTMLSuitableForQuill = function(html) {
         var lastBR = $container.lastChild,
             $pContainer;
         while (lastBR && lastBR.tagName === "BR") {
-            $pContainer = $.new("P");
+            $pContainer = q.new("P");
             $pContainer.innerHTML = "<br>";
             $container.replaceChild($pContainer, lastBR);
             lastBR = $pContainer.previousElementSibling;
         }
     }
 
-    var $container = $.new("DIV");
+    var $container = q.new("DIV");
     $container.innerHTML = html;
 
     var fontSizesEm = { "0.75em": "small", "1.5em": "large", "2.5em": "huge" },
@@ -1042,7 +1042,7 @@ Snip.getQuillClsForFormattedLossyContent = function(html) {
     return null;
 };
 Snip.stripAllTags = function(html, $refDiv) {
-    if (!$refDiv) $refDiv = $.new("DIV");
+    if (!$refDiv) $refDiv = q.new("DIV");
     if (html) $refDiv.innerHTML = html;
     // otherwise that elm's html is already set (nested calls)
 
@@ -1114,7 +1114,7 @@ Snip.defaultLinkSanitize = function(linkVal) {
 	converted into &nbsp; by setHTML
 */
 Snip.sanitizeTextareaTextForSave = function(text) {
-    var htmlNode = $.new("div");
+    var htmlNode = q.new("div");
     htmlNode.innerHTML = text;
     // textarea text does not have ANY &nbsp; but adding innerHTML
     // inserts &nbsp; for some unknown reason
@@ -1267,7 +1267,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
     };
 
     this.getDOMElementFull = function(objectNamesToHighlight) {
-        var div = $.new("div"),
+        var div = q.new("div"),
             listElm,
             htmlElm,
             emptyDiv;
@@ -1279,7 +1279,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
         }
 
         if (len === 0) {
-            emptyDiv = $.new("div");
+            emptyDiv = q.new("div");
             emptyDiv
                 .addClass("empty_folder")
                 .html(this.isSearchResultFolder ? "No matches found" : "This folder is empty");
@@ -1334,7 +1334,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
     // tags present in snippets might interfere with search
     // we only should work with plaintext
     this.stripAllSnippetsTags = function($refDiv) {
-        $refDiv = $refDiv || $.new("DIV"); // reuse existing DOM
+        $refDiv = $refDiv || q.new("DIV"); // reuse existing DOM
         this.hasStrippedSnippets = true;
 
         this.list.forEach(function stripSnippetsOfTags(elm) {
@@ -1409,8 +1409,8 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
     };
 
     function insertPathPartDivs(name) {
-        var pathPart = $.new("div").addClass("path_part"),
-            rightArrow = $.new("div").addClass("right_arrow");
+        var pathPart = q.new("div").addClass("path_part"),
+            rightArrow = q.new("div").addClass("right_arrow");
 
         $containerFolderPath.appendChild(pathPart.html(name));
         $containerFolderPath.appendChild(rightArrow);
@@ -1454,7 +1454,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
          * however my code doesn't work (gives "xml no name" error) on doing it, and actually works without doing it
          */
 
-        var div = $.new("div"),
+        var div = q.new("div"),
             output /*,
 			replacementMap = [["&", "&amp;"], ["<", "&lt;"], [">", "&gt;"], ["'", "&apos;"], ["\"", "&quot;"]]*/;
 
@@ -1501,8 +1501,8 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
     };
 
     this.getFolderSelectList = function(nameToNotShow) {
-        var mainContainer = $.new("div"),
-            $folderName = $.new("p").html(this.name),
+        var mainContainer = q.new("div"),
+            $folderName = q.new("p").html(this.name),
             childContainer,
             hasChildFolder = false;
 
@@ -1703,13 +1703,13 @@ Folder.insertObject = function(object, folder) {
     else folder.list.splice(folder.getLastFolderIndex() + 1, 0, object);
 };
 Folder.insertBulkActionDOM = function(listedFolder) {
-    var container = $.new("div");
+    var container = q.new("div");
 
     listedFolder.list.forEach(function(listElm) {
-        var $generic = $.new("div").addClass("generic"),
-            checkbox = $.new("input"),
-            img = $.new("img"),
-            div = $
+        var $generic = q.new("div").addClass("generic"),
+            checkbox = q.new("input"),
+            img = q.new("img"),
+            div = q
                 .new("div")
                 .addClass("name")
                 .html(listElm.name);
@@ -1934,13 +1934,13 @@ window.DualTextbox = function($container, isTryItEditor) {
         transferContentsToShownEditor = !isTryItEditor;
 
     // create navbar
-    var $nav = $.new("DIV").addClass("nav"),
-        $span = $.new("SPAN").text("Swap editor mode: "),
-        $pTextarea = $
+    var $nav = q.new("DIV").addClass("nav"),
+        $span = q.new("SPAN").text("Swap editor mode: "),
+        $pTextarea = q
             .new("P")
             .text("Textarea")
             .addClass(SHOW_CLASS),
-        $pRich = $.new("P").text("Styled textbox");
+        $pRich = q.new("P").text("Styled textbox");
     $pTextarea.dataset.containerSelector = "textarea";
     $pRich.dataset.containerSelector = "." + RICH_EDITOR_CONTAINER_CLASS;
     $pTextarea.dataset.editorSelector = "textarea";
@@ -1954,9 +1954,9 @@ window.DualTextbox = function($container, isTryItEditor) {
 
     // create rich/plain boxes
     // (textarea doesn't need a container; so assume itself to be the container)
-    var $textarea = $.new("TEXTAREA").addClass([SHOW_CLASS, $pTextarea.dataset.containerSelector]),
-        $richEditorContainer = $.new("DIV").addClass(RICH_EDITOR_CONTAINER_CLASS),
-        $richEditor = $.new("DIV"),
+    var $textarea = q.new("TEXTAREA").addClass([SHOW_CLASS, $pTextarea.dataset.containerSelector]),
+        $richEditorContainer = q.new("DIV").addClass(RICH_EDITOR_CONTAINER_CLASS),
+        $richEditor = q.new("DIV"),
         quillObj;
 
     $container.appendChild($textarea);

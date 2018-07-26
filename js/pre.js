@@ -1,4 +1,4 @@
-/* global $, getHTML, setHTML, isContentEditable, isTextNode, Snip */
+/* global q, getHTML, setHTML, isContentEditable, isTextNode, Snip */
 /* global updateAllValuesPerWin */
 
 // custom functions inspired from jQuery
@@ -192,7 +192,7 @@ var extendNodePrototype;
 		this.dispatchEvent(ev);
 	});
 
-	window.$ = function(selector) {
+	window.q = function(selector) {
 		var elms = document.querySelectorAll(selector),
 			elm;
 
@@ -208,7 +208,15 @@ var extendNodePrototype;
 		} else return elms;
 	};
 
-	$.new = function(tagName) {
+	window.qCls = function(cls){
+		return document.getElementsByClassName(cls);
+	};
+
+	window.qId = function(id){
+		return document.getElementById(id);
+	};
+
+	q.new = function(tagName) {
 		return document.createElement(tagName);
 	};
 
@@ -379,7 +387,7 @@ var extendNodePrototype;
 			for (; i < len; i++) {
 				text = textNodes[i];
 				tNode = document.createTextNode(text);
-				$br = $.new("br");
+				$br = q.new("br");
 				node.insertBefore($br, child);
 				node.insertBefore(tNode, $br);
 			}
@@ -452,7 +460,7 @@ var extendNodePrototype;
 			string = string.replace(new RegExp(elm[regexIndex], "g"), elm[replacerIdx]);
 		}
 
-		var container = $.new("div").html(string),
+		var container = q.new("div").html(string),
 			selector = "pre + br, blockquote + br, li + br, ol > br, ol + br, ul + br, ul > br",
 			unnecessaryBRs = container.querySelectorAll(selector),
 			count = unnecessaryBRs.length;

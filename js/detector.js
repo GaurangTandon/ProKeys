@@ -1,4 +1,4 @@
-/* global $, getHTML, DB_loaded, Folder, Snip, showBlockSiteModal, updateAllValuesPerWin*/
+/* global q, getHTML, DB_loaded, Folder, Snip, showBlockSiteModal, updateAllValuesPerWin*/
 /* global chrome, Data, getFormattedDate, isTextNode */
 /* global escapeRegExp, isContentEditable, debugDir, debugLog */
 
@@ -159,7 +159,7 @@
 
 	function insertSnippetInContentEditableNode(range, snip, node) {
 		prepareSnippetBodyForCENode(snip, node, function(snipBody) {
-			var snipElmNode = $.new(TAGNAME_SNIPPET_HOLDER_ELM);
+			var snipElmNode = q.new(TAGNAME_SNIPPET_HOLDER_ELM);
 			snipElmNode.html(snipBody).addClass(SPAN_CLASS); // identification
 
 			range.insertNode(snipElmNode);

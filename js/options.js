@@ -1,5 +1,5 @@
 /* global isEmpty, isObject, getFormattedDate, checkRuntimeError */
-/* global $, getHTML, DualTextbox, OLD_DATA_STORAGE_KEY, OBJECT_NAME_LIMIT */
+/* global q, getHTML, DualTextbox, OLD_DATA_STORAGE_KEY, OBJECT_NAME_LIMIT */
 /* global chrome, DB_loaded, NEW_DATA_STORAGE_KEY, saveSnippetData, debugDir */
 /* global escapeRegExp, Folder, Data, Snip, Generic, $containerFolderPath */
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets, debounce */
@@ -177,9 +177,9 @@
 
     function listBlockedSites() {
         function getLI(url) {
-            var li = $.new("li"),
-                label = $.new("label"),
-                input = $.new("input");
+            var li = q.new("li"),
+                label = q.new("label"),
+                input = q.new("input");
             input.type = "checkbox";
             label.appendChild(input);
             label.appendChild(document.createTextNode(url));
@@ -187,7 +187,7 @@
             return li;
         }
 
-        var ul = $(".blocked-sites ul"),
+        var ul = q(".blocked-sites ul"),
             i = 0,
             len = Data.blockedSites.length;
 
@@ -202,9 +202,9 @@
     }
 
     function createTableRow(textArr) {
-        var tr = $.new("tr");
+        var tr = q.new("tr");
 
-        for (var i = 0, len = textArr.length; i < len; i++) tr.appendChild($.new("td").html(textArr[i]));
+        for (var i = 0, len = textArr.length; i < len; i++) tr.appendChild(q.new("td").html(textArr[i]));
 
         return tr;
     }
@@ -277,11 +277,11 @@
         else {
             // clear the table initially
             $autoInsertTable.html("");
-            thead = $.new("thead");
-            tr = $.new("tr");
+            thead = q.new("thead");
+            tr = q.new("tr");
 
-            tr.appendChild($.new("th").html("Character"));
-            tr.appendChild($.new("th").html("Complement"));
+            tr.appendChild(q.new("th").html("Character"));
+            tr.appendChild(q.new("th").html("Complement"));
 
             thead.appendChild(tr);
 
@@ -310,13 +310,13 @@
 
     function appendInputBoxesInTable() {
         function append(elm) {
-            var td = $.new("td");
+            var td = q.new("td");
             td.appendChild(elm);
             tr.appendChild(td);
         }
 
         function configureTextInputElm(attribute) {
-            var inp = $
+            var inp = q
                 .new("input")
                 .addClass(mainClass)
                 .attr("placeholder", "Type " + attribute);
@@ -332,11 +332,11 @@
         }
 
         var mainClass = "char_input",
-            tr = $.new("tr"),
+            tr = q.new("tr"),
             inp1 = configureTextInputElm("new character"),
             inp2 = configureTextInputElm("its complement");
 
-        append($.new("button").html("Save"));
+        append(q.new("button").html("Save"));
 
         $autoInsertTable.appendChild(tr);
     }
@@ -455,17 +455,17 @@
         }
 
         initiateRestore = function(data) {
-            var selectList = $(".import .selectList"),
+            var selectList = q(".import .selectList"),
                 selectedFolder = Folder.getSelectedFolderInSelectList(selectList),
                 existingSnippets,
                 inputSnippetsJSON,
                 inputSnippets,
                 validation,
-                $deleteExistingSnippetsInput = $(".import .delete_existing"),
+                $deleteExistingSnippetsInput = q(".import .delete_existing"),
                 shouldDeleteExistingSnippets = $deleteExistingSnippetsInput.checked,
-                shouldMergeDuplicateFolderContents = $(".import input[name=merge]").checked;
+                shouldMergeDuplicateFolderContents = q(".import input[name=merge]").checked;
 
-            duplicateSnippetToKeep = $(".import input[name=duplicate]:checked").value;
+            duplicateSnippetToKeep = q(".import input[name=duplicate]:checked").value;
 
             try {
                 data = JSON.parse(data);
@@ -656,7 +656,7 @@
 
     // folder and snippet edit panel
     function editPanel(type) {
-        var $panel = $(".panel_" + type + "_edit");
+        var $panel = q(".panel_" + type + "_edit");
 
         function highlightInFolderList(folderElm, name) {
             var folderNames = folderElm.querySelectorAll("p"),
@@ -709,7 +709,7 @@
 
             headerSpan.html((isEditing ? "Edit " : "Create new ") + type);
 
-            $(".error").removeClass(SHOW_CLASS);
+            q(".error").removeClass(SHOW_CLASS);
 
             // defaults
             if (!isEditing)
@@ -728,7 +728,7 @@
 
     // things common to snip and folder
     function commonValidation(panelName) {
-        var panel = $(".panel_" + panelName + "_edit");
+        var panel = q(".panel_" + panelName + "_edit");
 
         function manipulateElmForValidation(elm, validateFunc, errorElm) {
             var text = elm ? elm.value : dualSnippetEditorObj.getShownTextForSaving(),
@@ -802,22 +802,22 @@
             var bytesAvailable = storage.MAX_ITEMS ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
 
             // set current bytes
-            $(".currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
+            q(".currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
 
             // set total bytes available
-            $(".bytesAvailable").html(roundByteSize(bytesAvailable));
+            q(".bytesAvailable").html(roundByteSize(bytesAvailable));
         });
     }
 
     function init() {
         // needs to be set before database actions
-        $containerSnippets = $("#snippets .panel_snippets .panel_content");
+        $containerSnippets = q("#snippets .panel_snippets .panel_content");
         // initialized here; but used in snippet_classes.js
-        $containerFolderPath = $("#snippets .panel_snippets .folder_path");
-        $panelSnippets = $(".panel_snippets");
-        $snipMatchDelimitedWordInput = $(".snippet_match_whole_word input[type=checkbox]");
-        $tabKeyInput = $("#tabKey");
-        $snipNameDelimiterListDIV = $(".delimiter_list");
+        $containerFolderPath = q("#snippets .panel_snippets .folder_path");
+        $panelSnippets = q(".panel_snippets");
+        $snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
+        $tabKeyInput = q("#tabKey");
+        $snipNameDelimiterListDIV = q(".delimiter_list");
 
         if (!DB_loaded) {
             setTimeout(DB_load, 100, DBLoadCallback);
@@ -829,12 +829,12 @@
         // and page has been initialized
         setEssentialItemsOnDBLoad();
 
-        var changeHotkeyBtn = $(".change_hotkey"),
-            hotkeyListener = $(".hotkey_listener");
+        var changeHotkeyBtn = q(".change_hotkey"),
+            hotkeyListener = q(".hotkey_listener");
 
         chrome.storage.onChanged.addListener(updateStorageAmount);
 
-        $("span.version").forEach(function(span) {
+        q("span.version").forEach(function(span) {
             span.innerHTML = VERSION;
         });
 
@@ -854,16 +854,16 @@
                     DIVSelector = "#" + DIVName,
                     btnSelector = ".sidebar .buttons button[data-divid =" + DIVName + "]",
                     selectedBtnClass = "selected",
-                    selectedDIV = $(containerSel + ".show"),
-                    selectedBtn = $(".sidebar .buttons ." + selectedBtnClass);
+                    selectedDIV = q(containerSel + ".show"),
+                    selectedBtn = q(".sidebar .buttons ." + selectedBtnClass);
 
                 if (DIVName === "snippets") Data.snippets.listSnippets();
 
                 if (selectedDIV) selectedDIV.removeClass("show");
-                $(containerSel + DIVSelector).addClass("show");
+                q(containerSel + DIVSelector).addClass("show");
 
                 if (selectedBtn) selectedBtn.removeClass(selectedBtnClass);
-                $(btnSelector).addClass(selectedBtnClass);
+                q(btnSelector).addClass(selectedBtnClass);
 
                 var href = window.location.href,
                     selIndex = href.indexOf("#");
@@ -880,7 +880,7 @@
 
             // the left hand side nav buttons
             // Help, Settings, Backup&Restore, About
-            $(".sidebar .buttons button").on("click", function() {
+            q(".sidebar .buttons button").on("click", function() {
                 showHideDIVs(this.dataset.divid);
             });
         })();
@@ -888,12 +888,12 @@
         (function helpPageHandlers() {
             /* set up accordion in help page */
             // heading
-            $("#help section dt").on("click", function() {
+            q("#help section dt").on("click", function() {
                 this.toggleClass("show");
             });
 
             // the tryit editor in Help section
-            new DualTextbox($("#tryit"), true)
+            new DualTextbox(q("#tryit"), true)
                 .setPlainText(
                     "You can experiment with various ProKeys' features in this interactive editor! This editor is resizable.\n\n\
 Textarea is the normal text editor mode. No support for bold, italics, etc. But multiline text is supported.\n\
@@ -907,9 +907,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         })();
 
         (function settingsPageHandlers() {
-            var $unblockBtn = $(".blocked-sites .unblock"),
-                $delimiterCharsInput = $(".delimiter_list input"),
-                $delimiterCharsResetBtn = $(".delimiter_list button");
+            var $unblockBtn = q(".blocked-sites .unblock"),
+                $delimiterCharsInput = q(".delimiter_list input"),
+                $delimiterCharsResetBtn = q(".delimiter_list button");
 
             // on user input in tab key setting
             $tabKeyInput.on("change", function() {
@@ -918,7 +918,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 saveOtherData("Saved!");
             });
 
-            $("#settings .siteBlockInput").on("keyup", function(event) {
+            q("#settings .siteBlockInput").on("keyup", function(event) {
                 if (event.keyCode === 13) blockSite.call(this);
             });
 
@@ -928,7 +928,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 }
 
                 var str = "Are you sure you want to unblock - ",
-                    $selectedCheckboxes = $(".blocked-sites ul input:checked"),
+                    $selectedCheckboxes = q(".blocked-sites ul input:checked"),
                     l = $selectedCheckboxes.length,
                     sites,
                     index;
@@ -1026,31 +1026,31 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
         (function snippetWork() {
             // define element variables
-            var $searchBtn = $(".search_btn"),
-                $searchPanel = $(".panel_search"),
-                $searchField = $(".panel_search input[type=text]"),
-                $closeBtn = $(".close_btn"),
-                $snippetSaveBtn = $(".panel_snip_edit .tick_btn"),
-                $folderSaveBtn = $(".panel_folder_edit .tick_btn"),
-                $addNewBtn = $(".panel_snippets .add_new_btn"),
-                $addNewPanel = $(".panel_snippets .panel_add_new"),
-                $createSnipBtn = $(".panel_add_new :nth-child(1)"),
-                $createFolderBtn = $(".panel_add_new :nth-child(2)"),
-                $sortBtn = $(".panel_snippets .sort_btn"),
-                $sortPanel = $(".panel_sort"),
+            var $searchBtn = q(".search_btn"),
+                $searchPanel = q(".panel_search"),
+                $searchField = q(".panel_search input[type=text]"),
+                $closeBtn = q(".close_btn"),
+                $snippetSaveBtn = q(".panel_snip_edit .tick_btn"),
+                $folderSaveBtn = q(".panel_folder_edit .tick_btn"),
+                $addNewBtn = q(".panel_snippets .add_new_btn"),
+                $addNewPanel = q(".panel_snippets .panel_add_new"),
+                $createSnipBtn = q(".panel_add_new :nth-child(1)"),
+                $createFolderBtn = q(".panel_add_new :nth-child(2)"),
+                $sortBtn = q(".panel_snippets .sort_btn"),
+                $sortPanel = q(".panel_sort"),
                 // the button that actually initiates sorting
-                $sortPanelBtn = $(".panel_sort input[type=button]"),
-                $bulkActionBtn = $(".panel_snippets .checkbox_btn"),
-                $bulkActionPanel = $(".panel_snippets .panel_bulk_action"),
-                folderPath = $(".folder_path"),
-                $selectList = $(".selectList");
+                $sortPanelBtn = q(".panel_sort input[type=button]"),
+                $bulkActionBtn = q(".panel_snippets .checkbox_btn"),
+                $bulkActionPanel = q(".panel_snippets .panel_bulk_action"),
+                folderPath = q(".folder_path"),
+                $selectList = q(".selectList");
 
             toggleSnippetEditPanel = editPanel(Generic.SNIP_TYPE);
             toggleFolderEditPanel = editPanel(Generic.FOLDER_TYPE);
             validateSnippetData = commonValidation(Generic.SNIP_TYPE);
             validateFolderData = commonValidation(Generic.FOLDER_TYPE);
 
-            dualSnippetEditorObj = new DualTextbox($("#body-editor"));
+            dualSnippetEditorObj = new DualTextbox(q("#body-editor"));
 
             /**
              * Delegated handler for edit, delete, clone buttons
@@ -1180,11 +1180,11 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             // $addNewBtn and $addNewPanel
             // and other combos
             function toggleBtnAndPanel(btn, panel) {
-                var existingPanel = $(".sub_panel.shown");
+                var existingPanel = q(".sub_panel.shown");
                 if (!panel.hasClass(SHOW_CLASS)) panel.addClass(SHOW_CLASS);
                 if (existingPanel) existingPanel.removeClass(SHOW_CLASS);
 
-                var existingBtn = $(".panel_btn.active");
+                var existingBtn = q(".panel_btn.active");
                 if (!btn.hasClass("active")) btn.addClass("active");
                 if (existingBtn) existingBtn.removeClass("active");
 
@@ -1388,8 +1388,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             })();
 
             (function checkIfFirstTimeUser() {
-                var $button = $(".change-log button"),
-                    $changeLog = $(".change-log"),
+                var $button = q(".change-log button"),
+                    $changeLog = q(".change-log"),
                     // ls set by background page
                     isUpdate = localStorage.extensionUpdated === "true";
 
@@ -1449,7 +1449,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
             // event delegation since radio buttons are
             // dynamically added
-            $(".storageMode").on("click", function() {
+            q(".storageMode").on("click", function() {
                 var input = this.querySelector("input:checked");
 
                 // make sure radio btn is clicked and is checked
@@ -1482,12 +1482,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 return res;
             }
 
-            $(".panel_popup .close_btn").on("click", function() {
-                $(".panel_popup.shown").removeClass(SHOW_CLASS);
+            q(".panel_popup .close_btn").on("click", function() {
+                q(".panel_popup.shown").removeClass(SHOW_CLASS);
             });
 
-            $(".export-buttons button").on("click", function() {
-                $("#snippets .panel_popup." + this.className).addClass(SHOW_CLASS);
+            q(".export-buttons button").on("click", function() {
+                q("#snippets .panel_popup." + this.className).addClass(SHOW_CLASS);
 
                 switch (this.className) {
                     case "export":
@@ -1503,8 +1503,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
             function showDataForExport() {
                 var data,
-                    dataUse = $(".export .steps :first-child input:checked").value,
-                    downloadLink = $(".export a"),
+                    dataUse = q(".export .steps :first-child input:checked").value,
+                    downloadLink = q(".export a"),
                     blob;
 
                 if (dataUse === "print") data = getSnippetPrintData(Data.snippets);
@@ -1526,10 +1526,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     ".txt";
             }
 
-            $(".export input").on("change", showDataForExport);
+            q(".export input").on("change", showDataForExport);
 
             function setupImportPopup() {
-                var $selectList = $(".import .selectList");
+                var $selectList = q(".import .selectList");
                 Folder.refreshSelectList($selectList);
                 fileInputLink.html("Choose file containing data");
                 // reset so that if same file is selected again,
@@ -1537,12 +1537,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 $inputFile.value = "";
             }
 
-            $(".import .restore").on("click", function() {
+            q(".import .restore").on("click", function() {
                 if (importFileData) initiateRestore(importFileData);
                 else alert("Please choose a file.");
             });
 
-            var fileInputLink = $(".import .file_input"),
+            var fileInputLink = q(".import .file_input"),
                 $inputFile = fileInputLink.nextElementSibling,
                 initialLinkText = fileInputLink.html(),
                 importFileData = null;
@@ -1581,11 +1581,11 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 fileInputLink.html("READING FILE: " + file.name);
             });
 
-            var $resvisionsRestoreBtn = $(".revisions .restore"),
-                $textarea = $(".revisions textarea"),
-                $select = $(".revisions select"),
-                $closeRevisionsPopupBtn = $(".revisions .close_btn"),
-                $preserveCheckboxesLI = $(".import .preserve_checkboxes"),
+            var $resvisionsRestoreBtn = q(".revisions .restore"),
+                $textarea = q(".revisions textarea"),
+                $select = q(".revisions select"),
+                $closeRevisionsPopupBtn = q(".revisions .close_btn"),
+                $preserveCheckboxesLI = q(".import .preserve_checkboxes"),
                 $mergeDuplicateFolderContentsInput = $preserveCheckboxesLI.querySelector("[name=merge]"),
                 $preserveExistingContentInput = $preserveCheckboxesLI.querySelector("[value=existing]"),
                 $preserveImportedContentInput = $preserveCheckboxesLI.querySelector("[value=imported]"),
@@ -1598,7 +1598,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 $select.html("");
 
                 revisions.forEach(function(rev) {
-                    $select.appendChild($.new("option").html(rev.label));
+                    $select.appendChild(q.new("option").html(rev.label));
                 });
 
                 function showRevision() {
@@ -1774,17 +1774,17 @@ Or you may try refreshing the page. "
 
         listBlockedSites();
 
-        $autoInsertTable = $(".auto_insert");
+        $autoInsertTable = q(".auto_insert");
         listAutoInsertChars();
 
-        autoInsertWrapSelectionInput = $("[name=\"wrapSelectionAutoInsert\"");
+        autoInsertWrapSelectionInput = q("[name=\"wrapSelectionAutoInsert\"");
         autoInsertWrapSelectionInput.checked = Data.wrapSelectionAutoInsert;
         autoInsertWrapSelectionInput.on("click", function() {
             Data.wrapSelectionAutoInsert = autoInsertWrapSelectionInput.checked;
             saveOtherData("Saved!");
         });
 
-        omniboxSearchURLInput = $(".search-provider input");
+        omniboxSearchURLInput = q(".search-provider input");
         // localStorage shared with background page
         localStorage.omniboxSearchURL = omniboxSearchURLInput.value = Data.omniboxSearchURL;
         omniboxSearchURLInput.on("keydown", function(e) {
@@ -1801,17 +1801,17 @@ Or you may try refreshing the page. "
             },
             currArr = textMap[getCurrentStorageType()];
 
-        $(".storageMode .current p").html(currArr[0]);
-        $(".storageMode .transfer p").html(currArr[1]);
+        q(".storageMode .current p").html(currArr[0]);
+        q(".storageMode .transfer p").html(currArr[1]);
 
         // display current hotkey combo
-        $(".hotkey_display").html(getCurrentHotkey());
+        q(".hotkey_display").html(getCurrentHotkey());
 
         updateStorageAmount();
 
         // we need to set height of logo equal to width
         // but css can't detect height so we need js hack
-        var logo = $(".logo");
+        var logo = q(".logo");
         window.onresize = debounce(function windowResizeHandler() {
             logo.style.width = logo.clientHeight + "px";
             Folder.implementChevronInFolderPath();

@@ -1,4 +1,4 @@
-/* global $, Data, Folder, isEmpty, OLD_DATA_STORAGE_KEY, NEW_DATA_STORAGE_KEY */
+/* global q, Data, Folder, isEmpty, OLD_DATA_STORAGE_KEY, NEW_DATA_STORAGE_KEY */
 /* global checkRuntimeError, DB_loaded, escapeRegExp, snipNameDelimiterListRegex */
 /*
 	1. this file manipulates data (loading, saving) as well as modal box insertion
@@ -102,7 +102,7 @@
 					window.location.reload();
 				},
 				reloadHandlerKeyup = keyHandlerCreator(reloadHandler),
-				reloadBtn = $
+				reloadBtn = q
 					.new("BUTTON")
 					.html("Reload page")
 					.on("click", reloadHandler)
@@ -204,7 +204,7 @@
 	}
 
 	window.showBlockSiteModal = function(msg) {
-		var modal = $.new("div").html(msg.modal).firstChild,
+		var modal = q.new("div").html(msg.modal).firstChild,
 			action = msg.action,
 			shouldBlockSite = action === "Block",
 			siteNameElm = modal.querySelector(".site-name"),
@@ -218,7 +218,7 @@
 		siteNameElm.html(msg.url);
 
 		if (URLAlertingText !== "") {
-			modal.querySelector(".block-dialog-message").appendChild($.new("P").html(URLAlertingText));
+			modal.querySelector(".block-dialog-message").appendChild(q.new("P").html(URLAlertingText));
 		}
 
 		window.document.body.appendChild(modal);
