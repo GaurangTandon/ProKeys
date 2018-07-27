@@ -803,10 +803,10 @@
             var bytesAvailable = storage.MAX_ITEMS ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
 
             // set current bytes
-            qClsSingle(".currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
+            qClsSingle("currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
 
             // set total bytes available
-            qClsSingle(".bytesAvailable").html(roundByteSize(bytesAvailable));
+            qClsSingle("bytesAvailable").html(roundByteSize(bytesAvailable));
         });
     }
 
