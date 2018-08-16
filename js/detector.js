@@ -985,17 +985,17 @@
 	}
 
 	function attachNecessaryHandlers(win, isBlocked) {
-		win.oncontextmenu = function(event) {
+		win.on("contextmenu", function(event) {
 			ctxElm = event.target;
 			ctxTimestamp = Date.now();
 			chrome.runtime.sendMessage({ ctxTimestamp: ctxTimestamp });
-		};
+		});
 
-		win.onerror = function() {
+		win.on("error", function() {
 			console.log(
 				"Error occurred in ProKeys. Mail a screen shot to prokeys.feedback@gmail.com to help me fix it! Thanks!"
 			);
-		};
+		});
 
 		if (isBlocked) return;
 

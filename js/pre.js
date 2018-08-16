@@ -12,7 +12,6 @@
 var extendNodePrototype;
 (function protoExtensionWork() {
 	// called by detector.js
-	// to be able to reuse the existing interval
 	window.updateAllValuesPerWin = function(win) {
 		for (var i = 0, count = protoExtensionNames.length; i < count; i++)
 			setNodeListPropPerWindow(protoExtensionNames[i], protoExtensionFunctions[i], win);
@@ -20,6 +19,12 @@ var extendNodePrototype;
 
 	var protoExtensionNames = [],
 		protoExtensionFunctions = [];
+
+	/**
+	 * extends protoype of Node, Array and NodeList
+	 * @param (string) prop property to extend
+	 * @param (function) func function to execute per for each Node
+	 */
 	extendNodePrototype = function(prop, func) {
 		protoExtensionNames.push(prop);
 		protoExtensionFunctions.push(func);
@@ -192,29 +197,53 @@ var extendNodePrototype;
 		this.dispatchEvent(ev);
 	});
 
-	window.q = function(selector) {
-		var elms = document.querySelectorAll(selector),
-			elm;
-
-		// cannot always return a NodeList/Array
-		// as properties like firstChild, lastChild will only be able
-		// to be accessed by elms[0].lastChild which is too cumbersome
-		if (elms.length === 1) {
-			elm = elms[0];
-			// so that I can access the length of the returned
-			// value else length if undefined
-			elm.length = 1;
-			return elm;
-		} else return elms;
+	var DOM_HELPERS = {
+		/**
+		 * short hand for document.querySelector
+		 * @param {string} selector selector to match element
+		 */
+		q: function(selector) {
+			return this.querySelector(selector);
+		},
+		/**
+		 * short hand for document.querySelectorAll
+		 * @param {string} selector selector to match elements
+		 */
+		Q: function(selector) {
+			return this.querySelectorAll(selector);
+		},
+		/**
+		 * short hand for document.getElementById
+		 * @param {string} id selector to match element
+		 */
+		qId: function(id) {
+			return this.getElementById(id);
+		},
+		/**
+		 * short hand for document.getElementsByClassName
+		 * @param {string} cls selector to match elements
+		 */
+		qCls: function(cls) {
+			return this.getElementsByClassName(cls);
+		},
+		/**
+		 * short hand for document.getElementsByClassName;
+		 * returns the first Node in the output (not a NodeList)
+		 * @param {string} cls selector to match elements
+		 * @returns {Node} matched element
+		 */
+		qClsSingle: function(cls) {
+			var res = this.qCls(cls);
+			return res && res[0];
+		}
 	};
 
-	window.qCls = function(cls){
-		return document.getElementsByClassName(cls);
-	};
-
-	window.qId = function(id){
-		return document.getElementById(id);
-	};
+	for (var i = 0, funcs = Object.keys(DOM_HELPERS), len = funcs.length, funcName, func; i < len; i++) {
+		funcName = funcs[i];
+		func = DOM_HELPERS[funcName];
+		window[funcName] = func.bind(document);
+		extendNodePrototype(funcName, func);
+	}
 
 	q.new = function(tagName) {
 		return document.createElement(tagName);

@@ -10,7 +10,7 @@
 (function() {
     "use strict";
 
-    window.onload = init;
+    window.on("load", init);
 
     var storage = chrome.storage.local,
         VERSION = chrome.runtime.getManifest().version,
@@ -324,9 +324,9 @@
 
             append(inp);
 
-            inp.onkeydown = function(e) {
+            inp.on("keydown", function(e) {
                 if (e.keyCode === 13) saveAutoInsert([inp1.value, inp2.value]);
-            };
+            });
 
             return inp;
         }
@@ -455,17 +455,18 @@
         }
 
         initiateRestore = function(data) {
-            var selectList = q(".import .selectList"),
+            var importPopup = q(".panel.import"),
+                selectList = importPopup.q(".selectList"),
                 selectedFolder = Folder.getSelectedFolderInSelectList(selectList),
                 existingSnippets,
                 inputSnippetsJSON,
                 inputSnippets,
                 validation,
-                $deleteExistingSnippetsInput = q(".import .delete_existing"),
+                $deleteExistingSnippetsInput = importPopup.q(".delete_existing"),
                 shouldDeleteExistingSnippets = $deleteExistingSnippetsInput.checked,
-                shouldMergeDuplicateFolderContents = q(".import input[name=merge]").checked;
+                shouldMergeDuplicateFolderContents = importPopup.q("input[name=merge]").checked;
 
-            duplicateSnippetToKeep = q(".import input[name=duplicate]:checked").value;
+            duplicateSnippetToKeep = importPopup.q("input[name=duplicate]:checked").value;
 
             try {
                 data = JSON.parse(data);
@@ -656,7 +657,7 @@
 
     // folder and snippet edit panel
     function editPanel(type) {
-        var $panel = q(".panel_" + type + "_edit");
+        var $panel = qClsSingle("panel_" + type + "_edit");
 
         function highlightInFolderList(folderElm, name) {
             var folderNames = folderElm.querySelectorAll("p"),
@@ -709,7 +710,7 @@
 
             headerSpan.html((isEditing ? "Edit " : "Create new ") + type);
 
-            q(".error").removeClass(SHOW_CLASS);
+            qCls("error").removeClass(SHOW_CLASS);
 
             // defaults
             if (!isEditing)
@@ -728,7 +729,7 @@
 
     // things common to snip and folder
     function commonValidation(panelName) {
-        var panel = q(".panel_" + panelName + "_edit");
+        var panel = qClsSingle("panel_" + panelName + "_edit");
 
         function manipulateElmForValidation(elm, validateFunc, errorElm) {
             var text = elm ? elm.value : dualSnippetEditorObj.getShownTextForSaving(),
@@ -802,22 +803,23 @@
             var bytesAvailable = storage.MAX_ITEMS ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
 
             // set current bytes
-            q(".currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
+            qClsSingle("currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
 
             // set total bytes available
-            q(".bytesAvailable").html(roundByteSize(bytesAvailable));
+            qClsSingle("bytesAvailable").html(roundByteSize(bytesAvailable));
         });
     }
 
-    function init() {
+    function init() {        
         // needs to be set before database actions
-        $containerSnippets = q("#snippets .panel_snippets .panel_content");
+        $panelSnippets = qClsSingle("panel_snippets");
+        $containerSnippets = $panelSnippet.qClsSingle("panel_content");
         // initialized here; but used in snippet_classes.js
-        $containerFolderPath = q("#snippets .panel_snippets .folder_path");
-        $panelSnippets = q(".panel_snippets");
+        $containerFolderPath = $panelSnippet.qClsSingle("folder_path");
+        
         $snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
-        $tabKeyInput = q("#tabKey");
-        $snipNameDelimiterListDIV = q(".delimiter_list");
+        $tabKeyInput = qId("tabKey");
+        $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         if (!DB_loaded) {
             setTimeout(DB_load, 100, DBLoadCallback);
@@ -1549,7 +1551,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
                 var reader = new FileReader();
 
-                reader.onload = function(event) {
+                reader.on("load", function(event) {
                     importFileData = event.target.result;
 
                     fileInputLink.html(
@@ -1558,9 +1560,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                             "' is READY." +
                             " Click Restore button to begin. Click here again to choose another file."
                     );
-                };
+                });
 
-                reader.onerror = function(event) {
+                reader.on("error", function(event) {
                     console.error(
                         "File '" +
                             importFileData.name +
@@ -1569,7 +1571,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                             event.target.error.code
                     );
                     fileInputLink.html(initialLinkText);
-                };
+                });
 
                 reader.readAsText(file);
 
@@ -1601,7 +1603,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     $textarea.value = JSON.stringify(selectedRevision.data, undefined, 2);
                 }
 
-                $select.oninput = showRevision;
+                $select.on("input", showRevision);
                 showRevision();
             }
 
@@ -1807,9 +1809,9 @@ Or you may try refreshing the page. "
         // we need to set height of logo equal to width
         // but css can't detect height so we need js hack
         var logo = q(".logo");
-        window.onresize = debounce(function windowResizeHandler() {
+        window.on("resize", debounce(function windowResizeHandler() {
             logo.style.width = logo.clientHeight + "px";
             Folder.implementChevronInFolderPath();
-        }, 300);
+        }, 300));
     }
 })();
