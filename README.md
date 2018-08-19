@@ -26,6 +26,8 @@ ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore
 
 Except for the feather-weight open-source QuillJS rich text editor, I only utilized vanilla JS for super performance and less app size. Also Eric Meyer's CSS reset stylesheet - public domain - has been used with modifications.
 
+Some icon images have been sourced from Font Awesome 5. The license is at [this link](https://fontawesome.com/license). No changes (except scaling) were made to these images.
+
 ## Technical details
 
 Are shared on [here](http://electricweb.org/chrome-extension-tutorial-snippets) in a long, three post series. In brief: this extension uses content scripts which are injected into every page and (what follows is for the snippet functionality only) every time the user presses the hotkey, a check is made for the preceding text, which if matches the name of any of the snippets, is substituted with the snippet body. A subsequent test for placeholders is made as well.
