@@ -1,5 +1,5 @@
-/* global q, getHTML, setHTML, isContentEditable, isTextNode, Snip */
-/* global updateAllValuesPerWin */
+/* global q, getHTML, setHTML, Snip */
+/* global updateAllValuesPerWin, pk */
 
 // custom functions inspired from jQuery
 // special thanks to
@@ -32,11 +32,14 @@ var extendNodePrototype;
 
 	function setNodeListPropPerWindow(prop, func, win) {
 		// in case of custom created array of Nodes, Array.prototype is necessary
-		win.Array.prototype[prop] = win.NodeList.prototype[prop] = function() {
+		win.Array.prototype[prop] = win.NodeList.prototype[prop] = win.HTMLCollection.prototype[prop] = function() {
 			var args = [].slice.call(arguments, 0);
-			this.forEach(function(node) {
-				func.apply(node, args);
-			});
+
+			// HTMLCollection doesn't support forEach
+			for (var i = 0, len = this.length; i < len; i++) {
+				func.apply(this[i], args);
+			}
+
 			return this;
 		};
 
@@ -47,6 +50,8 @@ var extendNodePrototype;
 (function() {
 	var DEBUGGING = true;
 
+	// will be used to store prokeys related variables (#204)
+	window.pk = {};
 	window.OBJECT_NAME_LIMIT = 30;
 	Date.MONTHS = [
 		"January",
@@ -326,7 +331,7 @@ var extendNodePrototype;
 	window.getHTML = function(node, prop) {
 		if (!node) return;
 
-		if (isTextNode(node)) return node.textContent.replace(/\u00a0/g, " ");
+		if (pk.isTextNode(node)) return node.textContent.replace(/\u00a0/g, " ");
 
 		switch (node.tagName) {
 			case "TEXTAREA":
@@ -341,7 +346,7 @@ var extendNodePrototype;
 		// in case number is passed; .replace won't work
 		newVal = newVal.toString();
 
-		if (isTextNode(node)) {
+		if (pk.isTextNode(node)) {
 			node.textContent = newVal.replace(/ /g, "\u00a0");
 			return node;
 		}
@@ -382,7 +387,7 @@ var extendNodePrototype;
 
 			for (var i = 0, len = node.childNodes.length; i < len; i++) {
 				child = node.childNodes[i];
-				if (isTextNode(child)) textNodesInNode.push(child);
+				if (pk.isTextNode(child)) textNodesInNode.push(child);
 			}
 
 			return textNodesInNode;
@@ -543,14 +548,14 @@ var extendNodePrototype;
 		return str.length + (m ? m.length : 0);
 	};
 
-	window.isTextNode = function(node) {
+	pk.isTextNode = function(node) {
 		return node.nodeType === 3;
 	};
 
 	// if it is a callForParent, means that a child node wants
 	// to get its parents checked
 	// callForParent: flag to prevent infinite recursion
-	window.isContentEditable = function(node, callForParent) {
+	pk.isContentEditable = function(node, callForParent) {
 		var tgN = node && node.tagName,
 			attr,
 			parent;
@@ -581,7 +586,7 @@ var extendNodePrototype;
 
 			if (!parent) return false;
 
-			if (isContentEditable(parent, true)) return true;
+			if (pk.isContentEditable(parent, true)) return true;
 		} while (parent !== window.document);
 
 		return false;

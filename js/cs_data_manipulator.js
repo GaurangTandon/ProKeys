@@ -1,5 +1,5 @@
-/* global q, Data, Folder, isEmpty, OLD_DATA_STORAGE_KEY, NEW_DATA_STORAGE_KEY */
-/* global checkRuntimeError, DB_loaded, escapeRegExp, snipNameDelimiterListRegex */
+/* global q, Folder, isEmpty, pk, Data */
+/* global checkRuntimeError, escapeRegExp */
 /*
 	1. this file manipulates data (loading, saving) as well as modal box insertion
 	that is unique to only independent webpage so that the remaining detector.js
@@ -28,12 +28,12 @@
 			wrapSelectionAutoInsert: true
 		};
 	// globals are: (used by detector.js)
-	window.DB_loaded = false;
+	pk.DB_loaded = false;
 	window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
-	window.OLD_DATA_STORAGE_KEY = "UserSnippets";
-	window.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
-	window.DATA_KEY_COUNT_PROP = NEW_DATA_STORAGE_KEY + "_-1";
-	window.snipNameDelimiterListRegex = null;
+	pk.OLD_DATA_STORAGE_KEY = "UserSnippets";
+	pk.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
+	pk.DATA_KEY_COUNT_PROP = pk.NEW_DATA_STORAGE_KEY + "_-1";
+	pk.snipNameDelimiterListRegex = null;
 
 	// function to save data for specific
 	// name and value
@@ -47,20 +47,20 @@
 	}
 
 	function DB_load(callback) {
-		storage.get(OLD_DATA_STORAGE_KEY, function(r) {
-			if (isEmpty(r[OLD_DATA_STORAGE_KEY])) DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
-			else if (r[OLD_DATA_STORAGE_KEY].dataVersion != Data.dataVersion)
-				DB_setValue(OLD_DATA_STORAGE_KEY, Data, callback);
+		storage.get(pk.OLD_DATA_STORAGE_KEY, function(r) {
+			if (isEmpty(r[pk.OLD_DATA_STORAGE_KEY])) DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
+			else if (r[pk.OLD_DATA_STORAGE_KEY].dataVersion != Data.dataVersion)
+				DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
 			else {
 				//	console.dir(r);
-				Data = r[OLD_DATA_STORAGE_KEY];
+				Data = r[pk.OLD_DATA_STORAGE_KEY];
 				if (callback) callback();
 			}
 		});
 	}
 
 	function DB_save(callback) {
-		DB_setValue(OLD_DATA_STORAGE_KEY, Data, function() {
+		DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, function() {
 			if (callback) callback();
 		});
 	}
@@ -88,10 +88,10 @@
 	}
 
 	function setEssentialItemsOnDBLoad() {
-		DB_loaded = true;
+		pk.DB_loaded = true;
 		Data.snippets = Folder.fromArray(Data.snippets);
 		Folder.setIndices();
-		snipNameDelimiterListRegex = new RegExp("[" + escapeRegExp(Data.snipNameDelimiterList) + "]");
+		pk.snipNameDelimiterListRegex = new RegExp("[" + escapeRegExp(Data.snipNameDelimiterList) + "]");
 	}
 
 	// attach click/keypress handler for the two buttons
@@ -203,7 +203,7 @@
 			);
 	}
 
-	window.showBlockSiteModal = function(msg) {
+	pk.showBlockSiteModal = function(msg) {
 		var modal = q.new("div").html(msg.modal).firstChild,
 			action = msg.action,
 			shouldBlockSite = action === "Block",

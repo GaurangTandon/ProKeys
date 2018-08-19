@@ -1,6 +1,8 @@
-/* global q, getHTML, DB_loaded, Folder, Snip, showBlockSiteModal, updateAllValuesPerWin*/
-/* global chrome, Data, getFormattedDate, isTextNode */
-/* global escapeRegExp, isContentEditable, debugDir, debugLog */
+/* global q, getHTML, DB_loaded, Folder, Snip, updateAllValuesPerWin*/
+/* global chrome, Data, getFormattedDate, pk */
+/* global escapeRegExp, debugDir, debugLog */
+
+// TODO: clear up properties isGmail, isGoogle from detector.js, and several pre.js properties
 
 (function() {
 	var windowLoadChecker = setInterval(function() {
@@ -219,7 +221,7 @@
 	// check snippet's presence and intiate
 	// another function to insert snippet body
 	function checkSnippetPresence(node) {
-		if (isContentEditable(node)) return checkSnippetPresenceContentEditable(node);
+		if (pk.isContentEditable(node)) return checkSnippetPresenceContentEditable(node);
 
 		var caretPos = node.selectionStart,
 			snip = Data.snippets.getUniqueSnippetAtCaretPos(node, caretPos), // holds current snippet object
@@ -362,7 +364,7 @@
 
 	// fired by the window.contextmenu event
 	function insertSnippetFromCtx(snip, node) {
-		if (isContentEditable(node)) return insertSnippetFromCtxContentEditable(snip, node);
+		if (pk.isContentEditable(node)) return insertSnippetFromCtxContentEditable(snip, node);
 
 		var caretPos = node.selectionStart,
 			val = node.value;
@@ -402,7 +404,7 @@
 
 	// auto-insert character functionality
 	function insertCharacter(node, characterStart, characterEnd) {
-		if (isContentEditable(node)) insertCharacterContentEditable(node, characterStart, characterEnd);
+		if (pk.isContentEditable(node)) insertCharacterContentEditable(node, characterStart, characterEnd);
 		else {
 			var text = node.value,
 				startPos = node.selectionStart,
@@ -534,7 +536,7 @@
 	function getUserSelection(node) {
 		var win, sel;
 
-		if (isTextNode(node) || isContentEditable(node)) {
+		if (pk.isTextNode(node) || pk.isContentEditable(node)) {
 			win = getNodeWindow(node);
 			sel = win.getSelection();
 
@@ -684,7 +686,7 @@
 		var sel = win.getSelection(),
 			range = sel.getRangeAt(0),
 			rangeNode = range.startContainer,
-			isCENode = isContentEditable(node);
+			isCENode = pk.isContentEditable(node);
 
 		var caretPos = isCENode ? range.endOffset : node.selectionEnd,
 			value = isCENode ? rangeNode.textContent : node.value,
@@ -729,7 +731,7 @@
 	function shiftCursor(node, shiftAmount) {
 		var win, sel, range, loc;
 
-		if (isContentEditable(node)) {
+		if (pk.isContentEditable(node)) {
 			win = getNodeWindow(node);
 			sel = win.getSelection();
 			range = sel.getRangeAt(0);
@@ -764,7 +766,7 @@
 
 		if (data && typeof data[CACHE_DATASET_STRING] !== "undefined") retVal = data[CACHE_DATASET_STRING] === "true";
 		else if (isParent(node, null, ["CodeMirror", "ace"], 3)) retVal = false;
-		else if (tgN === "TEXTAREA" || isContentEditable(node)) retVal = true;
+		else if (tgN === "TEXTAREA" || pk.isContentEditable(node)) retVal = true;
 		else if (tgN === "INPUT") {
 			inputNodeType = node.attr("type");
 			// "!inputNodeType" -> github issue #40
@@ -779,7 +781,7 @@
 	function getCharFollowingCaret(node) {
 		var win, sel, range, container, text, caretPos;
 
-		if (isContentEditable(node)) {
+		if (pk.isContentEditable(node)) {
 			win = getNodeWindow(node);
 			sel = win.getSelection();
 			range = sel.getRangeAt(0);
@@ -812,7 +814,7 @@
 			position,
 			nodeValue;
 
-		if (isContentEditable(node)) {
+		if (pk.isContentEditable(node)) {
 			win = getNodeWindow(node);
 			sel = win.getSelection();
 			range = sel.getRangeAt(0);
@@ -1013,7 +1015,7 @@
 	function init() {
 		// if DB is not loaded then
 		// try again after 1 second
-		if (!DB_loaded) {
+		if (!pk.DB_loaded) {
 			setTimeout(init, 1000);
 			return;
 		}
@@ -1051,7 +1053,7 @@
 			// the modal only appears in the window from where the block form intiated
 			else if (request.task === "showModal" && ctxElm) {
 				if (PAGE_IS_IFRAME) chrome.runtime.sendMessage({ openBlockSiteModalInParent: true, data: request });
-				else showBlockSiteModal(request);
+				else pk.showBlockSiteModal(request);
 			} else if (typeof request.clickedSnippet !== "undefined") {
 				timestamp = parseInt(request.ctxTimestamp, 10);
 
@@ -1063,7 +1065,7 @@
 			// when "Block this site" is called in iframe, iframe sends message
 			// to background.js to send msg to show dialog in parent window
 			// cannot access parent window directly due to CORS
-			else if (request.showBlockSiteModal && !PAGE_IS_IFRAME) showBlockSiteModal(request.data);
+			else if (request.showBlockSiteModal && !PAGE_IS_IFRAME) pk.showBlockSiteModal(request.data);
 		});
 
 		attachNecessaryHandlers(window, isBlocked);
