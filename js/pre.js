@@ -1,9 +1,11 @@
-/* global q, getHTML, setHTML, Snip */
-/* global updateAllValuesPerWin, pk */
+/* global q, pk, Snip */
 
 // custom functions inspired from jQuery
 // special thanks to
 // bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32
+
+// will be used to store prokeys related variables (#204)
+window.pk = {};
 
 /**
  * extends NodeList prototype per iframe present in the webpage
@@ -12,7 +14,7 @@
 var extendNodePrototype;
 (function protoExtensionWork() {
 	// called by detector.js
-	window.updateAllValuesPerWin = function(win) {
+	pk.updateAllValuesPerWin = function(win) {
 		for (var i = 0, count = protoExtensionNames.length; i < count; i++)
 			setNodeListPropPerWindow(protoExtensionNames[i], protoExtensionFunctions[i], win);
 	};
@@ -50,9 +52,7 @@ var extendNodePrototype;
 (function() {
 	var DEBUGGING = true;
 
-	// will be used to store prokeys related variables (#204)
-	window.pk = {};
-	window.OBJECT_NAME_LIMIT = 30;
+	pk.OBJECT_NAME_LIMIT = 30;
 	Date.MONTHS = [
 		"January",
 		"February",
@@ -173,6 +173,17 @@ var extendNodePrototype;
 		else if (rem === 3 && date !== 13) str = "rd";
 
 		return date + str;
+	};
+
+	/**
+	 * @param: timestamp: optional
+	 */
+	Date.getFormattedDate = function(timestamp) {
+		var d = (timestamp ? new Date(timestamp) : new Date()).toString();
+
+		// sample date would be:
+		// "Sat Feb 20 2016 09:17:23 GMT+0530 (India Standard Time)"
+		return d.substring(4, 15);
 	};
 
 	window.debugLog = function() {
@@ -319,16 +330,16 @@ var extendNodePrototype;
 	});
 
 	// returns innerText
-	window.getText = function(node) {
-		return getHTML(node, "innerText");
+	pk.getText = function(node) {
+		return pk.getHTML(node, "innerText");
 	};
 
 	// sets innerText
-	window.setText = function(node, newVal) {
-		return setHTML(node, newVal, "innerText");
+	pk.setText = function(node, newVal) {
+		return pk.setHTML(node, newVal, "innerText");
 	};
 
-	window.getHTML = function(node, prop) {
+	pk.getHTML = function(node, prop) {
 		if (!node) return;
 
 		if (pk.isTextNode(node)) return node.textContent.replace(/\u00a0/g, " ");
@@ -342,7 +353,7 @@ var extendNodePrototype;
 		}
 	};
 
-	window.setHTML = function(node, newVal, prop, isListSnippets) {
+	pk.setHTML = function(node, newVal, prop, isListSnippets) {
 		// in case number is passed; .replace won't work
 		newVal = newVal.toString();
 
@@ -448,7 +459,9 @@ var extendNodePrototype;
 	// use only when sure that Node is "not undefined"
 	extendNodePrototype("html", function(textToSet, prop, isListSnippets) {
 		// can be zero/empty string; make sure it's undefined
-		return typeof textToSet !== "undefined" ? setHTML(this, textToSet, prop, isListSnippets) : getHTML(this, prop);
+		return typeof textToSet !== "undefined"
+			? pk.setHTML(this, textToSet, prop, isListSnippets)
+			: pk.getHTML(this, prop);
 	});
 
 	// prototype alternative for setText/getText
@@ -481,7 +494,7 @@ var extendNodePrototype;
 	// replaces string's `\n` with `<br>` or reverse
 	// `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
 	// false => convrt text for dislplay in text area (`.value`)
-	window.convertBetweenHTMLTags = function(string, convertForHTML) {
+	pk.convertBetweenHTMLTags = function(string, convertForHTML) {
 		var map = [["<br>", "\\n"], [" &nbsp;", "  "]],
 			regexIndex = +convertForHTML,
 			replacerIdx = +!convertForHTML,
@@ -507,13 +520,13 @@ var extendNodePrototype;
 		return container.innerHTML.replace(/&nbsp; ?&nbsp;<li>/g, "<li>");
 	};
 
-	window.isEmpty = function(obj) {
+	pk.isObjectEmpty = function(obj) {
 		for (var prop in obj) if (obj.hasOwnProperty(prop)) return false;
 
 		return true;
 	};
 
-	window.escapeRegExp = function(str) {
+	pk.escapeRegExp = function(str) {
 		return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 	};
 
@@ -525,24 +538,13 @@ var extendNodePrototype;
 		return (num <= 9 ? "0" : "") + num;
 	};
 
-	/**
-	 * @param: timestamp: optional
-	 */
-	window.getFormattedDate = function(timestamp) {
-		var d = (timestamp ? new Date(timestamp) : new Date()).toString();
-
-		// sample date would be:
-		// "Sat Feb 20 2016 09:17:23 GMT+0530 (India Standard Time)"
-		return d.substring(4, 15);
-	};
-
-	window.isObject = function(o) {
+	pk.isObject = function(o) {
 		return Object.prototype.toString.call(o) === "[object Object]";
 	};
 
 	// should use this since users may use foreign language
 	// characters which use up more than two bytes
-	window.lengthInUtf8Bytes = function(str) {
+	pk.lengthInUtf8Bytes = function(str) {
 		// Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
 		var m = encodeURIComponent(str).match(/%[89ABab]/g);
 		return str.length + (m ? m.length : 0);
@@ -592,7 +594,7 @@ var extendNodePrototype;
 		return false;
 	};
 
-	window.checkRuntimeError = function() {
+	pk.checkRuntimeError = function() {
 		if (chrome.runtime.lastError) {
 			alert(
 				"An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!"
@@ -606,7 +608,7 @@ var extendNodePrototype;
 	// be triggered. The function will be called after it stops being called for
 	// N milliseconds. If `immediate` is passed, trigger the function on the
 	// leading edge, instead of the trailing.
-	window.debounce = function(func, wait, immediate) {
+	pk.debounce = function(func, wait, immediate) {
 		var timeout;
 		return function() {
 			var context = this,
@@ -622,5 +624,5 @@ var extendNodePrototype;
 		};
 	};
 
-	updateAllValuesPerWin(window);
+	pk.updateAllValuesPerWin(window);
 })();

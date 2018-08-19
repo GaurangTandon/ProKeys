@@ -1,9 +1,8 @@
-/* global isEmpty, isObject, getFormattedDate, checkRuntimeError, Q */
-/* global q, getHTML, DualTextbox, pk, Data */
-/* global qClsSingle, qCls, qId, OBJECT_NAME_LIMIT */
+/* global q, Q, DualTextbox, pk, Data */
+/* global qClsSingle, qCls, qId */
 /* global chrome, saveSnippetData, debugDir */
-/* global escapeRegExp, Folder, Snip, Generic, $containerFolderPath */
-/* global latestRevisionLabel, $containerSnippets, $panelSnippets, debounce */
+/* global Folder, Snip, Generic, $containerFolderPath */
+/* global latestRevisionLabel, $containerSnippets, $panelSnippets */
 // above are defined in window. format
 
 // TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
@@ -79,7 +78,7 @@
 
 		parsed.unshift({
 			// push latest revision
-			label: getFormattedDate() + " - " + latestRevisionLabel,
+			label: Date.getFormattedDate() + " - " + latestRevisionLabel,
 			data: dataString || Data.snippets
 		});
 
@@ -104,7 +103,7 @@
 			var folderToList = folderNameToList ? Data.snippets.getUniqueFolder(folderNameToList) : Data.snippets;
 			folderToList.listSnippets(objectNamesToHighlight);
 
-			checkRuntimeError();
+			pk.checkRuntimeError();
 
 			if (callback) callback();
 		});
@@ -122,7 +121,7 @@
 		DB_save(function() {
 			if (typeof msg === "function") msg();
 			else if (typeof msg === "string") alert(msg);
-			checkRuntimeError();
+			pk.checkRuntimeError();
 
 			if (callback) callback();
 		});
@@ -148,7 +147,7 @@
 		storage.get(pk.OLD_DATA_STORAGE_KEY, function(r) {
 			var req = r[pk.OLD_DATA_STORAGE_KEY];
 
-			if (isEmpty(req) || req.dataVersion != Data.dataVersion) DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
+			if (pk.isObjectEmpty(req) || req.dataVersion != Data.dataVersion) DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
 			else {
 				Data = req;
 				if (callback) callback();
@@ -168,7 +167,7 @@
 
 		for (var i = 0, len = arr.length; i < len; i++) {
 			var str = arr[i],
-				regex = new RegExp("^" + escapeRegExp(domain));
+				regex = new RegExp("^" + pk.escapeRegExp(domain));
 
 			if (regex.test(str)) return true;
 		}
@@ -371,7 +370,7 @@
 			function both(object) {
 				var objectNameLen = object.name.length;
 
-				if (objectNameLen <= OBJECT_NAME_LIMIT - stringToAppendToImportedObject.length)
+				if (objectNameLen <= pk.OBJECT_NAME_LIMIT - stringToAppendToImportedObject.length)
 					object.name += stringToAppendToImportedObject;
 				else object.name = object.name.substring(0, objectNameLen - 3) + stringToAppendToImportedObject;
 			}
@@ -688,8 +687,8 @@
 				// boolean to tell if call is to edit existing snippet/folder
 				// or create new snippet
 				isEditing = !!object,
-                isSnip = type == "snip",
-                errorElements = qCls("error");
+				isSnip = type == "snip",
+				errorElements = qCls("error");
 
 			$panelSnippets.toggleClass(SHOW_CLASS);
 			$panel.toggleClass(SHOW_CLASS);
@@ -738,7 +737,7 @@
 		};
 	}
 
-    /** functions common to snip and folder
+	/** functions common to snip and folder
      * @param {String} panelName snip or folder only
      * @returns {Function} 
      */
@@ -852,7 +851,7 @@
 					} else oldParentFolder["edit" + type](oldName, name, body);
 				} else newParentfolder["add" + type](name, body);
 			});
-		}		
+		};
 	}
 
 	function init() {        
@@ -1018,7 +1017,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				var node = e.target;
 
 				if (node.tagName === "BUTTON") saveAutoInsert(getAutoInsertPairFromSaveInput(node));
-				else if (getHTML(node) === "Remove") removeAutoInsertChar(getAutoInsertPairFromRemoveInput(node));
+				else if (pk.getHTML(node) === "Remove") removeAutoInsertChar(getAutoInsertPairFromRemoveInput(node));
 			});
 
 			$snipMatchDelimitedWordInput.on("change", function() {
@@ -1034,7 +1033,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					reservedDelimiter;
 				for (; i < len; i++) {
 					reservedDelimiter = RESERVED_DELIMITER_LIST.charAt(i);
-					if (stringList.match(escapeRegExp(reservedDelimiter))) return reservedDelimiter;
+					if (stringList.match(pk.escapeRegExp(reservedDelimiter))) return reservedDelimiter;
 				}
 
 				return true;
@@ -1258,7 +1257,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			$searchBtn.attr("title", "Search for folders or snips");
 			$searchField.on(
 				"keyup",
-				debounce(function searchFieldHandler() {
+				pk.debounce(function searchFieldHandler() {
 					var searchText = this.value,
 						listedFolder = Folder.getListedFolder(),
 						searchResult = listedFolder.searchSnippets(searchText);
@@ -1533,7 +1532,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				downloadLink.download =
                     (dataUse === "print" ? "ProKeys print snippets" : "ProKeys " + dataUse) +
                     " " +
-                    getFormattedDate() +
+                    Date.getFormattedDate() +
                     ".txt";
 			}
 
@@ -1766,7 +1765,7 @@ Or you may try refreshing the page. "
 			saveRevision(Data.snippets);
 		}
 
-		if (!isObject(Data.snippets)) Data.snippets = Folder.fromArray(Data.snippets);
+		if (!pk.isObject(Data.snippets)) Data.snippets = Folder.fromArray(Data.snippets);
 
 		// save the default snippets ONLY
 		if (firstInstall) saveSnippetData();
@@ -1823,7 +1822,7 @@ Or you may try refreshing the page. "
 		// we need to set height of logo equal to width
 		// but css can't detect height so we need js hack
 		var logo = qClsSingle("logo");
-		window.on("resize", debounce(function windowResizeHandler() {
+		window.on("resize", pk.debounce(function windowResizeHandler() {
 			logo.style.width = logo.clientHeight + "px";
 			Folder.implementChevronInFolderPath();
 		}, 300));

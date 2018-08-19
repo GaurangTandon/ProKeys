@@ -1,5 +1,4 @@
-/* global q, Folder, isEmpty, pk, Data */
-/* global checkRuntimeError, escapeRegExp */
+/* global q, Folder, pk, Data */
 /*
 	1. this file manipulates data (loading, saving) as well as modal box insertion
 	that is unique to only independent webpage so that the remaining detector.js
@@ -48,7 +47,7 @@
 
 	function DB_load(callback) {
 		storage.get(pk.OLD_DATA_STORAGE_KEY, function(r) {
-			if (isEmpty(r[pk.OLD_DATA_STORAGE_KEY])) DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
+			if (pk.isObjectEmpty(r[pk.OLD_DATA_STORAGE_KEY])) DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
 			else if (r[pk.OLD_DATA_STORAGE_KEY].dataVersion != Data.dataVersion)
 				DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
 			else {
@@ -73,7 +72,7 @@
 			Data.snippets = Folder.fromArray(Data.snippets);
 			if (typeof msg === "function") msg();
 			else if (typeof msg === "string") alert(msg);
-			checkRuntimeError();
+			pk.checkRuntimeError();
 
 			if (callback) callback();
 		});
@@ -91,7 +90,7 @@
 		pk.DB_loaded = true;
 		Data.snippets = Folder.fromArray(Data.snippets);
 		Folder.setIndices();
-		pk.snipNameDelimiterListRegex = new RegExp("[" + escapeRegExp(Data.snipNameDelimiterList) + "]");
+		pk.snipNameDelimiterListRegex = new RegExp("[" + pk.escapeRegExp(Data.snipNameDelimiterList) + "]");
 	}
 
 	// attach click/keypress handler for the two buttons

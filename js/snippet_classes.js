@@ -1,6 +1,6 @@
-/* global q, isObject, getFormattedDate, chrome, pk */
-/* global escapeRegExp, getText, Folder, Data, Snip, Generic, saveSnippetData, OBJECT_NAME_LIMIT*/
-/* global convertBetweenHTMLTags, Quill, $containerFolderPath, $containerSnippets, listOfSnippetCtxIDs, latestRevisionLabel */
+/* global q, chrome, pk */
+/* global Folder, Data, Snip, Generic, saveSnippetData */
+/* global Quill, $containerFolderPath, $containerSnippets, listOfSnippetCtxIDs, latestRevisionLabel */
 
 /* this file is loaded both as a content script
 	as well as a background page*/
@@ -207,11 +207,11 @@ Generic.getDuplicateObjectsText = function(text, type) {
 Generic.isValidName = function(name, type) {
 	return name.length === 0
 		? "Empty name field"
-		: name.length > OBJECT_NAME_LIMIT
+		: name.length > pk.OBJECT_NAME_LIMIT
 			? "Name cannot be greater than " +
-              OBJECT_NAME_LIMIT +
+			pk.OBJECT_NAME_LIMIT +
               " characters. Current name has " +
-              (name.length - OBJECT_NAME_LIMIT) +
+              (name.length - pk.OBJECT_NAME_LIMIT) +
               " more characters."
 			: Data.snippets.getUniqueObject(name, type)
 				? Generic.getDuplicateObjectsText(name, type)
@@ -636,7 +636,7 @@ Snip.MACROS = [
 			0
 		]
 	],
-	["\\bdate\\b", [getFormattedDate, 0]],
+	["\\bdate\\b", [Date.getFormattedDate, 0]],
 	["\\btime\\b", [Date.getCurrentTimestamp, 0]]
 ];
 Snip.fromObject = function(snip) {
@@ -660,7 +660,7 @@ Snip.isValidBody = function(body) {
 	return body.length ? "true" : "Empty body field";
 };
 Snip.getTimestampString = function(snip) {
-	return "Created on " + getFormattedDate(snip.timestamp);
+	return "Created on " + Date.getFormattedDate(snip.timestamp);
 };
 /*
 1. removes and replaces the spammy p nodes with \n
@@ -1146,7 +1146,7 @@ Snip.validate = function(arr, parentFolder, index) {
 
 	if (Array.isArray(arr)) {
 		if ((snippetVld = Folder.validate(arr)) !== "true") return snippetVld;
-	} else if (!isObject(arr)) {
+	} else if (!pk.isObject(arr)) {
 		return snippetUnderFolderString + " is not an object.";
 	} else {
 		propCounter = 0;
@@ -1344,7 +1344,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
 	};
 
 	this.searchSnippets = function(text) {
-		text = escapeRegExp(text);
+		text = pk.escapeRegExp(text);
 
 		if (!this.hasStrippedSnippets) this.stripAllSnippetsTags();
 
@@ -1401,7 +1401,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
 
 	this.listSnippets = function(objectNamesToHighlight) {
 		// can also be a MouseEvent (generated on click)
-		objectNamesToHighlight = isObject(objectNamesToHighlight) ? undefined : objectNamesToHighlight;
+		objectNamesToHighlight = pk.isObject(objectNamesToHighlight) ? undefined : objectNamesToHighlight;
 		$containerSnippets
 			.html("") // first remove previous content
 			.appendChild(this.getDOMElementFull(objectNamesToHighlight));
@@ -1469,7 +1469,7 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
 	}
 
 	function highlightMatchText(keyword, textToMatch) {
-		return textToMatch.replace(new RegExp(escapeRegExp(keyword), "ig"), function($0) {
+		return textToMatch.replace(new RegExp(pk.escapeRegExp(keyword), "ig"), function($0) {
 			return "<match>" + $0 + "</match>";
 		});
 	}
@@ -1529,12 +1529,12 @@ window.Folder = function(name, list, timestamp, isSearchResultFolder) {
 	};
 
 	this.getUniqueSnippetAtCaretPos = function(node, pos) {
-		var val = getText(node),
+		var val = pk.getText(node),
 			snip,
 			stringToCheck = "",
 			foundSnip = null,
 			delimiterChar = val[pos - 1],
-			lim = pos < OBJECT_NAME_LIMIT ? pos : OBJECT_NAME_LIMIT;
+			lim = pos < pk.OBJECT_NAME_LIMIT ? pos : pk.OBJECT_NAME_LIMIT;
 
 		for (var i = 1; i <= lim; i++) {
 			// the previous delimiter char gets added to the
@@ -2050,7 +2050,7 @@ window.DualTextbox = function($container, isTryItEditor) {
 			if (transferContentsToShownEditor) {
 				// <b> tags get converted to bold formatted text (and vc-vs)
 				if (isCurrModePlain) this.setPlainText(this.getRichText());
-				else this.setRichText(convertBetweenHTMLTags(this.getPlainText(), true));
+				else this.setRichText(pk.convertBetweenHTMLTags(this.getPlainText(), true));
 			}
 		}.bind(this)
 	);

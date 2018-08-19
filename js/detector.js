@@ -1,6 +1,6 @@
-/* global q, getHTML, DB_loaded, Folder, Snip, updateAllValuesPerWin*/
-/* global chrome, Data, getFormattedDate, pk */
-/* global escapeRegExp, debugDir, debugLog */
+/* global q, DB_loaded, Folder, Snip */
+/* global chrome, Data, pk */
+/* global debugDir, debugLog */
 
 // TODO: clear up properties isGmail, isGoogle from detector.js, and several pre.js properties
 
@@ -74,7 +74,7 @@
 				if (!doc[UNIQ_CS_KEY]) {
 					doc[UNIQ_CS_KEY] = true;
 					doc[DOC_IS_IFRAME_KEY] = true;
-					updateAllValuesPerWin(win);
+					pk.updateAllValuesPerWin(win);
 					attachNecessaryHandlers(win);
 					setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
 				}
@@ -524,7 +524,7 @@
 			regex;
 
 		for (var i = 0, len = arr.length; i < len; i++) {
-			regex = new RegExp("^" + escapeRegExp(arr[i]));
+			regex = new RegExp("^" + pk.escapeRegExp(arr[i]));
 
 			if (regex.test(domain)) return true;
 		}
@@ -553,7 +553,7 @@
 			}
 		}
 		// textarea
-		else return getHTML(node).substring(node.selectionStart, node.selectionEnd);
+		else return pk.getHTML(node).substring(node.selectionStart, node.selectionEnd);
 	}
 
 	/**
@@ -615,7 +615,7 @@
 
 	function formatVariable(str) {
 		return /date/i.test(str)
-			? getFormattedDate()
+			? Date.getFormattedDate()
 			: /time/i.test(str)
 				? Date.getCurrentTimestamp()
 				: /version/i.test(str)
@@ -787,7 +787,7 @@
 			range = sel.getRangeAt(0);
 			container = range.startContainer;
 			caretPos = range.startOffset;
-			text = getHTML(container); // no .html() as can be text node
+			text = pk.getHTML(container); // no .html() as can be text node
 
 			if (caretPos < text.length) return text[caretPos];
 			else {
@@ -795,7 +795,7 @@
 				container = range.startContainer.nextSibling;
 				// so take the following node
 				if (container) {
-					text = getHTML(container);
+					text = pk.getHTML(container);
 					if (text.length !== 0) return text[0];
 				}
 			}
@@ -1074,7 +1074,7 @@
 		if (isBlocked) return true;
 
 		setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);
-		updateAllValuesPerWin(window);
+		pk.updateAllValuesPerWin(window);
 
 		window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
 		window.isGmail = /mail\.google/.test(window.location.href);
