@@ -948,17 +948,21 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 			$blockSitesTextarea.on("keydown", function(event){
 				if(event.keyCode === 13 && (event.ctrlKey || event.metaKey)){
-					var URLs = $blockSitesTextarea.value.split("\n");
+					var URLs = $blockSitesTextarea.value.split("\n"),
+						i = 0,
+						len = URLs.length,
+						URL,
+						sanitizedURL;
+						
+					Data.blockedSites = []; // reset
 					
-					for (var index = 0, URL, sanitizedURL; index < URLs.length; index++) {
-						URL = URLs[index].trim();						
+					for (; i < len; i++) {
+						URL = URLs[i].trim();					
 						sanitizedURL = sanitizeSiteURLForBlock(URL);
 
 						if(sanitizedURL === false) return;
-						else URLs[index] = sanitizedURL;
+						else Data.blockedSites.push(sanitizedURL);
 					}
-
-					Data.blockedSites = URLs;
 
 					saveOtherData("Saved successfully", listBlockedSites);
 				}
