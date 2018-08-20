@@ -46,7 +46,8 @@
 		RESERVED_DELIMITER_LIST = "`~|\\^",
 		dualSnippetEditorObj,
 		autoInsertWrapSelectionInput,
-		omniboxSearchURLInput;
+		omniboxSearchURLInput,
+		$blockSitesTextarea;
 
 	// these variables are accessed by multiple files
 	pk.DB_loaded = false;
@@ -176,29 +177,7 @@
 	}
 
 	function listBlockedSites() {
-		function getLI(url) {
-			var li = q.new("li"),
-				label = q.new("label"),
-				input = q.new("input");
-			input.type = "checkbox";
-			label.appendChild(input);
-			label.appendChild(document.createTextNode(url));
-			li.appendChild(label);
-			return li;
-		}
-
-		var ul = q(".blocked-sites ul"),
-			i = 0,
-			len = Data.blockedSites.length;
-
-		// if atleast one blocked site
-		if (len > 0) ul.html("").removeClass("empty");
-		else {
-			ul.html("None Currently").addClass("empty");
-			return;
-		}
-
-		for (; i < len; i++) ul.appendChild(getLI(Data.blockedSites[i]));
+		$blockSitesTextarea.value = Data.blockedSites.join("\n");
 	}
 
 	function createTableRow(textArr) {
@@ -629,30 +608,24 @@
 		return result;
 	}
 
-	function blockSite() {
-		var regex = /(\w+\.)+\w+/,
-			value = this.value;
+	function sanitizeSiteURLForBlock(URL) {
+		var regex = /(\w+\.)+\w+/;
 
 		// invalid domain entered; exit
-		if (!regex.test(value)) {
+		if (!regex.test(URL)) {
 			alert("Invalid form of site address entered.");
-			return;
+			return false;
 		}
 
-		value = value.replace(/^(https?:\/\/)?(www\.)?/, "");
+		URL = URL.replace(/^(https?:\/\/)?(www\.)?/, "");
 
 		// already a blocked site
-		if (isBlockedSite(value)) {
-			alert("Site " + value + " is already blocked.");
-			return;
+		if (isBlockedSite(URL)) {
+			alert("Site " + URL + " is already blocked.");
+			return false;
 		}
 
-		// reset its value
-		this.value = "";
-
-		Data.blockedSites.push(value);
-
-		saveOtherData("Blocked " + value, listBlockedSites);
+		return URL;
 	}
 
 	/**
@@ -963,8 +936,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 		})();
 
 		(function settingsPageHandlers() {
-			var $unblockBtn = q(".blocked-sites .unblock"),
-				$delimiterCharsInput = q(".delimiter_list input"),
+			var $delimiterCharsInput = q(".delimiter_list input"),
 				$delimiterCharsResetBtn = q(".delimiter_list button");
 
 			// on user input in tab key setting
@@ -974,32 +946,21 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				saveOtherData("Saved!");
 			});
 
-			q("#settings .siteBlockInput").on("keyup", function(event) {
-				if (event.keyCode === 13) blockSite.call(this);
-			});
+			$blockSitesTextarea.on("keydown", function(event){
+				if(event.keyCode === 13 && (event.ctrlKey || event.metaKey)){
+					var URLs = $blockSitesTextarea.value.split("\n");
+					
+					for (var index = 0, URL, sanitizedURL; index < URLs.length; index++) {
+						URL = URLs[index].trim();						
+						sanitizedURL = sanitizeSiteURLForBlock(URL);
 
-			$unblockBtn.on("click", function() {
-				function getURL(elm) {
-					return elm.nextSibling.textContent;
-				}
-
-				var str = "Are you sure you want to unblock - ",
-					$selectedCheckboxes = q(".blocked-sites ul input:checked"),
-					l = $selectedCheckboxes.length,
-					sites,
-					index;
-
-				sites = l === 1 ? [getURL($selectedCheckboxes)] : $selectedCheckboxes.map(getURL);
-
-				if (l === 0) alert("Please select at least one site using the checkboxes.");
-				else if (confirm(str + sites.join(", ") + "?")) {
-					for (var i = 0; i < l; i++) {
-						index = Data.blockedSites.indexOf(sites[i]);
-
-						Data.blockedSites.splice(index, 1);
+						if(sanitizedURL === false) return;
+						else URLs[index] = sanitizedURL;
 					}
 
-					saveOtherData(listBlockedSites);
+					Data.blockedSites = URLs;
+
+					saveOtherData("Saved successfully", listBlockedSites);
 				}
 			});
 
@@ -1780,6 +1741,7 @@ Or you may try refreshing the page. "
 
 		if (Data.matchDelimitedWord) $snipNameDelimiterListDIV.addClass(SHOW_CLASS);
 
+		$blockSitesTextarea = q(".blocked-sites textarea");
 		listBlockedSites();
 
 		$autoInsertTable = qClsSingle("auto_insert");

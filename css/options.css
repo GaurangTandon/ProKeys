@@ -1,49 +1,54 @@
-*{
-	margin: 0; box-sizing: border-box;
+* {
+    margin: 0;
+    box-sizing: border-box;
 }
 /* setting padding 0 in ol,ul removes the list indentation*/
-*:not(ul, ol){
-	padding: 0;
+*:not(ul, ol) {
+    padding: 0;
 }
-html, body{
-	width: 100%;
+html,
+body {
+    width: 100%;
 }
 
 /*reset user agent's default styles*/
-a, label.file_input{
-	cursor: pointer;
-	text-decoration: none;
-	color: #1143BB;
+a,
+label.file_input {
+    cursor: pointer;
+    text-decoration: none;
+    color: #1143bb;
 }
 
-td{
-	border:1px solid;
-	padding: 5px;
+td {
+    border: 1px solid;
+    padding: 5px;
 }
-em{
-	font-style: italic;
+em {
+    font-style: italic;
 }
-h2{
-	font-size: 35px;
-	font-family: Arial;
+h2 {
+    font-size: 35px;
+    font-family: Arial;
 }
-h3{
-	font-size: 22px;
+h3 {
+    font-size: 22px;
 }
-ul, ol, li{	
-	border: 0;
-	font-size: 100%;
-	font: inherit;
-	vertical-align: baseline;
+ul,
+ol,
+li {
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
 }
-blockquote{
-	margin-bottom: 5px;
+blockquote {
+    margin-bottom: 5px;
     margin-top: 5px;
     padding-left: 16px;
     border-left: 4px solid rgb(204, 204, 204);
 }
-pre{
-	white-space: pre-wrap;
+pre {
+    white-space: pre-wrap;
     margin-bottom: 5px;
     margin-top: 5px;
     padding: 5px 10px;
@@ -51,273 +56,285 @@ pre{
     border-radius: 3px;
 }
 
-.tip{
-	font-size: 75%;
+.tip {
+    font-size: 75%;
 }
 
-button, .buttons a{
-	font-size: 20px;
+button,
+.buttons a {
+    font-size: 20px;
     font-family: Calibri;
     color: white;
-    background: #5580F0;
+    background: #5580f0;
     cursor: pointer;
     outline: none;
     border: none;
-	padding: 5px 15px;
-	transition: .5s ease;
+    padding: 5px 15px;
+    transition: 0.5s ease;
 }
 
-button:hover, .buttons a:hover{
-	background: #18C470;
+button:hover,
+.buttons a:hover {
+    background: #18c470;
 }
 
-label > input{
-	margin-right: 2px;
+label > input {
+    margin-right: 2px;
 }
 
-input[type=file]{
-	width: 0.1px;
-	height: 0.1px;
-	opacity: 0;
-	overflow: hidden;
-	position: absolute;
-	z-index: -1;
+input[type="file"] {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
 }
 
-input[type=button], td, th{
-	padding: 5px;
+input[type="button"],
+td,
+th {
+    padding: 5px;
 }
 
-.shown{
-	display: block !important;
+.shown {
+    display: block !important;
 }
 
-.sidebar{
-	position: fixed;
+.sidebar {
+    position: fixed;
     height: 100%;
-	width: 15%;
-	background: #FEFEFE;
+    width: 15%;
+    background: #fefefe;
 }
 
 .logo {
-	width: 150px;
+    width: 150px;
     height: 150px;
     margin: 30px auto 15px auto;
     background: white;
 }
 
-.logo a{
-	width: 100%;
+.logo a {
+    width: 100%;
     height: 100%;
     margin: auto;
     display: block;
-	background-image: url('../imgs/gk.png');
-	background-size: cover;
-	border-radius: 50%;
+    background-image: url("../imgs/gk.png");
+    background-size: cover;
+    border-radius: 50%;
 }
 
-.sidebar .buttons{
-	width: 100%;
-	min-height: 10px;
-	max-height: 400px;
-	text-align: center;
+.sidebar .buttons {
+    width: 100%;
+    min-height: 10px;
+    max-height: 400px;
+    text-align: center;
 }
 
 .sidebar .buttons button {
-	width: 80%;
+    width: 80%;
     padding: 5px;
-    margin: 10px 0; 
-	font-size: 30px;	
+    margin: 10px 0;
+    font-size: 30px;
 }
 
-.sidebar .buttons button.selected{
-	background: #18C470;
+.sidebar .buttons button.selected {
+    background: #18c470;
 }
 
-.wrapper{
-	width: 85%;	
-	position: absolute;
-	left: 15%;
+.wrapper {
+    width: 85%;
+    position: absolute;
+    left: 15%;
 }
 
-#content{
-	text-align: center;
-	display: block;
-	padding: 10px 0 10px 0;
-	width: 100%;
-	float: right;
+#content {
+    text-align: center;
+    display: block;
+    padding: 10px 0 10px 0;
+    width: 100%;
+    float: right;
 }
 
 footer {
     text-align: center;
 }
 
-.verticalLine{
-	border-left: 1px solid #B7B7B7;
-	height: 100%;
-	width: 0px;
-	position: absolute;
-	left: 0;
-	top:0;
+.verticalLine {
+    border-left: 1px solid #b7b7b7;
+    height: 100%;
+    width: 0px;
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 
-#faded{
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: #eee;
-	z-index: -1;
+#faded {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #eee;
+    z-index: -1;
 }
 
-#content > div{
-	width: 75%;
-	min-height: 700px;
-	margin: 0 auto;
-	display: none;
-	padding: 10px;
-	font-size: 20px;
-	background: white;
-	display: none;
+#content > div {
+    width: 75%;
+    min-height: 700px;
+    margin: 0 auto;
+    display: none;
+    padding: 10px;
+    font-size: 20px;
+    background: white;
+    display: none;
 }
 
-#content h1{
-    color: #18C470;
+#content h1 {
+    color: #18c470;
     font-size: 50px;
     font-family: Calibri;
     padding: 5px;
     margin: 50px 10px 20px 10px;
 }
 
-.box{	
-    border: 1px solid #1EEC88;
+.box {
+    border: 1px solid #1eec88;
     width: 95%;
     margin: 0 auto;
-	margin-bottom: 10px;
-	text-align: left;
-	padding: 15px;
+    margin-bottom: 10px;
+    text-align: left;
+    padding: 15px;
 }
 
-#about .box{
-	width: 90%;
-	box-sizing: content-box;
-	padding: 0;
+#about .box {
+    width: 90%;
+    box-sizing: content-box;
+    padding: 0;
 }
 
-.box.team-info{
-	padding: 0; border: 0;
+.box.team-info {
+    padding: 0;
+    border: 0;
 }
 
-#about .box.team-info .heading{ /*keep #about to maintain precedence*/
-	margin: 0;
+#about .box.team-info .heading {
+    /*keep #about to maintain precedence*/
+    margin: 0;
 }
 
-.box .heading, .box .heading2{	
+.box .heading,
+.box .heading2 {
     font-size: 25px;
-	font-weight: bold;
+    font-weight: bold;
 }
 
-#about .box .heading, .box.change-log .heading{
-	display: inline-block;
-	width: 100%;
-	background: #18C470;
-	color: white;
-	padding: 10px 20px;
+#about .box .heading,
+.box.change-log .heading {
+    display: inline-block;
+    width: 100%;
+    background: #18c470;
+    color: white;
+    padding: 10px 20px;
     font-size: 35px;
     text-align: left;
-	margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
-#about .box .content, .box.change-log .content{
-	padding: 15px;
+#about .box .content,
+.box.change-log .content {
+    padding: 15px;
 }
 
-.box.change-log .appeal, .box.change-log .notice{
-	padding: 10px;
+.box.change-log .appeal,
+.box.change-log .notice {
+    padding: 10px;
 }
 
-.box.change-log .notice-icon{/*
+.box.change-log .notice-icon {
+    /*
 	width: 10px;
 	height: 10px;*/
 }
 
 .btn-group {
-	width: 100%;
+    width: 100%;
 }
 
-.btn-group button, .btn-group a{
-	width: 30%;
-	margin-right: 10px;
+.btn-group button,
+.btn-group a {
+    width: 30%;
+    margin-right: 10px;
 }
 
-.box.hotkey .change_hotkey{
-	padding: 10px;
-	font-size: 20px;
-	position: relative;
-	top: -10px;
-	margin-top: 10px;
+.box.hotkey .change_hotkey {
+    padding: 10px;
+    font-size: 20px;
+    position: relative;
+    top: -10px;
+    margin-top: 10px;
 }
 
-.box.hotkey .info{
-	width: calc(100% - 200px);
-	display: inline-block;
-	margin: 10px 20px;
+.box.hotkey .info {
+    width: calc(100% - 200px);
+    display: inline-block;
+    margin: 10px 20px;
 }
 
-.box.change-log{
-	position: fixed;
-	top: 10%;
-	left: 30%;
-	background: white;
-	width: 550px;
-	z-index: 20;
-	padding: 0;
+.box.change-log {
+    position: fixed;
+    top: 10%;
+    left: 30%;
+    background: white;
+    width: 550px;
+    z-index: 20;
+    padding: 0;
 }
 
-.box.change-log h2{
-	font-size: 20px;
-	margin-top: 10px;
-	color: #18C470;
+.box.change-log h2 {
+    font-size: 20px;
+    margin-top: 10px;
+    color: #18c470;
 }
 
-.box.change-log .content p{
-	margin-bottom: 10px;
+.box.change-log .content p {
+    margin-bottom: 10px;
 }
 
-.box.change-log p{	
-	font-size: 18px;
-	font-weight: bold;
-	color: #18c470;
+.box.change-log p {
+    font-size: 18px;
+    font-weight: bold;
+    color: #18c470;
 }
 
-.box.change-log .heading span:last-child{
-	float: right;
+.box.change-log .heading span:last-child {
+    float: right;
 }
 
-.box.change-log{
-	display: none;
+.box.change-log {
+    display: none;
 }
 
-.box.change-log button{
-	margin-top: 10px;
+.box.change-log button {
+    margin-top: 10px;
 }
 
-.box.change-log ul{
-	line-height: 20px;
+.box.change-log ul {
+    line-height: 20px;
     font-size: 18px;
     padding-top: 5px;
     padding-left: 33px;
     list-style-type: decimal;
 }
 
-#content > .show{
-	display: block;
-	top: 0;
+#content > .show {
+    display: block;
+    top: 0;
 }
 
-#snippets{
-	min-width: 560px !important;
+#snippets {
+    min-width: 560px !important;
 }
 
 #snippets .export-buttons {
@@ -325,11 +342,11 @@ footer {
     margin: 0 auto 10px auto;
 }
 
-#snippets .export-buttons button{
-	margin-right: 10px;
-	padding: 5px;
-	font-size: 20px;
-	width: 30%;
+#snippets .export-buttons button {
+    margin-right: 10px;
+    padding: 5px;
+    font-size: 20px;
+    width: 30%;
 }
 
 .storageBytes {
@@ -341,195 +358,203 @@ footer {
     color: #777;
 }
 
-.storageBytes a{
-	color: #777; /*manual override*/
+.storageBytes a {
+    color: #777; /*manual override*/
 }
 
-.blocked-sites ul{
+.blocked-sites ul {
     display: inline-block;
-	min-width: 100px;
-	list-style-type: none;    
-    padding: 5px;    
+    min-width: 100px;
+    list-style-type: none;
+    padding: 5px;
 }
 
-.blocked-sites li{
-    border-bottom: 1px solid #999;    
-	margin-bottom: 10px;
-	padding: 5px;
-	padding-right: 20px;
+.blocked-sites li {
+    border-bottom: 1px solid #999;
+    margin-bottom: 10px;
+    padding: 5px;
+    padding-right: 20px;
 }
 
-.blocked-sites li input{
+.blocked-sites li input {
     margin-right: 10px;
     position: relative;
     top: 2px;
 }
 
 #settings .auto_insert {
-	display: inline-block;
-	margin-top: 10px;
-	font-size: 18px;
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 18px;
 }
 
-#settings .auto_insert thead th{
-	font-weight: bold; border:1px solid black;
+#settings .auto_insert thead th {
+    font-weight: bold;
+    border: 1px solid black;
 }
 
-#settings .auto_insert > tr td{
-	font-family: monospace;
+#settings .auto_insert > tr td {
+    font-family: monospace;
 }
 
-#settings .auto_insert > tr td:nth-child(3):hover{
-	cursor:pointer;
+#settings .auto_insert > tr td:nth-child(3):hover {
+    cursor: pointer;
 }
 
-#settings .auto_insert th, #settings .auto_insert td {
-	text-align: center;
+#settings .auto_insert th,
+#settings .auto_insert td {
+    text-align: center;
 }
 
-.siteBlockInput, .search-provider input {
-	width: 200px;
-	height: 25px;
-	font-size: 16px;
-	margin: 15px 0 0 0;
+.search-provider input {
+    width: 200px;
+    height: 25px;
+    font-size: 16px;
+    margin: 15px 0 0 0;
 }
 
-.search-provider input{
-	width: 400px;
+.blocked-sites textarea {
+    width: 500px;
+    height: 100px;
+    font-size: 18px;
 }
 
-.blocked-sites ul.empty{
-	padding-top: 15px;
+.search-provider input {
+    width: 400px;
 }
 
-.blocked-sites ul.empty + br + button{
-	display: none;
+.blocked-sites ul.empty {
+    padding-top: 15px;
 }
 
-.storageMode .container{
-	text-align: left;	
-	position: relative;
+.blocked-sites ul.empty + br + button {
+    display: none;
 }
 
-.storageMode .container div{
-	margin-top: 10px;
+.storageMode .container {
+    text-align: left;
+    position: relative;
 }
 
-.storageMode h3{
-	font-weight: bold;
-	font-size: 20px;	
-	margin-bottom: 5px;
+.storageMode .container div {
+    margin-top: 10px;
 }
 
-.storageMode .container p{
-	font-size: 18px;
-	margin-left: 10px;
+.storageMode h3 {
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 5px;
 }
 
-.storageMode .warning{
-	font-size: 15px;
-	margin-top: 10px;
+.storageMode .container p {
+    font-size: 18px;
+    margin-left: 10px;
 }
 
-.delimiter_list{
-	display: none;
+.storageMode .warning {
+    font-size: 15px;
+    margin-top: 10px;
 }
 
-.delimiter_list input{
-	width: 300px;
+.delimiter_list {
+    display: none;
+}
+
+.delimiter_list input {
+    width: 300px;
     display: inline-block;
     letter-spacing: 2px;
-	font-weight: bold;
+    font-weight: bold;
 }
 
-.delimiter_list button {	
-	font-size: 15px;
+.delimiter_list button {
+    font-size: 15px;
 }
 
-#help section{
-	text-align: left;
-	padding: 10px;
+#help section {
+    text-align: left;
+    padding: 10px;
 }
 
-#help .box{
-	/*otherwise <h2> gets pushed down really low*/
-	padding-top: 10px;
+#help .box {
+    /*otherwise <h2> gets pushed down really low*/
+    padding-top: 10px;
 }
 
-#help h2{
-	font-size: 35px;
-	color: #18C470;
-	margin: 5px auto;
-	font-weight: bold;
+#help h2 {
+    font-size: 35px;
+    color: #18c470;
+    margin: 5px auto;
+    font-weight: bold;
 }
 
-#help dt{
-	color: #5580F0;
-	font-size: 25px;
-	font-weight: bold;
-	margin: 10px 0;
+#help dt {
+    color: #5580f0;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 10px 0;
 }
 
-#help dt:hover{
-	cursor: pointer;
+#help dt:hover {
+    cursor: pointer;
 }
 
-#help dd{
-	margin-left: 20px;
-	height: 0px;
-	overflow: hidden;
-	transition: max-height 1s ease;
+#help dd {
+    margin-left: 20px;
+    height: 0px;
+    overflow: hidden;
+    transition: max-height 1s ease;
 }
 
-#help dt.show + dd{
-	height: initial;
+#help dt.show + dd {
+    height: initial;
 }
 
-#help dt::before{
-	content: "> ";	
-	color: #5580F0;
+#help dt::before {
+    content: "> ";
+    color: #5580f0;
 }
 
-#help dt.show::before{
-	content: "v ";
+#help dt.show::before {
+    content: "v ";
 }
 
-#help section h2:nth-child(2){
-	margin-top: 15px;
+#help section h2:nth-child(2) {
+    margin-top: 15px;
 }
 
-#help table{
-	margin-top: 10px;
+#help table {
+    margin-top: 10px;
 }
 
-#help table tr td{
-	text-align: center;
+#help table tr td {
+    text-align: center;
 }
 
-#help table thead{
-	font-weight: bold;
+#help table thead {
+    font-weight: bold;
 }
 
-#help table tr td:first-child{
-	font-family: monospace;
+#help table tr td:first-child {
+    font-family: monospace;
 }
 
-#help section > i{
-	margin-left: 20px;
+#help section > i {
+    margin-left: 20px;
 }
 
-.code{
-	font-family: monospace;
-	background: #E8E8E8;
-	font-size: 15px;
+.code {
+    font-family: monospace;
+    background: #e8e8e8;
+    font-size: 15px;
 }
 
-#tryit{
-	margin: 5px auto 20px auto;
+#tryit {
+    margin: 5px auto 20px auto;
     width: 95%;
     /*height: 210px;*/
     border: 1px solid grey;
-	/*if we allow resize horizontal, then on horizontal resize, the new value of width 
+    /*if we allow resize horizontal, then on horizontal resize, the new value of width 
 	would be set inside element.style property and on maximizing/smalling the window, 
 	responsive css code would not work and element would retain the fixed with value set in
 	element.style prop.
@@ -537,100 +562,103 @@ footer {
     overflow-y: auto;*/
 }
 
-.dualBoxContainer .nav{
-	width: 100%;
-	height: 30px;
-	background: rgb(232, 232, 232);
+.dualBoxContainer .nav {
+    width: 100%;
+    height: 30px;
+    background: rgb(232, 232, 232);
 }
 
-.dualBoxContainer .nav span{
-	padding-left: 10px;	
+.dualBoxContainer .nav span {
+    padding-left: 10px;
 }
 
-.dualBoxContainer .nav p{
-	display: inline-block;
-	height: 100%;
-	max-width: 200px;
-	padding: 5px;
-	cursor: pointer;
-	min-width: 50px;
-	margin: auto 0 auto 5px;
-	font-family: 'Segoe UI', Tahoma, sans-serif;
+.dualBoxContainer .nav p {
+    display: inline-block;
+    height: 100%;
+    max-width: 200px;
+    padding: 5px;
+    cursor: pointer;
+    min-width: 50px;
+    margin: auto 0 auto 5px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
-.dualBoxContainer .nav .show{
-	background: white;
+.dualBoxContainer .nav .show {
+    background: white;
 }
 
-.dualBoxContainer > .show{
-	display: block;
-	/*don't add height here since textarea isa .show elm but 
-	the .ql-container is not. It is nested inside a .show elm*/	
-	width: 100%;		
-	box-sizing: border-box;
-	outline: none;
-	overflow-y: auto;
+.dualBoxContainer > .show {
+    display: block;
+    /*don't add height here since textarea isa .show elm but 
+	the .ql-container is not. It is nested inside a .show elm*/
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    overflow-y: auto;
 }
 
 /*can't give padding to that rich editor because it's very big and needs space*/
 .dualBoxContainer textarea {
-	padding: 5px;
-	font-size: 18px;
-	resize: vertical;
-	height: 210px;
-	overflow-y: auto;
-	width: 100%;
-	display: block;
-	outline: none;
+    padding: 5px;
+    font-size: 18px;
+    resize: vertical;
+    height: 210px;
+    overflow-y: auto;
+    width: 100%;
+    display: block;
+    outline: none;
 }
 
 /* two selectors to override specificity from editor.min.css */
-.dualBoxContainer .ql-container, .dualBoxContainer .normal-editor{		
-	/*provide initial height; don't use !important else element.style will get overruled
+.dualBoxContainer .ql-container,
+.dualBoxContainer .normal-editor {
+    /*provide initial height; don't use !important else element.style will get overruled
 	which is used for resizing*/
-	height: 210px;
-	resize: vertical;
-	overflow-y: auto;
-	font-size: 18px;
-	overflow-x: hidden;
+    height: 210px;
+    resize: vertical;
+    overflow-y: auto;
+    font-size: 18px;
+    overflow-x: hidden;
 }
 
-.dualBoxContainer .normal-editor{
-	padding: 5px;
-	outline: none;
-	border: 0.1px solid rgba(0, 0, 0, 0.4);
+.dualBoxContainer .normal-editor {
+    padding: 5px;
+    outline: none;
+    border: 0.1px solid rgba(0, 0, 0, 0.4);
 }
 
-.dualBoxContainer > :not(.nav):not(.show){
-	display: none;
+.dualBoxContainer > :not(.nav):not(.show) {
+    display: none;
 }
 
 #about .buttons {
-	min-width: 50%;
-	max-width: 100%;
-	height: 50px;
-	margin: 10px auto;
+    min-width: 50%;
+    max-width: 100%;
+    height: 50px;
+    margin: 10px auto;
 }
 
-.g-plus img, .fb-share, .tw-share{
-	width: 40px;
-	height: 40px;
-	cursor: pointer;
-	margin: 10px;
-	display: inline-block;
+.g-plus img,
+.fb-share,
+.tw-share {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    margin: 10px;
+    display: inline-block;
 }
 
-.tw-share{
-	background: url("../imgs/t.png");
-	background-size: cover;
+.tw-share {
+    background: url("../imgs/t.png");
+    background-size: cover;
 }
 
-.fb-share{
-	background: url("../imgs/f.png");
-	background-size: cover;
+.fb-share {
+    background: url("../imgs/f.png");
+    background-size: cover;
 }
 
-#about .buttons a{
+#about .buttons a {
     padding: 5px;
     display: inline-block;
     text-align: center;
@@ -638,71 +666,71 @@ footer {
     margin-left: 10px;
 }
 
-.hotkey_listener{
-	opacity: 0;
-	width: 0;
-	height: 0;
+.hotkey_listener {
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .generic {
     padding: 5px;
-	position: relative; /*for .buttons*/
+    position: relative; /*for .buttons*/
     border-bottom: 1px solid grey;
     word-wrap: break-word;
     list-style: none;
-	text-align: left;
-	cursor: pointer;
-	font-family: Arial;
+    text-align: left;
+    cursor: pointer;
+    font-family: Arial;
 }
 
 .generic .name {
     display: inline-block;
     margin: 5px;
-	font-size: 17px;
-	height: 25px;
-	line-height: 25px;
-	min-width: 160px;
+    font-size: 17px;
+    height: 25px;
+    line-height: 25px;
+    min-width: 160px;
 }
 
 /*during bulk action*/
-.generic input[type=checkbox]{
-	margin-right: 10px;
+.generic input[type="checkbox"] {
+    margin-right: 10px;
 }
 
-.snip .name{
-	font-weight: bold;
+.snip .name {
+    font-weight: bold;
 }
 
-.snip.contracted .name{
-	font-weight: normal;
+.snip.contracted .name {
+    font-weight: normal;
 }
 
 .snip .body {
-    font-size: 16px;    
+    font-size: 16px;
     width: 100%;
-	padding: 5px;
-	/*text makes the cursor appear strange
+    padding: 5px;
+    /*text makes the cursor appear strange
 	when hovered over images*/
-	cursor: initial;
+    cursor: initial;
 }
 
-.snip.contracted .body{
-	color: grey;
-	display: inline-block;
-	/*little more than font size
+.snip.contracted .body {
+    color: grey;
+    display: inline-block;
+    /*little more than font size
 		so that the letters can fit properly
 		earlier the letter "y" was being */
-	height: 18px; 
-	position: relative; 
-	/* due to more height the .body was shifting towards the top, #FIXIT*/
-    top: 3px; 
-	padding: 0;
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;	
-	/*while this property is unnecessary, as we are setting .style.width
+    height: 18px;
+    position: relative;
+    /* due to more height the .body was shifting towards the top, #FIXIT*/
+    top: 3px;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /*while this property is unnecessary, as we are setting .style.width
 	 in options.js, however, it is necessary to prevent FOUT*/
-	width: calc(100% - 250px);
+    width: calc(100% - 250px);
 }
 
 /* images need to be shortened*/
@@ -710,192 +738,197 @@ footer {
     height: 15px;
 }
 
-.snip.contracted .clickable{
-	height: 100%;
+.snip.contracted .clickable {
+    height: 100%;
 }
 
-.snip .buttons, .folder .buttons{
-	margin-top: 5px;
-	height: 20px;	
+.snip .buttons,
+.folder .buttons {
+    margin-top: 5px;
+    height: 20px;
     position: absolute;
-	right: 5px;
-	top: 5px;
+    right: 5px;
+    top: 5px;
 }
 
-.snip .buttons div, .folder .buttons div{
-	height: 20px;
+.snip .buttons div,
+.folder .buttons div {
+    height: 20px;
     width: 20px;
-	display: inline-block;
-	margin-right: 5px;
+    display: inline-block;
+    margin-right: 5px;
 }
 
-.snip .clickable{
-	height: 45px; /*~ .snip's height*/
-	width: calc(100% - 80px);
-	opacity: 0;
+.snip .clickable {
+    height: 45px; /*~ .snip's height*/
+    width: calc(100% - 80px);
+    opacity: 0;
     position: absolute;
-	left: 0;
-	top: 0;
-	cursor: pointer;
+    left: 0;
+    top: 0;
+    cursor: pointer;
 }
 
-.snip.contracted .clickable{
-	width: calc(100% - 60px);
+.snip.contracted .clickable {
+    width: calc(100% - 60px);
 }
 
-.snip .timestamp{
-	font-size: 14px;
+.snip .timestamp {
+    font-size: 14px;
     color: grey;
     margin: 5px;
 }
 
-.snip.contracted .timestamp{
-	display: none;
+.snip.contracted .timestamp {
+    display: none;
 }
 
 /*class set on li.snip when user makes a new snip*/
 /*we need to highlight that snip*/
-.generic.highlighting{
-	background: #75E275;
-	/*slowly fade away the gold background*/
-	-webkit-animation: fadeBackground 3s;
-	animation: fadeBackground 3s;
-	-webkit-animation-fill-mode: forwards;
-	animation-fill-mode: forwards;
+.generic.highlighting {
+    background: #75e275;
+    /*slowly fade away the gold background*/
+    -webkit-animation: fadeBackground 3s;
+    animation: fadeBackground 3s;
+    -webkit-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
 }
 
-@-webkit-keyframes fadeBackground{
-	to{
-		background: white;
-	}
+@-webkit-keyframes fadeBackground {
+    to {
+        background: white;
+    }
 }
 
-@media screen and (max-width: 75em){
-	/* move the sidebar to the top as a nav bar START*/
-	.verticalLine{ display: none; } /*remove vertical line*/
+@media screen and (max-width: 75em) {
+    /* move the sidebar to the top as a nav bar START*/
+    .verticalLine {
+        display: none;
+    } /*remove vertical line*/
 
-	.sidebar{
-		z-index: 2;
-		position: fixed;
-		top: 0px;
-		left: 0;
-		width: 100%;
-		height: 8%;
-		border-bottom: 1px solid black;	
-	}
+    .sidebar {
+        z-index: 2;
+        position: fixed;
+        top: 0px;
+        left: 0;
+        width: 100%;
+        height: 8%;
+        border-bottom: 1px solid black;
+    }
 
-	.logo{
-		display: inline-block;
-		height: 80%;
-		width: 40px;
-		margin: 4px 0 0 15px;
-		border-radius: 0;
-	}
-	
-	.logo a{		
-		border-radius: 0;
-		background-size: 125%;
-		background-position: center center;
-	}
-	
-	.sidebar .buttons button{
-		width: 20%;
-		float: left;
-		height: 90%;
-		margin: 2px 5px;
-		padding: 0px;
-		border: 1px solid black;
-		font-size: 20px;
-	}
+    .logo {
+        display: inline-block;
+        height: 80%;
+        width: 40px;
+        margin: 4px 0 0 15px;
+        border-radius: 0;
+    }
 
-	.sidebar .buttons{
-		width: 89%;
-		float: right;
-		height: 100%;
-	}
-	/* move the sidebar to the top as a nav bar END*/
+    .logo a {
+        border-radius: 0;
+        background-size: 125%;
+        background-position: center center;
+    }
 
-	.wrapper{
-		left: 0;
-		top: 8%;
-		width: 100%;
-	}
+    .sidebar .buttons button {
+        width: 20%;
+        float: left;
+        height: 90%;
+        margin: 2px 5px;
+        padding: 0px;
+        border: 1px solid black;
+        font-size: 20px;
+    }
 
-	#content h1{
-		margin-top: 0;
-	}
-	
-	.panel_popup{		
-		left: 20% !important; 
-	}
-	
-	#about .buttons a{
-		margin: 0;
-	}
-	
-	#content > div{
-		width: 95%;
-	}
-	
-	#about .box{
-		width: 95%;
-	}
-	
-	.change-log.box{left: 20%;}
+    .sidebar .buttons {
+        width: 89%;
+        float: right;
+        height: 100%;
+    }
+    /* move the sidebar to the top as a nav bar END*/
+
+    .wrapper {
+        left: 0;
+        top: 8%;
+        width: 100%;
+    }
+
+    #content h1 {
+        margin-top: 0;
+    }
+
+    .panel_popup {
+        left: 20% !important;
+    }
+
+    #about .buttons a {
+        margin: 0;
+    }
+
+    #content > div {
+        width: 95%;
+    }
+
+    #about .box {
+        width: 95%;
+    }
+
+    .change-log.box {
+        left: 20%;
+    }
 }
 
 /*1600x1200+ begins*/
-@media screen and (min-width: 100em){
-	.sidebar .buttons button{
-		font-size: 40px;
-	}
+@media screen and (min-width: 100em) {
+    .sidebar .buttons button {
+        font-size: 40px;
+    }
 
-	#content > div{
-		font-size: 30px;
-	}
+    #content > div {
+        font-size: 30px;
+    }
 
-	button, input, .siteBlockInput + button, .siteBlockInput{
-		padding: 5px;
-		font-size: 24px;
-	}
+    button,
+    input {
+        padding: 5px;
+        font-size: 24px;
+    }
 
-	input[type="radio"], input[type="checkbox"]{
-		height: 20px;
-		width: 20px;
-	}
+    input[type="radio"],
+    input[type="checkbox"] {
+        height: 20px;
+        width: 20px;
+    }
 
-	.siteBlockInput{
-		width: 300px;
-		height: 33px;
-	}
+    .storageMode p {
+        font-size: 22px;
+    }
 
-	.storageMode p{
-		font-size: 22px;
-	}
+    #content h1 {
+        font-size: 55px;
+    }
 
-	#content h1{
-		font-size: 55px;
-	}
-
-	.g-plus img, .fb-share, .tw-share{
-		width: 55px;
-		height: 55px;
-	}
+    .g-plus img,
+    .fb-share,
+    .tw-share {
+        width: 55px;
+        height: 55px;
+    }
 }
 
-.panel{
-	width: 100%;
-	min-height: 100px;
-	border: 1px solid rgba(0, 0, 0, .35);
-	font-family: Calibri;
-	display: none;
+.panel {
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    font-family: Calibri;
+    display: none;
 }
 
-.panel_top{
-	position: relative;
-	width: 100%;
-	height: 50px;
-	background: linear-gradient(to bottom, rgba(250,250,255,1) 0%, rgba(222,223,224,1) 100%);
+.panel_top {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(to bottom, rgba(250, 250, 255, 1) 0%, rgba(222, 223, 224, 1) 100%);
 }
 
 .panel_top .header {
@@ -903,28 +936,28 @@ footer {
     padding-top: 11px;
     font-size: 25px;
     color: rgb(50, 50, 50);
-	/*setting width: 100% will prevent buttons from being clicked*/
+    /*setting width: 100% will prevent buttons from being clicked*/
     width: calc(100% - 100px);
     position: absolute;
     left: 50px;
 }
 
 .panel_content {
-	text-align: left;
+    text-align: left;
 }
 
-.panel_content .empty_folder{
-	color: grey;
-	text-align: center;
-	margin: 10px auto;
+.panel_content .empty_folder {
+    color: grey;
+    text-align: center;
+    margin: 10px auto;
 }
 
-.panel_content > div >  p{
-	margin-bottom: 10px;
+.panel_content > div > p {
+    margin-bottom: 10px;
 }
 
-.edit-panel .panel_content > div{
-	margin: 10px;
+.edit-panel .panel_content > div {
+    margin: 10px;
 }
 
 .edit-panel .name input[type="text"] {
@@ -935,59 +968,59 @@ footer {
 }
 
 .edit-panel #body-editor {
-	width: 100%;
+    width: 100%;
     overflow: auto;
     font-size: 90%;
     border: 1px solid grey;
 }
 
-.edit-panel .error{
-	color: red;
-	margin-top: 5px;
+.edit-panel .error {
+    color: red;
+    margin-top: 5px;
     font-size: 17px;
-	display: none;
+    display: none;
 }
 
-.selectList{
-	padding-top: 10px;
-	width: 100%;
-	text-align: left;
+.selectList {
+    padding-top: 10px;
+    width: 100%;
+    text-align: left;
 }
 
 .selectList > div {
-	border: 1px solid #efefef;
+    border: 1px solid #efefef;
 }
 
 .selectList p {
     padding: 10px;
-	cursor: pointer;
+    cursor: pointer;
 }
 
-.selectList p:hover{
-	background: rgb(229, 243, 255);
+.selectList p:hover {
+    background: rgb(229, 243, 255);
 }
 
 .selectList p.selected {
     background: rgb(204, 232, 255);
 }
 
-.selectList div.collapsed > div{
-	display: none;
+.selectList div.collapsed > div {
+    display: none;
 }
 
-.selectList div.empty > p::before{
-	content: "" !important; /*no arrows on empty folders*/
+.selectList div.empty > p::before {
+    content: "" !important; /*no arrows on empty folders*/
 }
 
-.selectList div > p::before{
-	content: "\25BC ";
+.selectList div > p::before {
+    content: "\25BC ";
     font-size: 15px;
     vertical-align: middle;
 }
 
 .selectList div.collapsed > p::before {
-	content: "\25BA ";
-	font-size: 15px;
+    content: "\25BA ";
+    font-size: 15px;
     vertical-align: middle;
 }
 
@@ -995,7 +1028,7 @@ footer {
     display: inline-block;
     height: 50px;
     width: calc(100% - 300px);
-	text-align: left;
+    text-align: left;
 }
 
 .folder_path .path_part {
@@ -1003,22 +1036,22 @@ footer {
     height: 50px;
     line-height: 50px;
     vertical-align: middle;
-	min-width: 40px;
-	font-size: 20px;
-	padding: 0 10px;
-	position: relative;
-	z-index: 10;	
+    min-width: 40px;
+    font-size: 20px;
+    padding: 0 10px;
+    position: relative;
+    z-index: 10;
 }
 
-.folder_path .path_part.ellipsized{
-	whitespace: no-wrap;
-	text-overflow: ellipsis;
-	overflow: hidden;
+.folder_path .path_part.ellipsized {
+    whitespace: no-wrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .folder_path .path_part:hover {
-    background: rgba(255,255,255,0.3);
-	cursor: pointer;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
 }
 
 .folder_path .path_part:not(:first-child) {
@@ -1027,97 +1060,105 @@ footer {
 
 .folder_path .right_arrow {
     display: inline-block;
-	vertical-align: middle;
+    vertical-align: middle;
     height: 35px;
     width: 35px;
     content: "";
     -webkit-transform: rotate(-45deg);
     transform: rotate(-45deg);
-    border: 1px solid rgba(0,0,0,0.2);
-    -webkit-mask-image: -webkit-gradient(linear, left top, right bottom, from(transparent), color-stop(0.5,transparent), color-stop(0.5, #000000), to(#000000));
-	margin-left: -25px;
-	position: relative;
-	z-index: 1;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    -webkit-mask-image: -webkit-gradient(
+        linear,
+        left top,
+        right bottom,
+        from(transparent),
+        color-stop(0.5, transparent),
+        color-stop(0.5, #000000),
+        to(#000000)
+    );
+    margin-left: -25px;
+    position: relative;
+    z-index: 1;
 }
 
-.sub_panel{
-	display: none;
+.sub_panel {
+    display: none;
 }
 
 .panel_search input[type="text"] {
     width: 95%;
     height: 100%;
     font-size: 80%;
-	margin: 0 auto;
+    margin: 0 auto;
     color: rgb(50, 50, 50);
     padding: 5px;
 }
 
-.sub_panel.shown{
-	border-bottom: 1px solid rgba(0, 0, 0, 0.3);
-	width: 100%;
-    padding: 5px;	
+.sub_panel.shown {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+    width: 100%;
+    padding: 5px;
 }
 
-.panel_sort{
-	position: relative;
-	font-size: 17px;
-	height: 55px !important;
-	text-align: left;
+.panel_sort {
+    position: relative;
+    font-size: 17px;
+    height: 55px !important;
+    text-align: left;
 }
 
-.panel_sort div{
-	margin-bottom: 5px;
+.panel_sort div {
+    margin-bottom: 5px;
 }
 
-.panel_sort input[type="button"]{
-	position: absolute;
-	right: 10px;
-	top: 10px;
-	font-size: 18px;
-	padding: 5px;
+.panel_sort input[type="button"] {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 18px;
+    padding: 5px;
 }
 
-.panel_bulk_action > div{
-	margin-bottom: 10px;
-	display: inline-block;
+.panel_bulk_action > div {
+    margin-bottom: 10px;
+    display: inline-block;
 }
 
-.panel_bulk_action .folderSelect{
-	display: none;
+.panel_bulk_action .folderSelect {
+    display: none;
 }
 
-.panel_bulk_action .bulk_actions{
-	float: right;
+.panel_bulk_action .bulk_actions {
+    float: right;
 }
 
-.panel_popup{
-	display: none;
-	position: absolute;	
-	top: 50px;
+.panel_popup {
+    display: none;
+    position: absolute;
+    top: 50px;
     left: 28%;
     min-height: 180px;
-	max-width: 550px;
+    max-width: 550px;
 }
 
-.panel_popup.shown{
-	z-index: 10;
-	background: white;    
+.panel_popup.shown {
+    z-index: 10;
+    background: white;
 }
 
-.panel_popup .panel_content{
-	padding: 10px;
+.panel_popup .panel_content {
+    padding: 10px;
 }
 
 .steps {
-	counter-reset: li-counter;
-	list-style-type: none;
-	margin-top: 10px;
-	padding-left: 10px;	
+    counter-reset: li-counter;
+    list-style-type: none;
+    margin-top: 10px;
+    padding-left: 10px;
 }
 
 .steps li {
-	counter-increment: li-counter;
+    counter-increment: li-counter;
     position: relative;
     padding-left: 30px;
     margin-bottom: 10px;
@@ -1125,147 +1166,147 @@ footer {
 }
 
 .steps li:before {
-	display: inline-block;
-	content: counter(li-counter);
-	height: 25px;
-	width: 25px;
-	border-radius: 50%;
-	background: #20ED89;
-	color: white;
-	text-align: center;
-	line-height: 25px;
-	font-size: 15px;
-	position: absolute;
+    display: inline-block;
+    content: counter(li-counter);
+    height: 25px;
+    width: 25px;
+    border-radius: 50%;
+    background: #20ed89;
+    color: white;
+    text-align: center;
+    line-height: 25px;
+    font-size: 15px;
+    position: absolute;
     left: 0;
 }
 
-.import .restore{
-	font-size: 25px;
-	margin-left: 37%;
+.import .restore {
+    font-size: 25px;
+    margin-left: 37%;
 }
 
-.import .delete_existing{
-	margin-top: 10px;
+.import .delete_existing {
+    margin-top: 10px;
 }
 
-.import .preserve_checkboxes label:last-child{
-	display: none;
+.import .preserve_checkboxes label:last-child {
+    display: none;
 }
 
-.panel_popup textarea{
-	width: 100%;
-	height: 200px;
+.panel_popup textarea {
+    width: 100%;
+    height: 200px;
 }
 
-.panel_btn{
-	width: 40px;
-	height: 40px;
-	border: 1px solid rgba(0, 0, 0, .25);
-	cursor: pointer;
-	margin: 5px 10px;
-	float: right;
+.panel_btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    margin: 5px 10px;
+    float: right;
 }
 
-.panel_btn.active::after{
-	height: 50px;
+.panel_btn.active::after {
+    height: 50px;
     width: 50px;
-    background: rgba(100, 100, 100, 0.1);	
-	margin: -5px;
+    background: rgba(100, 100, 100, 0.1);
+    margin: -5px;
     content: "";
     display: block;
 }
 
-.panel_btn:hover{
-	border: 1px solid rgba(0, 0, 0, .35);	
+.panel_btn:hover {
+    border: 1px solid rgba(0, 0, 0, 0.35);
 }
 
-.add_new_btn{
-	background: url("../imgs/plus.png") no-repeat no-repeat center;
+.add_new_btn {
+    background: url("../imgs/plus.png") no-repeat no-repeat center;
 }
 
-.search_btn{
-	background: url("../imgs/s.png") no-repeat no-repeat center;
+.search_btn {
+    background: url("../imgs/s.png") no-repeat no-repeat center;
 }
 
-.sort_btn{	
-	background: url("../imgs/sort-asc.png") no-repeat no-repeat center;
+.sort_btn {
+    background: url("../imgs/sort-asc.png") no-repeat no-repeat center;
 }
 
-.close_btn{	
-	background: url("../imgs/close.png") no-repeat no-repeat center;
-	float: left;
+.close_btn {
+    background: url("../imgs/close.png") no-repeat no-repeat center;
+    float: left;
 }
 
-.tick_btn{	
-	background: url("../imgs/tick.png") no-repeat no-repeat center;
+.tick_btn {
+    background: url("../imgs/tick.png") no-repeat no-repeat center;
 }
 
-.clone_btn{
-	background: url("../imgs/clone.png") no-repeat no-repeat center;
+.clone_btn {
+    background: url("../imgs/clone.png") no-repeat no-repeat center;
 }
 
-.snip.contracted .clone_btn{
-	display: none;
+.snip.contracted .clone_btn {
+    display: none;
 }
 
-.edit_btn{	
-	background: url("../imgs/edit.png") no-repeat no-repeat center;
+.edit_btn {
+    background: url("../imgs/edit.png") no-repeat no-repeat center;
 }
 
-.delete_btn{	
-	background: url("../imgs/delete.png") no-repeat no-repeat center;
+.delete_btn {
+    background: url("../imgs/delete.png") no-repeat no-repeat center;
 }
 
-.checkbox_btn{
-	background: url("../imgs/checkbox.png") no-repeat no-repeat center;
+.checkbox_btn {
+    background: url("../imgs/checkbox.png") no-repeat no-repeat center;
 }
 
-.team-info{
-	margin-bottom: 10px;
+.team-info {
+    margin-bottom: 10px;
 }
 
-.profile{
+.profile {
     margin: 0 auto;
     padding: 10px;
-    border: 1px solid #18C470;
+    border: 1px solid #18c470;
 }
 
-.profile img{
-	width: 100px;
+.profile img {
+    width: 100px;
     height: 100px;
     border-radius: 50%;
-	float: left;
+    float: left;
 }
 
-.profile .name{
-	font-size: 25px;
+.profile .name {
+    font-size: 25px;
     font-weight: bold;
     margin-left: 125px;
-	margin-bottom: 10px;
+    margin-bottom: 10px;
     font-family: Calibri;
     text-align: left;
 }
 
-.profile .roles{
-	font-size: 20px;
+.profile .roles {
+    font-size: 20px;
     margin-left: 125px;
-	margin-bottom: 10px;
+    margin-bottom: 10px;
     font-family: Calibri;
     text-align: left;
-    font-weight: bolder;	
+    font-weight: bolder;
 }
 
-.profile .social-links{
-	margin-left: 125px;
-	margin-top: 10px;
+.profile .social-links {
+    margin-left: 125px;
+    margin-top: 10px;
 }
 
-.profile .social-links a{
-	display: inline-block;
-	padding: 5px;
+.profile .social-links a {
+    display: inline-block;
+    padding: 5px;
 }
 
-.profile .info{
-	padding-left: 125px;
+.profile .info {
+    padding-left: 125px;
     text-align: justify;
 }
