@@ -936,7 +936,7 @@
 
 			// the left hand side nav buttons
 			// Help, Settings, Backup&Restore, About
-			q(".sidebar .buttons button").on("click", function() {
+			Q(".sidebar .buttons button").on("click", function() {
 				showHideDIVs(this.dataset.divid);
 			});
 		})();
@@ -944,7 +944,7 @@
 		(function helpPageHandlers() {
 			/* set up accordion in help page */
 			// heading
-			q("#help section dt").on("click", function() {
+			Q("#help section dt").on("click", function() {
 				this.toggleClass("show");
 			});
 
@@ -1140,7 +1140,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			});
 
 			$closeBtn.on("click", function() {
-				var $panel = this.parentNode.parentNode;
+				var $panel = this.parent(".panel");
 				$panel.removeClass(SHOW_CLASS);
 				$panelSnippets.addClass(SHOW_CLASS);
 			});
@@ -1371,7 +1371,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						saveSnippetData(
 							function() {
 								// hide the bulk action panel
-								$bulkActionBtn.trigger("click");
+								$bulkActionBtnclick();
 							},
 							selectFolderName,
 							selectedObjects.map(function(e) {
@@ -1398,7 +1398,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 						saveSnippetData(function() {
 							// hide the bulk action panel
-							$bulkActionBtn.trigger("click");
+							$bulkActionBtn.click();
 						}, Folder.getListedFolderName());
 					}
 				});
@@ -1494,11 +1494,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				return res;
 			}
 
-			q(".panel_popup .close_btn").on("click", function() {
-				q(".panel_popup.shown").removeClass(SHOW_CLASS);
-			});
-
-			q(".export-buttons button").on("click", function() {
+			Q(".export-buttons button").on("click", function() {
 				q("#snippets .panel_popup." + this.className).addClass(SHOW_CLASS);
 
 				switch (this.className) {
@@ -1629,7 +1625,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						deleteRevision($select.selectedIndex);
 						latestRevisionLabel = "restored revision (labelled: " + selectedRevision.label + ")";
 						saveSnippetData(function() {
-							$closeRevisionsPopupBtn.trigger("click");
+							$closeRevisionsPopupBtn.click();
 						});
 					}
 				} catch (e) {

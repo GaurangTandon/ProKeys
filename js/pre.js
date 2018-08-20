@@ -329,6 +329,20 @@ var extendNodePrototype;
 		} else return this.getAttribute(name);
 	});
 
+	extendNodePrototype("parent", function(selector) {
+		var parent = this.parentElement;
+
+		while(parent){
+			if(parent.matches(selector)){
+				return parent;
+			}
+
+			parent = parent.parentElement;
+		}
+
+		return null;
+	});
+
 	// returns innerText
 	pk.getText = function(node) {
 		return pk.getHTML(node, "innerText");
