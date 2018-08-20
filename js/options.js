@@ -656,14 +656,23 @@
 	}
 
 	/**
-     * @param {String} type snip or folder (capitalization doesn't matter)
+	 * function to setup the folder or snippet edit panel
+     * @param {String} type generic snip or folder
      */
-	function editPanel(type) {
+	function setupEditPanel(type) {
 		var $panel = qClsSingle("panel_" + type + "_edit"),
-			saveHandler = handlerSaveObject(type);
+			saveHandler = handlerSaveObject(type),
+			nameElm = $panel.querySelector(".name input");
 
 		$panel.on("keydown", function(event){
 			if(event.keyCode === 13 && (event.ctrlKey || event.metaKey)){
+				saveHandler();
+			}
+		});
+
+		nameElm.on("keydown", function(event){
+			// the ! ensures that both the $panel and the nameELm handlers don't fire simultaneously
+			if(event.keyCode === 13 && !(event.ctrlKey || event.metaKey)){
 				saveHandler();
 			}
 		});
@@ -681,7 +690,6 @@
 
 		return function(object, isSavingSnippet) {
 			var headerSpan = $panel.querySelector(".header span"),
-				nameElm = $panel.querySelector(".name input"),
 				folderElm = $panel.querySelector(".folderSelect .selectList"),
 				folderPathElm = $panelSnippets.querySelector(".folder_path :nth-last-child(2)"),
 				// boolean to tell if call is to edit existing snippet/folder
@@ -825,11 +833,12 @@
     
 	/**
      *
-     * @param {String} type NOT the Generic type, but rather "Snip"/"Folder" instead
+     * @param {String} type the Generic snip or folder type
      */
-	function handlerSaveObject(type){
-		type = type[0].toUpperCase() + type.substr(1).toLowerCase();
+	function handlerSaveObject(type){		
 		var validationFunc = type === Generic.SNIP_TYPE ? validateSnippetData : validateFolderData;
+		// once checked, now can mutate type as per need
+		type = type[0].toUpperCase() + type.substr(1).toLowerCase();
 
 		return function(){
 			return validationFunc(function(oldName, name, body, newParentfolder) {
@@ -1076,13 +1085,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			var $searchBtn = qClsSingle("search_btn"),
 				$searchPanel = qClsSingle("panel_search"),
 				$searchField = q(".panel_search input[type=text]"),
-				$closeBtn = qClsSingle("close_btn"),
+				$closeBtn = qCls("close_btn"),
 				$snippetSaveBtn = q(".panel_snip_edit .tick_btn"),
 				$folderSaveBtn = q(".panel_folder_edit .tick_btn"),
-				$addNewBtn = q(".panel_snippets .add_new_btn"),
-				$addNewPanel = q(".panel_snippets .panel_add_new"),
-				$createSnipBtn = q(".panel_add_new :nth-child(1)"),
-				$createFolderBtn = q(".panel_add_new :nth-child(2)"),
+				$addNewBtns = Q(".panel_snippets [class^=\"add_new\"]"),
 				$sortBtn = q(".panel_snippets .sort_btn"),
 				$sortPanel = qClsSingle("panel_sort"),
 				// the button that actually initiates sorting
@@ -1092,10 +1098,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				folderPath = qClsSingle("folder_path"),
 				$selectList = qClsSingle("selectList");
 
-			toggleSnippetEditPanel = editPanel(Generic.SNIP_TYPE);
-			toggleFolderEditPanel = editPanel(Generic.FOLDER_TYPE);
 			validateSnippetData = commonValidation(Generic.SNIP_TYPE);
 			validateFolderData = commonValidation(Generic.FOLDER_TYPE);
+			toggleSnippetEditPanel = setupEditPanel(Generic.SNIP_TYPE);
+			toggleFolderEditPanel = setupEditPanel(Generic.FOLDER_TYPE);			
 
 			dualSnippetEditorObj = new DualTextbox(qId("body-editor"));
 
@@ -1140,7 +1146,6 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			});
 
 			$snippetSaveBtn.on("click", handlerSaveObject(Generic.SNIP_TYPE));
-
 			$folderSaveBtn.on("click", handlerSaveObject(Generic.FOLDER_TYPE));
 
 			function deleteOnClick() {
@@ -1236,16 +1241,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				latestRevisionLabel = "sorted folder \"" + folder.name + "\"";
 			});
 
-			$addNewBtn.on("click", function() {
-				toggleBtnAndPanel($addNewBtn, $addNewPanel);
-			});
-
-			$createSnipBtn.on("click", function() {
-				toggleSnippetEditPanel();
-			});
-
-			$createFolderBtn.on("click", function() {
-				toggleFolderEditPanel();
+			$addNewBtns.on("click", function() {
+				if(/snip/i.test(this.className)){
+					toggleSnippetEditPanel();
+				}else{
+					toggleFolderEditPanel();
+				}
 			});
 
 			$searchBtn.on("click", function() {

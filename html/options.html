@@ -107,17 +107,14 @@
 						<div class="folder_path">
 							<!--div.path_part+div-->
 						</div>
-						<div class="add_new_btn panel_btn" title="Add new snippet or folder"></div>
+						<div class="add_new_snip_btn panel_btn" title="Add new snippet"></div>
+						<div class="add_new_folder_btn panel_btn" title="Add new folder"></div>
 						<div class="sort_btn panel_btn" title="Sort snippets"></div>
 						<div class="checkbox_btn panel_btn" title="Perform bulk action"></div>
 						<div class="search_btn panel_btn" title="Search snippets and folders"></div>
 					</div>
 					<div class="panel_search sub_panel">
 						<input type="text" placeholder="Type search phrase">
-					</div>
-					<div class="panel_add_new sub_panel">
-						<input type="button" value="Create new Snippet">
-						<input type="button" value="Create new Folder">
 					</div>
 					<div class="panel_sort sub_panel">
 						<div class="sort-dir">
@@ -354,7 +351,8 @@
 
 						<br>
 						<label>
-							<input type="checkbox" name="wrapSelectionAutoInsert" /> Automatically wrap selected text in the auto-insert character pair ("selection" would become "(selection)")</label>
+							<input type="checkbox" name="wrapSelectionAutoInsert" /> Automatically wrap selected text in the auto-insert character
+							pair ("selection" would become "(selection)")</label>
 					</div>
 				</div>
 
@@ -414,8 +412,8 @@
 						<h2>FAQ</h2>
 						<dl>
 							<dt>Why won't this work in Google Docs?</dt>
-							<dd>Google Docs by itself is a very powerful rich text editor. It is built in a very complex manner, which makes it difficult
-								for ProKeys to recognize the caret position and perform relevant functions. Sorry for the trouble!</dd>
+							<dd>Google Docs by itself is a very powerful rich text editor. It is built in a very complex manner, which makes it
+								difficult for ProKeys to recognize the caret position and perform relevant functions. Sorry for the trouble!</dd>
 							<dt>I deleted a snippet/made changes by mistake! What do I do?</dt>
 							<dd>Each of your edits/deletions/etc. are saved up carefully and listed in the "Past data versions" on the
 								<a target="_blank" href="options.html#snippets">Snippets</a> tab. You can restore your data from there :-)</dd>
@@ -430,8 +428,8 @@
 							<dt>Is it possible to have a snippet expand without a hotkey?</dt>
 							<dd>Sorry, but given the way ProKeys is built, it is necessary to have a hotkey to execute a snippet.</dd>
 							<dt>Why doesn't ProKeys work in email and password fields?</dt>
-							<dd>Email field doesn't support caret manipulation, so ProKeys can't detect caret movements there, and hence can't function.
-								ProKeys is disabled on password fields for obvious privacy reasons.</dd>
+							<dd>Email field doesn't support caret manipulation, so ProKeys can't detect caret movements there, and hence can't
+								function. ProKeys is disabled on password fields for obvious privacy reasons.</dd>
 						</dl>
 					</div>
 					<div class="box">
@@ -439,8 +437,8 @@
 						<dl>
 							<dt>What are snippets (snips)?</dt>
 							<dd>
-								<p>Snippets are pairs of an abbreviation and a long text. Typing the abbreviation, pressing the hotkey (default: Shift+Space),
-									replaces it with the long text.</p>
+								<p>Snippets are pairs of an abbreviation and a long text. Typing the abbreviation, pressing the hotkey (default:
+									Shift+Space), replaces it with the long text.</p>
 								<p>
 									<b>Example:</b> Snippet with snippet name - "brb". The snippet name is the abbreviation. It is
 									<b>case-insensitive</b>, so "brb", "BRB", and "bRb" are all same. Typing "brb" and pressing the hotkey, would replace
@@ -449,14 +447,14 @@
 
 							<dt>What are Placeholders?</dt>
 							<dd>
-								<p>Placeholders are fields in the snippet body which are populated with dynamic values provided by you while using the
-									snippet.
+								<p>Placeholders are fields in the snippet body which are populated with dynamic values provided by you while using
+									the snippet.
 									<br>A placeholder has the format `%text%` such that the
 									<b>text can only contain alphabets, digits and the underscore symbol</b>.</p>
 								<p>
-									<b>Example:</b> snippet "wishBDay", which you can use to wish your friends Happy Birthday! Since the name of the friend
-									keeps changing, so you can add a placeholder to the snippet body, as "%name%"(without quotes). It would be auto-highlighted
-									whenever you use the snippet and you can type your friend's name into it.</p>
+									<b>Example:</b> snippet "wishBDay", which you can use to wish your friends Happy Birthday! Since the name of the
+									friend keeps changing, so you can add a placeholder to the snippet body, as "%name%"(without quotes). It would be
+									auto-highlighted whenever you use the snippet and you can type your friend's name into it.</p>
 								<a href="#tryit">Try the "letter" sample snippet in editor</a>
 								<p>
 									<b>Usage</b> of a placeholder:</p>
@@ -473,8 +471,8 @@
 								<p>Often, mathematical calculations require you to leave your current work and use the calculator. But, using Mathomania,
 									you can do calculations within the text editor itself.</p>
 								<p>
-									<b>Supported operations</b> are: addition, subtraction, multiplication, division, exponentiation (like: 2^3; of integer
-									constants only), and percentage (using % symbol). You can group expressions using parentheses too.</p>
+									<b>Supported operations</b> are: addition, subtraction, multiplication, division, exponentiation (like: 2^3; of
+									integer constants only), and percentage (using % symbol). You can group expressions using parentheses too.</p>
 								<p>
 									<b>Usage:</b>
 								</p>
@@ -492,13 +490,13 @@
 									useful when you have a certain text repeated in several snippets. You can declare that certain text as a single
 									separate snippet, and then embed this new snippet inside the other snippets.</p>
 								<br>
-								<p>All the placeholders and macros of the embedded snippet work as if they were a part of the parent snippet. You can
-									embed more than one snippet inside a parent snippet, and your embedded snippet can also contain other embedding
+								<p>All the placeholders and macros of the embedded snippet work as if they were a part of the parent snippet. You
+									can embed more than one snippet inside a parent snippet, and your embedded snippet can also contain other embedding
 									references.
 								</p>
 								<br>
-								<p>To embed a snippet "snp2" inside another snippet "snp1", you would simply type "[[%s(snp2)]]" (without quotes) inside
-									the "snp1" snippet's body.</p>
+								<p>To embed a snippet "snp2" inside another snippet "snp1", you would simply type "[[%s(snp2)]]" (without quotes)
+									inside the "snp1" snippet's body.</p>
 							</dd>
 
 							<dt>What are Date/Time macros?</dt>
@@ -511,8 +509,8 @@
 								<ol class="steps">
 									<li>Place "[[%d()]]" (without quotes) inside the snippet body.</li>
 									<li>Place one or more of the symbols inside the parentheses, from the symbol list.</li>
-									<li>When you use the snippet, this entire string of `[[%d(...)]]` would be replaced by the current value of the symbols
-										it contains.</li>
+									<li>When you use the snippet, this entire string of `[[%d(...)]]` would be replaced by the current value of the
+										symbols it contains.</li>
 								</ol>
 
 								<strong>Symbol list</strong>
@@ -654,12 +652,14 @@
 									<span class="code">[[%d(Do+5 M-10)]]</span> is valid, while
 									<span class="code">[[%d(Do - 5 M- 10)]]</span> is invalid.</p>
 								<p>
-									<b>Evaluation</b> of these symbols is from left to right, and the symbol that appears first (at the top) in the symbols
-									list, is evaluated first.</p>
+									<b>Evaluation</b> of these symbols is from left to right, and the symbol that appears first (at the top) in the
+									symbols list, is evaluated first.</p>
 								<p>
 									<b>Example: </b>Consider this date/time macro:
-									<span class="code">[[%d(YYYY:MM:D)]]</span>. If you want to move 10 days forward and 5 months backward, you could write:
-									<span class="code">[[%d(YYYY:MM-5:D+10)]]</span> This was independent calculation. If you want it to be relative, use
+									<span class="code">[[%d(YYYY:MM:D)]]</span>. If you want to move 10 days forward and 5 months backward, you could
+									write:
+									<span class="code">[[%d(YYYY:MM-5:D+10)]]</span> This was independent calculation. If you want it to be relative,
+									use
 									<span class="code">[[%d(!YYYY:MM-5:D+10)]]</span> (with that
 									<span class="code">!</span>)</p>
 								<a href="#tryit">Try date and time arithmetic in editor</a> (use dateArithmetic sample snippet)
@@ -742,8 +742,8 @@
 
 							<dt>What are Variables?</dt>
 							<dd>
-								<p>Variables are used to insert dynamic values at any time while typing. They are inbuilt and cannot be created by you.
-									Of course, I would love a recommendation from you for a new variable! (email: prokeys.feedback@gmail.com)</p>
+								<p>Variables are used to insert dynamic values at any time while typing. They are inbuilt and cannot be created by
+									you. Of course, I would love a recommendation from you for a new variable! (email: prokeys.feedback@gmail.com)</p>
 								<p>
 									<b>Usage:</b>
 									<ol class="steps">
@@ -792,8 +792,8 @@
 							<dt>ProKeys works improperly/does not work on XYZ site</dt>
 							<dd>
 								<ol class="steps">
-									<li>Some sites like Google Docs, Quora, Facebook, etc. insert their custom textboxes which maks it difficult for ProKeys
-										to recognize the caret position and perform relevant functions.
+									<li>Some sites like Google Docs, Quora, Facebook, etc. insert their custom textboxes which maks it difficult for
+										ProKeys to recognize the caret position and perform relevant functions.
 										<br> Unfortunately, there is no workaround for this problem and you can only
 										<b>block the site in
 											<a target="_blank" href="options.html#settings">Settings</a>
@@ -802,8 +802,8 @@
 										<b>custom, manual check</b>
 										as it difficult to get ProKeys to work with &lt;iframe&gt;s. Please mail me at prokeys.feedback@gmail.com if you have come
 										across any such site and I will try my best to fix ProKeys for that site.</li>
-									<li>Code/programming editors like Codemirror, Ace, etc. used in variety of sites are not supported since they have their
-										own custom features and prevent ProKeys from working properly.</li>
+									<li>Code/programming editors like Codemirror, Ace, etc. used in variety of sites are not supported since they have
+										their own custom features and prevent ProKeys from working properly.</li>
 									<li>In case of snippets, make sure your caret(cursor) is placed just after the snippet name. Example: If your snippet
 										name is "abcd", place your caret after "d"</li>
 									<li>Check that the site is not blocked in
@@ -821,9 +821,11 @@
 										<b>not</b> read "Guest".</li>
 									<li>Data can be synced across one Google account only. Both your Chrome browsers must be signed in with the
 										<b>same Google account</b>.</li>
-									<li>Click the two sync buttons in the right order - use the first button when you're setting up sync for the first time;
-										the second button when you already have sync set up on another PC.</li>
-									<li>In case you use multiple email accounts, make sure you're not confusing the ones which you use to sign-in to Chrome.</li>
+									<li>Click the two sync buttons in the right order - use the first button when you're setting up sync for the first
+										time; the second button when you already have sync set up on another PC.</li>
+									<li>In case you use multiple email accounts, make sure you're not confusing the ones which you use to sign-in to
+										Chrome.
+									</li>
 									<li>If it
 										<i>still</i> doesn't work, contact us at prokeys.feedback@gmail.com</li>
 								</ol>
@@ -888,23 +890,29 @@
 
 						<p class="heading2">Give feedback!</p>
 						<div class="buttons">
-							<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews" target="_blank">Leave a Review</a>
-							<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support" target="_blank">Request a feature</a>
-							<a href="https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form" target="_blank">Anonymous Feedback</a>
+							<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews" target="_blank">Leave
+								a Review</a>
+							<a href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/support" target="_blank">Request
+								a feature</a>
+							<a href="https://docs.google.com/forms/d/1DcwQB5vnNCH0pP_Y-wVvOF6gsI0gaXGPPngctb4tCdA/viewform?usp=send_form" target="_blank">Anonymous
+								Feedback
+							</a>
 						</div>
 
 						<p class="heading2">
 							<a href="https://www.paypal.me/GaurangTandon">Donate money!</a>
 						</p>
 						Monetary donations are gratefully accepted using
-						<a href="https://www.paypal.me/GaurangTandon">PayPal</a>. (Paypal is a secure way to accept international payments, you can sign up for free)
+						<a href="https://www.paypal.me/GaurangTandon">PayPal</a>. (Paypal is a secure way to accept international payments,
+						you can sign up for free)
 						<br>
 						<br>
 						<p class="heading2">Found a bug?</p>
 						Contact with relevant information:
 						<strong>prokeys.feedback@gmail.com</strong> Please check
 						<a target="_blank" href="options.html#help">the troubleshooting guide</a> and
-						<a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known bugs list</a> before reporting.
+						<a href="https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing">the known
+							bugs list</a> before reporting.
 					</div>
 				</div>
 
