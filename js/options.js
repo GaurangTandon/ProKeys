@@ -829,9 +829,10 @@
      */
 	function handlerSaveObject(type){
 		type = type[0].toUpperCase() + type.substr(1).toLowerCase();
+		var validationFunc = type === Generic.SNIP_TYPE ? validateSnippetData : validateFolderData;
 
 		return function(){
-			return validateSnippetData(function(oldName, name, body, newParentfolder) {
+			return validationFunc(function(oldName, name, body, newParentfolder) {
 				var object, oldParentFolder, movedObject;
     
 				if (oldName) {
