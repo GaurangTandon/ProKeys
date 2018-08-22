@@ -641,6 +641,10 @@
 			if(event.keyCode === 13 && (event.ctrlKey || event.metaKey)){
 				saveHandler();
 			}
+
+			if(event.keyCode === 27){
+				$panel.qClsSingle("close_btn").click();
+			}
 		});
 
 		nameElm.on("keydown", function(event){
@@ -1104,10 +1108,39 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				}
 			});
 
-			$closeBtn.on("click", function() {
-				var $panel = this.parent(".panel");
+			/**
+			 * checks if the text typed in the panel is unedited or edited
+			 * @param {Element} $panel the snippet or folder panel being edited
+			 */
+			function userHasEditedTextPresentInPanel($panel, $objectName){
+				var $body = $panel.qClsSingle("body"),
+					objectName = $objectName.value,
+					nameChanged = $objectName.dataset.name !== objectName;
+
+				if(!$body || nameChanged) return nameChanged;
+
+				var body = dualSnippetEditorObj.getShownTextForSaving(),
+					bodyChanged = Data.snippets.getUniqueSnip(objectName).body !== body;
+
+				return bodyChanged;
+			}
+
+			function closePanel($panel){
 				$panel.removeClass(SHOW_CLASS);
 				$panelSnippets.addClass(SHOW_CLASS);
+			}
+
+			$closeBtn.on("click", function() {				
+				var $panel = this.parent(".panel"),
+					$objectName = $panel.q(".name input");
+
+				if($objectName && userHasEditedTextPresentInPanel($panel, $objectName)){
+					if(confirm("You have unsaved edits. Are you sure you wish to leave?")){
+						closePanel($panel);
+					}
+				}else{
+					closePanel($panel);
+				}
 			});
 
 			$snippetSaveBtn.on("click", handlerSaveObject(Generic.SNIP_TYPE));
