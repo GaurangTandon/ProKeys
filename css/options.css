@@ -692,6 +692,7 @@ footer {
 .panel_content .generic img {
     width: 20px;
     height: 20px;
+    cursor: move;
 }
 
 .generic .name {

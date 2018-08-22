@@ -188,6 +188,8 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 		}, 3000);
 	}
 
+	divMain.setAttribute("draggable", "true");
+
 	return divMain;
 };
 
