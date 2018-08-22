@@ -1723,9 +1723,6 @@ Folder.insertBulkActionDOM = function(listedFolder) {
 
 		checkbox.type = "checkbox";
 		img.src = "../imgs/" + listElm.type + ".svg";
-		div.on("click", function() {
-			checkbox.checked = !checkbox.checked;
-		});
 
 		$generic.appendChild(checkbox);
 		$generic.appendChild(img);

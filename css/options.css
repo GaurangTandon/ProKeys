@@ -56,12 +56,12 @@ pre {
     border-radius: 3px;
 }
 
-div{
+div {
     /* useful for the SVG icons that are added later */
     /* not fixing the broken selector because there is no other 
     way to select all those icons at once while being DRY*/
-	background-repeat: no-repeat !important;
-	background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
 }
 
 .tip {
@@ -660,7 +660,7 @@ footer {
     background-image: url("../imgs/fb.svg");
 }
 
-.g-plus{
+.g-plus {
     background-image: url("../imgs/g.svg");
 }
 
@@ -687,6 +687,11 @@ footer {
     text-align: left;
     cursor: pointer;
     font-family: Arial;
+}
+
+.panel_content .generic img {
+    width: 20px;
+    height: 20px;
 }
 
 .generic .name {
@@ -1210,8 +1215,8 @@ footer {
     border: 1px solid rgba(0, 0, 0, 0.25);
     cursor: pointer;
     margin: 5px 10px;
-	float: right;
-	background-size: 50% !important;
+    float: right;
+    background-size: 50% !important;
 }
 
 .panel_btn.active::after {
@@ -1232,27 +1237,27 @@ footer {
 }
 
 .search_btn {
-    background-image: url("../imgs/search.svg") ;
+    background-image: url("../imgs/search.svg");
 }
 
 .sort_btn {
-    background-image: url("../imgs/sort-asc.svg") ;
+    background-image: url("../imgs/sort-asc.svg");
 }
 
 .close_btn {
-    background-image: url("../imgs/close.svg") ;
+    background-image: url("../imgs/close.svg");
     float: left;
 }
 
 .tick_btn {
-    background-image: url("../imgs/tick.svg") ;
+    background-image: url("../imgs/tick.svg");
     background-size: 62% !important;
 }
 
 .clone_btn {
-	background-image: url("../imgs/clone.svg") ;
-	background-size: 90%;
-	margin-right: 10px !important;
+    background-image: url("../imgs/clone.svg");
+    background-size: 90%;
+    margin-right: 10px !important;
 }
 
 .snip.contracted .clone_btn {
@@ -1260,28 +1265,29 @@ footer {
 }
 
 .edit_btn {
-    background-image: url("../imgs/edit.svg") ;
+    background-image: url("../imgs/edit.svg");
 }
 
 .delete_btn {
-	background-image: url("../imgs/delete.svg") ;
-	background-size: 84%;
+    background-image: url("../imgs/delete.svg");
+    background-size: 84%;
 }
 
 .checkbox_btn {
-    background-image: url("../imgs/checkbox.svg") ;
+    background-image: url("../imgs/checkbox.svg");
 }
 
-.add_new_folder_btn{
-	background-image: url("../imgs/folder-reg.svg");
+.add_new_folder_btn {
+    background-image: url("../imgs/folder-reg.svg");
 }
 
-.add_new_snip_btn{
-	background-image: url("../imgs/file.svg") ;
-	background-size: 35% !important;
+.add_new_snip_btn {
+    background-image: url("../imgs/file.svg");
+    background-size: 35% !important;
 }
 
-.snip_img, .folder_img{
+.snip_img,
+.folder_img {
     height: 18px;
     width: 20px;
 }

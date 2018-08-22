@@ -1272,11 +1272,17 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						DOMcontainer = Folder.insertBulkActionDOM(originalShownFolder);
 
 						$bulkActionPanel.dataset.originalShownFolderName = originalShownFolderName;
+					
+						DOMcontainer.on("click", function(event){
+							var nodeClicked = event.target,
+								parentGeneric = nodeClicked.matches(".generic") ?
+									nodeClicked : nodeClicked.parent(".generic"),
+								inputCheckbox = parentGeneric.children[0];
 
-						DOMcontainer.on("click", function() {
-							// watching clicks on checkbox and div.name is resource intensive
-							// so just update count every time anywhere you click
-							updateSelectionCount(DOMcontainer);
+							if(nodeClicked.tagName !== "INPUT")
+								inputCheckbox.checked = !inputCheckbox.checked;
+
+							updateSelectionCount();
 						});
 
 						updateSelectionCount();
