@@ -57,6 +57,9 @@ pre {
 }
 
 div{
+    /* useful for the SVG icons that are added later */
+    /* not fixing the broken selector because there is no other 
+    way to select all those icons at once while being DRY*/
 	background-repeat: no-repeat !important;
 	background-position: center !important;
 }
@@ -255,12 +258,6 @@ footer {
 .box.change-log .appeal,
 .box.change-log .notice {
     padding: 10px;
-}
-
-.box.change-log .notice-icon {
-    /*
-	width: 10px;
-	height: 10px;*/
 }
 
 .btn-group {
@@ -803,7 +800,7 @@ footer {
     animation-fill-mode: forwards;
 }
 
-@-webkit-keyframes fadeBackground {
+@keyframes fadeBackground {
     to {
         background: white;
     }

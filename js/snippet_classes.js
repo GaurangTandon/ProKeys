@@ -166,7 +166,7 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	img = q.new("img");
 	img.src = "../imgs/" + this.type + ".svg";
-	img.classList.add(this.type+"_img");
+	img.classList.add(this.type + "_img");
 	
 	divMain.appendChild(img);
 
