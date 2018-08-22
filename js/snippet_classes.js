@@ -1722,7 +1722,7 @@ Folder.insertBulkActionDOM = function(listedFolder) {
 				.html(listElm.name);
 
 		checkbox.type = "checkbox";
-		img.src = "../imgs/" + listElm.type + ".png";
+		img.src = "../imgs/" + listElm.type + ".svg";
 		div.on("click", function() {
 			checkbox.checked = !checkbox.checked;
 		});

@@ -1249,7 +1249,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						var div = e.nextElementSibling.nextElementSibling,
 							name = div.html(),
 							img = e.nextElementSibling,
-							type = img.src.match(/\w+(?=\.png)/)[0];
+							type = img.src.match(/\w+(?=\.svg)/)[0];
 
 						return Data.snippets.getUniqueObject(name, type);
 					});
