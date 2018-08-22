@@ -56,6 +56,11 @@ pre {
     border-radius: 3px;
 }
 
+div{
+	background-repeat: no-repeat !important;
+	background-position: center !important;
+}
+
 .tip {
     font-size: 75%;
 }
@@ -638,7 +643,7 @@ footer {
     margin: 10px auto;
 }
 
-.g-plus img,
+.g-plus,
 .fb-share,
 .tw-share {
     width: 40px;
@@ -646,16 +651,20 @@ footer {
     cursor: pointer;
     margin: 10px;
     display: inline-block;
+    background-size: 95%;
+    background-repeat: no-repeat;
 }
 
 .tw-share {
-    background: url("../imgs/t.png");
-    background-size: cover;
+    background-image: url("../imgs/tw.svg");
 }
 
 .fb-share {
-    background: url("../imgs/f.png");
-    background-size: cover;
+    background-image: url("../imgs/fb.svg");
+}
+
+.g-plus{
+    background-image: url("../imgs/g.svg");
 }
 
 #about .buttons a {
@@ -1204,7 +1213,8 @@ footer {
     border: 1px solid rgba(0, 0, 0, 0.25);
     cursor: pointer;
     margin: 5px 10px;
-    float: right;
+	float: right;
+	background-size: 50% !important;
 }
 
 .panel_btn.active::after {
@@ -1221,28 +1231,31 @@ footer {
 }
 
 .add_new_btn {
-    background: url("../imgs/plus.png") no-repeat no-repeat center;
+    background-image: url("../imgs/plus.svg");
 }
 
 .search_btn {
-    background: url("../imgs/s.png") no-repeat no-repeat center;
+    background-image: url("../imgs/search.svg") ;
 }
 
 .sort_btn {
-    background: url("../imgs/sort-asc.png") no-repeat no-repeat center;
+    background-image: url("../imgs/sort-asc.svg") ;
 }
 
 .close_btn {
-    background: url("../imgs/close.png") no-repeat no-repeat center;
+    background-image: url("../imgs/close.svg") ;
     float: left;
 }
 
 .tick_btn {
-    background: url("../imgs/tick.png") no-repeat no-repeat center;
+    background-image: url("../imgs/tick.svg") ;
+    background-size: 62% !important;
 }
 
 .clone_btn {
-    background: url("../imgs/clone.png") no-repeat no-repeat center;
+	background-image: url("../imgs/clone.svg") ;
+	background-size: 90%;
+	margin-right: 10px !important;
 }
 
 .snip.contracted .clone_btn {
@@ -1250,15 +1263,30 @@ footer {
 }
 
 .edit_btn {
-    background: url("../imgs/edit.png") no-repeat no-repeat center;
+    background-image: url("../imgs/edit.svg") ;
 }
 
 .delete_btn {
-    background: url("../imgs/delete.png") no-repeat no-repeat center;
+	background-image: url("../imgs/delete.svg") ;
+	background-size: 84%;
 }
 
 .checkbox_btn {
-    background: url("../imgs/checkbox.png") no-repeat no-repeat center;
+    background-image: url("../imgs/checkbox.svg") ;
+}
+
+.add_new_folder_btn{
+	background-image: url("../imgs/folder-reg.svg");
+}
+
+.add_new_snip_btn{
+	background-image: url("../imgs/file.svg") ;
+	background-size: 35% !important;
+}
+
+.snip_img, .folder_img{
+    height: 18px;
+    width: 20px;
 }
 
 .team-info {

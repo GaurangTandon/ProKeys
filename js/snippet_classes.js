@@ -165,7 +165,9 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 	divMain = q.new("div").addClass([this.type, "generic", Snip.DOMContractedClass]);
 
 	img = q.new("img");
-	img.src = "../imgs/" + this.type + ".png";
+	img.src = "../imgs/" + this.type + ".svg";
+	img.classList.add(this.type+"_img");
+	
 	divMain.appendChild(img);
 
 	// creating the short `div` element
