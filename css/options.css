@@ -762,8 +762,8 @@ footer {
 
 .snip .buttons div,
 .folder .buttons div {
-    height: 20px;
-    width: 20px;
+    height: 18px;
+    width: 18px;
     display: inline-block;
     margin-right: 5px;
 }
