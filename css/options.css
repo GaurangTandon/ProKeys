@@ -712,6 +712,11 @@ footer {
 .generic.contracted.beingdragged {
     background: #bbe8f7;
     width: 90%;
+    border: 1px dashed grey;
+}
+
+.generic.contracted.draggedover {
+    border: 1px dashed black;
 }
 
 .snip .name {
@@ -787,7 +792,8 @@ footer {
 }
 
 .snip.contracted .clickable {
-    width: calc(100% - 60px);
+    width: calc(100% - 85px);
+    margin-left: 25px;
 }
 
 .snip .timestamp {

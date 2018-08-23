@@ -166,6 +166,7 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	img = q.new("img");
 	img.src = "../imgs/" + this.type + ".svg";
+	img.setAttribute("draggable", "false");
 	
 	divMain.appendChild(img);
 
@@ -190,11 +191,32 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	divMain.setAttribute("draggable", "true");
 
-	var BEING_DRAGGED_CLASS = "beingdragged";
+	var BEING_DRAGGED_CLASS = "beingdragged",
+		ANOTHER_DRAG_ELM_OVER = "draggedover";
 
 	divMain.on("dragstart", function(event){
 		divMain.addClass(BEING_DRAGGED_CLASS);
 		event.dataTransfer.setData("text/plain", JSON.stringify(this.toArray()));
+	}.bind(this));
+
+	divMain.on("dragend", function(event){
+		divMain.removeClass(BEING_DRAGGED_CLASS);
+	}.bind(this));
+
+	divMain.on("dragenter", function(event){
+		divMain.addClass(ANOTHER_DRAG_ELM_OVER);
+
+		event.dataTransfer.effectAllowed = 
+			event.dataTransfer.dropEffect = "move";
+	}.bind(this));
+
+	divMain.on("dragleave", function(){
+		divMain.removeClass(ANOTHER_DRAG_ELM_OVER);
+	}.bind(this));
+
+	divMain.on("drop", function(event){
+		console.log("Droppped!");
+		debugger;
 	}.bind(this));
 
 	return divMain;
