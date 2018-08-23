@@ -190,6 +190,13 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	divMain.setAttribute("draggable", "true");
 
+	var BEING_DRAGGED_CLASS = "beingdragged";
+
+	divMain.on("dragstart", function(event){
+		divMain.addClass(BEING_DRAGGED_CLASS);
+		event.dataTransfer.setData("text/plain", JSON.stringify(this.toArray()));
+	}.bind(this));
+
 	return divMain;
 };
 
