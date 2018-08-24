@@ -687,6 +687,7 @@ footer {
     text-align: left;
     cursor: pointer;
     font-family: Arial;
+    z-index: 10;
 }
 
 .panel_content .generic img {
@@ -830,7 +831,7 @@ footer {
     } /*remove vertical line*/
 
     .sidebar {
-        z-index: 2;
+        z-index: 100; /*always on top*/
         position: fixed;
         top: 0px;
         left: 0;

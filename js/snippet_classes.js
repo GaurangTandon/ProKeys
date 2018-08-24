@@ -115,25 +115,42 @@ window.Generic = function() {
 		}
 
 		function insertCloneOf(object) {
-			var parentFolder = object.getParentFolder(),
-				name = object.name,
-				type = object.type,
-				index = Data.snippets.getUniqueObjectIndex(name, type),
-				thisIndex = index.pop(),
-				posToInsertObject,
-				newObject = getClone(object),
+			var newObject = getClone(object),
 				countersMatch = newObject.name.match(/\d+/g),
 				counter = countersMatch[countersMatch.length - 1];
-
-			// second clone of same object should insert it after the 1st clone
-			posToInsertObject = thisIndex + +counter;
-
-			parentFolder.list.splice(posToInsertObject, 0, newObject);
+			
+			this.insertAfter(newObject, counter);
 
 			return newObject;
 		}
 
 		return insertCloneOf(this);
+	};
+	
+	/** 
+	 * @return {Generic} clone of this object 
+	 * (if it is a folder, its snippets' names remain as they were)
+	 */
+	this.getClone = function(){
+		if(this.type === Generic.SNIP_TYPE)
+			return new Snip(this.name, this.body, this.timestamp);
+		
+		var clonedFolder = new Folder(this.name, [], this.timestamp);
+		this.list.forEach(function(object) {
+			clonedFolder.list.push(object.getClone());
+		});
+
+		return clonedFolder;
+	};
+
+	this.insertAfter = function(newObject, stepValue){
+		var thisName = this.name,
+			thisType = this.type,
+			thisIndexArray = Data.snippets.getUniqueObjectIndex(thisName, thisType),
+			thisIndex = thisIndexArray[thisIndexArray.length - 1],
+			posToInsertObject = thisIndex + (stepValue || 1);
+
+		this.getParentFolder().list.splice(posToInsertObject, 0, newObject.getClone());		
 	};
 };
 /**
@@ -156,11 +173,9 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 	var divMain, divName, img;
 
 	objectNamesToHighlight =
-        objectNamesToHighlight === undefined
-            ? []
-        	: !Array.isArray(objectNamesToHighlight)
-        		? [objectNamesToHighlight]
-        		: objectNamesToHighlight;
+        objectNamesToHighlight === undefined ? [] :
+			!Array.isArray(objectNamesToHighlight) ?
+				[objectNamesToHighlight] : objectNamesToHighlight;
 
 	divMain = q.new("div").addClass([this.type, "generic", Snip.DOMContractedClass]);
 
@@ -196,6 +211,8 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	divMain.on("dragstart", function(event){
 		divMain.addClass(BEING_DRAGGED_CLASS);
+		event.dataTransfer.effectAllowed = 
+			event.dataTransfer.dropEffect = "move";
 		event.dataTransfer.setData("text/plain", JSON.stringify(this.toArray()));
 	}.bind(this));
 
@@ -205,9 +222,14 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	divMain.on("dragenter", function(event){
 		divMain.addClass(ANOTHER_DRAG_ELM_OVER);
+	}.bind(this));
 
+	divMain.on("dragover", function(event){
 		event.dataTransfer.effectAllowed = 
 			event.dataTransfer.dropEffect = "move";
+
+		event.preventDefault();
+		return false;
 	}.bind(this));
 
 	divMain.on("dragleave", function(){
@@ -215,8 +237,31 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 	}.bind(this));
 
 	divMain.on("drop", function(event){
-		console.log("Droppped!");
-		debugger;
+		event.stopPropagation();
+		
+		divMain.removeClass(BEING_DRAGGED_CLASS);
+		
+		var droppedOn = event.target,
+			parentFolderName;
+		
+		if(!droppedOn.matches(".generic")) 
+			droppedOn = droppedOn.parent(".generic");
+
+		var objectDroppedOn = Generic.getObjectThroughDOMListElm(droppedOn),
+			objectBeingDropped = Generic.getObjectThroughDOMListElm(divMain);
+
+		if(objectBeingDropped.type !== objectDroppedOn.type){
+			alert("Sorry, you cannot swap a folder with a snippet.");
+			return false;
+		}
+
+		objectDroppedOn.insertAfter(objectBeingDropped);
+		objectBeingDropped.remove();
+		parentFolderName = objectDroppedOn.getParentFolder().name;
+
+		saveSnippetData(undefined, parentFolderName, [objectBeingDropped.name, objectDroppedOn.name]);
+
+		return false;
 	}.bind(this));
 
 	return divMain;
@@ -248,6 +293,18 @@ Generic.isValidName = function(name, type) {
 			: Data.snippets.getUniqueObject(name, type)
 				? Generic.getDuplicateObjectsText(name, type)
 				: "true";
+};
+
+/**
+ * it returns the snip/folder object associated with the listElm
+ * @param: listElm: The DOM element .snip or .folder, whose buttons or anything are clicked
+ */
+Generic.getObjectThroughDOMListElm = function(listElm) {
+	var isSnip = listElm.classList.contains("snip"),
+		type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
+		name = listElm.querySelector(".name").innerText;
+
+	return Data.snippets.getUniqueObject(name, type);
 };
 
 Generic.FOLDER_TYPE = "folder";
@@ -1840,17 +1897,6 @@ Folder.getListedFolder = function() {
 	if (idx != -1) name = name.substring(Folder.SEARCH_RESULTS_NAME.length);
 
 	return Data.snippets.getUniqueFolder(name);
-};
-/**
- * it returns the snip/folder object associated with the listElm
- * @param: listElm: The DOM element .snip or .folder, whose buttons or anything are clicked
- */
-Folder.getObjectThroughDOMListElm = function(listElm) {
-	var isSnip = /snip/.test(listElm.className),
-		type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
-		name = listElm.querySelector(".name").innerText;
-
-	return Data.snippets.getUniqueObject(name, type);
 };
 Folder.validate = function(arr) {
 	if (typeof arr[0] !== "string") {
