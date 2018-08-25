@@ -687,11 +687,13 @@ footer {
     text-align: left;
     cursor: pointer;
     font-family: Arial;
+    z-index: 10;
 }
 
 .panel_content .generic img {
     width: 20px;
     height: 20px;
+    cursor: move;
 }
 
 .generic .name {
@@ -706,6 +708,16 @@ footer {
 /*during bulk action*/
 .generic input[type="checkbox"] {
     margin-right: 10px;
+}
+
+.generic.contracted.beingdragged {
+    background: #bbe8f7;
+    width: 90%;
+    border: 1px dashed grey;
+}
+
+.generic.contracted.draggedover {
+    border: 1px dashed black;
 }
 
 .snip .name {
@@ -781,7 +793,8 @@ footer {
 }
 
 .snip.contracted .clickable {
-    width: calc(100% - 60px);
+    width: calc(100% - 85px);
+    margin-left: 25px;
 }
 
 .snip .timestamp {
@@ -818,7 +831,7 @@ footer {
     } /*remove vertical line*/
 
     .sidebar {
-        z-index: 2;
+        z-index: 100; /*always on top*/
         position: fixed;
         top: 0px;
         left: 0;

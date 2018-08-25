@@ -1086,7 +1086,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				if (!objectElm || !/buttons/.test(container.className)) return true;
 
 				if (node.matches("#snippets .panel_content .edit_btn")) {
-					obj = Folder.getObjectThroughDOMListElm(objectElm);
+					obj = Generic.getObjectThroughDOMListElm(objectElm);
 					if (Folder.isFolder(obj)) toggleFolderEditPanel(obj);
 					else toggleSnippetEditPanel(obj);
 				} else if (node.matches("#snippets .panel_content .delete_btn")) deleteOnClick.call(objectElm);
@@ -1130,7 +1130,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				$panelSnippets.addClass(SHOW_CLASS);
 			}
 
-			$closeBtn.on("click", function() {				
+			$closeBtn.on("click", function() {
 				var $panel = this.parent(".panel"),
 					$objectName = $panel.q(".name input");
 
@@ -1147,7 +1147,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			$folderSaveBtn.on("click", handlerSaveObject(Generic.FOLDER_TYPE));
 
 			function deleteOnClick() {
-				var object = Folder.getObjectThroughDOMListElm(this),
+				var object = Generic.getObjectThroughDOMListElm(this),
 					name = object.name,
 					type = object.type,
 					isSnip = type === Generic.SNIP_TYPE,
@@ -1167,7 +1167,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			}
 
 			function cloneBtnOnClick() {
-				var object = Folder.getObjectThroughDOMListElm(this),
+				var object = Generic.getObjectThroughDOMListElm(this),
 					newObject = object.clone();
 				latestRevisionLabel = "cloned " + object.type + " \"" + object.name + "\"";
 
