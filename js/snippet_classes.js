@@ -590,6 +590,12 @@ Snip.prototype = new Generic();
 Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED = 200; // issues#67
 Snip.DOMContractedClass = "contracted"; // to show with ellipsis
 Snip.PASTE_MACRO_REGEX = /\[\[%p\]\]/gi;
+Snip.CARET_POSITION_CLASS = "caretPlacement";
+Snip.CARET_POSITION_EMPTY_REGEX = /\[\[%c(\(\))?\]\]/;
+Snip.CARET_POSITION_STUFFED_REGEX = /\[\[%c\([v^<>\d]+\)\]\]/;
+Snip.CARET_POSITION_SELECTION_START_REGEX = /\[\[%c\(s\)\]\]/;
+Snip.CARET_POSITION_SELECTION_END_REGEX = /\[\[%c\(e\)\]\]/;
+Snip.CARET_POSITION_SELECTION_END_STRING = "[[%c(e)]]";
 Snip.MACROS = [
 	[
 		"\\bs([+-]\\d+)?\\b",

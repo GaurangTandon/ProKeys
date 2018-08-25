@@ -118,6 +118,52 @@
 		// SPAN_CLASS no matter what I do
 	}
 
+	function setCaretOncePlaceholderProcessingDone(node, posStart, posEnd){
+		var snipBody, caretPlacementNode,
+			win = getNodeWindow(node),
+			sel = win.getSelection(),
+			range = sel.getRangeAt(0),
+			emptyCaretMacroIndex,
+			stuffedCaretMacroIndex,
+			selectionStartMacroIndex,
+			selectionEndMacroIndex;
+
+		if (isProKeysNode(node)) {		
+			caretPlacementNode = node.qClsSingle(Snip.CARET_POSITION_CLASS);
+
+			if(caretPlacementNode){
+				range.selectNodeContents(node);
+				range.deleteContents();
+				sel.removeAllRanges();
+				sel.addRange(range);
+			}else{
+				setCaretAtEndOf(node);
+			}
+		}else{
+			snipBody = node.value.substring(posStart, posEnd);
+			emptyCaretMacroIndex = snipBody.search(Snip.CARET_POSITION_EMPTY_REGEX);
+			stuffedCaretMacroIndex = snipBody.search(Snip.CARET_POSITION_STUFFED_REGEX);
+			selectionStartMacroIndex = snipBody.search(Snip.CARET_POSITION_SELECTION_START_REGEX);
+			selectionEndMacroIndex = snipBody.search(Snip.CARET_POSITION_SELECTION_END_REGEX);
+			
+			if(emptyCaretMacroIndex > -1){
+				emptyCaretMacroIndex += posStart;
+				node.value = node.value.unsubstring(emptyCaretMacroIndex, emptyCaretMacroIndex + snipBody.match(Snip.CARET_POSITION_EMPTY_REGEX)[0].length);
+				node.selectionEnd = node.selectionStart = emptyCaretMacroIndex;
+			}else if(stuffedCaretMacroIndex > -1){
+				// to do ?
+			}else if(selectionStartMacroIndex > -1 && selectionEndMacroIndex > -1 && selectionEndMacroIndex > selectionStartMacroIndex){
+				selectionStartMacroIndex += posStart;
+				selectionEndMacroIndex += posStart; 
+				
+				node.value = node.value.unsubstring(selectionEndMacroIndex, selectionEndMacroIndex + Snip.CARET_POSITION_SELECTION_END_STRING.length)
+					.unsubstring(selectionStartMacroIndex, selectionStartMacroIndex + Snip.CARET_POSITION_SELECTION_END_STRING.length);
+				node.selectionStart = selectionStartMacroIndex;
+				node.selectionEnd = selectionEndMacroIndex - Snip.CARET_POSITION_SELECTION_END_STRING.length;
+			}
+		}
+	}
+
 	function setCaretAtEndOf(node, pos) {
 		var win = getNodeWindow(node),
 			sel = win.getSelection(),
@@ -146,7 +192,11 @@
 				.replace(/\n/g, lineSeparator)
 				.replace(/(%[_A-Za-z0-9]+%)/g, function(w, $1) {
 					return "<span class='" + PLACE_CLASS + "'>" + $1 + "</span>";
+				})
+				.replace(/\[\[%c(\(\))?\]\]/, function(wholeMatch){
+					return "<span class=\"" + Snip.CARET_POSITION_CLASS + "\">" + wholeMatch + "</span>";
 				});
+
 			callback(snipBody);
 		});
 	}
@@ -163,7 +213,7 @@
 		prepareSnippetBodyForCENode(snip, node, function(snipBody) {
 			var snipElmNode = q.new(TAGNAME_SNIPPET_HOLDER_ELM);
 			snipElmNode.html(snipBody).addClass(SPAN_CLASS); // identification
-
+			
 			range.insertNode(snipElmNode);
 
 			populatePlaceholderObject(snipElmNode);
@@ -257,7 +307,7 @@
 			Placeholder.toIndex = endLength; // this just after snip body
 			checkPlaceholdersInNode(node, Placeholder.fromIndex, Placeholder.toIndex, true);
 		} else {
-			setCaretAtEndOf(node, endLength);
+			setCaretOncePlaceholderProcessingDone(node, start, endLength);
 
 			resetPlaceholderVariables();
 		}
@@ -274,7 +324,7 @@
 			pArr.shift();
 			return true;
 		} else {
-			setCaretAtEndOf(Placeholder.node);
+			setCaretOncePlaceholderProcessingDone(Placeholder.node);
 			resetPlaceholderVariables();
 			return false;
 		}
@@ -306,7 +356,7 @@
 		if (!bool) {
 			// but set this prop to make sure next tab
 			// jumps after snippet body
-			setCaretAtEndOf(node, to);
+			setCaretOncePlaceholderProcessingDone(node, from, to);
 			resetPlaceholderVariables();
 		}
 	}

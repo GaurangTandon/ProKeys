@@ -1119,8 +1119,11 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 				if(!$body || nameChanged) return nameChanged;
 
+				if(objectName === "") return false;
+
 				var body = dualSnippetEditorObj.getShownTextForSaving(),
-					bodyChanged = Data.snippets.getUniqueSnip(objectName).body !== body;
+					snip = Data.snippets.getUniqueSnip(objectName),
+					bodyChanged = snip ? snip !== body : false;
 
 				return bodyChanged;
 			}

@@ -638,5 +638,14 @@ var extendNodePrototype;
 		};
 	};
 
+	/**
+	 * removes the content inside those indices from the string
+	 * @param {Integer} posStart the index to start removing text from
+	 * @param {Integer} posEnd the index to stop removing text at
+	 */
+	String.prototype.unsubstring = function(posStart, posEnd){
+		return this.substring(0, posStart) + this.substring(posEnd);
+	};
+
 	pk.updateAllValuesPerWin(window);
 })();
