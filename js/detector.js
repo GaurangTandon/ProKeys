@@ -119,10 +119,13 @@
 	}
 
 	function setCaretOncePlaceholderProcessingDone(node, posStart, posEnd){
-		var snipBody, caretPlacementNode,
+		var snipBody,
 			win = getNodeWindow(node),
 			sel = win.getSelection(),
 			range = sel.getRangeAt(0),
+			caretPlacementNode,
+			caretEndPlacementNode,
+			caretMacroText,
 			emptyCaretMacroIndex,
 			stuffedCaretMacroIndex,
 			selectionStartMacroIndex,
@@ -132,8 +135,25 @@
 			caretPlacementNode = node.qClsSingle(Snip.CARET_POSITION_CLASS);
 
 			if(caretPlacementNode){
-				range.selectNodeContents(node);
-				range.deleteContents();
+				caretMacroText = caretPlacementNode.innerHTML;
+
+				if(Snip.CARET_POSITION_EMPTY_REGEX.test(caretMacroText)){
+					caretPlacementNode.innerHTML = "";
+					range.setStart(caretPlacementNode, 0);
+					range.setEnd(caretPlacementNode, 0);
+				}else if(Snip.CARET_POSITION_SELECTION_START_REGEX.test(caretMacroText)){
+					caretEndPlacementNode = node.qCls(Snip.CARET_POSITION_CLASS)[1];
+
+					if(!caretEndPlacementNode) return setCaretAtEndOf(node);
+					
+					caretEndPlacementNode.innerHTML =
+						caretPlacementNode.innerHTML = "";
+					range.setStart(caretPlacementNode, 0);
+					range.setEnd(caretEndPlacementNode, 0);
+				}else{
+					return setCaretAtEndOf(node);
+				}
+
 				sel.removeAllRanges();
 				sel.addRange(range);
 			}else{
@@ -193,7 +213,7 @@
 				.replace(/(%[_A-Za-z0-9]+%)/g, function(w, $1) {
 					return "<span class='" + PLACE_CLASS + "'>" + $1 + "</span>";
 				})
-				.replace(/\[\[%c(\(\))?\]\]/, function(wholeMatch){
+				.replace(/\[\[%c(\(.*?\))?\]\]/g, function(wholeMatch){
 					return "<span class=\"" + Snip.CARET_POSITION_CLASS + "\">" + wholeMatch + "</span>";
 				});
 
