@@ -5,6 +5,8 @@
 /* this file is loaded both as a content script
 	as well as a background page*/
 
+// TODO: added Folder.setIndices() to .remove and .insertAdjacent, hopefully it doesn't cause any issue :/
+
 // functions common to Snip and Folder
 window.Generic = function() {
 	this.matchesUnique = function(name) {
@@ -32,6 +34,7 @@ window.Generic = function() {
 			thisIndex = index[index.length - 1];
 
 		this.getParentFolder().list.splice(thisIndex, 1);
+		Folder.setIndices();
 	};
 
 	this.getParentFolder = function() {
@@ -119,7 +122,7 @@ window.Generic = function() {
 				countersMatch = newObject.name.match(/\d+/g),
 				counter = countersMatch[countersMatch.length - 1];
 			
-			this.insertAfter(newObject, counter);
+			object.insertAdjacent(newObject, counter);
 
 			return newObject;
 		}
@@ -143,14 +146,22 @@ window.Generic = function() {
 		return clonedFolder;
 	};
 
-	this.insertAfter = function(newObject, stepValue){
+	/**
+	 * inserts the given object stepValue places after/before this under the same parent folder list
+	 * to maintain sanity you should pass the clone of the object you're trying to insert
+	 * @param {Generic} newObject to be inserted at given position
+	 * @param {Number} stepValue how far after this to be inserted (default immediately next)
+	 */
+	this.insertAdjacent = function(newObject, stepValue, insertBeforeFlag){
 		var thisName = this.name,
 			thisType = this.type,
 			thisIndexArray = Data.snippets.getUniqueObjectIndex(thisName, thisType),
 			thisIndex = thisIndexArray[thisIndexArray.length - 1],
-			posToInsertObject = thisIndex + (stepValue || 1);
-
-		this.getParentFolder().list.splice(posToInsertObject, 0, newObject.getClone());		
+			parentFolderList = this.getParentFolder().list,
+			posToInsertObject = thisIndex + (stepValue ? +(stepValue) : 1) * (insertBeforeFlag ? 0 : 1);
+			
+		parentFolderList.splice(posToInsertObject, 0, newObject);
+		Folder.setIndices();
 	};
 };
 /**
@@ -168,7 +179,7 @@ Generic.getButtonsDOMElm = function() {
 	divButtons.appendChild(q.new("div").addClass("delete_btn")).attr("title", "Delete");
 	return divButtons;
 };
-
+Generic.currentlyDraggedElm = null;
 Generic.getDOMElement = function(objectNamesToHighlight) {
 	var divMain, divName, img;
 
@@ -194,7 +205,9 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 	divMain.appendChild(Generic.getButtonsDOMElm());
 
 	if (objectNamesToHighlight.indexOf(this.name) > -1) {
-		divMain.removeClass(Snip.DOMContractedClass);
+		if(objectNamesToHighlight[0] !== false)
+			divMain.removeClass(Snip.DOMContractedClass);
+
 		// highlight so the user may notice it #ux
 		// remove class after 3 seconds else it will
 		// highlight repeatedly
@@ -214,6 +227,8 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 		event.dataTransfer.effectAllowed = 
 			event.dataTransfer.dropEffect = "move";
 		event.dataTransfer.setData("text/plain", JSON.stringify(this.toArray()));
+		
+		Generic.currentlyDraggedElm = event.target;
 	}.bind(this));
 
 	divMain.on("dragend", function(event){
@@ -247,22 +262,41 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 		if(!droppedOn.matches(".generic")) 
 			droppedOn = droppedOn.parent(".generic");
 
+		// don't do anything if dropped on the same element
+		if(Generic.currentlyDraggedElm === droppedOn) return;		
+
 		var objectDroppedOn = Generic.getObjectThroughDOMListElm(droppedOn),
-			objectBeingDropped = Generic.getObjectThroughDOMListElm(divMain);
+			objectBeingDropped = Generic.getObjectThroughDOMListElm(Generic.currentlyDraggedElm);
 
 		if(objectBeingDropped.type !== objectDroppedOn.type){
 			alert("Sorry, you cannot swap a folder with a snippet.");
 			return false;
 		}
 
-		objectDroppedOn.insertAfter(objectBeingDropped);
+		var	objectDroppedOnIndexArray = Data.snippets.getUniqueObjectIndex(objectDroppedOn.name, objectDroppedOn.type),
+			objectBeingDroppedIndexArray = Data.snippets.getUniqueObjectIndex(objectBeingDropped.name, objectDroppedOn.type),
+			objectDroppedOnIndex = objectDroppedOnIndexArray[objectDroppedOnIndexArray.length - 1],
+			objectBeingDroppedIndex = objectBeingDroppedIndexArray[objectBeingDroppedIndexArray.length - 1];
+
+		// need to reset name so that it does not
+		// mess up indices setting up after insertAdjacent
+		// is executed
+		var orgName = objectBeingDropped.name,
+			randomName = orgName + Math.random(),
+			clonedObject = objectBeingDropped.getClone(),
+			shouldInsertBefore = objectDroppedOnIndex < objectBeingDroppedIndex;
+
+		clonedObject.name = randomName;	
+		objectDroppedOn.insertAdjacent(clonedObject, 1, shouldInsertBefore);
+		
 		objectBeingDropped.remove();
 		parentFolderName = objectDroppedOn.getParentFolder().name;
+		clonedObject.name = orgName;
 
-		saveSnippetData(undefined, parentFolderName, [objectBeingDropped.name, objectDroppedOn.name]);
+		saveSnippetData(undefined, parentFolderName, [false, orgName, objectDroppedOn.name]);
 
 		return false;
-	}.bind(this));
+	});
 
 	return divMain;
 };
