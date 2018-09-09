@@ -1111,6 +1111,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			/**
 			 * checks if the text typed in the panel is unedited or edited
 			 * @param {Element} $panel the snippet or folder panel being edited
+			 * @param {Element} $objectName the input element containing the object name 
 			 */
 			function userHasEditedTextPresentInPanel($panel, $objectName){
 				var $body = $panel.qClsSingle("body"),
@@ -1123,7 +1124,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 				var body = dualSnippetEditorObj.getShownTextForSaving(),
 					snip = Data.snippets.getUniqueSnip(objectName),
-					bodyChanged = snip ? snip !== body : false;
+					bodyChanged = snip ? snip.body !== body : false;
 
 				return bodyChanged;
 			}
