@@ -179,7 +179,7 @@ Generic.getButtonsDOMElm = function() {
 	divButtons.appendChild(q.new("div").addClass("delete_btn")).attr("title", "Delete");
 	return divButtons;
 };
-Generic.currentlyDraggedElm = null;
+
 Generic.getDOMElement = function(objectNamesToHighlight) {
 	var divMain, divName, img;
 
@@ -192,7 +192,6 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	img = q.new("img");
 	img.src = "../imgs/" + this.type + ".svg";
-	img.setAttribute("draggable", "false");
 	
 	divMain.appendChild(img);
 
@@ -216,87 +215,6 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 			divMain.removeClass(Generic.HIGHLIGHTING_CLASS);
 		}, 3000);
 	}
-
-	divMain.setAttribute("draggable", "true");
-
-	var BEING_DRAGGED_CLASS = "beingdragged",
-		ANOTHER_DRAG_ELM_OVER = "draggedover";
-
-	divMain.on("dragstart", function(event){
-		divMain.addClass(BEING_DRAGGED_CLASS);
-		event.dataTransfer.effectAllowed = 
-			event.dataTransfer.dropEffect = "move";
-		event.dataTransfer.setData("text/plain", JSON.stringify(this.toArray()));
-		
-		Generic.currentlyDraggedElm = event.target;
-	}.bind(this));
-
-	divMain.on("dragend", function(event){
-		divMain.removeClass(BEING_DRAGGED_CLASS);
-	}.bind(this));
-
-	divMain.on("dragenter", function(event){
-		divMain.addClass(ANOTHER_DRAG_ELM_OVER);
-	}.bind(this));
-
-	divMain.on("dragover", function(event){
-		event.dataTransfer.effectAllowed = 
-			event.dataTransfer.dropEffect = "move";
-
-		event.preventDefault();
-		return false;
-	}.bind(this));
-
-	divMain.on("dragleave", function(){
-		divMain.removeClass(ANOTHER_DRAG_ELM_OVER);
-	}.bind(this));
-
-	divMain.on("drop", function(event){
-		event.stopPropagation();
-		
-		divMain.removeClass(BEING_DRAGGED_CLASS);
-		
-		var droppedOn = event.target,
-			parentFolderName;
-		
-		if(!droppedOn.matches(".generic")) 
-			droppedOn = droppedOn.parent(".generic");
-
-		// don't do anything if dropped on the same element
-		if(Generic.currentlyDraggedElm === droppedOn) return;		
-
-		var objectDroppedOn = Generic.getObjectThroughDOMListElm(droppedOn),
-			objectBeingDropped = Generic.getObjectThroughDOMListElm(Generic.currentlyDraggedElm);
-
-		if(objectBeingDropped.type !== objectDroppedOn.type){
-			alert("Sorry, you cannot swap a folder with a snippet.");
-			return false;
-		}
-
-		var	objectDroppedOnIndexArray = Data.snippets.getUniqueObjectIndex(objectDroppedOn.name, objectDroppedOn.type),
-			objectBeingDroppedIndexArray = Data.snippets.getUniqueObjectIndex(objectBeingDropped.name, objectDroppedOn.type),
-			objectDroppedOnIndex = objectDroppedOnIndexArray[objectDroppedOnIndexArray.length - 1],
-			objectBeingDroppedIndex = objectBeingDroppedIndexArray[objectBeingDroppedIndexArray.length - 1];
-
-		// need to reset name so that it does not
-		// mess up indices setting up after insertAdjacent
-		// is executed
-		var orgName = objectBeingDropped.name,
-			randomName = orgName + Math.random(),
-			clonedObject = objectBeingDropped.getClone(),
-			shouldInsertBefore = objectDroppedOnIndex < objectBeingDroppedIndex;
-
-		clonedObject.name = randomName;	
-		objectDroppedOn.insertAdjacent(clonedObject, 1, shouldInsertBefore);
-		
-		objectBeingDropped.remove();
-		parentFolderName = objectDroppedOn.getParentFolder().name;
-		clonedObject.name = orgName;
-
-		saveSnippetData(undefined, parentFolderName, [false, orgName, objectDroppedOn.name]);
-
-		return false;
-	});
 
 	return divMain;
 };

@@ -710,16 +710,6 @@ footer {
     margin-right: 10px;
 }
 
-.generic.contracted.beingdragged {
-    background: #bbe8f7;
-    width: 90%;
-    border: 1px dashed grey;
-}
-
-.generic.contracted.draggedover {
-    border: 1px dashed black;
-}
-
 .snip .name {
     font-weight: bold;
 }
