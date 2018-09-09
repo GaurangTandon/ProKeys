@@ -336,7 +336,7 @@ Generic.isValidName = function(name, type) {
 Generic.getObjectThroughDOMListElm = function(listElm) {
 	var isSnip = listElm.classList.contains("snip"),
 		type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
-		name = listElm.querySelector(".name").innerText;
+		name = listElm.querySelector(".name").innerHTML;
 
 	return Data.snippets.getUniqueObject(name, type);
 };
