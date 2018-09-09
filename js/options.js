@@ -454,6 +454,7 @@
 					"Data was of incorrect format! Please close this box and check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report. And mail it to us at prokeys.feedback@gmail.com to be resolved."
 				);
 				console.log(e.message);
+				console.log(data);
 				return;
 			}
 
@@ -1483,6 +1484,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 		})();
 
 		(function backUpWork() {
+			var dataToExport;
+
 			// flattens all folders
 			/**
              * prints the snippets inside the folder
@@ -1503,34 +1506,30 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			}
 
 			Q(".export-buttons button").on("click", function() {
-				q("#snippets .panel_popup." + this.className).addClass(SHOW_CLASS);
+				var buttonClass = this.className,
+					functionMap = {
+						"export": showDataForExport,
+						"import": setupImportPopup,
+						"revisions": setUpPastRevisions
+					};
 
-				switch (this.className) {
-					case "export":
-						showDataForExport();
-						break;
-					case "import":
-						setupImportPopup();
-						break;
-					case "revisions":
-						setUpPastRevisions();
-				}
+				q("#snippets .panel_popup." + buttonClass).addClass(SHOW_CLASS);
+				functionMap[buttonClass]();
 			});
 
 			function showDataForExport() {
-				var data,
-					dataUse = q(".export .steps :first-child input:checked").value,
-					downloadLink = q(".export a"),
+				var	dataUse = q(".export .steps :first-child input:checked").value,
+					downloadLink = q(".export a:first-child"),
 					blob;
 
-				if (dataUse === "print") data = getSnippetPrintData(Data.snippets);
+				if (dataUse === "print") dataToExport = getSnippetPrintData(Data.snippets);
 				else {
 					Data.snippets = Data.snippets.toArray();
-					data = JSON.stringify(dataUse === "data" ? Data : Data.snippets, undefined, 2);
+					dataToExport = JSON.stringify(dataUse === "data" ? Data : Data.snippets, undefined, 2);
 					Data.snippets = Folder.fromArray(Data.snippets);
 				}
 
-				blob = new Blob([data], {
+				blob = new Blob([dataToExport], {
 					type: "text/js"
 				});
 
@@ -1539,10 +1538,15 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     (dataUse === "print" ? "ProKeys print snippets" : "ProKeys " + dataUse) +
                     " " +
                     Date.getFormattedDate() +
-                    ".txt";
+					".txt";
 			}
 
-			q(".export input").on("change", showDataForExport);
+			var copyToClipboardLink = q(".export .copy-data-to-clipboard-btn");
+			copyToClipboardLink.on("click", function(){
+				pk.copyTextToClipboard(dataToExport);
+			});
+			
+			Q(".export input").on("change", showDataForExport);
 
 			function setupImportPopup() {
 				var $selectList = q(".import .selectList");
@@ -1561,7 +1565,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			var fileInputLink = q(".import .file_input"),
 				$inputFile = fileInputLink.nextElementSibling,
 				initialLinkText = fileInputLink.html(),
-				importFileData = null;
+				importFileData = null,
+				importPopup = q(".panel.import"),
+				importThroughClipboardSpan = q(".import-data-clipboard-btn");
+
+			importPopup.on("paste", function(event){
+				importFileData = event.clipboardData.getData("text");
+				importThroughClipboardSpan.html("Pasted data is ready. Click Restore button to begin.");
+			});
 
 			$inputFile.on("change", function() {
 				var file = $inputFile.files[0];

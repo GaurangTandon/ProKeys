@@ -351,6 +351,11 @@ footer {
     width: 30%;
 }
 
+.fake-anchor {
+    cursor: pointer;
+    color: #1143bb;
+}
+
 .storageBytes {
     display: inline-block;
     margin: 0 auto;
