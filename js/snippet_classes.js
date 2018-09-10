@@ -917,7 +917,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets) {
 	function replacer(cls, prop, val) {
 		elms = $container.qCls(cls);
 
-		if (elms) {
+		if (elms.length) {
 			elms.removeClass(cls);
 			elms.forEach(function(elm) {
 				elm.style[prop] = val;

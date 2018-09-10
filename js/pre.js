@@ -194,6 +194,12 @@ var extendNodePrototype;
 		if (DEBUGGING) console.dir.apply(console, arguments);
 	};
 
+	HTMLCollection.prototype.forEach = function(func){
+		for(var i = 0, len = this.length; i < len; i++){
+			this[i].call(func);
+		}
+	};
+
 	extendNodePrototype("trigger", function(eventName, obj) {
 		var ev = new CustomEvent(eventName, {
 			detail: obj || null
