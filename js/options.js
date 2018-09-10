@@ -636,7 +636,8 @@
 	function setupEditPanel(type) {
 		var $panel = qClsSingle("panel_" + type + "_edit"),
 			saveHandler = handlerSaveObject(type),
-			nameElm = $panel.q(".name input");
+			nameElm = $panel.q(".name input"),
+			$parentFolderDIV;
 
 		$panel.on("keydown", function(event){
 			if(event.keyCode === 13 && (event.ctrlKey || event.metaKey)){
@@ -662,8 +663,16 @@
 			for (var i = 0, len = folderNames.length; i < len; i++)
 				if ((folder = folderNames[i]).html() === name) {
 					folder.addClass("selected");
-					return;
+					break;
 				}
+
+			if(folder){
+				$parentFolderDIV = folder.parent("div");
+				while(!$parentFolderDIV.classList.contains("selectList")){
+					$parentFolderDIV.removeClass("collapsed");
+					$parentFolderDIV = $parentFolderDIV.parent("div");
+				}
+			}
 		}
 
 		return function(object, isSavingSnippet) {
