@@ -461,12 +461,12 @@ var extendNodePrototype;
 
 		// block level elements already occupy a full line, hence, remove
 		// ONE <br> after them
-		node.querySelectorAll("pre, blockquote, ol, ul").forEach(function(elm) {
+		node.Q("pre, blockquote, ol, ul").forEach(function(elm) {
 			var br = elm.nextElementSibling;
 			if (br && br.tagName === "BR") br.parentNode.removeChild(br);
 		});
 
-		node.querySelectorAll("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
+		node.Q("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
 	}
 
 	// prototype alternative for setHTML/getHTML
@@ -523,7 +523,7 @@ var extendNodePrototype;
 
 		var container = q.new("div").html(string),
 			selector = "pre + br, blockquote + br, li + br, ol > br, ol + br, ul + br, ul > br",
-			unnecessaryBRs = container.querySelectorAll(selector),
+			unnecessaryBRs = container.Q(selector),
 			count = unnecessaryBRs.length;
 
 		for (i = 0; i < count; i++) {

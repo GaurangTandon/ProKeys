@@ -61,7 +61,7 @@
 	*/
 
 	function initiateIframeCheck(parentDoc) {
-		var iframes = parentDoc.querySelectorAll("iframe"),
+		var iframes = parentDoc.Q("iframe"),
 			win,
 			doc;
 
@@ -226,7 +226,7 @@
 		Placeholder.node = snipElmNode;
 		Placeholder.isCENode = true;
 		// convert the NodeList of <span.prokeys-placeholder> to array and store
-		Placeholder.array = [].slice.call(snipElmNode.querySelectorAll("." + PLACE_CLASS) || [], 0);
+		Placeholder.array = [].slice.call(snipElmNode.qCls(PLACE_CLASS) || [], 0);
 	}
 
 	function insertSnippetInContentEditableNode(range, snip, node) {

@@ -254,7 +254,7 @@ Generic.isValidName = function(name, type) {
 Generic.getObjectThroughDOMListElm = function(listElm) {
 	var isSnip = listElm.classList.contains("snip"),
 		type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
-		name = listElm.querySelector(".name").innerHTML;
+		name = listElm.qClsSingle("name").innerHTML;
 
 	return Data.snippets.getUniqueObject(name, type);
 };
@@ -325,7 +325,7 @@ window.Snip = function(name, body, timestamp) {
 		}
 
 		var divMain = Generic.getDOMElement.call(this, objectNamesToHighlight),
-			divName = divMain.querySelector(".name"),
+			divName = divMain.qClsSingle("name"),
 			divBody;
 
 		// our `div` body element; with Snip body
@@ -774,7 +774,7 @@ Snip.makeHTMLSuitableForTextareaThroughString = function(html) {
 	htmlNode.innerHTML = html;
 
 	if (Snip.isSuitableForPastingInTextareaAsIs(html)) {
-		htmlNode.querySelectorAll("OL, UL").forEach(Snip.formatOLULInListParentForTextarea);
+		htmlNode.Q("ol, ul").forEach(Snip.formatOLULInListParentForTextarea);
 
 		return htmlNode.innerHTML;
 	} else {
@@ -915,7 +915,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets) {
 	// when both class name and property value share diff text
 	// as in font size
 	function replacer(cls, prop, val) {
-		elms = $container.querySelectorAll("." + cls);
+		elms = $container.qCls(cls);
 
 		if (elms) {
 			elms.removeClass(cls);
@@ -974,7 +974,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets) {
 	// problem5 issues#153
 	// remove <p> tags when this method is called by
 	// detector.js; don't remove them when
-	if (!isListingSnippets) $container.querySelectorAll("p").forEach(processPElm);
+	if (!isListingSnippets) $container.Q("p").forEach(processPElm);
 
 	// 1. font size
 	for (var fontSize in fontSizesEm)
@@ -987,13 +987,13 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets) {
 	replacerThroughArray(fontFamilies, "ql-font-", "font-family");
 	replacerThroughArray(textAligns, "ql-align-", "text-align");
 
-	$container.querySelectorAll("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
+	$container.Q("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
 
 	// access by window to get `undefined` and not any error
 	// problem 9 issues#153
 	if (window.isGmail)
 		$container
-			.querySelectorAll("blockquote")
+			.Q("blockquote")
 			.addClass("gmail_quote")
 			.attr("style", "margin: 0px 0px 0px 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;");
 
@@ -1015,7 +1015,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets) {
  */
 Snip.makeHTMLSuitableForQuill = function(html) {
 	function replacer(sel, prop, cls, val) {
-		var elms = $container.querySelectorAll(sel);
+		var elms = $container.Q(sel);
 
 		if (elms) {
 			elms.forEach(function(e) {
@@ -1138,7 +1138,7 @@ Snip.defaultLinkSanitize = function(linkVal) {
 		return function(listParent) {
 			var resultString = sep1;
 
-			listParent.querySelectorAll("LI").forEach(function(li) {
+			listParent.Q("li").forEach(function(li) {
 				resultString += sep0 + "<li>" + li.innerHTML + "</li>" + sep1;
 			});
 
@@ -1168,12 +1168,12 @@ Snip.sanitizeTextareaTextForSave = function(text) {
 	// refer problem4 issue#153
 	htmlNode.innerHTML = htmlNode.innerHTML.replace(/&nbsp;/g, " ");
 
-	var aHREFs = htmlNode.querySelectorAll("a");
+	var aHREFs = htmlNode.Q("a");
 	aHREFs.forEach(function(a) {
 		a.href = Snip.defaultLinkSanitize(a.href);
 	});
 
-	var listParents = htmlNode.querySelectorAll("ol, ul");
+	var listParents = htmlNode.Q("ol, ul");
 	listParents.forEach(Snip.formatOLULInListParentForTextarea);
 
 	return htmlNode.innerHTML;
@@ -1782,7 +1782,7 @@ Folder.insertBulkActionDOM = function(listedFolder) {
 	return container;
 };
 Folder.getSelectedFolderInSelectList = function(selectList) {
-	var selectFolderName = selectList.querySelector(".selected").html();
+	var selectFolderName = selectList.qClsSingle("selected").html();
 
 	return Data.snippets.getUniqueFolder(selectFolderName);
 };
@@ -1819,7 +1819,7 @@ Folder.implementChevronInFolderPath = function(notRemoveChevron) {
 		folderObj = Folder.getListedFolder();
 
 	if (totalWidth > width) {
-		pathPart = $containerFolderPath.querySelector(".path_part:not(.chevron)");
+		pathPart = $containerFolderPath.q(".path_part:not(.chevron)");
 
 		if (pathPart === lastPathPart) {
 			pathPart.style.width =
@@ -1829,7 +1829,7 @@ Folder.implementChevronInFolderPath = function(notRemoveChevron) {
                 "px";
 			pathPart.addClass("ellipsized");
 		} else {
-			doesChevronExist = !!$containerFolderPath.querySelector(".chevron");
+			doesChevronExist = !!$containerFolderPath.qClsSingle("chevron");
 
 			// remove the right arrow
 			$containerFolderPath.removeChild(pathPart.nextElementSibling);
@@ -1843,10 +1843,10 @@ Folder.implementChevronInFolderPath = function(notRemoveChevron) {
 		}
 	}
 	// clear previous chevrons
-	else if (!notRemoveChevron && $containerFolderPath.querySelector(".chevron")) folderObj.insertFolderPathDOM();
+	else if (!notRemoveChevron && $containerFolderPath.qClsSingle("chevron")) folderObj.insertFolderPathDOM();
 };
 Folder.getListedFolderName = function() {
-	return $containerFolderPath.querySelector(":nth-last-child(2)").html();
+	return $containerFolderPath.q(":nth-last-child(2)").html();
 };
 Folder.getListedFolder = function() {
 	var name = Folder.getListedFolderName(),
@@ -2006,7 +2006,7 @@ window.DualTextbox = function($container, isTryItEditor) {
 		$richEditor.addClass(RICH_EDITOR_CLASS).attr("contenteditable", "true");
 	} else {
 		quillObj = initializeQuill($richEditor, $richEditorContainer);
-		$richEditor = $container.querySelector($pRich.dataset.editorSelector);
+		$richEditor = $container.q($pRich.dataset.editorSelector);
 	}
 
 	function initializeQuill($editor, $container) {
@@ -2064,7 +2064,7 @@ window.DualTextbox = function($container, isTryItEditor) {
 			if (transferContentsToShownEditor && !isCurrModePlain && !this.userAllowsToLoseFormattingOnSwapToTextarea())
 				return false;
 
-			var currShown = $container.querySelectorAll("." + SHOW_CLASS),
+			var currShown = $container.qCls(SHOW_CLASS),
 				currShownEditor = currShown[1],
 				$newlyShownContainer,
 				$newlyShownEditor;
@@ -2073,8 +2073,8 @@ window.DualTextbox = function($container, isTryItEditor) {
 
 			// add show class to `p` and corresponding box
 			node.addClass(SHOW_CLASS);
-			$newlyShownContainer = $container.querySelector(node.dataset.containerSelector);
-			$newlyShownEditor = $container.querySelector(node.dataset.editorSelector);
+			$newlyShownContainer = $container.q(node.dataset.containerSelector);
+			$newlyShownEditor = $container.q(node.dataset.editorSelector);
 			$newlyShownContainer.addClass(SHOW_CLASS);
 			$newlyShownEditor.attr("tab-index", 20).focus();
 

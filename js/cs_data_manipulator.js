@@ -168,13 +168,13 @@
 			}
 		}
 
-		var msgElm = modal.querySelector(".block-dialog-message"),
-			siteNameInput = modal.querySelector(".site-name"),
-			btnContainer = modal.querySelector(".block-dialog-buttons"),
-			buttons = modal.querySelectorAll(".block-dialog-button"),
+		var msgElm = modal.qClsSingle("block-dialog-message"),
+			siteNameInput = modal.qClsSingle("site-name"),
+			btnContainer = modal.qClsSingle("block-dialog-buttons"),
+			buttons = modal.qCls("block-dialog-button"),
 			OKBtn = buttons[0],
 			cancelBtn = buttons[1],
-			siteInputElm = modal.querySelector(".block-dialog-form input"),
+			siteInputElm = modal.q(".block-dialog-form input"),
 			keyCloseModal = keyHandlerCreator(closeModal),
 			keyOKBtn = keyHandlerCreator(OKBtnEvent),
 			URL;
@@ -206,18 +206,18 @@
 		var modal = q.new("div").html(msg.modal).firstChild,
 			action = msg.action,
 			shouldBlockSite = action === "Block",
-			siteNameElm = modal.querySelector(".site-name"),
+			siteNameElm = modal.qClsSingle("site-name"),
 			// alert user about difference of xyz.com/path vs xyz.com
 			// only alert when user is blocking site
 			URLAlertingText = shouldBlockSite ? getURLAlertingText(msg.url) : "";
 
 		attachModalHandlers(modal, shouldBlockSite);
 
-		modal.querySelector(".action").html(action);
+		modal.qClsSingle("action").html(action);
 		siteNameElm.html(msg.url);
 
 		if (URLAlertingText !== "") {
-			modal.querySelector(".block-dialog-message").appendChild(q.new("P").html(URLAlertingText));
+			modal.qClsSingle("block-dialog-message").appendChild(q.new("P").html(URLAlertingText));
 		}
 
 		window.document.body.appendChild(modal);
