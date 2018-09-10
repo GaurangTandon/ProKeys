@@ -636,7 +636,7 @@
 	function setupEditPanel(type) {
 		var $panel = qClsSingle("panel_" + type + "_edit"),
 			saveHandler = handlerSaveObject(type),
-			nameElm = $panel.querySelector(".name input");
+			nameElm = $panel.q(".name input");
 
 		$panel.on("keydown", function(event){
 			if(event.keyCode === 13 && (event.ctrlKey || event.metaKey)){
@@ -656,7 +656,7 @@
 		});
 
 		function highlightInFolderList(folderElm, name) {
-			var folderNames = folderElm.querySelectorAll("p"),
+			var folderNames = folderElm.Q("p"),
 				folder;
 
 			for (var i = 0, len = folderNames.length; i < len; i++)
@@ -667,9 +667,9 @@
 		}
 
 		return function(object, isSavingSnippet) {
-			var headerSpan = $panel.querySelector(".header span"),
-				folderElm = $panel.querySelector(".folderSelect .selectList"),
-				folderPathElm = $panelSnippets.querySelector(".folder_path :nth-last-child(2)"),
+			var headerSpan = $panel.q(".header span"),
+				folderElm = $panel.q(".folderSelect .selectList"),
+				folderPathElm = $panelSnippets.q(".folder_path :nth-last-child(2)"),
 				// boolean to tell if call is to edit existing snippet/folder
 				// or create new snippet
 				isEditing = !!object,
@@ -749,16 +749,16 @@
 		}
 
 		return function(callback) {
-			var nameElm = panel.querySelector(".name input"),
+			var nameElm = panel.q(".name input"),
 				name,
-				selectList = panel.querySelector(".selectList"),
+				selectList = panel.qClsSingle("selectList"),
 				folder = Folder.getSelectedFolderInSelectList(selectList),
 				isSnippet = /snip/.test(panel.className),
 				body;
 
 			if (isSnippet) {
 				name = manipulateElmForValidation(nameElm, Snip.isValidName);
-				body = manipulateElmForValidation(undefined, Snip.isValidBody, panel.querySelector(".body .error"));
+				body = manipulateElmForValidation(undefined, Snip.isValidBody, panel.q(".body .error"));
 			} else name = manipulateElmForValidation(nameElm, Folder.isValidName);
 
 			var allValid = name[1] && (isSnippet ? body[1] : true),
@@ -975,7 +975,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 			function getAutoInsertPairFromSaveInput(node) {
 				var $clickedTR = node.parentNode.parentNode;
-				return $clickedTR.querySelectorAll(".char_input").map(function(e) {
+				return $clickedTR.qCls("char_input").map(function(e) {
 					return e.value;
 				});
 			}
@@ -984,7 +984,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				var $clickedTR = node.parentNode;
 				return (
 					$clickedTR
-						.querySelectorAll("td")
+						.Q("td")
 					// slice to exclude Remove button
 						.map(function(e) {
 							return e.innerText;
@@ -1194,7 +1194,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					$containerDIV = node.parentNode;
 					$containerDIV.toggleClass(collapsedClass);
 
-					others = this.querySelector("." + classSel);
+					others = this.qClsSingle(classSel);
 					if (others) others.removeClass(classSel);
 					node.addClass(classSel);
 				}
@@ -1220,7 +1220,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 				// if checkbox style list is still shown
 				if (
-					$containerSnippets.querySelector("input[type=\"checkbox\"]") &&
+					$containerSnippets.q("input[type=\"checkbox\"]") &&
                     !$bulkActionPanel.hasClass(SHOW_CLASS)
 				)
 					Data.snippets.getUniqueFolder($bulkActionPanel.dataset.originalShownFolderName).listSnippets();
@@ -1231,8 +1231,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			});
 
 			$sortPanelBtn.on("click", function() {
-				var sortDir = $sortPanel.querySelector(".sort-dir :checked").parentNode.innerText,
-					sortType = $sortPanel.querySelector(".sort-type :checked").parentNode.innerText,
+				var sortDir = $sortPanel.q(".sort-dir :checked").parentNode.innerText,
+					sortType = $sortPanel.q(".sort-type :checked").parentNode.innerText,
 					descendingFlag = (sortDir = sortDir === "Descending"),
 					lastFolderDOM = folderPath.lastChild.previousSibling,
 					folder = Data.snippets.getUniqueFolder(lastFolderDOM.html());
@@ -1274,14 +1274,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			(function bulkActionsWork() {
 				var selectedObjects,
 					DOMcontainer,
-					moveToBtn = $bulkActionPanel.querySelector(".bulk_actions input:first-child"),
-					deleteBtn = $bulkActionPanel.querySelector(".bulk_actions input:last-child"),
-					toggleAllButton = $bulkActionPanel.querySelector(".selection_count input"),
-					folderSelect = $bulkActionPanel.querySelector(".folderSelect"),
-					selectList = $bulkActionPanel.querySelector(".selectList");
+					moveToBtn = $bulkActionPanel.q(".bulk_actions input:first-child"),
+					deleteBtn = $bulkActionPanel.q(".bulk_actions input:last-child"),
+					toggleAllButton = $bulkActionPanel.q(".selection_count input"),
+					folderSelect = $bulkActionPanel.qClsSingle("folderSelect"),
+					selectList = $bulkActionPanel.qClsSingle("selectList");
 
 				function updateSelectionCount() {
-					selectedObjects = DOMcontainer.querySelectorAll("input:checked") || [];
+					selectedObjects = DOMcontainer.Q("input:checked") || [];
 
 					selectedObjects = selectedObjects.map(function(e) {
 						var div = e.nextElementSibling.nextElementSibling,
@@ -1292,9 +1292,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						return Data.snippets.getUniqueObject(name, type);
 					});
 
-					$bulkActionPanel.querySelector(".selection_count span").html(selectedObjects.length);
+					$bulkActionPanel.q(".selection_count span").html(selectedObjects.length);
 
-					$bulkActionPanel.querySelectorAll(".bulk_actions input").forEach(function(elm) {
+					$bulkActionPanel.Q(".bulk_actions input").forEach(function(elm) {
 						elm.disabled = !selectedObjects.length;
 					});
 				}
@@ -1329,7 +1329,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				});
 
 				toggleAllButton.on("click", function() {
-					var checkboxes = DOMcontainer.querySelectorAll("input"),
+					var checkboxes = DOMcontainer.Q("input"),
 						allCheckedBoxesChecked = true,
 						finalCheckState;
 
@@ -1476,7 +1476,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			// event delegation since radio buttons are
 			// dynamically added
 			qClsSingle("storageMode").on("click", function() {
-				var input = this.querySelector("input:checked");
+				var input = this.q("input:checked");
 
 				// make sure radio btn is clicked and is checked
 				if (input) storageRadioBtnClick.call(input, input.dataset.storagetoset, input.id !== "sync2");
@@ -1613,10 +1613,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				$select = q(".revisions select"),
 				$closeRevisionsPopupBtn = q(".revisions .close_btn"),
 				$preserveCheckboxesLI = q(".import .preserve_checkboxes"),
-				$mergeDuplicateFolderContentsInput = $preserveCheckboxesLI.querySelector("[name=merge]"),
-				$preserveExistingContentInput = $preserveCheckboxesLI.querySelector("[value=existing]"),
-				$preserveImportedContentInput = $preserveCheckboxesLI.querySelector("[value=imported]"),
-				$caveatParagraph = $preserveCheckboxesLI.querySelector("p"),
+				$mergeDuplicateFolderContentsInput = $preserveCheckboxesLI.q("[name=merge]"),
+				$preserveExistingContentInput = $preserveCheckboxesLI.q("[value=existing]"),
+				$preserveImportedContentInput = $preserveCheckboxesLI.q("[value=imported]"),
+				$caveatParagraph = $preserveCheckboxesLI.q("p"),
 				selectedRevision;
 
 			function setUpPastRevisions() {

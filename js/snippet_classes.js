@@ -185,8 +185,8 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	objectNamesToHighlight =
         objectNamesToHighlight === undefined ? [] :
-			!Array.isArray(objectNamesToHighlight) ?
-				[objectNamesToHighlight] : objectNamesToHighlight;
+        	!Array.isArray(objectNamesToHighlight) ?
+        		[objectNamesToHighlight] : objectNamesToHighlight;
 
 	divMain = q.new("div").addClass([this.type, "generic", Snip.DOMContractedClass]);
 
