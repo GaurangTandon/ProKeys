@@ -1360,7 +1360,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 				// move to folder button
 				moveToBtn.on("click", function() {
-					var selectFolderName, selectedFolder;
+					var selectFolderName, selectedFolder,
+						atleastOneElementMoved = false;
 
 					if (!folderSelect.hasClass(SHOW_CLASS)) {
 						Folder.refreshSelectList(selectList);
@@ -1369,8 +1370,11 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						selectedFolder = Folder.getSelectedFolderInSelectList(selectList);
 						selectFolderName = selectedFolder.name;
 						selectedObjects.forEach(function(e) {
-							if (e.canNestUnder(selectedFolder)) e.moveTo(selectedFolder);
-							else
+							if (e.canNestUnder(selectedFolder)) {
+								atleastOneElementMoved = true;
+								e.moveTo(selectedFolder);
+							}
+							else{
 								alert(
 									"Cannot move " +
                                         e.type +
@@ -1381,7 +1385,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                                         "\"" +
                                         "; as it is the same as (or a parent folder of) the destination folder"
 								);
+							}
 						});
+
+						// do not list new folder if nothing was moved
+						if(!atleastOneElementMoved)
+							return;
 
 						latestRevisionLabel =
                             "moved " + selectedObjects.length + " objects to folder \"" + selectFolderName + "\"";
@@ -1389,7 +1398,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						saveSnippetData(
 							function() {
 								// hide the bulk action panel
-								$bulkActionBtnclick();
+								$bulkActionBtn.click();
 							},
 							selectFolderName,
 							selectedObjects.map(function(e) {
