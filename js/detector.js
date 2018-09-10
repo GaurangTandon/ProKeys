@@ -1063,10 +1063,11 @@
 			chrome.runtime.sendMessage({ ctxTimestamp: ctxTimestamp });
 		});
 
-		win.on("error", function() {
+		win.on("error", function(event) {
 			console.log(
 				"Error occurred in ProKeys. Mail a screen shot to prokeys.feedback@gmail.com to help me fix it! Thanks!"
 			);
+			console.error(event);
 		});
 
 		if (isBlocked) return;
