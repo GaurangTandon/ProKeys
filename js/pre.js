@@ -194,12 +194,6 @@ var extendNodePrototype;
 		if (DEBUGGING) console.dir.apply(console, arguments);
 	};
 
-	HTMLCollection.prototype.forEach = function(func){
-		for(var i = 0, len = this.length; i < len; i++){
-			this[i].call(func);
-		}
-	};
-
 	extendNodePrototype("trigger", function(eventName, obj) {
 		var ev = new CustomEvent(eventName, {
 			detail: obj || null
@@ -244,9 +238,10 @@ var extendNodePrototype;
 		/**
 		 * short hand for document.getElementsByClassName
 		 * @param {string} cls selector to match elements
+		 * @returns {Element[]} array (not HTMLCollection!) of matched elements
 		 */
 		qCls: function(cls) {
-			return this.getElementsByClassName(cls);
+			return Array.prototype.slice.call(this.getElementsByClassName(cls));
 		},
 		/**
 		 * short hand for document.getElementsByClassName;
