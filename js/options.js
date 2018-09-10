@@ -1694,68 +1694,62 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				changeHotkeyBtn.html("Change hotkey").disabled = false;
 			}
 
-			// called onkeyup because keydown gets called
-			// multiple if key is held down
-			function getKeyCombo(event) {
-				var arr = [],
-					keycode = event.keyCode,
-					// determines if keyCode is valid
-					// non-control character
-					valid;
+			/**
+			 * THE PROBLEM:
+			 * allowing keyups on both the control and the non control keys
+			 * resulted in the keyup event firing twice, when the keys were
+			 * released. Hence, if a control key is pressed (excluding enter),
+			 * exit the method. We only need to catch events on the other keys.
+			 * NOW:
+			 * we originally used keyups because keydown event fired multiple times
+			 * if key was held. but tracking keyup is difficult because of the above problem 
+			 * as well as the fact that the output would be different if the user lifted the 
+			 * shiftkey first or the space key first (when trying to set the hotkey to
+			 * Shift+Space)
+			 * Hence, we finally use this new solution.
+			 */
 
-				// first element should be the modifiers
-				if (event.shiftKey) arr.push("shiftKey");
-				else if (event.ctrlKey) arr.push("ctrlKey");
-				else if (event.altKey) arr.push("altKey");
-				else if (event.metaKey) arr.push("metaKey");
+			var combo;
+			hotkeyListener.on("keydown", function(event){
+				var keyCode = event.keyCode, valid,
+					arrayOfControlKeys = ["shiftKey", "altKey", "ctrlKey", "metaKey"];
 
-				// below code from
-				// http://stackoverflow.com/questions/12467240/determine-if-javascript-e-keycode-is-a-printable-non-control-character
-				// http://stackoverflow.com/users/1585400/shmiddty
-
+				// below code from https://stackoverflow.com/q/12467240
+				// User shmiddty https://stackoverflow.com/u/1585400
 				// determine if key is non-control key
 				valid =
-                    (keycode > 47 && keycode < 58) || // number keys
-                    keycode == 32 ||
-                    keycode == 13 || // spacebar & return key(s)
-                    (keycode > 64 && keycode < 91) || // letter keys
-                    (keycode > 95 && keycode < 112) || // numpad keys
-                    (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
-                    (keycode > 218 && keycode < 223); // [\]' (in order)
+					(keyCode > 47 && keyCode < 58) || // number keys
+					(keyCode == 32 || keyCode == 13) || // spacebar & return keys
+					(keyCode > 64 && keyCode < 91) || // letter keys
+					(keyCode > 95 && keyCode < 112) || // numpad keys
+					(keyCode > 185 && keyCode < 193) || // ;=,-./` (in order)
+					(keyCode > 218 && keyCode < 223); // [\]' (in order)
 
-				if (valid)
-				// then push the key also
-					arr.push(keycode);
-
-				return valid ? arr : null;
-			}
-
-			hotkeyListener.on("keyup", function(event) {
-				var combo = getKeyCombo(event);
-
-				// can be null if invalid key combo is inputted
-				if (combo) {
-					Data.hotKey = combo.slice(0);
+				// escape to exit
+				if(keyCode === 27){
+					resetHotkeyBtn();
+				}
+				else if(valid){
+					Data.hotKey = combo.concat([keyCode]).slice(0);
 
 					saveOtherData("Hotkey set to " + getCurrentHotkey(), function() {
 						location.href = "#settings";
 						location.reload();
 					});
-				} else {
-					alert("Setting new hotkey failed!");
-					alert(
-						"It was missing a key other than ctrl/alt/shift/meta key. Or, it was a key-combo reserved by the Operating System. \
-Or you may try refreshing the page. "
-					);
+				}else{
+					arrayOfControlKeys.forEach(function(key){
+						if(event[key] && combo.indexOf(key) === -1){
+							combo.unshift(key);
+						}
+					});
 				}
-
-				resetHotkeyBtn();
 			});
 
 			changeHotkeyBtn.on("click", function() {
 				this.html("Press new hotkeys").disabled = true; // disable the button
 
 				hotkeyListener.focus();
+				combo = [];
 
 				// after five seconds, automatically reset the button to default
 				setTimeout(resetHotkeyBtn, 5000);
