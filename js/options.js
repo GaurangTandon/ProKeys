@@ -1066,7 +1066,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				$bulkActionBtn = q(".panel_snippets .checkbox_btn"),
 				$bulkActionPanel = q(".panel_snippets .panel_bulk_action"),
 				folderPath = qClsSingle("folder_path"),
-				$selectList = qClsSingle("selectList");
+				$selectList = qCls("selectList");
 
 			validateSnippetData = commonValidation(Generic.SNIP_TYPE);
 			validateFolderData = commonValidation(Generic.FOLDER_TYPE);
@@ -1182,21 +1182,21 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			}
 
 			$selectList.on("click", function(e) {
-				var node = e.target,
+				var clickedNode = e.target,
 					classSel = "selected",
-					others,
+					otherNodes,
 					$containerDIV,
 					collapsedClass = "collapsed";
 
-				if (node.tagName === "P") {
+				if (clickedNode.tagName === "P") {
 					// do not use $selectList
 					// as it is a NodeList
-					$containerDIV = node.parentNode;
+					$containerDIV = clickedNode.parentNode;
 					$containerDIV.toggleClass(collapsedClass);
 
-					others = this.qClsSingle(classSel);
-					if (others) others.removeClass(classSel);
-					node.addClass(classSel);
+					otherNodes = this.qCls(classSel);
+					if (otherNodes) otherNodes.removeClass(classSel);
+					clickedNode.addClass(classSel);
 				}
 			});
 
