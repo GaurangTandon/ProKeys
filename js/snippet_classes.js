@@ -1940,7 +1940,12 @@ Folder.getDefaultSnippetData = function(){
 			{
 				name: "dateArithmetic",
 				body:
-					"Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5 m-5 s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
+					"Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5:m-5:s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
+				timestamp: ts
+			},
+			{
+				name: "urlMacro",
+				body: "Use the URL macro (details in the Help page) to retrieve information about the current webpage URL. For example, when executed on any webpage, the code - [[%u(0)]] - outputs the full website name on which it is executed.",
 				timestamp: ts
 			},
 			{

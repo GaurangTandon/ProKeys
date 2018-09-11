@@ -1152,7 +1152,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					if(confirm("You have unsaved edits. Are you sure you wish to leave?")){
 						closePanel($panel);
 					}
-				}else{
+				}
+				// not an edit panel, but rather some export popup
+				else{
 					closePanel($panel);
 				}
 			});
