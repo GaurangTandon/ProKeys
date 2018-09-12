@@ -433,6 +433,36 @@
 			return "true";
 		}
 
+		function convertClipboardPrintSnippetsTextToJSON(string){
+			var time = Date.now(), result = [];
+			
+			// different OS have different newline endings
+			// \r\n - Windows; \r - macOS; \n - Linux
+			// https://en.wikipedia.org/wiki/Newline%23Issues_with_different_newline_formats
+			string = string.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+			string += "\n\n";
+			string = string.split(/\n\n--\n\n/gm);
+		
+			string.forEach(function(snp) {
+				var idx = snp.indexOf("\n\n"),
+					name = snp.substring(0, idx);
+		
+				if (name !== "") {
+					result.push({
+						name: name,
+						body: snp.substring(idx + 2),
+						timestamp: time
+					});
+				}
+			});
+		
+			result = ["Snippets", time].concat(result);
+		
+			result = JSON.stringify(result, null, 4);	
+		
+			return result;
+		}
+
 		initiateRestore = function(data) {
 			var importPopup = q(".panel.import"),
 				selectList = importPopup.qClsSingle("selectList"),
@@ -448,14 +478,20 @@
 			duplicateSnippetToKeep = importPopup.q("input[name=duplicate]:checked").value;
 
 			try {
-				data = JSON.parse(data);
+				var a = JSON.parse(data);
+				data = a;
 			} catch (e) {
-				alert(
-					"Data was of incorrect format! Please close this box and check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report. And mail it to us at prokeys.feedback@gmail.com to be resolved."
-				);
-				console.log(e.message);
-				console.log(data);
-				return;
+				try{
+					data = JSON.parse(convertClipboardPrintSnippetsTextToJSON(data));
+					console.log(data);
+				}catch(e){
+					alert(
+						"Data was of incorrect format! Please close this box and check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report. And mail it to us at prokeys.feedback@gmail.com to be resolved."
+					);
+					console.log(e.message);
+					console.log(data);
+					return;
+				}
 			}
 
 			typeOfData = Array.isArray(data) ? "snippets" : "data";
