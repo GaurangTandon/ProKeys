@@ -26,7 +26,7 @@ ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore
 
 Except for the feather-weight open-source QuillJS rich text editor, I only utilized vanilla JS for super performance and less app size. Also Eric Meyer's CSS reset stylesheet - public domain - has been used with modifications.
 
-Some icon images have been sourced from Font Awesome 5. The license is at [this link](https://fontawesome.com/license). No changes (except scaling) were made to these images.
+Some icon images have been sourced from Font Awesome 5. The license is at [this link](https://fontawesome.com/license/free). No changes (except scaling) were made to these images.
 
 ## Technical details
 
