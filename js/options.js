@@ -897,7 +897,7 @@
 		$snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
 		$tabKeyInput = qId("tabKey");
 		$snipNameDelimiterListDIV = qClsSingle("delimiter_list");
-
+		
 		if (!pk.DB_loaded) {
 			setTimeout(DB_load, 100, DBLoadCallback);
 			return;
@@ -1824,19 +1824,23 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 	function setEssentialItemsOnDBLoad() {
 		// user installs extension; set ls prop
-		var firstInstall = !localStorage[LS_REVISIONS_PROP];
+		var firstInstall = localStorage.firstInstall === "true";
+		
 		if (firstInstall) {
 			// refer github issues#4
 			Data.dataUpdateVariable = !Data.dataUpdateVariable;
 			localStorage[LS_REVISIONS_PROP] = "[]";
+			localStorage.firstInstall = "false";
+			// see issues/218#issuecomment-420487611
+			Data.snippets = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS.snippets));
 			saveRevision(Data.snippets);
 		}
-
+	
 		if (!pk.isObject(Data.snippets)) Data.snippets = Folder.fromArray(Data.snippets);
-
+		
 		// save the default snippets ONLY
 		if (firstInstall) saveSnippetData();
-
+		
 		Folder.setIndices();
 
 		var propertiesChanged = ensureRobustCompat(Data);

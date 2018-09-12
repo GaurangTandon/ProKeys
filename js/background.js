@@ -91,11 +91,11 @@ function createBlockSiteCtxItem() {
 }
 
 function openSnippetsPage(version, reason) {
+	if (reason === "update") localStorage.extensionUpdated = true;
+
 	chrome.tabs.create({
 		url: chrome.extension.getURL("html/options.html#snippets")
 	});
-
-	if (reason === "update") localStorage.extensionUpdated = true;
 }
 
 var currentOmniboxQuery, defaultOmniboxSuggestion;
@@ -153,7 +153,9 @@ chrome.runtime.onInstalled.addListener(function(details) {
 		version = chrome.runtime.getManifest().version;
 
 	if (reason === "install") {
-		openSnippetsPage(version);
+		localStorage.firstInstall = "true";
+
+		openSnippetsPage(version, reason);
 
 		title = "ProKeys successfully installed!";
 		text = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
