@@ -1001,7 +1001,7 @@
 			console.log(
 				"Error occurred in ProKeys. Mail a screen shot to prokeys.feedback@gmail.com to help me fix it! Thanks!"
 			);
-			console.error(event);
+			console.error(event.message, event);
 		});
 
 		if (isBlocked) return;
