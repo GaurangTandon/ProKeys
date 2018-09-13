@@ -695,10 +695,9 @@ footer {
     z-index: 10;
 }
 
-.panel_content .generic img {
+.panel_content .generic > img {
     width: 20px;
     height: 20px;
-    cursor: move;
 }
 
 .generic .name {
