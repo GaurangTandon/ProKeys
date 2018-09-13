@@ -50,7 +50,7 @@ var extendNodePrototype;
 })();
 
 (function() {
-	var DEBUGGING = true;
+	var DEBUGGING = false;
 
 	pk.OBJECT_NAME_LIMIT = 30;
 	Date.MONTHS = [

@@ -483,7 +483,7 @@
 			} catch (e) {
 				try{
 					data = JSON.parse(convertClipboardPrintSnippetsTextToJSON(data));
-					console.log(data);
+					console.log("Received print snippets data", data);
 				}catch(e){
 					alert(
 						"Data was of incorrect format! Please close this box and check console log (Ctrl+Shift+J/Cmd+Shift+J) for error report. And mail it to us at prokeys.feedback@gmail.com to be resolved."
