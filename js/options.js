@@ -902,7 +902,6 @@
 			setTimeout(DB_load, 100, DBLoadCallback);
 			return;
 		}
-		//console.log(Data.snippets);
 
 		// should only be called when DB has loaded
 		// and page has been initialized
