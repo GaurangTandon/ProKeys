@@ -1636,7 +1636,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 				var reader = new FileReader();
 
-				reader.on("load", function(event) {
+				// don't use .on here as it is NOT
+				// an HTML element
+				reader.addEventListener("load", function(event) {
 					importFileData = event.target.result;
 
 					fileInputLink.html(
@@ -1647,7 +1649,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 					);
 				});
 
-				reader.on("error", function(event) {
+				reader.addEventListener("error", function(event) {
 					console.error(
 						"File '" +
                             importFileData.name +
@@ -1663,7 +1665,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				fileInputLink.html("READING FILE: " + file.name);
 			});
 
-			var $resvisionsRestoreBtn = q(".revisions .restore"),
+			var $revisionsRestoreBtn = q(".revisions .restore"),
 				$textarea = q(".revisions textarea"),
 				$select = q(".revisions select"),
 				$closeRevisionsPopupBtn = q(".revisions .close_btn"),
@@ -1692,7 +1694,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 				showRevision();
 			}
 
-			$resvisionsRestoreBtn.on("click", function() {
+			$revisionsRestoreBtn.on("click", function() {
 				try {
 					if (confirm("Are you sure you want to use the selected revision?")) {
 						Data.snippets = Folder.fromArray(JSON.parse($textarea.value));
