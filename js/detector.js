@@ -61,26 +61,29 @@
 	*/
 
 	function initiateIframeCheck(parentDoc) {
-		var iframes = parentDoc.Q("iframe"),
+		var iframes = parentDoc.querySelectorAll("iframe"),
 			win,
 			doc;
 
 		iframes.forEach(function(iframe) {
-			try {
-				doc = iframe.contentDocument;
-				win = iframe.contentWindow;
-
-				// make sure handler's not already attached
-				if (!doc[UNIQ_CS_KEY]) {
-					doc[UNIQ_CS_KEY] = true;
-					doc[DOC_IS_IFRAME_KEY] = true;
-					pk.updateAllValuesPerWin(win);
-					attachNecessaryHandlers(win);
-					setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
+			iframe.on("load", function(){
+				try {
+					doc = iframe.contentDocument;
+					win = iframe.contentWindow;
+	
+					// make sure handler's not already attached
+					if (!doc[UNIQ_CS_KEY]) {
+						doc[UNIQ_CS_KEY] = true;
+						doc[DOC_IS_IFRAME_KEY] = true;
+						pk.updateAllValuesPerWin(win);
+						attachNecessaryHandlers(win);
+						setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
+					}
+				} catch (e) {
+					debugDir(e);
+					debugDir(iframe);
 				}
-			} catch (e) {
-				//debugDir(e);
-			}
+			});			
 		});
 	}
 
@@ -150,6 +153,8 @@
 				.replace(/\[\[%c(\(.*?\))?\]\]/g, function(wholeMatch){
 					return "<span class=\"" + Snip.CARET_POSITION_CLASS + "\">" + wholeMatch + "</span>";
 				});
+			
+			debugLog("prepared snippet body for CE node\n", snipBody);
 
 			callback(snipBody);
 		});
@@ -225,6 +230,7 @@
 	// check snippet's presence and intiate
 	// another function to insert snippet body
 	function checkSnippetPresence(node) {
+		debugLog("checking snippet presence", node);
 		if (pk.isContentEditable(node)) return checkSnippetPresenceContentEditable(node);
 
 		var caretPos = node.selectionStart,
@@ -975,7 +981,6 @@
 	function keyEventAttacher(handler) {
 		return function(event) {
 			var node = event.target;
-
 			if (isUsableNode(node)) handler.call(node, event);
 		};
 	}
@@ -991,25 +996,25 @@
 	}
 
 	function attachNecessaryHandlers(win, isBlocked) {
-		win.on("contextmenu", function(event) {
+		win.addEventListener("contextmenu", function(event) {
 			ctxElm = event.target;
 			ctxTimestamp = Date.now();
 			chrome.runtime.sendMessage({ ctxTimestamp: ctxTimestamp });
 		});
 
-		win.on("error", function(event) {
+		win.addEventListener("error", function(event) {
 			console.log(
 				"Error occurred in ProKeys. Mail a screen shot to prokeys.feedback@gmail.com to help me fix it! Thanks!"
 			);
 			console.error(event.message, event);
+			console.trace();
 		});
 
 		if (isBlocked) return;
 
-		// attaching listeners to `document` to listen to
-		// both normal and dynamically attached input boxes
 		win.document.on("keydown", onKeyDownFunc, true);
 		win.document.on("keypress", onKeyPressFunc, true);
+		debugLog("handlers attached");
 	}
 
 	/*
@@ -1018,6 +1023,7 @@
 	*/
 
 	function init() {
+		debugLog("init", document);
 		// if DB is not loaded then
 		// try again after 1 second
 		if (!pk.DB_loaded) {
@@ -1077,9 +1083,10 @@
 
 		// do not operate on blocked sites
 		if (isBlocked) return true;
-
+		
 		setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);
 		pk.updateAllValuesPerWin(window);
+		debugLog("done initializing");
 
 		window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
 		window.isGmail = /mail\.google/.test(window.location.href);

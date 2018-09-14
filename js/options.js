@@ -10,7 +10,7 @@
 (function() {
 	"use strict";
 
-	window.on("load", init);
+	window.addEventListener("load", init);
 
 	var storage = chrome.storage.local,
 		VERSION = chrome.runtime.getManifest().version,
@@ -1895,7 +1895,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 		// we need to set height of logo equal to width
 		// but css can't detect height so we need js hack
 		var logo = qClsSingle("logo");
-		window.on("resize", pk.debounce(function windowResizeHandler() {
+		window.addEventListener("resize", pk.debounce(function windowResizeHandler() {
 			logo.style.width = logo.clientHeight + "px";
 			Folder.implementChevronInFolderPath();
 		}, 300));
