@@ -60,31 +60,39 @@
 		- getNodeWindow
 	*/
 
+	function onIFrameLoad(iframe){
+		var doc, win;
+
+		try {
+			doc = iframe.contentDocument;
+			win = iframe.contentWindow;
+
+			// make sure handler's not already attached
+			if (doc && !doc[UNIQ_CS_KEY]) {
+				doc[UNIQ_CS_KEY] = true;
+				doc[DOC_IS_IFRAME_KEY] = true;
+				pk.updateAllValuesPerWin(win);
+				attachNecessaryHandlers(win);
+				setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
+			}
+		} catch (e) {
+			debugDir(e);
+			debugDir(iframe);
+		}
+	}
+
 	function initiateIframeCheck(parentDoc) {
-		var iframes = parentDoc.querySelectorAll("iframe"),
-			win,
+		var iframes = parentDoc.querySelectorAll("iframe"),			
 			doc;
 
 		iframes.forEach(function(iframe) {
-			iframe.on("load", function(){
-				try {
-					doc = iframe.contentDocument;
-					win = iframe.contentWindow;
-	
-					// make sure handler's not already attached
-					if (!doc[UNIQ_CS_KEY]) {
-						doc[UNIQ_CS_KEY] = true;
-						doc[DOC_IS_IFRAME_KEY] = true;
-						pk.updateAllValuesPerWin(win);
-						attachNecessaryHandlers(win);
-						setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
-					}
-				} catch (e) {
-					debugDir(e);
-					debugDir(iframe);
-				}
-			});			
-		});
+			iframe.on("load", onIFrameLoad);
+			doc = iframe.contentDocument;
+			
+			if(doc && doc.readyState === "complete"){
+				onIFrameLoad(iframe);
+			}
+		});			
 	}
 
 	// in certain web apps, like mailchimp
@@ -1014,7 +1022,7 @@
 
 		win.document.on("keydown", onKeyDownFunc, true);
 		win.document.on("keypress", onKeyPressFunc, true);
-		debugLog("handlers attached");
+		debugLog("handlers attached on", win.document);
 	}
 
 	/*

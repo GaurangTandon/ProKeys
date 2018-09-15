@@ -50,7 +50,7 @@ var extendNodePrototype;
 })();
 
 (function() {
-	var DEBUGGING = false;
+	var DEBUGGING = true;
 
 	pk.OBJECT_NAME_LIMIT = 30;
 	Date.MONTHS = [
@@ -186,13 +186,14 @@ var extendNodePrototype;
 		return d.substring(4, 15);
 	};
 
-	window.debugLog = function() {
-		if (DEBUGGING) console.log.apply(console, arguments);
-	};
-
-	window.debugDir = function() {
-		if (DEBUGGING) console.dir.apply(console, arguments);
-	};
+	// see https://stackoverflow.com/q/13815640
+	if(DEBUGGING){
+		window.debugLog = console.log.bind(console);
+		window.debugDir = console.dir.bind(console);
+	}else{
+		window.debugLog = function(){};
+		window.debugDir = function(){};
+	}
 
 	extendNodePrototype("trigger", function(eventName, obj) {
 		var ev = new CustomEvent(eventName, {
