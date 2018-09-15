@@ -76,8 +76,7 @@
 				setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
 			}
 		} catch (e) {
-			debugDir(e);
-			debugDir(iframe);
+			debugLog(e, iframe);
 		}
 	}
 
