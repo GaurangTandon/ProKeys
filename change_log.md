@@ -1,6 +1,6 @@
 ## Change log
 
-**This Change log file has been deprecated since version 3.4.\*. Please head over to [Releases](https://github.com/GaurangTandon/ProKeys/releases) to read the latest changes.**
+**This Change log has been deprecated since version 3.4.\*. Please head over to [Releases](https://github.com/GaurangTandon/ProKeys/releases) to read the latest changes.**
 
 Helps organize exactly what things happened in which version.
 
