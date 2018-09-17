@@ -1,10 +1,8 @@
 ## Change log
 
-<sup>cum to-do list</sup>
+**This Change log file has been deprecated since version 3.4.\*. Please head over to [Releases](https://github.com/GaurangTandon/ProKeys/releases) to read the latest changes.**
 
 Helps organize exactly what things happened in which version.
-
-### [**Upcoming**](https://github.com/GaurangTandon/ProKeys/projects/1) <sup>(kanban board for next updates)</sup>
 
 ---
 
