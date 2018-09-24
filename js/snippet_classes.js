@@ -2119,7 +2119,7 @@ window.DualTextbox = function($container, isTryItEditor) {
 	};
 
 	this.setPlainText = function(text) {
-		$textarea.text(text);
+		$textarea.innerHTML = text;
 		return this;
 	};
 
