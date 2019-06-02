@@ -343,7 +343,7 @@ function loadSnippetListIntoBGPage(list) {
 	return Data.snippets;
 }
 
-chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	// when user updates snippet data, reloading page is not required
 	if (typeof request.snippetList !== "undefined") addCtxSnippetList(loadSnippetListIntoBGPage(request.snippetList));
 	else if (request.openBlockSiteModalInParent === true) {

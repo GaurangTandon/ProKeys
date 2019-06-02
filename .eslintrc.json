@@ -13,5 +13,6 @@
         "sourceType": "module"
     },
     "rules": {
+        "quotes": ["error", "double"]
     }
 }

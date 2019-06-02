@@ -121,7 +121,7 @@ window.Generic = function() {
 			var newObject = getClone(object),
 				countersMatch = newObject.name.match(/\d+/g),
 				counter = countersMatch[countersMatch.length - 1];
-			
+
 			object.insertAdjacent(newObject, counter);
 
 			return newObject;
@@ -129,15 +129,15 @@ window.Generic = function() {
 
 		return insertCloneOf(this);
 	};
-	
-	/** 
-	 * @return {Generic} clone of this object 
+
+	/**
+	 * @return {Generic} clone of this object
 	 * (if it is a folder, its snippets' names remain as they were)
 	 */
 	this.getClone = function(){
 		if(this.type === Generic.SNIP_TYPE)
 			return new Snip(this.name, this.body, this.timestamp);
-		
+
 		var clonedFolder = new Folder(this.name, [], this.timestamp);
 		this.list.forEach(function(object) {
 			clonedFolder.list.push(object.getClone());
@@ -159,7 +159,7 @@ window.Generic = function() {
 			thisIndex = thisIndexArray[thisIndexArray.length - 1],
 			parentFolderList = this.getParentFolder().list,
 			posToInsertObject = thisIndex + (stepValue ? +(stepValue) : 1) * (insertBeforeFlag ? 0 : 1);
-			
+
 		parentFolderList.splice(posToInsertObject, 0, newObject);
 		Folder.setIndices();
 	};
@@ -192,7 +192,7 @@ Generic.getDOMElement = function(objectNamesToHighlight) {
 
 	img = q.new("img");
 	img.src = "../imgs/" + this.type + ".svg";
-	
+
 	divMain.appendChild(img);
 
 	// creating the short `div` element
@@ -357,11 +357,11 @@ window.Snip = function(name, body, timestamp) {
 		};
 	};
 
-	this.formatMacros = function(callback) {        
+	this.formatMacros = function(callback) {
 		var embeddedSnippetsList = [this.name],
 			// optimization for more than one embeds of the same snippet
 			embeddingResultsCached = {};
-    
+
 		function embedSnippets(snipBody){
 			return snipBody.replace(/\[\[\%s\((.*?)\)\]\]/g, function(wholeMatch, snipName) {
 				// to avoid circular referencing
@@ -369,7 +369,7 @@ window.Snip = function(name, body, timestamp) {
 
 				var matchedSnip = Data.snippets.getUniqueSnip(snipName),
 					matchedSnipName = matchedSnip && matchedSnip.name;
-        
+
 				if(matchedSnip) {
 					embeddedSnippetsList.push(matchedSnipName);
 					if(embeddingResultsCached[matchedSnipName]){
@@ -383,27 +383,27 @@ window.Snip = function(name, body, timestamp) {
 				}
 			});
 		}
-    
+
 		var MAX_LENGTH = 100;
-    
+
 		function getListTillN(string, delimiter, length, startReplacement) {
 			string = string.replace(new RegExp("^\\" + startReplacement), "");
-    
+
 			var array = string.split(new RegExp("\\" + delimiter, "g")),
 				usefulArray = array.slice(0, length),
 				output = usefulArray.join(delimiter);
-    
+
 			return output ? startReplacement + output : "";
 		}
-    
+
 		function getExactlyNthItem(string, delimiter, index, startReplacement) {
 			return string.replace(new RegExp("^\\" + startReplacement), "").split(delimiter)[index - 1];
 		}
-        
+
 		// snippet embedding shuold be performed first, so that if the newly embedded
 		// snippet body has some macros, they would be evaluated in the below replacements
 		var snipBody = embedSnippets(this.body);
-    
+
 		// Date/Time macro replacement
 		// sameTimeFlag: indicates whether all calculations will be dependent (true)
 		// on each other or independent (false) of each other
@@ -421,9 +421,9 @@ window.Snip = function(name, body, timestamp) {
 				// replacement got involved in dateTime arithmetic
 				// to avoid it; we take a substitute
 				replacedOutput = userInputMacroText;
-    
+
 			sameTimeFlag = !!sameTimeFlag;
-    
+
 			// operate on text (it is the one inside brackets of %d)
 			for (var i = 0, len = Snip.MACROS.length; i < len; i++) {
 				// macros has regex-function pairs
@@ -433,56 +433,56 @@ window.Snip = function(name, body, timestamp) {
 				elm = macro[1];
 				macroFunc = elm[0];
 				dateArithmeticChange = elm[1];
-    
+
 				userInputMacroText.replace(macroRegex, function(match, dateArithmeticMatch) {
 					var timeChange = 0;
-    
+
 					if (dateArithmeticMatch) {
 						dateArithmeticMatch = parseInt(dateArithmeticMatch, 10);
-    
+
 						// if the macro is a month, we need to account for the deviation days being changed
 						if (/M/.test(macroRegexString)) timeChange += Date.getTotalDeviationFrom30DaysMonth(dateArithmeticMatch) * Date.MILLISECONDS_IN_A_DAY;
-    
+
 						timeChange += dateArithmeticChange * dateArithmeticMatch;
 					} else macroRegexString = macroRegexString.replace(/[^a-zA-Z\\\/]/g, "").replace("\\d", "");
-    
+
 					if (sameTimeFlag) date.setTime(date.getTime() + timeChange);
 
 					operableDate = sameTimeFlag ? date : new Date(Date.now() + timeChange);
-    
+
 					replacedOutput = replacedOutput.replace(new RegExp(macroRegexString), macroFunc(operableDate));
 				});
 			}
-    
+
 			return replacedOutput;
 		});
-    
+
 		// browser URL macros
 		snipBody = snipBody.replace(/\[\[\%u\((.*?)\)\]\]/g, function(wholeMatch, query) {
 			var output = "",
 				pathLength = query.match(/(q?)\d+/),
 				searchParamLength = query.match(/q(\d+)/);
-    
+
 			pathLength = !pathLength ? MAX_LENGTH : pathLength[1] ? 0 : +pathLength[0];
 			searchParamLength = !searchParamLength ? 0 : !searchParamLength[1] ? MAX_LENGTH : +searchParamLength[1];
-    
+
 			if (/p/i.test(query)) output += window.location.protocol + "//";
 			if (/w/i.test(query)) output += "www.";
-    
+
 			output += window.location.host;
-    
+
 			output += getListTillN(window.location.pathname, "/", pathLength, "/");
-    
+
 			output += getListTillN(window.location.search, "&", searchParamLength, "?");
-    
+
 			if (/h/i.test(query)) output += window.location.hash;
-    
+
 			return output;
 		});
-    
+
 		snipBody = snipBody.replace(/\[\[\%u\{(\w|\d+|q\d+)\}\]\]/g, function(wholeMatch, query) {
 			var hash;
-    
+
 			if (Number.isInteger(+query)) {
 				return getExactlyNthItem(window.location.pathname, "/", +query, "/");
 			} else if (query === "p") {
@@ -496,9 +496,9 @@ window.Snip = function(name, body, timestamp) {
 				return getExactlyNthItem(window.location.search, "&", +query.substring(1), "?");
 			}
 		});
-    
+
 		if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
-			chrome.extension.sendMessage("givePasteData", function(pasteData) {
+			chrome.runtime.sendMessage("givePasteData", function(pasteData) {
 				callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
 			});
 		} else callback(snipBody);
@@ -711,7 +711,7 @@ Snip.getTimestampString = function(snip) {
 };
 /*
 1. removes and replaces the spammy p nodes with \n
-2. leaves pre, blockquote, u, etc. as it is (since they're useful in markdown) 
+2. leaves pre, blockquote, u, etc. as it is (since they're useful in markdown)
 3. replaces br element with \n
 */
 Snip.makeHTMLSuitableForTextareaThroughString = function(html) {
@@ -875,7 +875,7 @@ Snip.makeHTMLSuitableForTextarea = function(htmlNode) {
 	/*
 	the container consists of top-level elements - p, pre, blockquote, ul, ol (more?)
 	hence, we keep looping while there exist top-level children of container
-	at each iteration, we understand that it is a new line so add the html content 
+	at each iteration, we understand that it is a new line so add the html content
 	of the top-level htmlNode (after a pElementSanitization) along with a `\n`
 	-----
 	single new line is represented by beginning of a new `p`, pre, bq element
@@ -954,7 +954,7 @@ Snip.makeHTMLValidForExternalEmbed = function(html, isListingSnippets) {
 	1. .ql-size-(small|huge|large) to style="font-size: 0.75|1.5|2.5em"
 	2. .ql-font-(monospace|serif) to style="font-family: monospace|serif"
 	3. .ql-align-(justify|center|right) to style="text-align: (same)"
-	4. existing 'style="color/background-color: rgb(...);"' 
+	4. existing 'style="color/background-color: rgb(...);"'
 		remains as is
 
 	Note that these classes aren't necessarily on span elms

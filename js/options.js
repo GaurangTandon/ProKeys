@@ -206,7 +206,7 @@
 			}
 		});
 
-		chrome.extension.sendMessage(msg);
+		chrome.runtime.sendMessage(msg);
 	}
 
 	function removeAutoInsertChar(autoInsertPair) {
@@ -435,18 +435,18 @@
 
 		function convertClipboardPrintSnippetsTextToJSON(string){
 			var time = Date.now(), result = [];
-			
+
 			// different OS have different newline endings
 			// \r\n - Windows; \r - macOS; \n - Linux
 			// https://en.wikipedia.org/wiki/Newline%23Issues_with_different_newline_formats
 			string = string.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 			string += "\n\n";
 			string = string.split(/\n\n--\n\n/gm);
-		
+
 			string.forEach(function(snp) {
 				var idx = snp.indexOf("\n\n"),
 					name = snp.substring(0, idx);
-		
+
 				if (name !== "") {
 					result.push({
 						name: name,
@@ -455,11 +455,11 @@
 					});
 				}
 			});
-		
+
 			result = ["Snippets", time].concat(result);
-		
-			result = JSON.stringify(result, null, 4);	
-		
+
+			result = JSON.stringify(result, null, 4);
+
 			return result;
 		}
 
@@ -726,7 +726,7 @@
 			if (isEditing) $panel.removeClass("creating-new");
 			else $panel.addClass("creating-new");
 
-			/* cleanup  (otherwise abnormal rte swap alerts are received from 
+			/* cleanup  (otherwise abnormal rte swap alerts are received from
 					userAllowsToLoseFormattingOnSwapToTextarea method when we
 					later would load another snippet)*/
 			dualSnippetEditorObj.setPlainText("").setRichText("");
@@ -770,7 +770,7 @@
 
 	/** functions common to snip and folder
      * @param {String} panelName snip or folder only
-     * @returns {Function} 
+     * @returns {Function}
      */
 	function commonValidation(panelName) {
 		var panel = qClsSingle("panel_" + panelName + "_edit");
@@ -853,12 +853,12 @@
 			qClsSingle("bytesAvailable").html(roundByteSize(bytesAvailable));
 		});
 	}
-    
+
 	/**
      *
      * @param {String} type the Generic snip or folder type
      */
-	function handlerSaveObject(type){		
+	function handlerSaveObject(type){
 		var validationFunc = type === Generic.SNIP_TYPE ? validateSnippetData : validateFolderData;
 		// once checked, now can mutate type as per need
 		type = type[0].toUpperCase() + type.substr(1).toLowerCase();
@@ -866,18 +866,18 @@
 		return function(){
 			return validationFunc(function(oldName, name, body, newParentfolder) {
 				var object, oldParentFolder, movedObject;
-    
+
 				if (oldName) {
 					object = Data.snippets["getUnique" + type](oldName);
 					oldParentFolder = object.getParentFolder();
-    
+
 					if (newParentfolder.name !== oldParentFolder.name) {
 						// first move that object; before changing its name/body
 						movedObject = object.moveTo(newParentfolder);
-    
+
 						movedObject.name = name;
 						if (type === "Snip") movedObject.body = body;
-    
+
 						latestRevisionLabel =
                             "moved \"" + name + "\" " + movedObject.type + " to \"" + newParentfolder.name + "\"";
 						saveSnippetData(undefined, newParentfolder.name, name);
@@ -887,17 +887,17 @@
 		};
 	}
 
-	function init() {        
+	function init() {
 		// needs to be set before database actions
 		$panelSnippets = qClsSingle("panel_snippets");
 		$containerSnippets = $panelSnippets.qClsSingle("panel_content");
 		// initialized here; but used in snippet_classes.js
 		$containerFolderPath = $panelSnippets.qClsSingle("folder_path");
-        
+
 		$snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
 		$tabKeyInput = qId("tabKey");
 		$snipNameDelimiterListDIV = qClsSingle("delimiter_list");
-		
+
 		if (!pk.DB_loaded) {
 			setTimeout(DB_load, 100, DBLoadCallback);
 			return;
@@ -1002,11 +1002,11 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						len = URLs.length,
 						URL,
 						sanitizedURL;
-						
+
 					Data.blockedSites = []; // reset
-					
+
 					for (; i < len; i++) {
-						URL = URLs[i].trim();					
+						URL = URLs[i].trim();
 						sanitizedURL = sanitizeSiteURLForBlock(URL);
 
 						if(sanitizedURL === false) return;
@@ -1115,7 +1115,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			validateSnippetData = commonValidation(Generic.SNIP_TYPE);
 			validateFolderData = commonValidation(Generic.FOLDER_TYPE);
 			toggleSnippetEditPanel = setupEditPanel(Generic.SNIP_TYPE);
-			toggleFolderEditPanel = setupEditPanel(Generic.FOLDER_TYPE);			
+			toggleFolderEditPanel = setupEditPanel(Generic.FOLDER_TYPE);
 
 			dualSnippetEditorObj = new DualTextbox(qId("body-editor"));
 
@@ -1156,7 +1156,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			/**
 			 * checks if the text typed in the panel is unedited or edited
 			 * @param {Element} $panel the snippet or folder panel being edited
-			 * @param {Element} $objectName the input element containing the object name 
+			 * @param {Element} $objectName the input element containing the object name
 			 */
 			function userHasEditedTextPresentInPanel($panel, $objectName){
 				var $body = $panel.qClsSingle("body"),
@@ -1356,7 +1356,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 						DOMcontainer = Folder.insertBulkActionDOM(originalShownFolder);
 
 						$bulkActionPanel.dataset.originalShownFolderName = originalShownFolderName;
-					
+
 						DOMcontainer.on("click", function(event){
 							var nodeClicked = event.target,
 								parentGeneric = nodeClicked.matches(".generic") ?
@@ -1486,7 +1486,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
 			Data.snippets.listSnippets();
 
-			/* executed in the very end since saveOtherData async and 
+			/* executed in the very end since saveOtherData async and
 				stringifies data.snippets*/
 			// till now, we don't have any use for data.visited
 			// variable in any file; but still keeping it just in case
@@ -1600,7 +1600,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			copyToClipboardLink.on("click", function(){
 				pk.copyTextToClipboard(dataToExport);
 			});
-			
+
 			Q(".export input").on("change", showDataForExport);
 
 			function setupImportPopup() {
@@ -1741,8 +1741,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			 * exit the method. We only need to catch events on the other keys.
 			 * NOW:
 			 * we originally used keyups because keydown event fired multiple times
-			 * if key was held. but tracking keyup is difficult because of the above problem 
-			 * as well as the fact that the output would be different if the user lifted the 
+			 * if key was held. but tracking keyup is difficult because of the above problem
+			 * as well as the fact that the output would be different if the user lifted the
 			 * shiftkey first or the space key first (when trying to set the hotkey to
 			 * Shift+Space)
 			 * Hence, we finally use this new solution.
@@ -1826,7 +1826,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 	function setEssentialItemsOnDBLoad() {
 		// user installs extension; set ls prop
 		var firstInstall = localStorage.firstInstall === "true";
-		
+
 		if (firstInstall) {
 			// refer github issues#4
 			Data.dataUpdateVariable = !Data.dataUpdateVariable;
@@ -1836,12 +1836,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			Data.snippets = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS.snippets));
 			saveRevision(Data.snippets);
 		}
-	
+
 		if (!pk.isObject(Data.snippets)) Data.snippets = Folder.fromArray(Data.snippets);
-		
+
 		// save the default snippets ONLY
 		if (firstInstall) saveSnippetData();
-		
+
 		Folder.setIndices();
 
 		var propertiesChanged = ensureRobustCompat(Data);
