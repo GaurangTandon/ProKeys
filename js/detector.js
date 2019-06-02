@@ -18,7 +18,7 @@
 
 	var isGoogle,
 		isGmail,
-		/* should be "span"; if "p" is used, then it gets appended inside 
+		/* should be "span"; if "p" is used, then it gets appended inside
 			another "p" which the webpage was using. this can cause styling
 			problems for that rich editor */
 		TAGNAME_SNIPPET_HOLDER_ELM = "SPAN",
@@ -81,17 +81,17 @@
 	}
 
 	function initiateIframeCheck(parentDoc) {
-		var iframes = parentDoc.querySelectorAll("iframe"),			
+		var iframes = parentDoc.querySelectorAll("iframe"),
 			doc;
 
 		iframes.forEach(function(iframe) {
 			iframe.on("load", onIFrameLoad);
 			doc = iframe.contentDocument;
-			
+
 			if(doc && doc.readyState === "complete"){
 				onIFrameLoad(iframe);
 			}
-		});			
+		});
 	}
 
 	// in certain web apps, like mailchimp
@@ -160,7 +160,7 @@
 				.replace(/\[\[%c(\(.*?\))?\]\]/g, function(wholeMatch){
 					return "<span class=\"" + Snip.CARET_POSITION_CLASS + "\">" + wholeMatch + "</span>";
 				});
-			
+
 			debugLog("prepared snippet body for CE node\n", snipBody);
 
 			callback(snipBody);
@@ -179,7 +179,7 @@
 		prepareSnippetBodyForCENode(snip, node, function(snipBody) {
 			var snipElmNode = q.new(TAGNAME_SNIPPET_HOLDER_ELM);
 			snipElmNode.html(snipBody).addClass(SPAN_CLASS); // identification
-			
+
 			range.insertNode(snipElmNode);
 
 			populatePlaceholderObject(snipElmNode);
@@ -576,7 +576,7 @@
 	/**
 	 * issues#106
 	 * @param {Element} textarea in which keydown is simulated
-	
+
 	function simulateTextareaKeydown(textarea) {
 		textarea.focus();
 		document.execCommand("insertText", false, "a");
@@ -1006,7 +1006,7 @@
 		win.addEventListener("contextmenu", function(event) {
 			ctxElm = event.target;
 			ctxTimestamp = Date.now();
-			chrome.runtime.sendMessage({ ctxTimestamp: ctxTimestamp });
+			chrome.runtime.sendMessage({ ctxTimestamp: ctxTimestamp }, pk.checkRuntimeError("attachHandlers"));
 		});
 
 		win.addEventListener("error", function(event) {
@@ -1070,7 +1070,7 @@
 			// ctxElm condition just to make sure that
 			// the modal only appears in the window from where the block form intiated
 			else if (request.task === "showModal" && ctxElm) {
-				if (PAGE_IS_IFRAME) chrome.runtime.sendMessage({ openBlockSiteModalInParent: true, data: request });
+				if (PAGE_IS_IFRAME) chrome.runtime.sendMessage({ openBlockSiteModalInParent: true, data: request }, pk.checkRuntimeError("showModal"));
 				else pk.showBlockSiteModal(request);
 			} else if (typeof request.clickedSnippet !== "undefined") {
 				timestamp = parseInt(request.ctxTimestamp, 10);
@@ -1090,7 +1090,7 @@
 
 		// do not operate on blocked sites
 		if (isBlocked) return true;
-		
+
 		setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);
 		pk.updateAllValuesPerWin(window);
 		debugLog("done initializing");
@@ -1098,4 +1098,4 @@
 		window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
 		window.isGmail = /mail\.google/.test(window.location.href);
 	}
-})();
+}());

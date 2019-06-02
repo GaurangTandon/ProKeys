@@ -615,14 +615,21 @@ var extendNodePrototype;
 		return false;
 	};
 
-	pk.checkRuntimeError = function() {
-		if (chrome.runtime.lastError) {
-			alert(
-				"An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!"
-			);
-			console.log(chrome.runtime.lastError);
-			return true;
-		}
+	/*	stack trace may sometimes not be beneficial, therefore
+		use a unique identifier to track down the culprit */
+	pk.checkRuntimeError = function(unique_identifier) {
+		return function(){
+			if (chrome.runtime.lastError) {
+				// TODO: remove
+				// alert(
+				// 	"An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!"
+				// );
+				console.log(chrome.runtime.lastError);
+				console.trace();
+				console.log(unique_identifier);
+				return true;
+			}
+		};
 	};
 
 	// Returns a function, that, as long as it continues to be invoked, will not

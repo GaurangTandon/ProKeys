@@ -499,6 +499,7 @@ window.Snip = function(name, body, timestamp) {
 
 		if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
 			chrome.runtime.sendMessage("givePasteData", function(pasteData) {
+				pk.checkRuntimeError("givePasteData")();
 				callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
 			});
 		} else callback(snipBody);

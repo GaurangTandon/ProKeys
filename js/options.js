@@ -201,11 +201,11 @@
 			for (var i = 0, len = tabs.length; i < len; i++) {
 				tab = tabs[i];
 				if (!window.pk.isTabSafe(tab)) continue;
-				chrome.tabs.sendMessage(tab.id, msg);
+				chrome.tabs.sendMessage(tab.id, msg,pk.checkRuntimeError("notifySnippetDataChanges-innerloop"));
 			}
 		});
 
-		chrome.runtime.sendMessage(msg);
+		chrome.runtime.sendMessage(msg, pk.checkRuntimeError("notifySnippetDataChanges"));
 	}
 
 	function removeAutoInsertChar(autoInsertPair) {

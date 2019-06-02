@@ -215,7 +215,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 
 		chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
 			if (!window.pk.isTabSafe(tabs[0])) return;
-			chrome.tabs.sendMessage(tabs[0].id, msg);
+			chrome.tabs.sendMessage(tabs[0].id, msg,pk.checkRuntimeError("ID==BSI"));
 		});
 	} else if (Generic.CTX_SNIP_REGEX.test(id)) {
 		startIndex = Generic.CTX_START[Generic.SNIP_TYPE].length;
@@ -226,7 +226,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 				chrome.tabs.sendMessage(tabs[0].id, {
 					clickedSnippet: snip.toArray(),
 					ctxTimestamp: latestCtxTimestamp
-				});
+				}, pk.checkRuntimeError("CSRTI"));
 		});
 	}
 });
@@ -253,8 +253,8 @@ function updateContextMenu(isRecalled) {
 
 		if (typeof tabs[0] === "undefined") return;
 		if (!window.pk.isTabSafe(tabs[0])) return;
-		console.log(tabs[0]);
 		chrome.tabs.sendMessage(tabs[0].id, { checkBlockedYourself: true }, function(response) {
+			if(pk.checkRuntimeError("CBY")()) return;
 			isBlocked = response;
 
 			contextMenuActionBlockSite =
@@ -287,6 +287,7 @@ function updateContextMenu(isRecalled) {
 		if (needToGetLatestData) {
 			if (window.pk.isTabSafe(tabs[0]))
 				chrome.tabs.sendMessage(tabs[0].id, { giveSnippetList: true }, function(response) {
+					if(pk.checkRuntimeError("GSL")()) return;
 					if (Array.isArray(response)) {
 						needToGetLatestData = false;
 						loadSnippetListIntoBGPage(response);
@@ -353,7 +354,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 		chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
 			var tab = tabs[0];
 			if (window.pk.isTabSafe(tab))
-				chrome.tabs.sendMessage(tab.id, { showBlockSiteModal: true, data: request.data });
+				chrome.tabs.sendMessage(tab.id, { showBlockSiteModal: true, data: request.data }, pk.checkRuntimeError("OBSMIP"));
 		});
 	} else if (typeof request.ctxTimestamp !== "undefined") latestCtxTimestamp = request.ctxTimestamp;
 	else if (request === "givePasteData") sendResponse(getPasteData());
