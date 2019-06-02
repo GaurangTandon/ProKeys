@@ -1058,7 +1058,7 @@
 		}
 
 		var isBlocked = isBlockedSite(URL);
-
+		console.log(Data);
 		chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 			var timestamp;
 

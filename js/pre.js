@@ -49,8 +49,8 @@ var extendNodePrototype;
 	}
 }());
 
-(function() {
-	var DEBUGGING = false;
+(function () {
+    const DEBUGGING = true;
 
 	pk.OBJECT_NAME_LIMIT = 30;
 	Date.MONTHS = [
@@ -65,7 +65,7 @@ var extendNodePrototype;
 		"September",
 		"October",
 		"November",
-		"December"
+        "December"
 	];
 	Date.DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 	Date.MILLISECONDS_IN_A_DAY = 86400 * 1000;
