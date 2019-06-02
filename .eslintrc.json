@@ -1,7 +1,8 @@
 {
     "env": {
         "browser": true,
-        "es6": true
+        "es6": true,
+        "webextensions": true
     },
     "extends": "airbnb-base",
     "globals": {
@@ -14,6 +15,14 @@
     },
     "rules": {
         "quotes": ["error", "double"],
-        "indent": ["error", 4]
+        "indent": ["error", 4],
+        "curly": ["error", "all"],
+        "func-names": "off",
+        "no-multi-assign": "off",
+        "no-plusplus": "off",
+        "no-magic-numbers": "error",
+        "no-param-reassign": "off",
+        "no-extend-native": "off",
+        "one-var": ["error", "consecutive"]
     }
 }
