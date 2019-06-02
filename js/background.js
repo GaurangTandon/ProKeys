@@ -214,6 +214,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 		};
 
 		chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+			if (!window.pk.isTabSafe(tabs[0])) return;
 			chrome.tabs.sendMessage(tabs[0].id, msg);
 		});
 	} else if (Generic.CTX_SNIP_REGEX.test(id)) {
@@ -221,7 +222,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 		snip = Data.snippets.getUniqueSnip(id.substring(startIndex));
 
 		chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-			if (tabs[0])
+			if (window.pk.isTabSafe(tabs[0]))
 				chrome.tabs.sendMessage(tabs[0].id, {
 					clickedSnippet: snip.toArray(),
 					ctxTimestamp: latestCtxTimestamp
@@ -251,7 +252,8 @@ function updateContextMenu(isRecalled) {
 		var isBlocked;
 
 		if (typeof tabs[0] === "undefined") return;
-
+		if (!window.pk.isTabSafe(tabs[0])) return;
+		console.log(tabs[0]);
 		chrome.tabs.sendMessage(tabs[0].id, { checkBlockedYourself: true }, function(response) {
 			isBlocked = response;
 
@@ -283,13 +285,14 @@ function updateContextMenu(isRecalled) {
 		});
 
 		if (needToGetLatestData) {
-			chrome.tabs.sendMessage(tabs[0].id, { giveSnippetList: true }, function(response) {
-				if (Array.isArray(response)) {
-					needToGetLatestData = false;
-					loadSnippetListIntoBGPage(response);
-					addCtxSnippetList();
-				}
-			});
+			if (window.pk.isTabSafe(tabs[0]))
+				chrome.tabs.sendMessage(tabs[0].id, { giveSnippetList: true }, function(response) {
+					if (Array.isArray(response)) {
+						needToGetLatestData = false;
+						loadSnippetListIntoBGPage(response);
+						addCtxSnippetList();
+					}
+				});
 		}
 	});
 }
@@ -349,8 +352,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	else if (request.openBlockSiteModalInParent === true) {
 		chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
 			var tab = tabs[0];
-
-			chrome.tabs.sendMessage(tab.id, { showBlockSiteModal: true, data: request.data });
+			if (window.pk.isTabSafe(tab))
+				chrome.tabs.sendMessage(tab.id, { showBlockSiteModal: true, data: request.data });
 		});
 	} else if (typeof request.ctxTimestamp !== "undefined") latestCtxTimestamp = request.ctxTimestamp;
 	else if (request === "givePasteData") sendResponse(getPasteData());

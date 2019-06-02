@@ -200,8 +200,7 @@
 
 			for (var i = 0, len = tabs.length; i < len; i++) {
 				tab = tabs[i];
-				if (!tab || !tab.id) continue;
-
+				if (!window.pk.isTabSafe(tab)) continue;
 				chrome.tabs.sendMessage(tab.id, msg);
 			}
 		});
@@ -1900,4 +1899,4 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 			Folder.implementChevronInFolderPath();
 		}, 300));
 	}
-})();
+}());

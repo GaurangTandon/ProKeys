@@ -47,7 +47,7 @@ var extendNodePrototype;
 
 		win.Node.prototype[prop] = func;
 	}
-})();
+}());
 
 (function() {
 	var DEBUGGING = false;
@@ -712,4 +712,11 @@ var extendNodePrototype;
 	};
 
 	pk.updateAllValuesPerWin(window);
-})();
+
+	// attempting to send a message to a tab on chrome:// or webstore
+	// page will fail with this error because no content script is running there
+	// see https://stackoverflow.com/a/11911806
+	pk.isTabSafe = function(tab){
+		return (tab && tab.id && tab.url && !/^chrome:/.test(tab.url) && !/^https?:\/\/chrome\.google\.com/.test(tab.url));
+	};
+}());
