@@ -784,6 +784,7 @@ let extendNodePrototype;
             tab
             && tab.id
             && tab.url
+            && !/^chrome-extension:/.test(tab.url)
             && !/^chrome:/.test(tab.url)
             && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
         );
