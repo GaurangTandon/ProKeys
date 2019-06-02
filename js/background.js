@@ -1,4 +1,4 @@
-/* global q, Folder, Data, Generic, chrome , modalHTML, listOfSnippetCtxIDs */
+/* global q, Folder, Data, Generic, chrome , modalHTML, listOfSnippetCtxIDs, pk */
 console.log(`Loaded once ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
     // can recall at max 10 times
