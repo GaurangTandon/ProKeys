@@ -116,7 +116,10 @@ chrome.omnibox.onInputChanged.addListener((text, suggestCallback) => {
     currentOmniboxQuery = text;
 
     Data.snippets.filterSnippetsForOmnibox(text, ([defSuggest, ...otherSuggests]) => {
-        defaultOmniboxSuggestion = defSuggest;
+        // {} when user entered text does not match any snippet content
+        defaultOmniboxSuggestion = defSuggest || {
+            description: "Sorry, entered text did not match any existing snippet",
+        };
 
         chrome.omnibox.setDefaultSuggestion({
             description: defaultOmniboxSuggestion.description,
@@ -316,7 +319,6 @@ function updateContextMenu(isRecalled) {
 
         if (needToGetLatestData) {
             chrome.tabs.sendMessage(tabs[0].id, { giveSnippetList: true }, (response) => {
-                console.log("Attempt to update");
                 if (pk.checkRuntimeError("GSL")()) {
                     return;
                 }
