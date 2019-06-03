@@ -100,6 +100,11 @@
         }
     }
 
+    /**
+     * This function isn't loaded by options page
+     * Whatever you do here, please duplicate it on the
+     * options.js page analogue of this function too
+     */
     function setEssentialItemsOnDBLoad() {
         pk.DB_loaded = true;
         Data.snippets = Folder.fromArray(Data.snippets);
