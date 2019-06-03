@@ -1173,7 +1173,6 @@
         }
 
         const isBlocked = isBlockedSite(URL);
-        console.log(Data);
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             let timestamp;
 

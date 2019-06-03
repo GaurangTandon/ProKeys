@@ -139,16 +139,16 @@ chrome.omnibox.onInputEntered.addListener((omniboxText, disposition) => {
 
 // create modal dialog for blocking site by detector.js
 (function createBlockSiteModal() {
-    const modalContent = `<div class='prokeys-block block-theme-plain'>
-        <div class='block-overlay'></div>
-        <div class='block-content'>
-            <div class='block-dialog-form'>
-                <div class='block-dialog-message'>Are you sure you want to <span class='action'></span><br> <input type='text' class='site-name'><br> from ProKeys?</div>
-                <div class='block-dialog-buttons'>
-                    <input type='button' value='OK' class='block-dialog-button-primary block-dialog-button'>
-                    <input type='button' value='Cancel' class='block-dialog-button-secondary block-dialog-button'> </div>
-            </div>
-        </div></div>`;
+    const modalContent = "<div class='prokeys-block block-theme-plain'>"
+        + "<div class='block-overlay'></div>"
+        + "<div class='block-content'>"
+        + "<div class='block-dialog-form'>"
+        + "<div class='block-dialog-message'>Are you sure you want to <span class='action'></span><br> <input type='text' class='site-name'><br> from ProKeys?</div>"
+        + "<div class='block-dialog-buttons'>"
+        + "<input type='button' value='OK' class='block-dialog-button-primary block-dialog-button'>"
+        + "<input type='button' value='Cancel' class='block-dialog-button-secondary block-dialog-button'> </div>"
+        + "</div>"
+        + "</div></div>";
 
     window.modalHTML = modalContent;
 }());
