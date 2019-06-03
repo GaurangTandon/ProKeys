@@ -273,9 +273,6 @@ function updateContextMenu(isRecalled) {
         const tab = tabs[0];
         let isBlocked;
 
-        if (typeof tab === "undefined") {
-            return;
-        }
         if (!window.pk.isTabSafe(tab)) {
             return;
         }
@@ -385,17 +382,24 @@ chrome.contextMenus.onClicked.addListener((info) => {
     }
 });
 
-chrome.tabs.onActivated.addListener((info) => {
-    updateContextMenu();
-});
-
-chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+function onActivatedOrUpdated() {
+    const IMG_ACTIVE = "../imgs/r16.png",
+        IMG_INACTIVE = "../imgs/r16grey.png";
+    let path = "";
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (pk.isTabSafe(tabs[0])) {
-            updateContextMenu();
+            path = IMG_ACTIVE;
+        } else {
+            path = IMG_INACTIVE;
         }
+        chrome.browserAction.setIcon({ path });
     });
-});
+    updateContextMenu();
+}
+
+chrome.tabs.onActivated.addListener(onActivatedOrUpdated);
+
+chrome.tabs.onUpdated.addListener(onActivatedOrUpdated);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // when user updates snippet data, reloading page is not required
