@@ -74,9 +74,9 @@ function injectScript(tab) {
     // loop through content scripts and execute in order
     const contentScripts = chrome.runtime.getManifest().content_scripts[0].js;
 
-    for (let i = 0, len = contentScripts.length; i < len; i++) {
+    for (const cs of contentScripts) {
         chrome.tabs.executeScript(tab.id, {
-            file: contentScripts[i],
+            file: cs,
         });
     }
 }
@@ -181,7 +181,10 @@ function addCtxSnippetList(snippets) {
             () => {
                 if (chrome.runtime.lastError) {
                     // already exists, so first remove it
-                    chrome.contextMenus.remove(SNIPPET_MAIN_ID);
+                    chrome.contextMenus.remove(
+                        SNIPPET_MAIN_ID,
+                        pk.checkRuntimeError("CTX-CREATE-REM"),
+                    );
                     addMainEntry();
                 }
             },
@@ -204,6 +207,7 @@ chrome.runtime.onInstalled.addListener((details) => {
         title;
     const { reason } = details,
         { version } = chrome.runtime.getManifest();
+    console.log(Data.snippets);
 
     if (reason === "install") {
         localStorage.firstInstall = "true";
@@ -260,15 +264,16 @@ function updateContextMenu(isRecalled) {
     }
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
         let isBlocked;
 
-        if (typeof tabs[0] === "undefined") {
+        if (typeof tab === "undefined") {
             return;
         }
-        if (!window.pk.isTabSafe(tabs[0])) {
+        if (!window.pk.isTabSafe(tab)) {
             return;
         }
-        chrome.tabs.sendMessage(tabs[0].id, { checkBlockedYourself: true }, (response) => {
+        chrome.tabs.sendMessage(tab.id, { checkBlockedYourself: true }, (response) => {
             if (pk.checkRuntimeError("CBY")()) {
                 return;
             }
@@ -307,18 +312,17 @@ function updateContextMenu(isRecalled) {
         });
 
         if (needToGetLatestData) {
-            if (window.pk.isTabSafe(tabs[0])) {
-                chrome.tabs.sendMessage(tabs[0].id, { giveSnippetList: true }, (response) => {
-                    if (pk.checkRuntimeError("GSL")()) {
-                        return;
-                    }
-                    if (Array.isArray(response)) {
-                        needToGetLatestData = false;
-                        loadSnippetListIntoBGPage(response);
-                        addCtxSnippetList();
-                    }
-                });
-            }
+            chrome.tabs.sendMessage(tabs[0].id, { giveSnippetList: true }, (response) => {
+                console.log("Attempt to update");
+                if (pk.checkRuntimeError("GSL")()) {
+                    return;
+                }
+                if (Array.isArray(response)) {
+                    needToGetLatestData = false;
+                    loadSnippetListIntoBGPage(response);
+                    addCtxSnippetList();
+                }
+            });
         }
     });
 }
@@ -331,7 +335,7 @@ try {
 
 createBlockSiteCtxItem();
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener((info) => {
     const id = info.menuItemId,
         url = info.pageUrl;
     let msg,
@@ -357,16 +361,17 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         snip = Data.snippets.getUniqueSnip(id.substring(startIndex));
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (window.pk.isTabSafe(tabs[0])) {
+            const tab = tabs[0];
+            if (window.pk.isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
-                    tabs[0].id,
+                    tab.id,
                     {
                         clickedSnippet: snip.toArray(),
                         ctxTimestamp: latestCtxTimestamp,
                     },
                     pk.checkRuntimeError("CSRTI"),
                 );
-            } else if (tabs[0].url) {
+            } else if (tab.url) {
                 alert(
                     "Sorry, context menu insertion doesn't work in the chrome:// tabs or in the Webstore!",
                 );

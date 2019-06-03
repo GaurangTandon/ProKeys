@@ -26,6 +26,7 @@
         "one-var": ["error", "consecutive"],
         "prefer-const": "warn",
         "no-global-assign": "warn",
-        "no-tabs": "warn"
+        "no-tabs": "warn",
+        "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"]
     }
 }
