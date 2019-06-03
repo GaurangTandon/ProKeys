@@ -76,7 +76,7 @@ Helps organize exactly what things happened in which version.
 **3.0.0** - 27/May/2016
 
 -   made snippet handling OOP, added folder suppet
--   logo redesign (thanks [Varun](https://plus.google.com/+VarunSingh000/posts)!)
+-   logo redesign (thanks [Varun](https://github.com/iWrote)!)
 -   removed snippets popup, listing snippets in options page now
 -   completely redesigned the options page, made responsive till 200% zoom
 -   fixed: https://github.com/GaurangTandon/ProKeys/issues/3
@@ -133,7 +133,6 @@ Helps organize exactly what things happened in which version.
 
 -   shorter image names
 -   minified images - saving nearly 10 KB :)
--   new Google Plus logo in About page
 -   fix for [excessive CPU usage issue](https://github.com/GaurangTandon/ProKeys/issues/3)
 -   disabled ProKeys for input boxes using ReactJS (they possess `reactid` in `dataset`)
 -   refactored detector.js code and others with ESLint

@@ -58,7 +58,7 @@ pre {
 
 div {
     /* useful for the SVG icons that are added later */
-    /* not fixing the broken selector because there is no other 
+    /* not fixing the broken selector because there is no other
     way to select all those icons at once while being DRY*/
     background-repeat: no-repeat !important;
     background-position: center !important;
@@ -561,8 +561,8 @@ footer {
     width: 95%;
     /*height: 210px;*/
     border: 1px solid grey;
-    /*if we allow resize horizontal, then on horizontal resize, the new value of width 
-	would be set inside element.style property and on maximizing/smalling the window, 
+    /*if we allow resize horizontal, then on horizontal resize, the new value of width
+	would be set inside element.style property and on maximizing/smalling the window,
 	responsive css code would not work and element would retain the fixed with value set in
 	element.style prop.
     resize: vertical;
@@ -596,7 +596,7 @@ footer {
 
 .dualBoxContainer > .show {
     display: block;
-    /*don't add height here since textarea isa .show elm but 
+    /*don't add height here since textarea isa .show elm but
 	the .ql-container is not. It is nested inside a .show elm*/
     width: 100%;
     box-sizing: border-box;
@@ -645,7 +645,6 @@ footer {
     margin: 10px auto;
 }
 
-.g-plus,
 .fb-share,
 .tw-share {
     width: 40px;
@@ -663,10 +662,6 @@ footer {
 
 .fb-share {
     background-image: url("../imgs/fb.svg");
-}
-
-.g-plus {
-    background-image: url("../imgs/g.svg");
 }
 
 #about .buttons a {
@@ -926,7 +921,6 @@ footer {
         font-size: 55px;
     }
 
-    .g-plus img,
     .fb-share,
     .tw-share {
         width: 55px;
