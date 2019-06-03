@@ -679,7 +679,6 @@ let extendNodePrototype;
                 // Chrome.Runtime.LastError:, do not use .error() as it prints
                 // out too many red messages :(
                 console.log(`CRLError (${uniqueIdentifier}): ${chrome.runtime.lastError.message}`);
-                console.trace();
                 return true;
             }
             return false;

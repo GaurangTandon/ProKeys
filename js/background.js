@@ -81,6 +81,14 @@ function injectScript(tab) {
     }
 }
 
+// helps inject script into all active tabs
+// so that user is not required to do manual reload
+function injectScriptAllTabs() {
+    chrome.tabs.query({}, (tabs) => {
+        tabs.forEach(injectScript);
+    });
+}
+
 function createBlockSiteCtxItem() {
     chrome.contextMenus.create(
         {
@@ -207,7 +215,6 @@ chrome.runtime.onInstalled.addListener((details) => {
         title;
     const { reason } = details,
         { version } = chrome.runtime.getManifest();
-    console.log(Data.snippets);
 
     if (reason === "install") {
         localStorage.firstInstall = "true";
@@ -216,18 +223,14 @@ chrome.runtime.onInstalled.addListener((details) => {
 
         title = "ProKeys successfully installed!";
         text = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
-
-        // inject script into all active tabs
-        // so that user is not required to do manual reload
-        chrome.tabs.query({}, (tabs) => {
-            tabs.forEach(injectScript);
-        });
+        injectScriptAllTabs();
     } else if (reason === "update") {
         title = `ProKeys updated to v${version}`;
         text = "Hooray! Please reload active tabs to use the new version.";
 
         openSnippetsPage(version, reason);
         needToGetLatestData = true;
+        injectScriptAllTabs();
         addCtxSnippetList();
     }
 
