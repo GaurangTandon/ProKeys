@@ -366,6 +366,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
                     },
                     pk.checkRuntimeError("CSRTI"),
                 );
+            } else if (tabs[0].url) {
+                alert(
+                    "Sorry, context menu insertion doesn't work in the chrome:// tabs or in the Webstore!",
+                );
             }
         });
     }

@@ -676,7 +676,7 @@ let extendNodePrototype;
                 // alert(
                 // "An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!"
                 // );
-                console.log(chrome.runtime.lastError);
+                console.error(chrome.runtime.lastError.message);
                 console.trace();
                 console.log(uniqueIdentifier);
                 return true;
