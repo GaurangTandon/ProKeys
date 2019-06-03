@@ -69,7 +69,7 @@ let extendNodePrototype;
     ];
     Date.DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     Date.MILLISECONDS_IN_A_DAY = 86400 * 1000;
-    Object.setPrototypeOf(NodeList, Array);
+    NodeList.prototype.__proto__ = Array.prototype;
 
     Date.prototype.isLeapYear = function () {
         const year = this.getFullYear();
