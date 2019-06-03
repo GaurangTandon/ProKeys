@@ -1706,8 +1706,9 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
             // string to check as we move towards left
             stringToCheck = delimiterChar + stringToCheck;
             delimiterChar = val[pos - 1 - i];
+            snip = this.getUniqueSnip(stringToCheck);
 
-            if ((snip = this.getUniqueSnip(stringToCheck))) {
+            if (snip) {
                 if (Data.matchDelimitedWord && pk.snipNameDelimiterListRegex) {
                     // delimiter char may not exist if snip name
                     // is at the beginning of the textbox
@@ -1723,6 +1724,8 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                     foundSnip = snip;
                 }
             }
+
+            if (foundSnip) { break; }
         }
 
         return foundSnip;

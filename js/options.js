@@ -2089,5 +2089,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 Folder.implementChevronInFolderPath();
             }, 300),
         );
+        pk.snipNameDelimiterListRegex = new RegExp(
+            `[${pk.escapeRegExp(Data.snipNameDelimiterList)}]`,
+        );
     }
 }());
