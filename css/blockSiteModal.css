@@ -2,14 +2,17 @@
     padding-top: 160px;
     padding-bottom: 160px;
     font-size: 14px;
-	position: fixed;
+    position: fixed;
     top: 50px;
     left: 25%;
-	width: 50%;
-	z-index: 1000; /* force on top */
+    width: 50%;
+    z-index: 1000; /* force on top */
 }
 
-.prokeys-block, .prokeys-block *, .prokeys-block ::before, .prokeys-block ::after {
+.prokeys-block,
+.prokeys-block *,
+.prokeys-block ::before,
+.prokeys-block ::after {
     box-sizing: border-box;
 }
 
@@ -25,7 +28,7 @@
 }
 
 .prokeys-block .block-content {
-    font-family: 'Helvetica Neue', sans-serif;
+    font-family: "Helvetica Neue", sans-serif;
     background: white;
     color: rgb(68, 68, 68);
     padding: 1em;
@@ -44,7 +47,7 @@
     margin: 0px;
 }
 
-.prokeys-block .block-dialog-form .site-name{
+.prokeys-block .block-dialog-form .site-name {
     width: 300px;
 }
 
@@ -52,12 +55,13 @@
     margin-bottom: 0.5em;
 }
 
-.prokeys-block .block-dialog-buttons button, .prokeys-block .block-dialog-form input{
-	padding: 5px;
-	color: black;
+.prokeys-block .block-dialog-buttons button,
+.prokeys-block .block-dialog-form input {
+    padding: 5px;
+    color: black;
 }
 
-.prokeys-block .block-dialog-form input{
+.prokeys-block .block-dialog-form input {
     border: 1px solid black;
 }
 
@@ -68,7 +72,7 @@
 }
 
 .prokeys-block .block-dialog-button-primary {
-    background: #C7FF71;
+    background: #c7ff71;
 }
 
 .prokeys-block .block-dialog-button-secondary {
