@@ -15,7 +15,7 @@
     },
     "rules": {
         "quotes": ["error", "double"],
-        "indent": ["error", 4],
+        "indent": ["warn", 4],
         "curly": ["error", "all"],
         "func-names": "off",
         "no-multi-assign": "off",
@@ -25,6 +25,7 @@
         "no-extend-native": "off",
         "one-var": ["error", "consecutive"],
         "prefer-const": "warn",
-        "no-global-assign": "warn"
+        "no-global-assign": "warn",
+        "no-tabs": "warn"
     }
 }

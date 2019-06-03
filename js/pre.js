@@ -73,7 +73,7 @@ let extendNodePrototype;
 
     Date.prototype.isLeapYear = function () {
         const year = this.getFullYear();
-        return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+        return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
     };
 
     Date.getCurrentTimestamp = function () {
@@ -156,7 +156,7 @@ let extendNodePrototype;
         if (hour === 0) {
             return [12, "am"];
         }
-        if (hour == 12) {
+        if (hour === 12) {
             return [12, "pm"];
         }
         if (hour >= 1 && hour < 12) {
@@ -165,8 +165,8 @@ let extendNodePrototype;
         return [hour - 12, "pm"];
     };
 
-    Date.parseDay = function (day_num, type) {
-        return type === "full" ? Date.DAYS[day_num] : Date.DAYS[day_num].slice(0, 3);
+    Date.parseDay = function (dayNum, type) {
+        return type === "full" ? Date.DAYS[dayNum] : Date.DAYS[dayNum].slice(0, 3);
     };
 
     // accepts num (0-11); returns month
@@ -455,7 +455,7 @@ let extendNodePrototype;
 
     pk.getHTML = function (node, prop) {
         if (!node) {
-            return;
+            return undefined;
         }
 
         if (pk.isTextNode(node)) {
@@ -591,7 +591,7 @@ let extendNodePrototype;
     };
 
     pk.escapeRegExp = function (str) {
-        return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+        return str.replace(/[-[\]/{}())*+?.\\^$|]/g, "\\$&");
     };
 
     // prepends 0 to single digit num and returns it
@@ -667,8 +667,8 @@ let extendNodePrototype;
         return false;
     };
 
-    /*	stack trace may sometimes not be beneficial, therefore
-		use a unique identifier to track down the culprit */
+    /*  stack trace may sometimes not be beneficial, therefore
+        use a unique identifier to track down the culprit */
     pk.checkRuntimeError = function (uniqueIdentifier) {
         return function checkREHelper() {
             if (chrome.runtime.lastError) {
