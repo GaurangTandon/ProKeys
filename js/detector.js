@@ -206,6 +206,8 @@
             range.setStart(container, caretPos - snip.name.length);
             range.setEnd(container, caretPos);
             range.deleteContents();
+
+            insertSnippetInContentEditableNode(range, snip, node);
         }
 
         if (!range.collapsed) {
