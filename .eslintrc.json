@@ -20,9 +20,11 @@
         "func-names": "off",
         "no-multi-assign": "off",
         "no-plusplus": "off",
-        "no-magic-numbers": "error",
+        "no-magic-numbers": "warn",
         "no-param-reassign": "off",
         "no-extend-native": "off",
-        "one-var": ["error", "consecutive"]
+        "one-var": ["error", "consecutive"],
+        "prefer-const": "warn",
+        "no-global-assign": "warn"
     }
 }
