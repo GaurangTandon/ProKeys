@@ -24,7 +24,7 @@
         VERSION = chrome.runtime.getManifest().version;
     window.LS_REVISIONS_PROP = "prokeys_revisions";
     window.SHOW_CLASS = "shown";
-    window.IN_OPTIONS_PAGE = true;
+    pk.IN_OPTIONS_PAGE = true;
     window.$containerSnippets = null;
     window.$panelSnippets = null;
     window.$containerFolderPath = null;

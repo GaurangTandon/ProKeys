@@ -1049,11 +1049,10 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
 
     $container.Q("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
 
-    // access by window to get `undefined` and not any error
-    // problem 9 issues#153
-    if (window.isGmail) {
+    if (pk.isGmail) {
         $container
             .Q("blockquote")
+            // problem 9 issues#153
             .addClass("gmail_quote")
             .attr(
                 "style",
@@ -1338,7 +1337,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
     this.isSearchResultFolder = !!isSearchResultFolder;
 
     // only options page mutates list
-    if (window.IN_OPTIONS_PAGE) {
+    if (pk.IN_OPTIONS_PAGE) {
         observeList(this.list);
     }
 
@@ -1822,7 +1821,7 @@ Folder.fromArray = function (arr) {
     folder.list = arr.map(listElm => (Array.isArray(listElm) ? Folder.fromArray(listElm) : Snip.fromObject(listElm)));
 
     // only options page mutates list
-    if (window.IN_OPTIONS_PAGE) {
+    if (pk.IN_OPTIONS_PAGE) {
         observeList(folder.list);
     }
 

@@ -1,7 +1,5 @@
 /* global q, Folder, Snip, chrome, Data, pk, debugLog */
 
-// TODO: clear up properties isGmail from detector.js, and several pre.js properties
-
 (function () {
     let windowLoadChecker = setInterval(() => {
             if (window.document.readyState === "complete") {
@@ -12,8 +10,6 @@
         // //////////////////////
         // Global variables
         // //////////////////////
-
-        isGmail,
         /* should be "span"; if "p" is used, then it gets appended inside
             another "p" which the webpage was using. this can cause styling
             problems for that rich editor */
@@ -1033,7 +1029,7 @@
 
             // [Tab] key for tab spacing/placeholder shifting
             if (keyCode === 9 && metaKeyNotPressed) {
-                if (isGmail && isParent(node, "form")) {
+                if (pk.isGmail && isParent(node, "form")) {
                     // in Gmail, the subject and to address field
                     // should not have any tab function.
                     // These two fields have a "form" as their parent.
@@ -1171,7 +1167,7 @@
             let timestamp;
 
             // when user updates snippet data, reloading page is not required
-            if (typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE) {
+            if (typeof request.snippetList !== "undefined" && !pk.IN_OPTIONS_PAGE) {
                 Data.snippets = Folder.fromArray(request.snippetList);
                 Folder.setIndices();
             } else if (request.checkBlockedYourself) {
@@ -1218,7 +1214,7 @@
         pk.updateAllValuesPerWin(window);
         debugLog("done initializing");
 
-        window.isGmail = /mail\.google/.test(window.location.href);
+        pk.isGmail = /mail\.google/.test(window.location.href);
     }
 
     function setEssentialItemsOnDBLoad() {
