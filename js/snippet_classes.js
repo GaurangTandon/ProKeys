@@ -1,6 +1,6 @@
 /* global q, chrome, pk */
 /* global Folder, Data, Snip, Generic, saveSnippetData */
-/* global Quill, $containerFolderPath, $containerSnippets, listOfSnippetCtxIDs */
+/* global Quill, $containerFolderPath, $containerSnippets */
 
 /* this file is loaded both as a content script
     as well as a background page */
@@ -1755,7 +1755,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                 },
             );
 
-            listOfSnippetCtxIDs.push(id);
+            pk.listOfSnippetCtxIDs.push(id);
 
             if (Folder.isFolder(object)) {
                 object.createCtxMenuEntry(id);
@@ -1775,7 +1775,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                 pk.checkRuntimeError("SCJS-CTX-CRE"),
             );
 
-            listOfSnippetCtxIDs.push(id);
+            pk.listOfSnippetCtxIDs.push(id);
         }
     };
 
@@ -2337,11 +2337,11 @@ function observeList(list) {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: (function (prop) {
+            value: (function (property) {
                 return function (...args) {
                     // do not use list[prop] because it is already overwritten
                     // and so will lead to inifinite recursion
-                    const ret = [][prop].apply(list, args);
+                    const ret = [][property].apply(list, args);
                     Folder.setIndices();
                     return ret;
                 };

@@ -1,4 +1,4 @@
-/* global q, Folder, Data, Generic, chrome , modalHTML, listOfSnippetCtxIDs, pk */
+/* global q, Folder, Data, Generic, chrome, pk */
 console.log(`Loaded once ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
     // can recall at max 10 times
@@ -17,16 +17,15 @@ let contextMenuActionBlockSite,
     // this helps remove the ambiguity as to which one was latest
     // storing it in background.js so as to provide a global one-stop center
     // content scripts, which cannot interact among themselves
-    latestCtxTimestamp;
+    latestCtxTimestamp,
+    modalHTML;
 
-// for pre.js
-window.IN_BG_PAGE = true;
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
 window.Data = {};
 Data.snippets = new Folder("Snippets");
 Data.ctxEnabled = true;
-window.listOfSnippetCtxIDs = [];
+pk.listOfSnippetCtxIDs = [];
 
 Folder.setIndices();
 
@@ -180,7 +179,7 @@ chrome.omnibox.onInputEntered.addListener((omniboxText, disposition) => {
         + "</div>"
         + "</div></div>";
 
-    window.modalHTML = modalContent;
+    modalHTML = modalContent;
 }());
 
 let removeCtxSnippetList,
@@ -189,8 +188,8 @@ let removeCtxSnippetList,
     let cachedSnippetList = "",
         defaultEntryExists = false;
     removeCtxSnippetList = function () {
-        while (listOfSnippetCtxIDs.length > 0) {
-            chrome.contextMenus.remove(listOfSnippetCtxIDs.pop());
+        while (pk.listOfSnippetCtxIDs.length > 0) {
+            chrome.contextMenus.remove(pk.listOfSnippetCtxIDs.pop());
         }
         cachedSnippetList = "";
         if (defaultEntryExists) {
@@ -279,7 +278,7 @@ function updateContextMenu(isRecalled = false) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
 
-        if (!window.pk.isTabSafe(tab)) {
+        if (!pk.isTabSafe(tab)) {
             return;
         }
 
@@ -341,7 +340,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
         };
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (!window.pk.isTabSafe(tabs[0])) {
+            if (!pk.isTabSafe(tabs[0])) {
                 return;
             }
             chrome.tabs.sendMessage(tabs[0].id, msg, pk.checkRuntimeError("ID==BSI"));
@@ -352,7 +351,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
-            if (window.pk.isTabSafe(tab)) {
+            if (pk.isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
                     tab.id,
                     {
@@ -421,7 +420,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.openBlockSiteModalInParent === true) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
-            if (window.pk.isTabSafe(tab)) {
+            if (pk.isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
                     tab.id,
                     { showBlockSiteModal: true, data: request.data },
