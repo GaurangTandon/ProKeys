@@ -393,7 +393,9 @@ function onTabActivatedOrUpdated({ tabId }) {
                 loadSnippetListIntoBGPage(snippets);
                 addCtxSnippetList();
             }
-            Data.ctxEnabled = ctxEnabled;
+            if (typeof ctxEnabled !== "undefined") {
+                Data.ctxEnabled = ctxEnabled;
+            }
         });
     }
 
@@ -410,7 +412,6 @@ function onTabActivatedOrUpdated({ tabId }) {
 }
 
 chrome.tabs.onActivated.addListener(onTabActivatedOrUpdated);
-
 chrome.tabs.onUpdated.addListener(onTabActivatedOrUpdated);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
