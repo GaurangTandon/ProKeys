@@ -16,6 +16,7 @@
         validateFolderData,
         $autoInsertTable,
         $tabKeyInput,
+        $ctxEnabledInput,
         $snipMatchDelimitedWordInput,
         $snipNameDelimiterListDIV,
         dualSnippetEditorObj,
@@ -44,6 +45,7 @@
             snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
             omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
             wrapSelectionAutoInsert: true,
+            ctxEnabled: true,
         };
 
     // these variables are accessed by multiple files
@@ -109,6 +111,11 @@
         chrome.runtime.sendMessage(msg, pk.checkRuntimeError("notifySnippetDataChanges"));
     }
 
+    function notifyCtxEnableToggle() {
+        const msg = { ctxEnabled: Data.ctxEnabled };
+        chrome.runtime.sendMessage(msg, pk.checkRuntimeError("NCET"));
+    }
+
     // function to save data for specific
     // name and value
     function DB_setValue(name, value, callback) {
@@ -165,7 +172,7 @@
                 : Data.snippets;
             folderToList.listSnippets(objectNamesToHighlight);
 
-            pk.checkRuntimeError();
+            pk.checkRuntimeError("DB_save inside")();
 
             if (callback) {
                 callback();
@@ -185,10 +192,13 @@
         DB_save(() => {
             if (typeof msg === "function") {
                 msg();
-            } else if (typeof msg === "string") {
+            } else if (typeof msg === "undefined") {
+                msg = "Saved!";
+            }
+            if (typeof msg === "string") {
                 window.alert(msg);
             }
-            pk.checkRuntimeError();
+            pk.checkRuntimeError("saveotherdata-options.js")();
 
             if (callback) {
                 callback();
@@ -353,12 +363,10 @@
     function ensureRobustCompat(data) {
         let missingProperties = false;
 
-        for (const prop in SETTINGS_DEFAULTS) {
-            if (SETTINGS_DEFAULTS.hasOwnProperty(prop)) {
-                if (typeof data[prop] === "undefined") {
-                    data[prop] = SETTINGS_DEFAULTS[prop];
-                    missingProperties = true;
-                }
+        for (const prop of Object.keys(SETTINGS_DEFAULTS)) {
+            if (typeof data[prop] === "undefined") {
+                data[prop] = SETTINGS_DEFAULTS[prop];
+                missingProperties = true;
             }
         }
 
@@ -604,11 +612,8 @@
             ensureRobustCompat(data);
 
             // delete user-added properties that ProKeys doesn't recognize
-            for (const prop in data) {
-                if (
-                    Object.prototype.hasOwnProperty(data, prop)
-                    && !Object.prototype.hasOwnProperty(SETTINGS_DEFAULTS, prop)
-                ) {
+            for (const prop of Object.keys(data)) {
+                if (!Object.prototype.hasOwnProperty.call(SETTINGS_DEFAULTS, prop)) {
                     delete data[prop];
                 }
             }
@@ -1009,6 +1014,7 @@
 
         $snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
         $tabKeyInput = qId("tabKey");
+        $ctxEnabledInput = qId("ctxEnable");
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         if (!pk.DB_loaded) {
@@ -1115,7 +1121,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             $tabKeyInput.on("change", function () {
                 Data.tabKey = this.checked;
 
-                saveOtherData("Saved!");
+                saveOtherData();
+            });
+
+            // on user input in tab key setting
+            $ctxEnabledInput.on("change", function () {
+                Data.ctxEnabled = this.checked;
+                notifyCtxEnableToggle();
+                saveOtherData();
             });
 
             $blockSitesTextarea.on("keydown", (event) => {
@@ -1172,7 +1185,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 const isChecked = this.checked;
                 Data.matchDelimitedWord = isChecked;
                 $snipNameDelimiterListDIV.toggleClass(SHOW_CLASS);
-                saveOtherData("Data saved!");
+                saveOtherData();
             });
 
             function validateDelimiterList(stringList) {
@@ -1199,7 +1212,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         return true;
                     }
                     Data.snipNameDelimiterList = this.value;
-                    saveOtherData("Data saved!");
+                    saveOtherData();
                 }
 
                 return false;
@@ -1217,7 +1230,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 ) {
                     Data.snipNameDelimiterList = SETTINGS_DEFAULTS.snipNameDelimiterList;
                     delimiterInit();
-                    saveOtherData("Data saved!");
+                    saveOtherData();
                 }
             });
 
@@ -2035,6 +2048,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
         // on load; set checkbox state to user preference
         $tabKeyInput.checked = Data.tabKey;
+        $ctxEnabledInput.checked = Data.ctxEnabled;
         $snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
 
         if (Data.matchDelimitedWord) {
@@ -2051,7 +2065,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         autoInsertWrapSelectionInput.checked = Data.wrapSelectionAutoInsert;
         autoInsertWrapSelectionInput.on("click", () => {
             Data.wrapSelectionAutoInsert = autoInsertWrapSelectionInput.checked;
-            saveOtherData("Saved!");
+            saveOtherData();
         });
 
         omniboxSearchURLInput = q(".search-provider input");
@@ -2060,7 +2074,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         omniboxSearchURLInput.on("keydown", function (e) {
             if (e.keyCode === 13) {
                 Data.omniboxSearchURL = this.value;
-                saveOtherData("Saved!");
+                saveOtherData();
             }
         });
 
