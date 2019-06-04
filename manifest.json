@@ -13,7 +13,13 @@
     },
     "content_scripts": [
         {
-            "js": ["js/pre.js", "js/cs_data_manipulator.js", "js/snippet_classes.js", "js/detector.js"],
+            "js": [
+                "js/pre.js",
+                "js/snippet_classes.js",
+                "js/common_data_handlers.js",
+                "js/modalHandlers.js",
+                "js/detector.js"
+            ],
             "css": ["css/blockSiteModal.css"],
             "matches": ["<all_urls>"],
             "run_at": "document_start",

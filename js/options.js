@@ -1,16 +1,16 @@
 /* global q, Q, DualTextbox, pk, Data, SHOW_CLASS */
-/* global qClsSingle, qCls, qId, LS_REVISIONS_PROP, saveOtherData */
+/* global qClsSingle, qId, LS_REVISIONS_PROP, saveOtherData */
 /* global chrome, saveSnippetData, ensureRobustCompat, initBackupDOM */
-/* global Folder, SETTINGS_DEFAULTS, $containerFolderPath */
+/* global Folder, SETTINGS_DEFAULTS, $containerFolderPath, storage */
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
-/* global initSnippetWork */
+/* global initSnippetWork, saveRevision, notifySnippetDataChanges */
+/* global changeStorageType, databaseSave, DB_load, getCurrentStorageType */
 // above are defined in window. format
 
 // TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
 // TODO: latestRevisionLabel is shown read-only on eslint. Why?
 (function () {
-    let storage = chrome.storage.local,
-        $autoInsertTable,
+    let $autoInsertTable,
         $tabKeyInput,
         $ctxEnabledInput,
         $snipMatchDelimitedWordInput,
@@ -26,37 +26,11 @@
         VERSION = chrome.runtime.getManifest().version;
     window.LS_REVISIONS_PROP = "prokeys_revisions";
     window.SHOW_CLASS = "shown";
-    window.SETTINGS_DEFAULTS = {
-        snippets: Folder.getDefaultSnippetData(),
-        blockedSites: [],
-        charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
-        dataVersion: 1,
-        language: "English",
-        hotKey: ["shiftKey", 32],
-        dataUpdateVariable: true,
-        matchDelimitedWord: false,
-        tabKey: false,
-        visited: false,
-        snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
-        omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
-        wrapSelectionAutoInsert: true,
-        ctxEnabled: true,
-    };
-
-    // these variables are accessed by multiple files
-    pk.DB_loaded = false;
-    // currently it's storing default data for first install;
-    // after DB_load, it stores the latest data
-    // snippets are later added
-    window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
     window.IN_OPTIONS_PAGE = true;
     window.$containerSnippets = null;
     window.$panelSnippets = null;
     window.$containerFolderPath = null;
     window.latestRevisionLabel = "data created (added defaut snippets)";
-    pk.OLD_DATA_STORAGE_KEY = "UserSnippets";
-    pk.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
-    pk.DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
 
     // when we restore one revision, we have to remove it from its
     // previous position; saveSnippetData will automatically insert it
@@ -68,7 +42,7 @@
         localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
 
-    function saveRevision(dataString) {
+    window.saveRevision = function (dataString) {
         let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
 
         parsed.unshift({
@@ -79,11 +53,11 @@
 
         parsed = parsed.slice(0, MAX_REVISIONS_STORED);
         localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
-    }
+    };
 
     // notifies content script and background page
     // about Data.snippets changes
-    function notifySnippetDataChanges() {
+    window.notifySnippetDataChanges = function () {
         const msg = {
             snippetList: Data.snippets.toArray(),
         };
@@ -104,107 +78,12 @@
         });
 
         chrome.runtime.sendMessage(msg, pk.checkRuntimeError("notifySnippetDataChanges"));
-    }
+    };
 
     function notifyCtxEnableToggle() {
         const msg = { ctxEnabled: Data.ctxEnabled };
         chrome.runtime.sendMessage(msg, pk.checkRuntimeError("NCET"));
     }
-
-    // function to save data for specific
-    // name and value
-    function DB_setValue(name, value, callback) {
-        const obj = {};
-        obj[name] = value;
-
-        storage.set(obj, () => {
-            if (callback) {
-                callback();
-            }
-        });
-    }
-
-    function DB_load(callback) {
-        storage.get(pk.OLD_DATA_STORAGE_KEY, (r) => {
-            const req = r[pk.OLD_DATA_STORAGE_KEY];
-
-            // converting to !== might break just in case this relies on 0 == undefined :/
-            if (pk.isObjectEmpty(req) || req.dataVersion != Data.dataVersion) {
-                DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
-            } else {
-                Data = req;
-                if (callback) {
-                    callback();
-                }
-            }
-        });
-    }
-
-    function DB_save(callback) {
-        DB_setValue(pk.OLD_DATA_STORAGE_KEY, Data, () => {
-            if (callback) {
-                callback();
-            }
-        });
-    }
-
-    /**
-     * PRECONDITION: Data.snippets is a Folder object
-     */
-    window.saveSnippetData = function (callback, folderNameToList, objectNamesToHighlight) {
-        Data.snippets = Data.snippets.toArray();
-
-        // refer github issues#4
-        Data.dataUpdateVariable = !Data.dataUpdateVariable;
-
-        DB_save(() => {
-            saveRevision(Data.snippets.toArray());
-            notifySnippetDataChanges();
-
-            Folder.setIndices();
-            const folderToList = folderNameToList
-                ? Data.snippets.getUniqueFolder(folderNameToList)
-                : Data.snippets;
-            folderToList.listSnippets(objectNamesToHighlight);
-
-            pk.checkRuntimeError("DB_save inside")();
-
-            if (callback) {
-                callback();
-            }
-        });
-
-        Data.snippets = Folder.fromArray(Data.snippets);
-    };
-
-    // save data not involving snippets
-    window.saveOtherData = function (msg, callback) {
-        Data.snippets = Data.snippets.toArray();
-
-        // github issues#4
-        Data.dataUpdateVariable = !Data.dataUpdateVariable;
-
-        DB_save(() => {
-            if (typeof msg === "function") {
-                msg();
-            } else if (typeof msg === "undefined") {
-                msg = "Saved!";
-            }
-            if (typeof msg === "string") {
-                window.alert(msg);
-            }
-            pk.checkRuntimeError("saveotherdata-options.js")();
-
-            if (callback) {
-                callback();
-            }
-        });
-
-        // once DB_save has been called, doesn't matter
-        // if this prop is object/array since storage.clear/set
-        // methods are using a separate storageObj
-        Data.snippets = Folder.fromArray(Data.snippets);
-    };
 
     // returns whether site is blocked by user
     function isBlockedSite(domain) {
@@ -238,13 +117,10 @@
 
     function getAutoInsertCharIndex(firstCharToGet) {
         const arr = Data.charsToAutoInsertUserList;
-        let firstChar;
 
-        for (let i = 0, len = arr.length; i < len; i++) {
-            firstChar = arr[i][0];
-
-            if (firstCharToGet === firstChar) {
-                return i;
+        for (const [index, charPair] of arr.entries()) {
+            if (firstCharToGet === charPair[0]) {
+                return index;
             }
         }
 
@@ -371,17 +247,6 @@
         return missingProperties;
     };
 
-    // get type of current storage as string
-    function getCurrentStorageType() {
-        // property MAX_ITEMS is present only in sync
-        return storage.MAX_ITEMS ? "sync" : "local";
-    }
-
-    // changes type of storage: local-sync, sync-local
-    function changeStorageType() {
-        storage = getCurrentStorageType() === "sync" ? chrome.storage.local : chrome.storage.sync;
-    }
-
     // transfer data from one storage to another
     function migrateData(transferData, callback) {
         function afterMigrate() {
@@ -394,13 +259,13 @@
         // so that storage gets changed by DB_load
         Data.snippets = false;
 
-        DB_save(() => {
+        databaseSave(() => {
             changeStorageType();
 
             if (transferData) {
                 // get the copy
                 Data.snippets = str;
-                DB_save(afterMigrate);
+                databaseSave(afterMigrate);
             } else {
                 // don't do Data.snippets = Folder.fromArray(Data.snippets);
                 // here since Data.snippets is false and since this is
