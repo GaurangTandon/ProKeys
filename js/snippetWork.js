@@ -1,6 +1,5 @@
 /* global q, Q, DualTextbox, pk, Data, SHOW_CLASS */
-/* global qClsSingle, qCls, qId, saveOtherData */
-/* global saveSnippetData, Folder, Snip, Generic */
+/* global qClsSingle, qCls, qId, Folder, Snip, Generic */
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
 
 (function () {
@@ -40,7 +39,7 @@
                         latestRevisionLabel = `moved "${name}" ${movedObject.type} to "${
                             newParentfolder.name
                         }"`;
-                        saveSnippetData(undefined, newParentfolder.name, name);
+                        pk.saveSnippetData(undefined, newParentfolder.name, name);
                     } else {
                         oldParentFolder[`edit${type}`](oldName, name, body);
                     }
@@ -362,7 +361,7 @@
 
                 latestRevisionLabel = `deleted ${type} "${name}"`;
 
-                saveSnippetData(undefined, folder.name);
+                pk.saveSnippetData(undefined, folder.name);
             }
         }
 
@@ -373,7 +372,7 @@
 
             // keep the same snippet highlighted as well (object.name)
             // so that user can press clone button repeatedly
-            saveSnippetData(undefined, newObject.getParentFolder().name, [
+            pk.saveSnippetData(undefined, newObject.getParentFolder().name, [
                 object.name,
                 newObject.name,
             ]);
@@ -603,7 +602,7 @@
                         selectedObjects.length
                     } objects to folder "${selectFolderName}"`;
 
-                    saveSnippetData(
+                    pk.saveSnippetData(
                         () => {
                             // hide the bulk action panel
                             $bulkActionBtn.click();
@@ -627,7 +626,7 @@
 
                     latestRevisionLabel = `deleted ${selectedObjects.length} objects`;
 
-                    saveSnippetData(() => {
+                    pk.saveSnippetData(() => {
                         // hide the bulk action panel
                         $bulkActionBtn.click();
                     }, Folder.getListedFolderName());
@@ -653,7 +652,7 @@
 
         Data.snippets.listSnippets();
 
-        /* executed in the very end since saveOtherData async and
+        /* executed in the very end since pk.saveOtherData async and
                 stringifies data.snippets */
         // till now, we don't have any use for data.visited
         // variable in any file; but still keeping it just in case
@@ -661,7 +660,7 @@
         const isFreshInstall = !Data.visited;
         if (isFreshInstall) {
             Data.visited = true;
-            saveOtherData();
+            pk.saveOtherData();
         }
     };
 }());

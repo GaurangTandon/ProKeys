@@ -1,5 +1,4 @@
-/* global q, chrome, pk */
-/* global Folder, Data, Snip, Generic, saveSnippetData */
+/* global q, chrome, pk, Folder, Data, Snip, Generic */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 /* this file is loaded both as a content script
@@ -1382,7 +1381,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
 
             latestRevisionLabel = `created ${newObj.type} "${newObj.name}"`;
 
-            saveSnippetData(undefined, folderName, newObj.name);
+            pk.saveSnippetData(undefined, folderName, newObj.name);
         };
     }
 
@@ -1396,7 +1395,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
             object.edit(newName, body);
             latestRevisionLabel = `edited ${type} "${oldName}"`;
 
-            saveSnippetData(undefined, parent.name, newName);
+            pk.saveSnippetData(undefined, parent.name, newName);
         };
     }
 
@@ -1558,7 +1557,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
 
         this.list = sort(folders).concat(sort(snippets));
 
-        saveSnippetData(undefined, this.name);
+        pk.saveSnippetData(undefined, this.name);
     };
 
     this.listSnippets = function (objectNamesToHighlight) {

@@ -1,11 +1,10 @@
-/* global pk, Data, getCurrentStorageType */
-/* global chrome, Folder, SETTINGS_DEFAULTS, storage */
+/* global pk, Data, chrome, Folder */
 /* global saveRevision, notifySnippetDataChanges */
 
 (function () {
     const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
-    window.storage = chrome.storage.local;
-    window.SETTINGS_DEFAULTS = {
+    pk.storage = chrome.storage.local;
+    pk.SETTINGS_DEFAULTS = {
         snippets: Folder.getDefaultSnippetData(),
         blockedSites: [],
         charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
@@ -25,7 +24,7 @@
     // currently it's storing default data for first install;
     // after DB_load, it stores the latest data
     // snippets are later added
-    window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
+    window.Data = JSON.parse(JSON.stringify(pk.SETTINGS_DEFAULTS));
     pk.OLD_DATA_STORAGE_KEY = "UserSnippets";
     pk.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
     pk.DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
@@ -35,15 +34,15 @@
         const obj = {};
         obj[name] = value;
 
-        storage.set(obj, () => {
+        pk.storage.set(obj, () => {
             if (callback) {
                 callback();
             }
         });
     }
 
-    window.DB_load = function (callback) {
-        storage.get(pk.OLD_DATA_STORAGE_KEY, (r) => {
+    pk.DB_load = function (callback) {
+        pk.storage.get(pk.OLD_DATA_STORAGE_KEY, (r) => {
             const req = r[pk.OLD_DATA_STORAGE_KEY];
 
             // converting to !== might break just in case this relies on 0 == undefined :/
@@ -59,24 +58,24 @@
         });
     };
 
-    function databaseSave(callback) {
+    pk.databaseSave = function (callback) {
         databaseSetValue(pk.OLD_DATA_STORAGE_KEY, Data, () => {
             if (callback) {
                 callback();
             }
         });
-    }
+    };
 
     /**
      * PRECONDITION: Data.snippets is a Folder object
      */
-    window.saveSnippetData = function (callback, folderNameToList, objectNamesToHighlight) {
+    pk.saveSnippetData = function (callback, folderNameToList, objectNamesToHighlight) {
         Data.snippets = Data.snippets.toArray();
 
         // refer github issues#4
         Data.dataUpdateVariable = !Data.dataUpdateVariable;
 
-        databaseSave(() => {
+        pk.databaseSave(() => {
             if (IN_OPTIONS_PAGE) {
                 saveRevision(Data.snippets.toArray());
                 notifySnippetDataChanges();
@@ -99,13 +98,13 @@
     };
 
     // save data not involving snippets
-    window.saveOtherData = function (msg = "Saved!", callback) {
+    pk.saveOtherData = function (msg = "Saved!", callback) {
         Data.snippets = Data.snippets.toArray();
 
         // issues#4
         Data.dataUpdateVariable = !Data.dataUpdateVariable;
 
-        databaseSave(() => {
+        pk.databaseSave(() => {
             if (typeof msg === "function") {
                 msg();
             } else if (typeof msg === "string") {
@@ -125,13 +124,13 @@
     };
 
     // get type of current storage as string
-    window.getCurrentStorageType = function () {
+    pk.getCurrentStorageType = function () {
         // property MAX_ITEMS is present only in sync
-        return storage.MAX_ITEMS ? "sync" : "local";
+        return pk.storage.MAX_ITEMS ? "sync" : "local";
     };
 
     // changes type of storage: local-sync, sync-local
-    window.changeStorageType = function () {
-        storage = getCurrentStorageType() === "sync" ? chrome.storage.local : chrome.storage.sync;
+    pk.changeStorageType = function () {
+        pk.storage = pk.getCurrentStorageType() === "sync" ? chrome.storage.local : chrome.storage.sync;
     };
 }());
