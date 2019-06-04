@@ -1,6 +1,6 @@
 /* global q, Folder, Snip, chrome, Data, pk, debugLog */
 
-// TODO: clear up properties isGmail, isGoogle from detector.js, and several pre.js properties
+// TODO: clear up properties isGmail from detector.js, and several pre.js properties
 
 (function () {
     let windowLoadChecker = setInterval(() => {
@@ -13,7 +13,6 @@
         // Global variables
         // //////////////////////
 
-        isGoogle,
         isGmail,
         /* should be "span"; if "p" is used, then it gets appended inside
             another "p" which the webpage was using. this can cause styling
@@ -119,10 +118,7 @@
      * @param {Element} node to check
      */
     function isProKeysNode(node) {
-        return (
-            node.tagName === TAGNAME_SNIPPET_HOLDER_ELM
-            && ((node && node.hasClass(SPAN_CLASS)) || isGoogle)
-        );
+        return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM && (node && node.hasClass(SPAN_CLASS));
 
         // in plus.google.com, the span elements which
         // are added by prokeys do not retain their
@@ -1037,7 +1033,7 @@
 
             // [Tab] key for tab spacing/placeholder shifting
             if (keyCode === 9 && metaKeyNotPressed) {
-                if ((isGmail || isGoogle) && isParent(node, "form")) {
+                if (isGmail && isParent(node, "form")) {
                     // in Gmail, the subject and to address field
                     // should not have any tab function.
                     // These two fields have a "form" as their parent.
@@ -1222,7 +1218,6 @@
         pk.updateAllValuesPerWin(window);
         debugLog("done initializing");
 
-        window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
         window.isGmail = /mail\.google/.test(window.location.href);
     }
 

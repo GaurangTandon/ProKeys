@@ -1,6 +1,8 @@
 /* global Q, q, Data, Folder, SHOW_CLASS, pk, initiateRestore, LS_REVISIONS_PROP */
 /* global deleteRevision, latestRevisionLabel */
-pk.domWork = {};
+if (!pk.domWork) {
+    pk.domWork = {};
+}
 pk.domWork.initBackup = function () {
     let dataToExport;
 
