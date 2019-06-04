@@ -856,7 +856,7 @@
 
         if (data && typeof data[CACHE_DATASET_STRING] !== "undefined") {
             retVal = data[CACHE_DATASET_STRING] === "true";
-        } else if (isParent(node, null, ["CodeMirror", "ace"], 3)) {
+        } else if (isParent(node, null, ["CodeMirror", "ace", "monaco-editor"], 3)) {
             retVal = false;
         } else if (tgN === "TEXTAREA" || pk.isContentEditable(node)) {
             retVal = true;
