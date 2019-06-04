@@ -52,7 +52,7 @@ let extendNodePrototype;
 (function mainIIFE() {
     const DEBUGGING = false;
 
-    pk.OBJECT_NAME_LIMIT = 30;
+    pk.OBJECT_NAME_LIMIT = 60;
     Date.MONTHS = [
         "January",
         "February",
