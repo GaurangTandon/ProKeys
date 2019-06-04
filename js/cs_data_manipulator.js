@@ -24,6 +24,7 @@
         snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
         omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
         wrapSelectionAutoInsert: true,
+        ctxEnabled: true,
     };
     // globals are: (used by detector.js)
     pk.DB_loaded = false;

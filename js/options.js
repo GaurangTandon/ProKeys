@@ -16,6 +16,7 @@
         validateFolderData,
         $autoInsertTable,
         $tabKeyInput,
+        $ctxEnabledInput,
         $snipMatchDelimitedWordInput,
         $snipNameDelimiterListDIV,
         dualSnippetEditorObj,
@@ -44,6 +45,7 @@
             snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
             omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
             wrapSelectionAutoInsert: true,
+            ctxEnabled: true,
         };
 
     // these variables are accessed by multiple files
@@ -353,12 +355,10 @@
     function ensureRobustCompat(data) {
         let missingProperties = false;
 
-        for (const prop in SETTINGS_DEFAULTS) {
-            if (SETTINGS_DEFAULTS.hasOwnProperty(prop)) {
-                if (typeof data[prop] === "undefined") {
-                    data[prop] = SETTINGS_DEFAULTS[prop];
-                    missingProperties = true;
-                }
+        for (const prop of Object.keys(SETTINGS_DEFAULTS)) {
+            if (typeof data[prop] === "undefined") {
+                data[prop] = SETTINGS_DEFAULTS[prop];
+                missingProperties = true;
             }
         }
 
@@ -604,11 +604,8 @@
             ensureRobustCompat(data);
 
             // delete user-added properties that ProKeys doesn't recognize
-            for (const prop in data) {
-                if (
-                    Object.prototype.hasOwnProperty(data, prop)
-                    && !Object.prototype.hasOwnProperty(SETTINGS_DEFAULTS, prop)
-                ) {
+            for (const prop of Object.keys(data)) {
+                if (!Object.prototype.hasOwnProperty.call(SETTINGS_DEFAULTS, prop)) {
                     delete data[prop];
                 }
             }
@@ -1009,6 +1006,7 @@
 
         $snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
         $tabKeyInput = qId("tabKey");
+        $ctxEnabledInput = qId("ctxEnable");
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         if (!pk.DB_loaded) {
@@ -1114,6 +1112,13 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             // on user input in tab key setting
             $tabKeyInput.on("change", function () {
                 Data.tabKey = this.checked;
+
+                saveOtherData("Saved!");
+            });
+
+            // on user input in tab key setting
+            $ctxEnabledInput.on("change", function () {
+                Data.ctxEnabled = this.checked;
 
                 saveOtherData("Saved!");
             });
@@ -2035,6 +2040,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
         // on load; set checkbox state to user preference
         $tabKeyInput.checked = Data.tabKey;
+        $ctxEnabledInput.checked = Data.ctxEnabled;
         $snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
 
         if (Data.matchDelimitedWord) {
