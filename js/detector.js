@@ -1,6 +1,6 @@
-/* global q, Folder, Snip */
+/* global q, Folder, Snip, changeStorageType */
 /* global chrome, Data, pk */
-/* global debugLog */
+/* global debugLog, DB_load */
 
 // TODO: clear up properties isGmail, isGoogle from detector.js, and several pre.js properties
 
@@ -1227,4 +1227,24 @@
         window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
         window.isGmail = /mail\.google/.test(window.location.href);
     }
+
+    function setEssentialItemsOnDBLoad() {
+        pk.DB_loaded = true;
+        Data.snippets = Folder.fromArray(Data.snippets);
+        Folder.setIndices();
+        pk.snipNameDelimiterListRegex = new RegExp(
+            `[${pk.escapeRegExp(Data.snipNameDelimiterList)}]`,
+        );
+    }
+
+    DB_load(() => {
+        if (Data.snippets === false) {
+            changeStorageType();
+            DB_load(setEssentialItemsOnDBLoad);
+
+            return;
+        }
+
+        setEssentialItemsOnDBLoad();
+    });
 }());
