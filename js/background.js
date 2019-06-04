@@ -7,7 +7,6 @@ const BLOCK_SITE_ID = "blockSite",
     SNIPPET_MAIN_ID = "snippet_main",
     URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 let contextMenuActionBlockSite,
-    wasOnBlockedSite = false,
     // boolean set to true on updating app as well as when extension loads
     // or after browser restart
     // so that user gets updated snippet list whenever he comes
@@ -26,6 +25,7 @@ window.IN_BG_PAGE = true;
 // doesn't clash with the Data variable in options.js
 window.Data = {};
 Data.snippets = new Folder("Snippets");
+Data.ctxEnabled = true;
 window.listOfSnippetCtxIDs = [];
 
 Folder.setIndices();
@@ -89,15 +89,34 @@ function injectScriptAllTabs() {
     });
 }
 
-function createBlockSiteCtxItem() {
-    chrome.contextMenus.create(
-        {
-            id: BLOCK_SITE_ID,
-            title: "reload page for blocking site",
-        },
-        pk.checkRuntimeError("CRX-CREATE"),
-    );
-}
+let toggleBlockSiteCtxItem;
+(function () {
+    // use closure to keep track of state of block site ctx item
+    let currentlyShown = false;
+    toggleBlockSiteCtxItem = function () {
+        if (Data.ctxEnabled && !currentlyShown) {
+            chrome.contextMenus.create(
+                {
+                    id: BLOCK_SITE_ID,
+                    title: "reload page for blocking site",
+                },
+                () => {
+                    if (pk.checkRuntimeError("BSI-CREATE")()) {
+                        return;
+                    }
+                    currentlyShown = true;
+                },
+            );
+        } else if (!Data.ctxEnabled && currentlyShown) {
+            chrome.contextMenus.remove(BLOCK_SITE_ID, () => {
+                if (pk.checkRuntimeError("BSI-REM")()) {
+                    return;
+                }
+                currentlyShown = false;
+            });
+        }
+    };
+}());
 
 function openSnippetsPage(version, reason) {
     if (reason === "update") {
@@ -164,54 +183,43 @@ chrome.omnibox.onInputEntered.addListener((omniboxText, disposition) => {
     window.modalHTML = modalContent;
 }());
 
-function removeCtxSnippetList(removeMainEntryFlag) {
-    while (listOfSnippetCtxIDs.length > 0) {
-        chrome.contextMenus.remove(listOfSnippetCtxIDs.pop());
-    }
+let removeCtxSnippetList,
+    addCtxSnippetList;
+(function snippetListCtxClosure() {
+    let cachedSnippetList = "",
+        defaultEntryExists = false;
+    removeCtxSnippetList = function () {
+        while (listOfSnippetCtxIDs.length > 0) {
+            chrome.contextMenus.remove(listOfSnippetCtxIDs.pop());
+        }
+        cachedSnippetList = "";
+        if (defaultEntryExists) {
+            chrome.contextMenus.remove(SNIPPET_MAIN_ID, pk.checkRuntimeError("REMOVE-SMI"));
+            defaultEntryExists = false;
+        }
+    };
 
-    if (removeMainEntryFlag) {
-        // entirely possible that flag-^ is true w/o any snippet_main_id
-        // actually being present
-        chrome.contextMenus.remove(SNIPPET_MAIN_ID, pk.checkRuntimeError("REMOVE-SMI"));
-    }
-}
-
-function addCtxSnippetList(snippets) {
-    let hasSnippets;
-    function addMainEntry() {
-        if (hasSnippets) {
+    addCtxSnippetList = function (snippets) {
+        snippets = snippets || Data.snippets;
+        const newInput = JSON.stringify(snippets.toArray());
+        if (newInput === cachedSnippetList) {
             return;
         }
-
-        chrome.contextMenus.create(
-            {
+        removeCtxSnippetList();
+        cachedSnippetList = newInput;
+        const hasSnippets = snippets.list.length > 0;
+        defaultEntryExists = !hasSnippets;
+        if (!hasSnippets) {
+            chrome.contextMenus.create({
                 contexts: ["editable"],
                 id: SNIPPET_MAIN_ID,
                 title: "No snippet to insert",
-            },
-            () => {
-                if (chrome.runtime.lastError) {
-                    // already exists, so first remove it
-                    chrome.contextMenus.remove(
-                        SNIPPET_MAIN_ID,
-                        pk.checkRuntimeError("CTX-CREATE-REM"),
-                    );
-                    addMainEntry();
-                }
-            },
-        );
-    }
-
-    // just in case previous data is larger that current data
-    // we might have overlapping data display so avoid all problems
-    removeCtxSnippetList(true);
-    snippets = snippets || Data.snippets;
-    hasSnippets = snippets.list.length > 0;
-    addMainEntry();
-
-    // now create the new context menus
-    snippets.createCtxMenuEntry();
-}
+            });
+        } else {
+            snippets.createCtxMenuEntry();
+        }
+    };
+}());
 
 chrome.runtime.onInstalled.addListener((details) => {
     let text,
@@ -221,36 +229,31 @@ chrome.runtime.onInstalled.addListener((details) => {
 
     if (reason === "install") {
         localStorage.firstInstall = "true";
-
-        openSnippetsPage(version, reason);
-
         title = "ProKeys successfully installed!";
         text = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
-        injectScriptAllTabs();
     } else if (reason === "update") {
         title = `ProKeys updated to v${version}`;
         text = "Hooray! Please reload active tabs to use the new version.";
-
-        openSnippetsPage(version, reason);
         needToGetLatestData = true;
-        injectScriptAllTabs();
-        addCtxSnippetList();
+    } else {
+        // do not process anything other than install or update
+        return;
     }
 
-    // either update or install was there
-    if (text !== undefined) {
-        // the empty function and string is required < Chrome 42
-        chrome.notifications.create(
-            "",
-            {
-                type: "basic",
-                iconUrl: "imgs/r128.png",
-                title,
-                message: text,
-            },
-            (id) => {},
-        );
-    }
+    openSnippetsPage(version, reason);
+    injectScriptAllTabs();
+
+    // the empty function and string is required < Chrome 42
+    chrome.notifications.create(
+        "",
+        {
+            type: "basic",
+            iconUrl: "imgs/r128.png",
+            title,
+            message: text,
+        },
+        (id) => {},
+    );
 });
 
 function loadSnippetListIntoBGPage(list) {
@@ -262,80 +265,65 @@ function loadSnippetListIntoBGPage(list) {
 // isRecalled: if the function has been called
 // if the response from content script was undefined
 // why content script sends undefined response is i don't know
-function updateContextMenu(isRecalled) {
+function updateContextMenu(isRecalled = false) {
     if (isRecalled) {
         recalls++;
     } else {
         recalls = 0;
     }
 
+    if (!Data.ctxEnabled) {
+        return;
+    }
+
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
-        let isBlocked;
 
         if (!window.pk.isTabSafe(tab)) {
             return;
         }
-        chrome.tabs.sendMessage(tab.id, { checkBlockedYourself: true }, (response) => {
+
+        chrome.tabs.sendMessage(tab.id, { checkBlockedYourself: true }, (isBlocked) => {
             if (pk.checkRuntimeError("CBY")()) {
                 return;
             }
-            isBlocked = response;
 
-            contextMenuActionBlockSite = isBlocked === undefined
-                ? "reload page for (un)blocking"
-                : isBlocked
-                    ? "Unblock"
-                    : "Block";
-
-            if (isBlocked === undefined) {
+            if (typeof isBlocked === "undefined") {
+                contextMenuActionBlockSite = "Unable to block/unblock";
                 if (recalls <= LIMIT_OF_RECALLS) {
                     setTimeout(updateContextMenu, 500, true);
-                } else {
-                    chrome.contextMenus.update(BLOCK_SITE_ID, {
-                        title: "Unable to block/unblock this site",
-                    });
                 }
+            } else {
+                contextMenuActionBlockSite = isBlocked ? "Unblock" : "Block";
 
-                return;
-            }
-
-            // remove all snippet support as well
-            if (isBlocked) {
-                removeCtxSnippetList(true);
-                wasOnBlockedSite = true;
-            } else if (wasOnBlockedSite) {
-                wasOnBlockedSite = false;
-                addCtxSnippetList();
+                if (isBlocked) {
+                    removeCtxSnippetList();
+                } else {
+                    addCtxSnippetList();
+                }
             }
 
             chrome.contextMenus.update(BLOCK_SITE_ID, {
                 title: `${contextMenuActionBlockSite} this site`,
             });
         });
-
-        if (needToGetLatestData) {
-            chrome.tabs.sendMessage(tabs[0].id, { giveSnippetList: true }, (response) => {
-                if (pk.checkRuntimeError("GSL")()) {
-                    return;
-                }
-                if (Array.isArray(response)) {
-                    needToGetLatestData = false;
-                    loadSnippetListIntoBGPage(response);
-                    addCtxSnippetList();
-                }
-            });
-        }
     });
 }
 
-try {
-    updateContextMenu();
-} catch (e) {
-    console.log(`Error while creating context menu - ${e.message}`);
+/**
+ * sets up or toggles display of ctx menu based
+ * on ctxEnabled property
+ */
+function initContextMenu() {
+    if (Data.ctxEnabled) {
+        // let this call decide whether to show snippets or not
+        // based on whether site is blocked or not
+        updateContextMenu();
+    } else {
+        removeCtxSnippetList();
+    }
+    toggleBlockSiteCtxItem();
 }
-
-createBlockSiteCtxItem();
 
 chrome.contextMenus.onClicked.addListener((info) => {
     const id = info.menuItemId,
@@ -382,24 +370,48 @@ chrome.contextMenus.onClicked.addListener((info) => {
     }
 });
 
-function onActivatedOrUpdated() {
+/**
+ *
+ * @param {Number} tabId id of tab
+ */
+function onTabActivatedOrUpdated({ tabId }) {
     const IMG_ACTIVE = "../imgs/r16.png",
         IMG_INACTIVE = "../imgs/r16grey.png";
     let path = "";
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (pk.isTabSafe(tabs[0])) {
+    if (!tabId) {
+        return;
+    }
+
+    if (needToGetLatestData) {
+        chrome.tabs.sendMessage(tabId, { giveFreshData: true }, (data) => {
+            if (!data || pk.checkRuntimeError("GSL")()) {
+                return;
+            }
+            const { snippets, ctxEnabled } = data;
+            if (Array.isArray(snippets)) {
+                needToGetLatestData = false;
+                loadSnippetListIntoBGPage(snippets);
+                addCtxSnippetList();
+            }
+            Data.ctxEnabled = ctxEnabled;
+        });
+    }
+
+    chrome.tabs.get(tabId, (tab) => {
+        if (pk.isTabSafe(tab)) {
             path = IMG_ACTIVE;
         } else {
             path = IMG_INACTIVE;
         }
         chrome.browserAction.setIcon({ path });
     });
-    updateContextMenu();
+
+    initContextMenu();
 }
 
-chrome.tabs.onActivated.addListener(onActivatedOrUpdated);
+chrome.tabs.onActivated.addListener(onTabActivatedOrUpdated);
 
-chrome.tabs.onUpdated.addListener(onActivatedOrUpdated);
+chrome.tabs.onUpdated.addListener(onTabActivatedOrUpdated);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // when user updates snippet data, reloading page is not required
@@ -420,6 +432,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         latestCtxTimestamp = request.ctxTimestamp;
     } else if (request === "givePasteData") {
         sendResponse(getPasteData());
+    } else if (typeof request.ctxEnabled !== "undefined") {
+        Data.ctxEnabled = request.ctxEnabled;
+        initContextMenu();
     }
 });
 

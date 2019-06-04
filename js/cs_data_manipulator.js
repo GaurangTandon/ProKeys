@@ -82,7 +82,7 @@
             } else if (typeof msg === "string") {
                 alert(msg);
             }
-            pk.checkRuntimeError();
+            pk.checkRuntimeError("cs_dm saveData")();
 
             if (callback) {
                 callback();

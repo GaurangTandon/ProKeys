@@ -27,6 +27,7 @@
         "prefer-const": "warn",
         "no-global-assign": "warn",
         "no-tabs": "warn",
-        "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"]
+        "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
+        "no-nested-ternary": "warn"
     }
 }
