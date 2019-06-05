@@ -1,4 +1,4 @@
-/* global q, Q, DualTextbox, pk, Data, SHOW_CLASS */
+/* global q, Q, DualTextbox, pk, Data */
 /* global qClsSingle, qCls, qId, Folder, Snip, Generic */
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
 
@@ -108,8 +108,8 @@
                 isSnip = type === "snip",
                 errorElements = qCls("error");
 
-            $panelSnippets.toggleClass(SHOW_CLASS);
-            $panel.toggleClass(SHOW_CLASS);
+            $panelSnippets.toggleClass(pk.dom.SHOW_CLASS);
+            $panel.toggleClass(pk.dom.SHOW_CLASS);
             if (isEditing) {
                 $panel.removeClass("creating-new");
             } else {
@@ -146,7 +146,7 @@
             headerSpan.html((isEditing ? "Edit " : "Create new ") + type);
 
             if (errorElements) {
-                errorElements.removeClass(SHOW_CLASS);
+                errorElements.removeClass(pk.dom.SHOW_CLASS);
             }
 
             // defaults
@@ -188,9 +188,9 @@
             }
 
             if (!isTextValid) {
-                textErrorElm.addClass(SHOW_CLASS).html(textVld);
+                textErrorElm.addClass(pk.dom.SHOW_CLASS).html(textVld);
             } else {
-                textErrorElm.removeClass(SHOW_CLASS);
+                textErrorElm.removeClass(pk.dom.SHOW_CLASS);
             }
 
             return [text, isTextValid];
@@ -324,8 +324,8 @@
         }
 
         function closePanel($panel) {
-            $panel.removeClass(SHOW_CLASS);
-            $panelSnippets.addClass(SHOW_CLASS);
+            $panel.removeClass(pk.dom.SHOW_CLASS);
+            $panelSnippets.addClass(pk.dom.SHOW_CLASS);
         }
 
         $closeBtn.on("click", function () {
@@ -403,12 +403,12 @@
         // $addNewBtn and $addNewPanel
         // and other combos
         function toggleBtnAndPanel(btn, panel) {
-            const existingPanel = q(".sub_panel.shown");
-            if (!panel.hasClass(SHOW_CLASS)) {
-                panel.addClass(SHOW_CLASS);
+            const existingPanel = q(".sub_panel.show");
+            if (!panel.hasClass(pk.dom.SHOW_CLASS)) {
+                panel.addClass(pk.dom.SHOW_CLASS);
             }
             if (existingPanel) {
-                existingPanel.removeClass(SHOW_CLASS);
+                existingPanel.removeClass(pk.dom.SHOW_CLASS);
             }
 
             const existingBtn = q(".panel_btn.active");
@@ -423,7 +423,7 @@
             // to remove the search/checkbox panel and so we need to remove
             // their type of list
             if (
-                !$searchPanel.hasClass(SHOW_CLASS)
+                !$searchPanel.hasClass(pk.dom.SHOW_CLASS)
                 && Folder.getListedFolder().isSearchResultFolder
             ) {
                 Data.snippets.listSnippets();
@@ -432,7 +432,7 @@
             // if checkbox style list is still shown
             if (
                 $containerSnippets.q("input[type=\"checkbox\"]")
-                && !$bulkActionPanel.hasClass(SHOW_CLASS)
+                && !$bulkActionPanel.hasClass(pk.dom.SHOW_CLASS)
             ) {
                 Data.snippets
                     .getUniqueFolder($bulkActionPanel.dataset.originalShownFolderName)
@@ -470,7 +470,7 @@
             toggleBtnAndPanel($searchBtn, $searchPanel);
             $searchField.html("").focus();
             // now hidden search panel, so re-list the snippets
-            if (!$searchPanel.hasClass(SHOW_CLASS)) {
+            if (!$searchPanel.hasClass(pk.dom.SHOW_CLASS)) {
                 Folder.getListedFolder().listSnippets();
             }
         });
@@ -521,7 +521,7 @@
 
                 toggleBtnAndPanel(this, $bulkActionPanel);
 
-                if ($bulkActionPanel.hasClass(SHOW_CLASS)) {
+                if ($bulkActionPanel.hasClass(pk.dom.SHOW_CLASS)) {
                     originalShownFolderName = Folder.getListedFolderName();
                     originalShownFolder = Data.snippets.getUniqueFolder(originalShownFolderName);
                     DOMcontainer = Folder.insertBulkActionDOM(originalShownFolder);
@@ -543,7 +543,7 @@
                     });
 
                     updateSelectionCount();
-                    folderSelect.removeClass(SHOW_CLASS);
+                    folderSelect.removeClass(pk.dom.SHOW_CLASS);
                 }
             });
 
@@ -575,9 +575,9 @@
                     selectedFolder,
                     atleastOneElementMoved = false;
 
-                if (!folderSelect.hasClass(SHOW_CLASS)) {
+                if (!folderSelect.hasClass(pk.dom.SHOW_CLASS)) {
                     Folder.refreshSelectList(selectList);
-                    folderSelect.addClass(SHOW_CLASS);
+                    folderSelect.addClass(pk.dom.SHOW_CLASS);
                 } else {
                     selectedFolder = Folder.getSelectedFolderInSelectList(selectList);
                     selectFolderName = selectedFolder.name;
@@ -641,10 +641,10 @@
                 isUpdate = localStorage.extensionUpdated === "true";
 
             if (isUpdate) {
-                $changeLog.addClass(SHOW_CLASS);
+                $changeLog.addClass(pk.dom.SHOW_CLASS);
 
                 $button.on("click", () => {
-                    $changeLog.removeClass(SHOW_CLASS);
+                    $changeLog.removeClass(pk.dom.SHOW_CLASS);
                     localStorage.extensionUpdated = "false";
                 });
             }

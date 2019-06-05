@@ -1,9 +1,8 @@
-/* global Q, q, Data, Folder, SHOW_CLASS, pk, initiateRestore, LS_REVISIONS_PROP */
-/* global deleteRevision, latestRevisionLabel */
-if (!pk.domWork) {
-    pk.domWork = {};
+/* global Q, q, Data, Folder, pk, initiateRestore, deleteRevision, latestRevisionLabel */
+if (!pk.dom) {
+    pk.dom = {};
 }
-pk.domWork.initBackup = function () {
+pk.dom.initBackup = function () {
     let dataToExport;
 
     // flattens all folders
@@ -33,7 +32,7 @@ pk.domWork.initBackup = function () {
                 revisions: setUpPastRevisions,
             };
 
-        q(`#snippets .panel_popup.${buttonClass}`).addClass(SHOW_CLASS);
+        q(`#snippets .panel_popup.${buttonClass}`).addClass(pk.dom.SHOW_CLASS);
         functionMap[buttonClass]();
     });
 
@@ -143,7 +142,7 @@ pk.domWork.initBackup = function () {
     let selectedRevision;
 
     function setUpPastRevisions() {
-        const revisions = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+        const revisions = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
 
         $select.html("");
 

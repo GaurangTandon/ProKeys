@@ -105,7 +105,7 @@ th {
     padding: 5px;
 }
 
-.shown {
+.show {
     display: block !important;
 }
 
@@ -1106,7 +1106,7 @@ footer {
     padding: 5px;
 }
 
-.sub_panel.shown {
+.sub_panel.show {
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
     width: 100%;
     padding: 5px;
@@ -1153,7 +1153,7 @@ footer {
     max-width: 550px;
 }
 
-.panel_popup.shown {
+.panel_popup.show {
     z-index: 10;
     background: white;
 }

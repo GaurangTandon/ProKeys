@@ -1,5 +1,4 @@
-/* global q, Q, DualTextbox, pk, Data, SHOW_CLASS */
-/* global qClsSingle, qId, LS_REVISIONS_PROP */
+/* global q, Q, DualTextbox, pk, Data, qClsSingle, qId */
 /* global chrome, ensureRobustCompat, Folder, $containerFolderPath */
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
 /* global initSnippetWork, saveRevision, notifySnippetDataChanges */
@@ -22,8 +21,7 @@
         MAX_SYNC_DATA_SIZE = 102400,
         MAX_LOCAL_DATA_SIZE = 5242880,
         VERSION = chrome.runtime.getManifest().version;
-    window.LS_REVISIONS_PROP = "prokeys_revisions";
-    window.SHOW_CLASS = "shown";
+    pk.LS_REVISIONS_PROP = "prokeys_revisions";
     pk.IN_OPTIONS_PAGE = true;
     window.$containerSnippets = null;
     window.$panelSnippets = null;
@@ -34,14 +32,14 @@
     // previous position; saveSnippetData will automatically insert it
     // back at the top of the list again
     window.deleteRevision = function (index) {
-        const parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+        const parsed = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
 
         parsed.splice(index, 1);
-        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+        localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
 
     window.saveRevision = function (dataString) {
-        let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+        let parsed = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
 
         parsed.unshift({
             // push latest revision
@@ -50,7 +48,7 @@
         });
 
         parsed = parsed.slice(0, MAX_REVISIONS_STORED);
-        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+        localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
 
     // notifies content script and background page
@@ -65,7 +63,7 @@
 
             for (let i = 0, len = tabs.length; i < len; i++) {
                 tab = tabs[i];
-                if (window.pk.isTabSafe(tab)) {
+                if (pk.isTabSafe(tab)) {
                     chrome.tabs.sendMessage(
                         tab.id,
                         msg,
@@ -554,7 +552,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             $snipMatchDelimitedWordInput.on("change", function () {
                 const isChecked = this.checked;
                 Data.matchDelimitedWord = isChecked;
-                $snipNameDelimiterListDIV.toggleClass(SHOW_CLASS);
+                $snipNameDelimiterListDIV.toggleClass(pk.dom.SHOW_CLASS);
                 pk.saveOtherData();
             });
 
@@ -651,7 +649,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             });
         }());
 
-        pk.domWork.initBackup();
+        pk.dom.initBackup();
 
         // prevent exposure of locals
         (function hotKeyWork() {
@@ -753,7 +751,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         if (firstInstall) {
             // refer github issues#4
             Data.dataUpdateVariable = !Data.dataUpdateVariable;
-            localStorage[LS_REVISIONS_PROP] = "[]";
+            localStorage[pk.LS_REVISIONS_PROP] = "[]";
             localStorage.firstInstall = "false";
             // see issues/218#issuecomment-420487611
             Data.snippets = JSON.parse(JSON.stringify(pk.SETTINGS_DEFAULTS.snippets));
@@ -782,7 +780,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         $snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
 
         if (Data.matchDelimitedWord) {
-            $snipNameDelimiterListDIV.addClass(SHOW_CLASS);
+            $snipNameDelimiterListDIV.addClass(pk.dom.SHOW_CLASS);
         }
 
         $blockSitesTextarea = q(".blocked-sites textarea");

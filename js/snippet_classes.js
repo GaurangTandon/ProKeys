@@ -898,7 +898,7 @@ Snip.makeHTMLSuitableForTextarea = function (htmlNode) {
         for (; i < childrenCount; i++) {
             elm = children[i];
 
-            if (elm.nodeType == 1) {
+            if (elm.nodeType === 1) {
                 tags = getProperTagPair(elm);
 
                 content = tags[0] + elementSanitize(elm) + tags[1];
@@ -1116,15 +1116,13 @@ Snip.makeHTMLSuitableForQuill = function (html) {
     const fontSizesEm = { "0.75em": "small", "1.5em": "large", "2.5em": "huge" },
         fontFamilies = ["monospace", "serif"];
 
-    for (const fontSize in fontSizesEm) {
-        if (fontSizesEm.hasOwnProperty(fontSize)) {
-            replacer(
-                `[style*="font-size: ${fontSize}"]`,
-                "font-size",
-                "size",
-                fontSizesEm[fontSize],
-            );
-        }
+    for (const fontSize of Object.keys(fontSizesEm)) {
+        replacer(
+            `[style*="font-size: ${fontSize}"]`,
+            "font-size",
+            "size",
+            fontSizesEm[fontSize],
+        );
     }
 
     replacerThroughArray(fontFamilies, "font-family");
@@ -1723,7 +1721,9 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                 }
             }
 
-            if (foundSnip) { break; }
+            if (foundSnip) {
+                break;
+            }
         }
 
         return foundSnip;
@@ -2116,10 +2116,8 @@ lose all his formatting, so show alert box for a warning and then accordingly tr
 to the new shown box */
 window.DualTextbox = function ($container, isTryItEditor) {
     // contants/flags
-    let SHOW_CLASS = "show",
-        RICH_EDITOR_CONTAINER_CLASS = "rich_editor_container",
+    const RICH_EDITOR_CONTAINER_CLASS = "rich_editor_container",
         RICH_EDITOR_CLASS = isTryItEditor ? "normal-editor" : "ql-editor",
-        isCurrModePlain = true, // default is textarea
         transferContentsToShownEditor = !isTryItEditor,
         // create navbar
         $nav = q.new("DIV").addClass("nav"),
@@ -2127,8 +2125,9 @@ window.DualTextbox = function ($container, isTryItEditor) {
         $pTextarea = q
             .new("P")
             .text("Textarea")
-            .addClass(SHOW_CLASS),
+            .addClass(pk.dom.SHOW_CLASS),
         $pRich = q.new("P").text("Styled textbox");
+    let isCurrModePlain = true; // default is textarea
     $pTextarea.dataset.containerSelector = "textarea";
     $pRich.dataset.containerSelector = `.${RICH_EDITOR_CONTAINER_CLASS}`;
     $pTextarea.dataset.editorSelector = "textarea";
@@ -2142,7 +2141,9 @@ window.DualTextbox = function ($container, isTryItEditor) {
 
     // create rich/plain boxes
     // (textarea doesn't need a container; so assume itself to be the container)
-    let $textarea = q.new("TEXTAREA").addClass([SHOW_CLASS, $pTextarea.dataset.containerSelector]),
+    let $textarea = q
+            .new("TEXTAREA")
+            .addClass([pk.dom.SHOW_CLASS, $pTextarea.dataset.containerSelector]),
         $richEditorContainer = q.new("DIV").addClass(RICH_EDITOR_CONTAINER_CLASS),
         $richEditor = q.new("DIV"),
         quillObj;
@@ -2203,7 +2204,7 @@ window.DualTextbox = function ($container, isTryItEditor) {
         if (
             !(node.tagName === "P")
             // only show if not already shown
-            || node.hasClass(SHOW_CLASS)
+            || node.hasClass(pk.dom.SHOW_CLASS)
         ) {
             return true;
         }
@@ -2217,18 +2218,18 @@ window.DualTextbox = function ($container, isTryItEditor) {
             return false;
         }
 
-        let currShown = $container.qCls(SHOW_CLASS),
+        let currShown = $container.qCls(pk.dom.SHOW_CLASS),
             currShownEditor = currShown[1],
             $newlyShownContainer,
             $newlyShownEditor;
-        currShown.removeClass(SHOW_CLASS);
+        currShown.removeClass(pk.dom.SHOW_CLASS);
         currShownEditor.removeAttribute("tab-index");
 
         // add show class to `p` and corresponding box
-        node.addClass(SHOW_CLASS);
+        node.addClass(pk.dom.SHOW_CLASS);
         $newlyShownContainer = $container.q(node.dataset.containerSelector);
         $newlyShownEditor = $container.q(node.dataset.editorSelector);
-        $newlyShownContainer.addClass(SHOW_CLASS);
+        $newlyShownContainer.addClass(pk.dom.SHOW_CLASS);
         $newlyShownEditor.attr("tab-index", 20).focus();
 
         isCurrModePlain = !isCurrModePlain; // reverse
