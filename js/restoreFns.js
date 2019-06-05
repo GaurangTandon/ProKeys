@@ -1,4 +1,4 @@
-/* global pk, Data, Folder, q, saveSnippetData, SETTINGS_DEFAULTS, ensureRobustCompat */
+/* global pk, Data, Folder, q, ensureRobustCompat */
 
 let validateRestoreData,
     initiateRestore;
@@ -204,7 +204,7 @@ let validateRestoreData,
             Data.snippets = existingSnippets;
         }
 
-        saveSnippetData(() => {
+        pk.saveSnippetData(() => {
             if (window.confirm("Data saved! Reload the page for changes to take effect?")) {
                 window.location.reload();
             }
@@ -232,7 +232,7 @@ let validateRestoreData,
 
         // delete user-added properties that ProKeys doesn't recognize
         for (const prop of Object.keys(data)) {
-            if (!Object.prototype.hasOwnProperty.call(SETTINGS_DEFAULTS, prop)) {
+            if (!Object.prototype.hasOwnProperty.call(pk.SETTINGS_DEFAULTS, prop)) {
                 delete data[prop];
             }
         }

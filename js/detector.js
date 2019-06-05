@@ -1,8 +1,4 @@
-/* global q, Folder, Snip, changeStorageType */
-/* global chrome, Data, pk */
-/* global debugLog, DB_load */
-
-// TODO: clear up properties isGmail, isGoogle from detector.js, and several pre.js properties
+/* global q, Folder, Snip, chrome, Data, pk, debugLog */
 
 (function () {
     let windowLoadChecker = setInterval(() => {
@@ -14,9 +10,6 @@
         // //////////////////////
         // Global variables
         // //////////////////////
-
-        isGoogle,
-        isGmail,
         /* should be "span"; if "p" is used, then it gets appended inside
             another "p" which the webpage was using. this can cause styling
             problems for that rich editor */
@@ -121,10 +114,7 @@
      * @param {Element} node to check
      */
     function isProKeysNode(node) {
-        return (
-            node.tagName === TAGNAME_SNIPPET_HOLDER_ELM
-            && ((node && node.hasClass(SPAN_CLASS)) || isGoogle)
-        );
+        return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM && (node && node.hasClass(SPAN_CLASS));
 
         // in plus.google.com, the span elements which
         // are added by prokeys do not retain their
@@ -1039,7 +1029,7 @@
 
             // [Tab] key for tab spacing/placeholder shifting
             if (keyCode === 9 && metaKeyNotPressed) {
-                if ((isGmail || isGoogle) && isParent(node, "form")) {
+                if (pk.isGmail && isParent(node, "form")) {
                     // in Gmail, the subject and to address field
                     // should not have any tab function.
                     // These two fields have a "form" as their parent.
@@ -1177,7 +1167,7 @@
             let timestamp;
 
             // when user updates snippet data, reloading page is not required
-            if (typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE) {
+            if (typeof request.snippetList !== "undefined" && !pk.IN_OPTIONS_PAGE) {
                 Data.snippets = Folder.fromArray(request.snippetList);
                 Folder.setIndices();
             } else if (request.checkBlockedYourself) {
@@ -1224,8 +1214,7 @@
         pk.updateAllValuesPerWin(window);
         debugLog("done initializing");
 
-        window.isGoogle = /(inbox\.google)|(plus\.google\.)/.test(window.location.href);
-        window.isGmail = /mail\.google/.test(window.location.href);
+        pk.isGmail = /mail\.google/.test(window.location.href);
     }
 
     function setEssentialItemsOnDBLoad() {
@@ -1237,10 +1226,10 @@
         );
     }
 
-    DB_load(() => {
+    pk.DB_load(() => {
         if (Data.snippets === false) {
-            changeStorageType();
-            DB_load(setEssentialItemsOnDBLoad);
+            pk.changeStorageType();
+            pk.DB_load(setEssentialItemsOnDBLoad);
 
             return;
         }

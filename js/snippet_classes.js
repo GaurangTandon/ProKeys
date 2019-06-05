@@ -1,6 +1,5 @@
-/* global q, chrome, pk */
-/* global Folder, Data, Snip, Generic, saveSnippetData */
-/* global Quill, $containerFolderPath, $containerSnippets, listOfSnippetCtxIDs */
+/* global q, chrome, pk, Folder, Data, Snip, Generic, latestRevisionLabel */
+/* global Quill, $containerFolderPath, $containerSnippets */
 
 /* this file is loaded both as a content script
     as well as a background page */
@@ -462,7 +461,7 @@ window.Snip = function (name, body, timestamp) {
                             timeChange += dateArithmeticChange * dateArithmeticMatch;
                         } else {
                             macroRegexString = macroRegexString
-                                .replace(/[^a-zA-Z\\\/]/g, "")
+                                .replace(/[^a-zA-Z\\/]/g, "")
                                 .replace("\\d", "");
                         }
 
@@ -899,7 +898,7 @@ Snip.makeHTMLSuitableForTextarea = function (htmlNode) {
         for (; i < childrenCount; i++) {
             elm = children[i];
 
-            if (elm.nodeType == 1) {
+            if (elm.nodeType === 1) {
                 tags = getProperTagPair(elm);
 
                 content = tags[0] + elementSanitize(elm) + tags[1];
@@ -1039,7 +1038,7 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
     }
 
     // 1. font size
-    for (const fontSize in Object.keys(fontSizesEm)) {
+    for (const fontSize of Object.keys(fontSizesEm)) {
         cls = `ql-size-${fontSize}`;
         replacer(cls, "font-size", `${fontSizesEm[fontSize]}em`);
     }
@@ -1050,11 +1049,10 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
 
     $container.Q("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
 
-    // access by window to get `undefined` and not any error
-    // problem 9 issues#153
-    if (window.isGmail) {
+    if (pk.isGmail) {
         $container
             .Q("blockquote")
+            // problem 9 issues#153
             .addClass("gmail_quote")
             .attr(
                 "style",
@@ -1118,15 +1116,13 @@ Snip.makeHTMLSuitableForQuill = function (html) {
     const fontSizesEm = { "0.75em": "small", "1.5em": "large", "2.5em": "huge" },
         fontFamilies = ["monospace", "serif"];
 
-    for (const fontSize in fontSizesEm) {
-        if (fontSizesEm.hasOwnProperty(fontSize)) {
-            replacer(
-                `[style*="font-size: ${fontSize}"]`,
-                "font-size",
-                "size",
-                fontSizesEm[fontSize],
-            );
-        }
+    for (const fontSize of Object.keys(fontSizesEm)) {
+        replacer(
+            `[style*="font-size: ${fontSize}"]`,
+            "font-size",
+            "size",
+            fontSizesEm[fontSize],
+        );
     }
 
     replacerThroughArray(fontFamilies, "font-family");
@@ -1297,11 +1293,7 @@ Snip.validate = function (arr, parentFolder, index) {
         propCounter = 0;
 
         // check whether this item has all required properties
-        for (const prop in arr) {
-            if (!arr.hasOwnProperty(prop)) {
-                continue;
-            }
-
+        for (const prop of Object.keys(arr)) {
             // if invalid property or not of string type
             if (correctProps.indexOf(prop) === -1) {
                 delete arr[prop];
@@ -1339,7 +1331,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
     this.isSearchResultFolder = !!isSearchResultFolder;
 
     // only options page mutates list
-    if (window.IN_OPTIONS_PAGE) {
+    if (pk.IN_OPTIONS_PAGE) {
         observeList(this.list);
     }
 
@@ -1382,7 +1374,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
 
             latestRevisionLabel = `created ${newObj.type} "${newObj.name}"`;
 
-            saveSnippetData(undefined, folderName, newObj.name);
+            pk.saveSnippetData(undefined, folderName, newObj.name);
         };
     }
 
@@ -1396,7 +1388,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
             object.edit(newName, body);
             latestRevisionLabel = `edited ${type} "${oldName}"`;
 
-            saveSnippetData(undefined, parent.name, newName);
+            pk.saveSnippetData(undefined, parent.name, newName);
         };
     }
 
@@ -1558,7 +1550,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
 
         this.list = sort(folders).concat(sort(snippets));
 
-        saveSnippetData(undefined, this.name);
+        pk.saveSnippetData(undefined, this.name);
     };
 
     this.listSnippets = function (objectNamesToHighlight) {
@@ -1725,7 +1717,9 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                 }
             }
 
-            if (foundSnip) { break; }
+            if (foundSnip) {
+                break;
+            }
         }
 
         return foundSnip;
@@ -1755,7 +1749,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                 },
             );
 
-            listOfSnippetCtxIDs.push(id);
+            pk.listOfSnippetCtxIDs.push(id);
 
             if (Folder.isFolder(object)) {
                 object.createCtxMenuEntry(id);
@@ -1775,7 +1769,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                 pk.checkRuntimeError("SCJS-CTX-CRE"),
             );
 
-            listOfSnippetCtxIDs.push(id);
+            pk.listOfSnippetCtxIDs.push(id);
         }
     };
 
@@ -1823,7 +1817,7 @@ Folder.fromArray = function (arr) {
     folder.list = arr.map(listElm => (Array.isArray(listElm) ? Folder.fromArray(listElm) : Snip.fromObject(listElm)));
 
     // only options page mutates list
-    if (window.IN_OPTIONS_PAGE) {
+    if (pk.IN_OPTIONS_PAGE) {
         observeList(folder.list);
     }
 
@@ -2118,10 +2112,8 @@ lose all his formatting, so show alert box for a warning and then accordingly tr
 to the new shown box */
 window.DualTextbox = function ($container, isTryItEditor) {
     // contants/flags
-    let SHOW_CLASS = "show",
-        RICH_EDITOR_CONTAINER_CLASS = "rich_editor_container",
+    const RICH_EDITOR_CONTAINER_CLASS = "rich_editor_container",
         RICH_EDITOR_CLASS = isTryItEditor ? "normal-editor" : "ql-editor",
-        isCurrModePlain = true, // default is textarea
         transferContentsToShownEditor = !isTryItEditor,
         // create navbar
         $nav = q.new("DIV").addClass("nav"),
@@ -2129,8 +2121,9 @@ window.DualTextbox = function ($container, isTryItEditor) {
         $pTextarea = q
             .new("P")
             .text("Textarea")
-            .addClass(SHOW_CLASS),
+            .addClass(pk.dom.SHOW_CLASS),
         $pRich = q.new("P").text("Styled textbox");
+    let isCurrModePlain = true; // default is textarea
     $pTextarea.dataset.containerSelector = "textarea";
     $pRich.dataset.containerSelector = `.${RICH_EDITOR_CONTAINER_CLASS}`;
     $pTextarea.dataset.editorSelector = "textarea";
@@ -2144,7 +2137,9 @@ window.DualTextbox = function ($container, isTryItEditor) {
 
     // create rich/plain boxes
     // (textarea doesn't need a container; so assume itself to be the container)
-    let $textarea = q.new("TEXTAREA").addClass([SHOW_CLASS, $pTextarea.dataset.containerSelector]),
+    let $textarea = q
+            .new("TEXTAREA")
+            .addClass([pk.dom.SHOW_CLASS, $pTextarea.dataset.containerSelector]),
         $richEditorContainer = q.new("DIV").addClass(RICH_EDITOR_CONTAINER_CLASS),
         $richEditor = q.new("DIV"),
         quillObj;
@@ -2205,7 +2200,7 @@ window.DualTextbox = function ($container, isTryItEditor) {
         if (
             !(node.tagName === "P")
             // only show if not already shown
-            || node.hasClass(SHOW_CLASS)
+            || node.hasClass(pk.dom.SHOW_CLASS)
         ) {
             return true;
         }
@@ -2219,18 +2214,18 @@ window.DualTextbox = function ($container, isTryItEditor) {
             return false;
         }
 
-        let currShown = $container.qCls(SHOW_CLASS),
+        let currShown = $container.qCls(pk.dom.SHOW_CLASS),
             currShownEditor = currShown[1],
             $newlyShownContainer,
             $newlyShownEditor;
-        currShown.removeClass(SHOW_CLASS);
+        currShown.removeClass(pk.dom.SHOW_CLASS);
         currShownEditor.removeAttribute("tab-index");
 
         // add show class to `p` and corresponding box
-        node.addClass(SHOW_CLASS);
+        node.addClass(pk.dom.SHOW_CLASS);
         $newlyShownContainer = $container.q(node.dataset.containerSelector);
         $newlyShownEditor = $container.q(node.dataset.editorSelector);
-        $newlyShownContainer.addClass(SHOW_CLASS);
+        $newlyShownContainer.addClass(pk.dom.SHOW_CLASS);
         $newlyShownEditor.attr("tab-index", 20).focus();
 
         isCurrModePlain = !isCurrModePlain; // reverse
@@ -2337,11 +2332,11 @@ function observeList(list) {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: (function (prop) {
+            value: (function (property) {
                 return function (...args) {
                     // do not use list[prop] because it is already overwritten
                     // and so will lead to inifinite recursion
-                    const ret = [][prop].apply(list, args);
+                    const ret = [][property].apply(list, args);
                     Folder.setIndices();
                     return ret;
                 };

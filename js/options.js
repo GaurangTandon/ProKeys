@@ -1,10 +1,7 @@
-/* global q, Q, DualTextbox, pk, Data, SHOW_CLASS */
-/* global qClsSingle, qId, LS_REVISIONS_PROP, saveOtherData */
-/* global chrome, saveSnippetData, ensureRobustCompat, initBackupDOM */
-/* global Folder, SETTINGS_DEFAULTS, $containerFolderPath, storage */
+/* global q, Q, DualTextbox, pk, Data, qClsSingle, qId */
+/* global chrome, ensureRobustCompat, Folder, $containerFolderPath */
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
 /* global initSnippetWork, saveRevision, notifySnippetDataChanges */
-/* global changeStorageType, databaseSave, DB_load, getCurrentStorageType */
 // above are defined in window. format
 
 // TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
@@ -24,9 +21,8 @@
         MAX_SYNC_DATA_SIZE = 102400,
         MAX_LOCAL_DATA_SIZE = 5242880,
         VERSION = chrome.runtime.getManifest().version;
-    window.LS_REVISIONS_PROP = "prokeys_revisions";
-    window.SHOW_CLASS = "shown";
-    window.IN_OPTIONS_PAGE = true;
+    pk.LS_REVISIONS_PROP = "prokeys_revisions";
+    pk.IN_OPTIONS_PAGE = true;
     window.$containerSnippets = null;
     window.$panelSnippets = null;
     window.$containerFolderPath = null;
@@ -36,14 +32,14 @@
     // previous position; saveSnippetData will automatically insert it
     // back at the top of the list again
     window.deleteRevision = function (index) {
-        const parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+        const parsed = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
 
         parsed.splice(index, 1);
-        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+        localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
 
     window.saveRevision = function (dataString) {
-        let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+        let parsed = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
 
         parsed.unshift({
             // push latest revision
@@ -52,7 +48,7 @@
         });
 
         parsed = parsed.slice(0, MAX_REVISIONS_STORED);
-        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+        localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
 
     // notifies content script and background page
@@ -67,7 +63,7 @@
 
             for (let i = 0, len = tabs.length; i < len; i++) {
                 tab = tabs[i];
-                if (window.pk.isTabSafe(tab)) {
+                if (pk.isTabSafe(tab)) {
                     chrome.tabs.sendMessage(
                         tab.id,
                         msg,
@@ -221,7 +217,7 @@
         // first insert in user list
         Data.charsToAutoInsertUserList.push(autoInsertPair);
 
-        saveOtherData(`Saved auto-insert pair - ${firstChar}${lastChar}`, listAutoInsertChars);
+        pk.saveOtherData(`Saved auto-insert pair - ${firstChar}${lastChar}`, listAutoInsertChars);
     }
 
     function removeAutoInsertChar(autoInsertPair) {
@@ -229,7 +225,10 @@
 
         Data.charsToAutoInsertUserList.splice(index, 1);
 
-        saveOtherData(`Removed auto-insert pair '${autoInsertPair.join("")}'`, listAutoInsertChars);
+        pk.saveOtherData(
+            `Removed auto-insert pair '${autoInsertPair.join("")}'`,
+            listAutoInsertChars,
+        );
     }
 
     // goes through all default properties, and adds
@@ -237,9 +236,9 @@
     window.ensureRobustCompat = function (data) {
         let missingProperties = false;
 
-        for (const prop of Object.keys(SETTINGS_DEFAULTS)) {
+        for (const prop of Object.keys(pk.SETTINGS_DEFAULTS)) {
             if (typeof data[prop] === "undefined") {
-                data[prop] = SETTINGS_DEFAULTS[prop];
+                data[prop] = pk.SETTINGS_DEFAULTS[prop];
                 missingProperties = true;
             }
         }
@@ -259,13 +258,13 @@
         // so that storage gets changed by DB_load
         Data.snippets = false;
 
-        databaseSave(() => {
-            changeStorageType();
+        pk.databaseSave(() => {
+            pk.changeStorageType();
 
             if (transferData) {
                 // get the copy
                 Data.snippets = str;
-                databaseSave(afterMigrate);
+                pk.databaseSave(afterMigrate);
             } else {
                 // don't do Data.snippets = Folder.fromArray(Data.snippets);
                 // here since Data.snippets is false and since this is
@@ -363,8 +362,8 @@
     // updates the storage header in #headArea
     // "You have x bytes left out of y bytes"
     function updateStorageAmount() {
-        storage.getBytesInUse((bytesInUse) => {
-            const bytesAvailable = storage.MAX_ITEMS ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
+        pk.storage.getBytesInUse((bytesInUse) => {
+            const bytesAvailable = pk.storage.MAX_ITEMS ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
 
             // set current bytes
             qClsSingle("currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
@@ -387,7 +386,7 @@
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         if (!pk.DB_loaded) {
-            setTimeout(DB_load, 100, DBLoadCallback);
+            setTimeout(pk.DB_load, 100, DBLoadCallback);
             return;
         }
 
@@ -490,14 +489,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             $tabKeyInput.on("change", function () {
                 Data.tabKey = this.checked;
 
-                saveOtherData();
+                pk.saveOtherData();
             });
 
             // on user input in tab key setting
             $ctxEnabledInput.on("change", function () {
                 Data.ctxEnabled = this.checked;
                 notifyCtxEnableToggle();
-                saveOtherData();
+                pk.saveOtherData();
             });
 
             $blockSitesTextarea.on("keydown", (event) => {
@@ -520,7 +519,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         Data.blockedSites.push(sanitizedURL);
                     }
 
-                    saveOtherData("Saved successfully", listBlockedSites);
+                    pk.saveOtherData("Saved successfully", listBlockedSites);
                 }
             });
 
@@ -553,8 +552,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             $snipMatchDelimitedWordInput.on("change", function () {
                 const isChecked = this.checked;
                 Data.matchDelimitedWord = isChecked;
-                $snipNameDelimiterListDIV.toggleClass(SHOW_CLASS);
-                saveOtherData();
+                $snipNameDelimiterListDIV.toggleClass(pk.dom.SHOW_CLASS);
+                pk.saveOtherData();
             });
 
             function validateDelimiterList(stringList) {
@@ -581,7 +580,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         return true;
                     }
                     Data.snipNameDelimiterList = this.value;
-                    saveOtherData();
+                    pk.saveOtherData();
                 }
 
                 return false;
@@ -597,9 +596,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         "Are you sure you want to replace the current list with the default delimiter list?",
                     )
                 ) {
-                    Data.snipNameDelimiterList = SETTINGS_DEFAULTS.snipNameDelimiterList;
+                    Data.snipNameDelimiterList = pk.SETTINGS_DEFAULTS.snipNameDelimiterList;
                     delimiterInit();
-                    saveOtherData();
+                    pk.saveOtherData();
                 }
             });
 
@@ -620,8 +619,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     return;
                 }
 
-                storage.getBytesInUse((bytesInUse) => {
-                    if (getCurrentStorageType() === "local" && bytesInUse > MAX_SYNC_DATA_SIZE) {
+                pk.storage.getBytesInUse((bytesInUse) => {
+                    if (pk.getCurrentStorageType() === "local" && bytesInUse > MAX_SYNC_DATA_SIZE) {
                         window.alert(
                             `You are currently using ${bytesInUse} bytes of data; while sync storage only permits a maximum of ${MAX_SYNC_DATA_SIZE} bytes.\n\nPlease reduce the size of data (by deleting, editing, exporting snippets) you're using to migreate to sync storage successfully.`,
                         );
@@ -650,7 +649,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             });
         }());
 
-        initBackupDOM();
+        pk.dom.initBackup();
 
         // prevent exposure of locals
         (function hotKeyWork() {
@@ -694,7 +693,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 } else if (valid) {
                     Data.hotKey = combo.concat([keyCode]).slice(0);
 
-                    saveOtherData(`Hotkey set to ${getCurrentHotkey()}`, () => {
+                    pk.saveOtherData(`Hotkey set to ${getCurrentHotkey()}`, () => {
                         window.location.href = "#settings";
                         window.location.reload();
                     });
@@ -730,9 +729,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         // wrong storage mode
         if (Data.snippets === false) {
             // change storage to other type
-            changeStorageType();
+            pk.changeStorageType();
 
-            DB_load(DBLoadCallback);
+            pk.DB_load(DBLoadCallback);
         } else {
             pk.DB_loaded = true;
             init();
@@ -752,10 +751,10 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         if (firstInstall) {
             // refer github issues#4
             Data.dataUpdateVariable = !Data.dataUpdateVariable;
-            localStorage[LS_REVISIONS_PROP] = "[]";
+            localStorage[pk.LS_REVISIONS_PROP] = "[]";
             localStorage.firstInstall = "false";
             // see issues/218#issuecomment-420487611
-            Data.snippets = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS.snippets));
+            Data.snippets = JSON.parse(JSON.stringify(pk.SETTINGS_DEFAULTS.snippets));
             saveRevision(Data.snippets);
         }
 
@@ -765,14 +764,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
         // save the default snippets ONLY
         if (firstInstall) {
-            saveSnippetData();
+            pk.saveSnippetData();
         }
 
         Folder.setIndices();
 
         const propertiesChanged = ensureRobustCompat(Data);
         if (propertiesChanged) {
-            saveOtherData();
+            pk.saveOtherData();
         }
 
         // on load; set checkbox state to user preference
@@ -781,7 +780,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         $snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
 
         if (Data.matchDelimitedWord) {
-            $snipNameDelimiterListDIV.addClass(SHOW_CLASS);
+            $snipNameDelimiterListDIV.addClass(pk.dom.SHOW_CLASS);
         }
 
         $blockSitesTextarea = q(".blocked-sites textarea");
@@ -794,7 +793,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         autoInsertWrapSelectionInput.checked = Data.wrapSelectionAutoInsert;
         autoInsertWrapSelectionInput.on("click", () => {
             Data.wrapSelectionAutoInsert = autoInsertWrapSelectionInput.checked;
-            saveOtherData();
+            pk.saveOtherData();
         });
 
         omniboxSearchURLInput = q(".search-provider input");
@@ -803,7 +802,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         omniboxSearchURLInput.on("keydown", function (e) {
             if (e.keyCode === 13) {
                 Data.omniboxSearchURL = this.value;
-                saveOtherData();
+                pk.saveOtherData();
             }
         });
 
@@ -812,7 +811,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 local: [local, `${sync1}<br>${sync2}`],
                 sync: [sync, localT],
             },
-            currArr = textMap[getCurrentStorageType()];
+            currArr = textMap[pk.getCurrentStorageType()];
 
         q(".storageMode .current p").html(currArr[0]);
         q(".storageMode .transfer p").html(currArr[1]);
