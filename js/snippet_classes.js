@@ -1,4 +1,4 @@
-/* global q, chrome, pk, Folder, Data, Snip, Generic */
+/* global q, chrome, pk, Folder, Data, Snip, Generic, latestRevisionLabel */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 /* this file is loaded both as a content script
@@ -461,7 +461,7 @@ window.Snip = function (name, body, timestamp) {
                             timeChange += dateArithmeticChange * dateArithmeticMatch;
                         } else {
                             macroRegexString = macroRegexString
-                                .replace(/[^a-zA-Z\\\/]/g, "")
+                                .replace(/[^a-zA-Z\\/]/g, "")
                                 .replace("\\d", "");
                         }
 
@@ -1038,7 +1038,7 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
     }
 
     // 1. font size
-    for (const fontSize in Object.keys(fontSizesEm)) {
+    for (const fontSize of Object.keys(fontSizesEm)) {
         cls = `ql-size-${fontSize}`;
         replacer(cls, "font-size", `${fontSizesEm[fontSize]}em`);
     }
@@ -1293,11 +1293,7 @@ Snip.validate = function (arr, parentFolder, index) {
         propCounter = 0;
 
         // check whether this item has all required properties
-        for (const prop in arr) {
-            if (!arr.hasOwnProperty(prop)) {
-                continue;
-            }
-
+        for (const prop of Object.keys(arr)) {
             // if invalid property or not of string type
             if (correctProps.indexOf(prop) === -1) {
                 delete arr[prop];
