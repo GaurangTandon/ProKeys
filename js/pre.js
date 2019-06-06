@@ -7,6 +7,20 @@
 // will be used to store prokeys related variables (#204)
 window.pk = {};
 
+// attempting to send a message to a tab on chrome:// or webstore
+// page will fail with this error because no content script is running there
+// see https://stackoverflow.com/a/11911806
+export function isTabSafe(tab) {
+    return (
+        tab
+        && tab.id
+        && tab.url
+        && !/^chrome-extension:/.test(tab.url)
+        && !/^chrome:/.test(tab.url)
+        && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
+    );
+}
+
 /**
  * extends NodeList prototype per iframe present in the webpage
  * @type {Function}
@@ -73,6 +87,7 @@ let extendNodePrototype;
     ];
     Date.DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     Date.MILLISECONDS_IN_A_DAY = 86400 * 1000;
+    // eslint-disable-next-line no-proto
     NodeList.prototype.__proto__ = Array.prototype;
 
     function isLeapYear(year) {
@@ -670,7 +685,9 @@ let extendNodePrototype;
             if (chrome.runtime.lastError) {
                 // TODO: remove
                 // alert(
-                // "An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com . This will help me resolve your issue and improve my extension. Thanks!"
+                // `An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is
+                // shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com
+                // .This will help me resolve your issue and improve my extension. Thanks!`
                 // );
                 // Chrome.Runtime.LastError:, do not use .error() as it prints
                 // out too many red messages :(
@@ -772,19 +789,7 @@ let extendNodePrototype;
 
     pk.updateAllValuesPerWin(window);
 
-    // attempting to send a message to a tab on chrome:// or webstore
-    // page will fail with this error because no content script is running there
-    // see https://stackoverflow.com/a/11911806
-    pk.isTabSafe = function (tab) {
-        return (
-            tab
-            && tab.id
-            && tab.url
-            && !/^chrome-extension:/.test(tab.url)
-            && !/^chrome:/.test(tab.url)
-            && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
-        );
-    };
+    pk.isTabSafe = isTabSafe;
 
     /**
      * @param {String} url to check

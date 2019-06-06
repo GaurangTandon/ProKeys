@@ -1,4 +1,7 @@
 /* global q, Folder, Data, Generic, chrome, pk */
+
+import { isTabSafe } from "./pre";
+
 console.log(`Loaded once ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
     // can recall at max 10 times
@@ -66,7 +69,7 @@ function getPasteData() {
 }
 
 function injectScript(tab) {
-    if (!pk.isTabSafe(tab)) {
+    if (!isTabSafe(tab)) {
         return;
     }
 
@@ -274,7 +277,7 @@ function updateContextMenu(isRecalled = false) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
 
-        if (!pk.isTabSafe(tab)) {
+        if (!isTabSafe(tab)) {
             return;
         }
 
@@ -336,7 +339,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
         };
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (!pk.isTabSafe(tabs[0])) {
+            if (!isTabSafe(tabs[0])) {
                 return;
             }
             chrome.tabs.sendMessage(tabs[0].id, msg, pk.checkRuntimeError("ID==BSI"));
@@ -347,7 +350,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
-            if (pk.isTabSafe(tab)) {
+            if (isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
                     tab.id,
                     {
@@ -395,7 +398,7 @@ function onTabActivatedOrUpdated({ tabId }) {
     }
 
     chrome.tabs.get(tabId, (tab) => {
-        if (pk.isTabSafe(tab)) {
+        if (isTabSafe(tab)) {
             path = IMG_ACTIVE;
         } else {
             path = IMG_INACTIVE;
@@ -416,7 +419,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.openBlockSiteModalInParent === true) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
-            if (pk.isTabSafe(tab)) {
+            if (isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
                     tab.id,
                     { showBlockSiteModal: true, data: request.data },
