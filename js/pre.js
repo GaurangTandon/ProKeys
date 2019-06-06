@@ -9,18 +9,18 @@ window.pk = {};
 
 /**
  * extends NodeList prototype per iframe present in the webpage
+ * @type {Function}
  */
-// only one method exposed to user
 let extendNodePrototype;
 (function protoExtensionWork() {
-    const protoExtensionNames = [],
-        protoExtensionFunctions = [];
+    const protoExtensions = {};
+
     function setNodeListPropPerWindow(prop, func, win) {
         // in case of custom created array of Nodes, Array.prototype is necessary
         win.Array.prototype[prop] = win.NodeList.prototype[prop] = win.HTMLCollection.prototype[
             prop
         ] = function (...args) {
-            // HTMLCollection doesn't support forEach
+            // HTMLCollection, etc. doesn't support forEach
             for (let i = 0, len = this.length; i < len; i++) {
                 func.apply(this[i], args);
             }
@@ -33,19 +33,18 @@ let extendNodePrototype;
 
     // called by detector.js
     pk.updateAllValuesPerWin = function (win) {
-        for (let i = 0, count = protoExtensionNames.length; i < count; i++) {
-            setNodeListPropPerWindow(protoExtensionNames[i], protoExtensionFunctions[i], win);
+        for (const [name, func] of protoExtensions) {
+            setNodeListPropPerWindow(name, func, win);
         }
     };
 
     /**
      * extends protoype of Node, Array and NodeList
-     * @param (string) prop property to extend
-     * @param (function) func function to execute per for each Node
+     * @param {String} prop property to extend
+     * @param {Function} func function to execute per for each Node
      */
     extendNodePrototype = function (prop, func) {
-        protoExtensionNames.push(prop);
-        protoExtensionFunctions.push(func);
+        protoExtensions[prop] = func;
     };
 }());
 
@@ -76,9 +75,13 @@ let extendNodePrototype;
     Date.MILLISECONDS_IN_A_DAY = 86400 * 1000;
     NodeList.prototype.__proto__ = Array.prototype;
 
+    function isLeapYear(year) {
+        return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    }
+
     Date.prototype.isLeapYear = function () {
         const year = this.getFullYear();
-        return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        return isLeapYear(year);
     };
 
     Date.getCurrentTimestamp = function () {
@@ -96,6 +99,7 @@ let extendNodePrototype;
             dn = this.getDate();
         let dayOfYear = dayCount[mn] + dn;
 
+        // if mn is ahead of february (= 1)
         if (mn > 1 && this.isLeapYear()) {
             dayOfYear++;
         }
@@ -142,7 +146,7 @@ let extendNodePrototype;
             case 1:
                 totalDaysChange--;
                 // leap year 29 days; one less than 30 days
-                if (!(currYear % 400 === 0 || (currYear % 100 !== 0 && currYear % 4 === 0))) {
+                if (!isLeapYear(currYear)) {
                     totalDaysChange--;
                 }
                 break;
@@ -263,7 +267,7 @@ let extendNodePrototype;
          * @returns {Element[]} array (not HTMLCollection!) of matched elements
          */
         qCls(cls) {
-            return Array.prototype.slice.call(this.getElementsByClassName(cls));
+            return [...this.getElementsByClassName(cls)];
         },
         /**
          * short hand for document.getElementsByClassName;
@@ -273,17 +277,11 @@ let extendNodePrototype;
          */
         qClsSingle(cls) {
             const res = this.qCls(cls);
-            return res && res[0];
+            return res ? res[0] : null;
         },
     };
 
-    for (
-        let i = 0, funcs = Object.keys(DOM_HELPERS), len = funcs.length, funcName, func;
-        i < len;
-        i++
-    ) {
-        funcName = funcs[i];
-        func = DOM_HELPERS[funcName];
+    for (const [funcName, func] of DOM_HELPERS) {
         window[funcName] = func.bind(document);
         extendNodePrototype(funcName, func);
     }
@@ -299,11 +297,11 @@ let extendNodePrototype;
          * recommend using as contentWindow's of iframes will not
          * have this property set
          */
-        (window.on = function (name, fn, useCapture) {
-            const names = name.split(/,\s*/g);
+        (window.on = function (nameList, fn, useCapture) {
+            const names = nameList.split(/,\s*/g);
 
-            for (let i = 0, len = names.length; i < len; i++) {
-                this.addEventListener(names[i], fn, useCapture);
+            for (const name of names) {
+                this.addEventListener(name, fn, useCapture);
             }
 
             return this;
@@ -316,7 +314,6 @@ let extendNodePrototype;
         return this;
     });
 
-    // returns true if element has class; usage: Element.hasClass("class")
     extendNodePrototype("hasClass", function (className) {
         return this.className && new RegExp(`(^|\\s)${className}(\\s|$)`).test(this.className);
     });
@@ -586,13 +583,7 @@ let extendNodePrototype;
     };
 
     pk.isObjectEmpty = function (obj) {
-        for (const prop in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, prop)) {
-                return false;
-            }
-        }
-
-        return true;
+        return Object.keys(obj).length === 0;
     };
 
     pk.escapeRegExp = function (str) {
@@ -672,8 +663,8 @@ let extendNodePrototype;
         return false;
     };
 
-    /*  stack trace may sometimes not be beneficial, therefore
-        use a unique identifier to track down the culprit */
+    /*  stack trace is not beneficial being async, therefore
+        use a unique identifier to track down the origin */
     pk.checkRuntimeError = function (uniqueIdentifier) {
         return function checkREHelper() {
             if (chrome.runtime.lastError) {
