@@ -29,6 +29,7 @@
         "no-tabs": "warn",
         "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
         "no-nested-ternary": "warn",
-        "no-use-before-define": "warn"
+        "no-use-before-define": "warn",
+        "prefer-destructuring": "warn"
     }
 }

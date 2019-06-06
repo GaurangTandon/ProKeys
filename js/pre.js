@@ -1,4 +1,4 @@
-/* global q, pk, Snip */
+/* global q, pk, Snip, Data */
 
 // custom functions inspired from jQuery
 // special thanks to
@@ -57,6 +57,7 @@ let extendNodePrototype;
     }
     pk.dom.SHOW_CLASS = "show";
     pk.OBJECT_NAME_LIMIT = 60;
+    pk.protoWWWReplaceRegex = /^(ht|f)tps?:\/\/(www\.)?/;
     Date.MONTHS = [
         "January",
         "February",
@@ -792,5 +793,23 @@ let extendNodePrototype;
             && !/^chrome:/.test(tab.url)
             && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
         );
+    };
+
+    /**
+     * @param {String} url to check
+     * @returns {Boolean} true if site is blocked by user, false otherwise
+     */
+    pk.isBlockedSite = function (url) {
+        const domain = url.replace(pk.protoWWWReplaceRegex, "");
+
+        for (const blockedSite of Data.blockedSites) {
+            const regex = new RegExp(`^${pk.escapeRegExp(blockedSite)}`);
+
+            if (regex.test(domain)) {
+                return true;
+            }
+        }
+
+        return false;
     };
 }());
