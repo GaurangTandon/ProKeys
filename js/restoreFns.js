@@ -3,10 +3,13 @@
 let validateRestoreData,
     initiateRestore;
 (function backUpDataValidationFunctions() {
+    /**
+     * "existing", "imported", "both"
+     * @type {String}
+     */
     let duplicateSnippetToKeep,
         typeOfData;
 
-    // duplicateSnippetToKeep - one of "existing", "imported", "both"
     function handleDuplicatesInSnippets(inputFolderMain, shouldMergeDuplicateFolderContents) {
         const stringToAppendToImportedObject = "(1)";
 
@@ -78,35 +81,35 @@ let validateRestoreData,
         handler(inputFolderMain);
     }
 
-    // receives charToAutoInsertUserList from user
-    // during restore and validates it
+    /**
+     * receives charList from user during restore and validates it
+     * @param {String[][]} charList user inputted auto insert pairs
+     */
     function validateCharListArray(charList) {
-        for (let i = 0, len = charList.length, item, autoInsertSpecifierMessage; i < len; i++) {
-            item = charList[i];
-            autoInsertSpecifierMessage = `elements in ${i + 1}th character list`;
+        const len = charList.length;
+        for (let idx = 0; idx < len; idx++) {
+            const item = charList[idx],
+                autoInsertSpecifierMessage = `elements in ${idx + 1}th character list`;
 
-            // item should be array
             if (!Array.isArray(item)) {
                 return `Invalid ${autoInsertSpecifierMessage}`;
             }
 
-            // array should be of 2 items
             if (item.length !== 2) {
                 return `Expected exactly 2 ${autoInsertSpecifierMessage}`;
             }
 
-            // item's elements should be string
-            if (typeof item[0] + typeof item[1] !== "stringstring") {
+            if (typeof item[0] !== "string" || typeof item[1] !== "string") {
                 return `${autoInsertSpecifierMessage} are not strings.`;
             }
 
-            // item's elements should be one char in length
+            // only one char in each
             if (item[0].length !== 1 || item[1].length !== 1) {
                 return `${autoInsertSpecifierMessage} are not of length 1.`;
             }
 
             // check dupes
-            for (let j = i + 1; j < len; j++) {
+            for (let j = idx + 1; j < len; j++) {
                 if (item[0] === charList[j][0]) {
                     charList.splice(j, 1);
                     j--;
@@ -242,24 +245,17 @@ let validateRestoreData,
             return vld2;
         }
 
-        for (let k = 0, len = data.blockedSites.length, elm; k < len; k++) {
-            elm = data.blockedSites[k];
-
+        for (const [idx, blockedSite] of data.blockedSites.entries()) {
             // check type
-            if (typeof elm !== "string") {
-                return `Element ${elm} of blocked sites was not a string.`;
+            if (typeof blockedSite !== "string") {
+                return `Element ${blockedSite} of blocked sites was not a string.`;
             }
 
-            data.blockedSites[k] = elm.replace(/^www/, "");
-
-            // delete duplicate sites
-            for (let j = k + 1; j < len; j++) {
-                if (elm === data.blockedSites[j]) {
-                    data.blockedSites.splice(j, 1);
-                    j--;
-                }
-            }
+            data.blockedSites[idx] = blockedSite.replace(/^www/, "");
         }
+
+        // remove all duplicates in one step
+        data.blockedSites = Array.from(new Set(data.blockedSites));
 
         return "true";
     };

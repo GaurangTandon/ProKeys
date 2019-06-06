@@ -189,25 +189,20 @@ Generic.getButtonsDOMElm = function () {
 };
 
 Generic.getDOMElement = function (objectNamesToHighlight) {
-    let divMain,
-        divName,
-        img;
-
     objectNamesToHighlight = objectNamesToHighlight === undefined
         ? []
         : !Array.isArray(objectNamesToHighlight)
             ? [objectNamesToHighlight]
             : objectNamesToHighlight;
 
-    divMain = q.new("div").addClass([this.type, "generic", Snip.DOMContractedClass]);
-
-    img = q.new("img");
+    const divMain = q.new("div").addClass([this.type, "generic", Snip.DOMContractedClass]),
+        img = q.new("img");
     img.src = `../imgs/${this.type}.svg`;
 
     divMain.appendChild(img);
 
     // creating the short `div` element
-    divName = q.new("div");
+    const divName = q.new("div");
     // text with newlines does not fit in one line
     divName.text(this.name).addClass("name");
     divMain.appendChild(divName);
@@ -219,7 +214,7 @@ Generic.getDOMElement = function (objectNamesToHighlight) {
             divMain.removeClass(Snip.DOMContractedClass);
         }
 
-        // highlight so the user may notice it #ux
+        // highlight so the user may notice it
         // remove class after 3 seconds else it will
         // highlight repeatedly
         divMain.addClass(Generic.HIGHLIGHTING_CLASS);
@@ -231,8 +226,12 @@ Generic.getDOMElement = function (objectNamesToHighlight) {
     return divMain;
 };
 
-// when we attach click handler to div.snip/.folder
-// .buttons div click handlers get overrided
+/**
+ * when we attach click handler to div.snip/.folder
+ * .buttons div click handlers get overrided
+ * @param {Function} handler
+ * @returns {Function}
+ */
 Generic.preventButtonClickOverride = function (handler) {
     return function (e) {
         if (!e.target.matches(".buttons, .buttons div")) {
@@ -245,21 +244,28 @@ Generic.getDuplicateObjectsText = function (text, type) {
     return `A ${type} with name '${text}' already exists (possibly with the same letters in upper/lower case.)`;
 };
 
+/**
+ * @param {String} name
+ * @param {String} type
+ * @returns {String} validation result
+ */
 Generic.isValidName = function (name, type) {
-    return name.length === 0
-        ? "Empty name field"
-        : name.length > pk.OBJECT_NAME_LIMIT
-            ? `Name cannot be greater than ${
-                pk.OBJECT_NAME_LIMIT
-            } characters. Current name has ${name.length - pk.OBJECT_NAME_LIMIT} more characters.`
-            : Data.snippets.getUniqueObject(name, type)
-                ? Generic.getDuplicateObjectsText(name, type)
-                : "true";
+    if (name.length === 0) {
+        return "Empty name field";
+    }
+    if (name.length > pk.OBJECT_NAME_LIMIT) {
+        return `Name cannot be greater than ${
+            pk.OBJECT_NAME_LIMIT
+        } characters. Current name has ${name.length - pk.OBJECT_NAME_LIMIT} more characters.`;
+    }
+    return Data.snippets.getUniqueObject(name, type)
+        ? Generic.getDuplicateObjectsText(name, type)
+        : "true";
 };
 
 /**
- * it returns the snip/folder object associated with the listElm
- * @param: listElm: The DOM element .snip or .folder, whose buttons or anything are clicked
+ * @param {Element} listElm The DOM element .snip or .folder, whose buttons, etc. were clicked
+ * @returns {Generic} the snip/folder object associated with the listElm
  */
 Generic.getObjectThroughDOMListElm = function (listElm) {
     const isSnip = listElm.classList.contains("snip"),
@@ -295,12 +301,12 @@ window.Snip = function (name, body, timestamp) {
             divBody = q.new("div").addClass("body");
 
         function makeSuitableCollapsedDisplay(bodyText) {
-            const replacer = " ";
+            const whitespaceReplacer = " ";
 
             return bodyText
                 .substring(0, Snip.MAX_COLLAPSED_CHARACTERS_DISPLAYED)
-                .replace(/\n|<br>/g, replacer)
-                .replace(/(<\/[a-z]+>)/gi, `$1${replacer}`);
+                .replace(/\n|<br>/g, whitespaceReplacer)
+                .replace(/(<\/[a-z]+>)/gi, `$1${whitespaceReplacer}`);
         }
 
         function toggleDivBodyText(snip) {
@@ -326,7 +332,7 @@ window.Snip = function (name, body, timestamp) {
         // even when user is selecting text in it
         // hence we should put a selectable but transparent
         // element at the top
-        function getClickableElm() {
+        function getClickableElm(node) {
             return q
                 .new("div")
                 .addClass("clickable")
@@ -334,7 +340,7 @@ window.Snip = function (name, body, timestamp) {
                     "click",
                     Generic.preventButtonClickOverride(() => {
                         divMain.toggleClass(Snip.DOMContractedClass);
-                        toggleDivBodyText(this);
+                        toggleDivBodyText(node);
                     }),
                 );
         }
@@ -342,7 +348,7 @@ window.Snip = function (name, body, timestamp) {
         toggleDivBodyText(this);
         divMain.appendChild(divBody);
 
-        divMain.appendChild(getClickableElm.call(this));
+        divMain.appendChild(getClickableElm(this));
 
         const timestampElm = q
             .new("div")
@@ -1117,12 +1123,7 @@ Snip.makeHTMLSuitableForQuill = function (html) {
         fontFamilies = ["monospace", "serif"];
 
     for (const fontSize of Object.keys(fontSizesEm)) {
-        replacer(
-            `[style*="font-size: ${fontSize}"]`,
-            "font-size",
-            "size",
-            fontSizesEm[fontSize],
-        );
+        replacer(`[style*="font-size: ${fontSize}"]`, "font-size", "size", fontSizesEm[fontSize]);
     }
 
     replacerThroughArray(fontFamilies, "font-family");
@@ -1271,26 +1272,25 @@ Snip.sanitizeTextareaTextForSave = function (text) {
     return htmlNode.innerHTML;
 };
 Snip.validate = function (arr, parentFolder, index) {
-    let correctProps = ["name", "body", "timestamp"],
+    const correctProps = ["name", "body", "timestamp"],
         expectedPropsLength = correctProps.length,
         checks = {
             body: Snip.isValidBody,
             name: Snip.isValidName,
         },
-        propVal,
-        checkFunc,
-        propCounter,
-        snippetVld,
         snippetUnderFolderString = `${index}th snippet under folder ${parentFolder}`;
+    let propVal,
+        snippetVld;
 
     if (Array.isArray(arr)) {
-        if ((snippetVld = Folder.validate(arr)) !== "true") {
+        snippetVld = Folder.validate(arr);
+        if (snippetVld !== "true") {
             return snippetVld;
         }
     } else if (!pk.isObject(arr)) {
         return `${snippetUnderFolderString} is not an object.`;
     } else {
-        propCounter = 0;
+        let propCounter = 0;
 
         // check whether this item has all required properties
         for (const prop of Object.keys(arr)) {
@@ -1303,7 +1303,7 @@ Snip.validate = function (arr, parentFolder, index) {
             }
 
             propVal = arr[prop];
-            checkFunc = checks[prop];
+            const checkFunc = checks[prop];
 
             if (
                 checkFunc
@@ -1443,8 +1443,8 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
 
         let folder = this;
 
-        for (let i = 0, len = index.length; i < len; i++) {
-            folder = folder.list[index[i]];
+        for (const idx of index) {
+            folder = folder.list[idx];
         }
 
         return folder;
@@ -1583,12 +1583,10 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
         insertPathPartDivs(Folder.MAIN_SNIPPETS_NAME);
 
         let index = Data.snippets.getUniqueFolderIndex(this.name),
-            i = 0,
-            len = index.length,
             folder = Data.snippets;
 
-        for (; i < len; i++) {
-            folder = folder.list[index[i]];
+        for (const idx of index) {
+            folder = folder.list[idx];
             insertPathPartDivs(folder.name);
         }
 
@@ -1606,12 +1604,11 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
          * however my code doesn't work (gives "xml no name" error) on doing it, and actually works without doing it
          */
 
-        let div = q.new("div"),
-            output; /* ,
-            replacementMap = [["&", "&amp;"], ["<", "&lt;"], [">", "&gt;"], ["'", "&apos;"], ["\"", "&quot;"]] */
+        const div = q.new("div");
+        /* replacementMap = [["&", "&amp;"], ["<", "&lt;"], [">", "&gt;"], ["'", "&apos;"], ["\"", "&quot;"]] */
 
         div.innerHTML = text;
-        output = div.innerText.replace(/\n/g, " ");
+        const output = div.innerText.replace(/\n/g, " ");
 
         /* replacementMap.forEach(function (element) {
             output = output.replace(element[0], element[1]);
@@ -1740,13 +1737,7 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
                     title: object.name,
                     parentId,
                 },
-                () => {
-                    if (chrome.runtime.lastError) {
-                        console.log("Error while creating context menu: ");
-                        console.log(chrome.runtime.lastError);
-                    }
-                    // do nothing
-                },
+                pk.checkRuntimeError("CRX-CREATE-SCJS"),
             );
 
             pk.listOfSnippetCtxIDs.push(id);
@@ -1775,8 +1766,8 @@ window.Folder = function (name, list, timestamp, isSearchResultFolder) {
 
     function genericLooper(type) {
         /**
-         * @param {Function} fn : function to execute on matching list elm; doesn't retain `this` context
-         * @param {boolean} shouldNotNest : calls `fn` on snippets/folders inside `this.list` by default
+         * @param {Function} fn function to execute on matching list elm; doesn't retain `this` context
+         * @param {boolean} shouldNotNest calls `fn` on snippets/folders inside `this.list` by default
          */
         const ret = function (fn, shouldNotNest) {
             this.list.forEach((listElm) => {
@@ -1868,12 +1859,11 @@ Folder.setIndices = function () {
     repeat(Data.snippets, []);
 };
 Folder.copyContents = function (fromFolder, toFolder) {
-    let { list } = fromFolder,
-        len = list.length,
-        i = len - 1;
+    const { list } = fromFolder,
+        len = list.length;
 
     // loop in reverse order, so that they are inserted in the correct order
-    for (; i >= 0; i--) {
+    for (let i = len - 1; i >= 0; i--) {
         Folder.insertObject(list[i].getDuplicatedObject(), toFolder);
     }
 };
@@ -1885,31 +1875,31 @@ Folder.insertObject = function (object, folder) {
     }
 };
 Folder.insertBulkActionDOM = function (listedFolder) {
-    const container = q.new("div");
+    const $container = q.new("div");
 
     listedFolder.list.forEach((listElm) => {
         const $generic = q.new("div").addClass("generic"),
-            checkbox = q.new("input"),
-            img = q.new("img"),
-            div = q
+            $checkbox = q.new("input"),
+            $img = q.new("img"),
+            $div = q
                 .new("div")
                 .addClass("name")
                 .html(listElm.name);
 
-        checkbox.type = "checkbox";
-        img.src = `../imgs/${listElm.type}.svg`;
+        $checkbox.type = "checkbox";
+        $img.src = `../imgs/${listElm.type}.svg`;
 
-        $generic.appendChild(checkbox);
-        $generic.appendChild(img);
-        $generic.appendChild(div);
-        container.appendChild($generic);
+        $generic.appendChild($checkbox);
+        $generic.appendChild($img);
+        $generic.appendChild($div);
+        $container.appendChild($generic);
     });
 
     $containerSnippets
         .html("") // first remove previous content
-        .appendChild(container);
+        .appendChild($container);
 
-    return container;
+    return $container;
 };
 Folder.getSelectedFolderInSelectList = function (selectList) {
     const selectFolderName = selectList.qClsSingle("selected").html();
@@ -1935,21 +1925,19 @@ Folder.implementChevronInFolderPath = function (notRemoveChevron) {
                 return isArrow ? (arrowCount++, sum) : sum + elm.offsetWidth;
             }, 0);
 
-        // arrows, being titled, actually take up less space (falf their width)
+        // arrows, being titled, actually take up less space (half their width)
         totalWidth += arrowCount * ACTUAL_ARROW_WIDTH;
 
         return totalWidth;
     }
 
-    let width = $containerFolderPath.offsetWidth,
+    const width = $containerFolderPath.offsetWidth,
         totalWidth = computeTotalWidth(),
         lastPathPart = $containerFolderPath.lastChild.previousElementSibling,
-        pathPart,
-        doesChevronExist,
         folderObj = Folder.getListedFolder();
 
     if (totalWidth > width) {
-        pathPart = $containerFolderPath.q(".path_part:not(.chevron)");
+        const pathPart = $containerFolderPath.q(".path_part:not(.chevron)");
 
         if (pathPart === lastPathPart) {
             pathPart.style.width = `${
@@ -1957,7 +1945,7 @@ Folder.implementChevronInFolderPath = function (notRemoveChevron) {
             }px`;
             pathPart.addClass("ellipsized");
         } else {
-            doesChevronExist = !!$containerFolderPath.qClsSingle("chevron");
+            const doesChevronExist = !!$containerFolderPath.qClsSingle("chevron");
 
             // remove the right arrow
             $containerFolderPath.removeChild(pathPart.nextElementSibling);
@@ -2000,18 +1988,17 @@ Folder.validate = function (arr) {
     /* Note: Generic.getDuplicateObjectsText is being used below
         to suppress duplicate snippets warnings. They will NOT be checked.
         If a user creates duplicate folders, it's his own fault. */
-    let folderName = arr[0],
+    const folderName = arr[0],
         folderTimestamp = arr[1],
         snippets = arr.slice(2),
-        folderMsg = `Folder ${folderName}`,
-        folderVld,
-        snippetVld;
+        folderMsg = `Folder ${folderName}`;
+    let snippetVld;
 
     if (typeof folderName !== "string") {
         return `Name of ${folderMsg} is not a string.`;
     }
 
-    folderVld = Folder.isValidName(folderName);
+    const folderVld = Folder.isValidName(folderName);
 
     if (
         folderVld !== "true"
@@ -2320,14 +2307,9 @@ window.DualTextbox = function ($container, isTryItEditor) {
 };
 
 function observeList(list) {
-    let watchProperties = ["push", "pop", "shift", "unshift", "splice"],
-        i = 0,
-        len = watchProperties.length,
-        prop;
+    const watchProperties = ["push", "pop", "shift", "unshift", "splice"];
 
-    for (; i < len; i++) {
-        prop = watchProperties[i];
-
+    for (const prop of watchProperties) {
         Object.defineProperty(list, prop, {
             configurable: false,
             enumerable: false,

@@ -15,8 +15,7 @@
         let URL;
         const msgElm = modal.qClsSingle("block-dialog-message"),
             buttons = modal.qCls("block-dialog-button"),
-            OKBtn = buttons[0],
-            cancelBtn = buttons[1],
+            [OKBtn, cancelBtn] = buttons,
             siteInputElm = modal.q(".block-dialog-form input"),
             siteNameInput = modal.qClsSingle("site-name"),
             btnContainer = modal.qClsSingle("block-dialog-buttons");
@@ -51,13 +50,12 @@
 
         function OKBtnEvent() {
             URL = siteNameInput.value;
-            let idx;
 
             if (shouldBlockSite) {
                 Data.blockedSites.push(URL);
                 saveData(success);
             } else {
-                idx = Data.blockedSites.indexOf(URL);
+                const idx = Data.blockedSites.indexOf(URL);
 
                 if (idx !== -1) {
                     Data.blockedSites.splice(idx, 1);
@@ -68,15 +66,9 @@
                     // 1000ms delay experimentally established
                     saveData(success);
                 } else {
-                    const userMeant = [],
-                        // create regex after removing the part after /
-                        regex = new RegExp(URL.replace(/\/.*$/gi, ""), "gi");
-
-                    Data.blockedSites.forEach((e) => {
-                        if (regex.test(e)) {
-                            userMeant.push(e);
-                        }
-                    });
+                    // create regex after removing the part after /
+                    const regex = new RegExp(URL.replace(/\/.*$/gi, ""), "gi"),
+                        userMeant = Data.blockedSites.filter(blockedSite => regex.test(blockedSite));
 
                     let alertText = `URL ${URL} is already unblocked. Please see the Settings page for list of blocked sites.`;
 
@@ -103,8 +95,7 @@
     function getURLAlertingText(url) {
         url = url.split("/");
 
-        const path = url[1],
-            site = url[0];
+        const [site, path] = url;
 
         if (!path) {
             return "";

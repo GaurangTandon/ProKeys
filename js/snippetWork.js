@@ -9,8 +9,8 @@
         toggleFolderEditPanel,
         dualSnippetEditorObj;
     /**
-     *
-     * @param {String} type the Generic snip or folder type
+     * @param {String} type generic snip or folder
+     * @returns {Function} the handler for given type
      */
     function handlerSaveObject(type) {
         const validationFunc = type === Generic.SNIP_TYPE ? validateSnippetData : validateFolderData;
@@ -19,17 +19,13 @@
 
         return function () {
             return validationFunc((oldName, name, body, newParentfolder) => {
-                let object,
-                    oldParentFolder,
-                    movedObject;
-
                 if (oldName) {
-                    object = Data.snippets[`getUnique${type}`](oldName);
-                    oldParentFolder = object.getParentFolder();
+                    const oldObject = Data.snippets[`getUnique${type}`](oldName),
+                        oldParentFolder = oldObject.getParentFolder();
 
                     if (newParentfolder.name !== oldParentFolder.name) {
                         // first move that object; before changing its name/body
-                        movedObject = object.moveTo(newParentfolder);
+                        const movedObject = oldObject.moveTo(newParentfolder);
 
                         movedObject.name = name;
                         if (type === "Snip") {
@@ -51,8 +47,10 @@
     }
 
     /**
-     * function to setup the folder or snippet edit panel
+     * setup the folder or snippet edit panel
+     * attaches handlers to div's
      * @param {String} type generic snip or folder
+     * @returns {Function} triggered for display of edit panel
      */
     function setupEditPanel(type) {
         const $panel = qClsSingle(`panel_${type}_edit`),
@@ -61,27 +59,29 @@
         let $parentFolderDIV;
 
         $panel.on("keydown", (event) => {
+            // ctrl/cmd-enter
             if (event.keyCode === 13 && (event.ctrlKey || event.metaKey)) {
                 saveHandler();
             }
 
+            // escape
             if (event.keyCode === 27) {
                 $panel.qClsSingle("close_btn").click();
             }
         });
 
         nameElm.on("keydown", (event) => {
-            // the ! ensures that both the $panel and the nameELm handlers don't fire simultaneously
+            // the ! ensures that both the $panel and the nameElm handlers don't fire simultaneously
             if (event.keyCode === 13 && !(event.ctrlKey || event.metaKey)) {
                 saveHandler();
             }
         });
 
         function highlightInFolderList(folderElm, name) {
-            const folderNames = folderElm.Q("p");
+            const $folderNames = folderElm.Q("p");
             let folderUsable = null;
 
-            for (const folder of folderNames) {
+            for (const folder of $folderNames) {
                 if (folder.html() === name) {
                     folderUsable = folder;
                     folder.addClass("selected");
@@ -167,7 +167,7 @@
 
     /** functions common to snip and folder
      * @param {String} panelName snip or folder only
-     * @returns {Function}
+     * @returns {Function} extracts text from elms, passes them for validation, callsback
      */
     function commonValidation(panelName) {
         const panel = qClsSingle(`panel_${panelName}_edit`);
@@ -187,10 +187,10 @@
                 isTextValid = true;
             }
 
-            if (!isTextValid) {
-                textErrorElm.addClass(pk.dom.SHOW_CLASS).html(textVld);
-            } else {
+            if (isTextValid) {
                 textErrorElm.removeClass(pk.dom.SHOW_CLASS);
+            } else {
+                textErrorElm.addClass(pk.dom.SHOW_CLASS).html(textVld);
             }
 
             return [text, isTextValid];
@@ -299,9 +299,9 @@
         });
 
         /**
-         * checks if the text typed in the panel is unedited or edited
          * @param {Element} $panel the snippet or folder panel being edited
          * @param {Element} $objectName the input element containing the object name
+         * @returns {Boolean} if the text typed in the panel is edited (true)
          */
         function userHasEditedTextPresentInPanel($panel, $objectName) {
             const $body = $panel.qClsSingle("body"),
@@ -347,8 +347,7 @@
 
         function deleteOnClick() {
             const object = Generic.getObjectThroughDOMListElm(this),
-                { name } = object,
-                { type } = object,
+                { name, type } = object,
                 isSnip = type === Generic.SNIP_TYPE,
                 warning = isSnip ? "" : " (and ALL its contents)";
             let folder;
@@ -366,15 +365,15 @@
         }
 
         function cloneBtnOnClick() {
-            const object = Generic.getObjectThroughDOMListElm(this),
-                newObject = object.clone();
-            latestRevisionLabel = `cloned ${object.type} "${object.name}"`;
+            const clickedObject = Generic.getObjectThroughDOMListElm(this),
+                objectClone = clickedObject.clone();
+            latestRevisionLabel = `cloned ${clickedObject.type} "${clickedObject.name}"`;
 
             // keep the same snippet highlighted as well (object.name)
             // so that user can press clone button repeatedly
-            pk.saveSnippetData(undefined, newObject.getParentFolder().name, [
-                object.name,
-                newObject.name,
+            pk.saveSnippetData(undefined, objectClone.getParentFolder().name, [
+                clickedObject.name,
+                objectClone.name,
             ]);
         }
 
@@ -404,17 +403,13 @@
         // and other combos
         function toggleBtnAndPanel(btn, panel) {
             const existingPanel = q(".sub_panel.show");
-            if (!panel.hasClass(pk.dom.SHOW_CLASS)) {
-                panel.addClass(pk.dom.SHOW_CLASS);
-            }
+            panel.addClass(pk.dom.SHOW_CLASS);
             if (existingPanel) {
                 existingPanel.removeClass(pk.dom.SHOW_CLASS);
             }
 
             const existingBtn = q(".panel_btn.active");
-            if (!btn.hasClass("active")) {
-                btn.addClass("active");
-            }
+            btn.addClass("active");
             if (existingBtn) {
                 existingBtn.removeClass("active");
             }
@@ -581,13 +576,15 @@
                 } else {
                     selectedFolder = Folder.getSelectedFolderInSelectList(selectList);
                     selectFolderName = selectedFolder.name;
-                    selectedObjects.forEach((e) => {
-                        if (e.canNestUnder(selectedFolder)) {
+                    selectedObjects.forEach((selObj) => {
+                        if (selObj.canNestUnder(selectedFolder)) {
                             atleastOneElementMoved = true;
-                            e.moveTo(selectedFolder);
+                            selObj.moveTo(selectedFolder);
                         } else {
                             window.alert(
-                                `Cannot move ${e.type} "${e.name}" to "${selectedFolder.name}"`
+                                `Cannot move ${selObj.type} "${selObj.name}" to "${
+                                    selectedFolder.name
+                                }"`
                                     + "; as it is the same as (or a parent folder of) the destination folder",
                             );
                         }
@@ -620,8 +617,8 @@
                             + "Remember that deleting a folder will also delete ALL its contents.",
                     )
                 ) {
-                    selectedObjects.forEach((e) => {
-                        e.remove();
+                    selectedObjects.forEach((selObj) => {
+                        selObj.remove();
                     });
 
                     latestRevisionLabel = `deleted ${selectedObjects.length} objects`;

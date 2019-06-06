@@ -40,13 +40,12 @@
 
     window.saveRevision = function (dataString) {
         let parsed = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
-
-        parsed.unshift({
-            // push latest revision
+        const latestRevision = {
             label: `${Date.getFormattedDate()} - ${latestRevisionLabel}`,
             data: dataString || Data.snippets,
-        });
+        };
 
+        parsed.unshift(latestRevision);
         parsed = parsed.slice(0, MAX_REVISIONS_STORED);
         localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
@@ -59,10 +58,7 @@
         };
 
         chrome.tabs.query({}, (tabs) => {
-            let tab;
-
-            for (let i = 0, len = tabs.length; i < len; i++) {
-                tab = tabs[i];
+            for (const tab of tabs) {
                 if (pk.isTabSafe(tab)) {
                     chrome.tabs.sendMessage(
                         tab.id,
@@ -81,22 +77,6 @@
         chrome.runtime.sendMessage(msg, pk.checkRuntimeError("NCET"));
     }
 
-    // returns whether site is blocked by user
-    function isBlockedSite(domain) {
-        const arr = Data.blockedSites;
-
-        for (let i = 0, len = arr.length; i < len; i++) {
-            const str = arr[i],
-                regex = new RegExp(`^${pk.escapeRegExp(domain)}`);
-
-            if (regex.test(str)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function listBlockedSites() {
         $blockSitesTextarea.value = Data.blockedSites.join("\n");
     }
@@ -104,8 +84,8 @@
     function createTableRow(textArr) {
         const tr = q.new("tr");
 
-        for (let i = 0, len = textArr.length; i < len; i++) {
-            tr.appendChild(q.new("td").html(textArr[i]));
+        for (const text of textArr) {
+            tr.appendChild(q.new("td").html(text));
         }
 
         return tr;
@@ -163,20 +143,14 @@
 
     // inserts in the table the chars to be auto-inserted
     function listAutoInsertChars() {
-        const arr = Data.charsToAutoInsertUserList,
-            len = arr.length;
-        // used to generate table in loop
-        let thead,
-            tr,
-            i = 0;
-
-        if (len === 0) {
+        if (Data.charsToAutoInsertUserList.length === 0) {
             $autoInsertTable.html("No Auto-Insert pair currently. Add new:");
         } else {
+            const thead = q.new("thead"),
+                tr = q.new("tr");
+
             // clear the table initially
             $autoInsertTable.html("");
-            thead = q.new("thead");
-            tr = q.new("tr");
 
             tr.appendChild(q.new("th").html("Character"));
             tr.appendChild(q.new("th").html("Complement"));
@@ -185,9 +159,9 @@
 
             $autoInsertTable.appendChild(thead);
 
-            for (; i < len; i++) {
+            for (const charPair of Data.charsToAutoInsertUserList) {
                 // create <tr> with <td>s having text as in current array and Remove
-                $autoInsertTable.appendChild(createTableRow(arr[i].concat("Remove")));
+                $autoInsertTable.appendChild(createTableRow(charPair.concat("Remove")));
             }
         }
 
@@ -195,8 +169,7 @@
     }
 
     function saveAutoInsert(autoInsertPair) {
-        const firstChar = autoInsertPair[0],
-            lastChar = autoInsertPair[1],
+        const [firstChar, lastChar] = autoInsertPair,
             str = "Please type exactly one character in ";
 
         if (firstChar.length !== 1) {
@@ -324,10 +297,10 @@
             return false;
         }
 
-        URL = URL.replace(/^(https?:\/\/)?(www\.)?/, "");
+        URL = URL.replace(pk.protoWWWReplaceRegex, "");
 
         // already a blocked site
-        if (isBlockedSite(URL)) {
+        if (pk.isBlockedSite(URL)) {
             window.alert(`Site ${URL} is already blocked.`);
             return false;
         }
@@ -369,7 +342,7 @@
     // "You have x bytes left out of y bytes"
     function updateStorageAmount() {
         pk.storage.getBytesInUse((bytesInUse) => {
-            const bytesAvailable = pk.storage.MAX_ITEMS ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
+            const bytesAvailable = pk.getCurrentStorageType() === "sync" ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
 
             // set current bytes
             qClsSingle("currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
@@ -680,18 +653,33 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
              */
 
             let combo;
+
+            // below code from https://stackoverflow.com/q/12467240
+            // User shmiddty https://stackoverflow.com/u/1585400
+            const nonControlKeyCodeRanges = [
+                [48, 57], // number keys
+                [65, 90], // letter keys
+                [96, 111], // numpad keys
+                [186, 192], // ;=,-./` (in order)
+                [219, 222], // [\]' (in order)
+                [32], // spacebar
+                [13], // return
+                [9], // tab
+            ];
+
+            function isNonControlKey(keyCode) {
+                return nonControlKeyCodeRanges.some((range) => {
+                    if (range.length === 1) {
+                        return keyCode === range[0];
+                    }
+                    return keyCode >= range[0] && keyCode <= range[1];
+                });
+            }
+
             hotkeyListener.on("keydown", (event) => {
                 const { keyCode } = event,
                     arrayOfControlKeys = ["shiftKey", "altKey", "ctrlKey", "metaKey"],
-                    // below code from https://stackoverflow.com/q/12467240
-                    // User shmiddty https://stackoverflow.com/u/1585400
-                    // determine if key is non-control key
-                    valid = (keyCode > 47 && keyCode < 58) // number keys
-                        || (keyCode === 32 || keyCode === 13) // spacebar & return keys
-                        || (keyCode > 64 && keyCode < 91) // letter keys
-                        || (keyCode > 95 && keyCode < 112) // numpad keys
-                        || (keyCode > 185 && keyCode < 193) // ;=,-./` (in order)
-                        || (keyCode > 218 && keyCode < 223); // [\]' (in order)
+                    valid = isNonControlKey(keyCode);
 
                 // escape to exit
                 if (keyCode === 27) {
@@ -837,6 +825,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 Folder.implementChevronInFolderPath();
             }, 300),
         );
+
         pk.snipNameDelimiterListRegex = new RegExp(
             `[${pk.escapeRegExp(Data.snipNameDelimiterList)}]`,
         );

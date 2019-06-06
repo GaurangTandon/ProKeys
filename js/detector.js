@@ -572,24 +572,6 @@
         sel.addRange(range);
     }
 
-    /**
-     * @param {String} url to check
-     * @returns {Boolean} true if site is blocked by user, false otherwise
-     */
-    function isBlockedSite(url) {
-        const domain = url.replace(/^(ht|f)tps?:\/\/(www\.)?/, "");
-
-        for (const blockedSite of Data.blockedSites) {
-            const regex = new RegExp(`^${pk.escapeRegExp(blockedSite)}`);
-
-            if (regex.test(domain)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     // returns user-selected text in content-editable element
     function getUserSelection(node) {
         let win,
@@ -1114,7 +1096,7 @@
             URL = window.location.href;
         }
 
-        const isBlocked = isBlockedSite(URL);
+        const isBlocked = pk.isBlockedSite(URL);
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             let timestamp;
 
