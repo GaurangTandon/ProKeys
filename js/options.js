@@ -275,8 +275,10 @@
         });
     }
 
-    // returns the current hotkey in string format
-    // example: ["shiftKey", 32] returns Shift+Space
+    /**
+     * returns the current hotkey in string format
+     * example: `["shiftKey", 32]` returns `Shift+Space`
+     */
     function getCurrentHotkey() {
         const combo = Data.hotKey.slice(0),
             specials = {
@@ -314,10 +316,10 @@
     }
 
     function sanitizeSiteURLForBlock(URL) {
-        const regex = /(\w+\.)+\w+/;
+        const validSiteRegex = /(\w+\.)+\w+/;
 
         // invalid domain entered; exit
-        if (!regex.test(URL)) {
+        if (!validSiteRegex.test(URL)) {
             window.alert("Invalid form of site address entered.");
             return false;
         }
@@ -336,15 +338,19 @@
     // (sample) input 1836 => "2KB"
     // input 5,123,456 => "5MB"
     function roundByteSize(bytes) {
-        const powers = [6, 3, 0, -3],
-            suffixes = ["MB", "KB", "B", "mB"],
+        const suffixPowerMap = {
+                MB: 6,
+                KB: 3,
+                B: 0,
+                mB: -3,
+            },
             DECIMAL_PLACES_TO_SHOW = 1;
 
-        for (let i = 0, len = powers.length, lim; i < len; i++) {
-            lim = 10 ** powers[i];
+        for (const [suffix, power] of suffixPowerMap) {
+            const lim = 10 ** power;
 
             if (bytes >= lim) {
-                return parseFloat((bytes / lim).toFixed(DECIMAL_PLACES_TO_SHOW)) + suffixes[i];
+                return parseFloat((bytes / lim).toFixed(DECIMAL_PLACES_TO_SHOW)) + suffix;
             }
         }
 
@@ -352,11 +358,11 @@
     }
 
     function roundByteSizeWithPercent(bytes, bytesLim) {
-        const out = roundByteSize(bytes),
+        const roundedByteSize = roundByteSize(bytes),
             // nearest multiple of five
             percent = Math.round((bytes / bytesLim) * 20) * 5;
 
-        return `${out} (${percent}%)`;
+        return `${roundedByteSize} (${percent}%)`;
     }
 
     // updates the storage header in #headArea
