@@ -77,14 +77,14 @@
         let iframes = parentDoc.querySelectorAll("iframe"),
             doc;
 
-        iframes.forEach((iframe) => {
+        for (const iframe of iframes) {
             iframe.on("load", onIFrameLoad);
             doc = iframe.contentDocument;
 
             if (doc && doc.readyState === "complete") {
                 onIFrameLoad(iframe);
             }
-        });
+        }
     }
 
     // in certain web apps, like mailchimp
@@ -115,10 +115,6 @@
      */
     function isProKeysNode(node) {
         return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM && (node && node.hasClass(SPAN_CLASS));
-
-        // in plus.google.com, the span elements which
-        // are added by prokeys do not retain their
-        // SPAN_CLASS no matter what I do
     }
 
     function setCaretAtEndOf(node, pos) {
@@ -182,7 +178,7 @@
         });
     }
 
-    function checkSnippetPresenceContentEditable(node) {
+    function isSnippetPresentCENode(node) {
         const win = getNodeWindow(node),
             sel = win.getSelection(),
             range = sel.getRangeAt(0),
@@ -235,10 +231,10 @@
 
     // check snippet's presence and intiate
     // another function to insert snippet body
-    function checkSnippetPresence(node) {
+    function isSnippetPresent(node) {
         debugLog("checking snippet presence", node);
         if (pk.isContentEditable(node)) {
-            return checkSnippetPresenceContentEditable(node);
+            return isSnippetPresentCENode(node);
         }
 
         let caretPos = node.selectionStart,
@@ -290,7 +286,7 @@
             currND;
         // debugLog(Placeholder);
         if (pArr && pArr.length > 0) {
-            currND = pArr[0];
+            [currND] = pArr;
 
             selectEntireTextIn(currND);
             pArr.shift();
@@ -386,22 +382,6 @@
         return foundPlaceholder;
     }
 
-    // fired by the window.contextmenu event
-    function insertSnippetFromCtx(snip, node) {
-        if (pk.isContentEditable(node)) {
-            return insertSnippetFromCtxContentEditable(snip, node);
-        }
-
-        let caretPos = node.selectionStart,
-            val = node.value;
-
-        if (caretPos !== node.selectionEnd) {
-            val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
-        }
-
-        insertSnippetInTextarea(caretPos, caretPos, snip, val, node);
-    }
-
     // fired by insertSnippetFromCtx
     function insertSnippetFromCtxContentEditable(snip, node) {
         const win = getNodeWindow(node),
@@ -415,17 +395,39 @@
         insertSnippetInContentEditableNode(range, snip, node);
     }
 
+    // fired by the window.contextmenu event
+    function insertSnippetFromCtx(snip, node) {
+        if (pk.isContentEditable(node)) {
+            insertSnippetFromCtxContentEditable(snip, node);
+            return;
+        }
+
+        const caretPos = node.selectionStart;
+        let val = node.value;
+
+        if (caretPos !== node.selectionEnd) {
+            val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
+        }
+
+        insertSnippetInTextarea(caretPos, caretPos, snip, val, node);
+    }
+
     /*
         Auto-Insert Character functions
         - searchAutoInsertChars
         - insertCharacter
     */
 
-    /* searchCharIndex : int value: 0 or 1 - denoting whether to match the
+    /**
+     * @param {String} character to match
+     * @param {Number} searchCharIndex (0 or 1) denoting whether to match the
         starting (`{`) or the closing (`}`) characters of an auto-insert combo
-        with the `character` */
+        with the `character`
+     * @returns {String[]} the auto insert pair if found, else
+     */
     function searchAutoInsertChars(character, searchCharIndex) {
-        const arr = Data.charsToAutoInsertUserList;
+        const arr = Data.charsToAutoInsertUserList,
+            defaultReturn = ["", ""];
 
         for (let i = 0, len = arr.length; i < len; i++) {
             if (arr[i][searchCharIndex] === character) {
@@ -433,7 +435,7 @@
             }
         }
 
-        return null;
+        return defaultReturn;
     }
 
     // auto-insert character functionality
@@ -570,14 +572,15 @@
         sel.addRange(range);
     }
 
-    // returns whether site is blocked by user
+    /**
+     * @param {String} url to check
+     * @returns {Boolean} true if site is blocked by user, false otherwise
+     */
     function isBlockedSite(url) {
-        let domain = url.replace(/^(ht|f)tps?:\/\/(www\.)?/, ""),
-            arr = Data.blockedSites,
-            regex;
+        const domain = url.replace(/^(ht|f)tps?:\/\/(www\.)?/, "");
 
-        for (let i = 0, len = arr.length; i < len; i++) {
-            regex = new RegExp(`^${pk.escapeRegExp(arr[i])}`);
+        for (const blockedSite of Data.blockedSites) {
+            const regex = new RegExp(`^${pk.escapeRegExp(blockedSite)}`);
 
             if (regex.test(domain)) {
                 return true;
@@ -613,42 +616,13 @@
         }
     }
 
-    /**
-     * issues#106
-     * @param {Element} textarea in which keydown is simulated
-
-    function simulateTextareaKeydown(textarea) {
-        textarea.focus();
-        document.execCommand("insertText", false, "a");
-        debugDir(textarea);
-        //textarea.triggerKeypress(8);
-    }
-*/
-    /**
-     * issues#106
-     * @param {Element} node in which keydown is simulated
-     */
-    /*
-    function simulateCEKeydown(node) {
-        node.focus();
-        document.execCommand("insertHTML", false, "a");
-        debugDir(node);
-    } */
-
     // classArray for CodeMirror and ace editors
     // parentSelector for others
     // max search upto 10 parent nodes (searchLimit)
     function isParent(node, parentSelector, classArray, searchLimit) {
         function classMatch(classToMatch) {
-            let c = node.className;
-
-            if (!c) {
-                return false;
-            }
-            c = c.split(" ");
-
-            for (let i = 0, len = c.length; i < len; i++) {
-                if (c[i].search(classToMatch) === 0) {
+            for (const cls of node.classList) {
+                if (cls.search(classToMatch) === 0) {
                     return true;
                 }
             }
@@ -692,9 +666,29 @@
                     : null;
     }
 
+    /**
+     * @param {Element} node whose caret to shift
+     * @param {Number} shiftCount shift count (+tive towards right; -ive to left)
+     */
+    function shiftCaretByCount(node, shiftCount) {
+        if (pk.isContentEditable(node)) {
+            const win = getNodeWindow(node),
+                sel = win.getSelection(),
+                range = sel.getRangeAt(0),
+                loc = range.startOffset + shiftCount;
+            // debugDir(node);debugDir(range);
+            range.setStart(range.startContainer, loc);
+            range.setEnd(range.endContainer, loc);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else {
+            node.selectionStart = node.selectionEnd += shiftCount;
+        }
+    }
+
     function insertTabChar(node) {
         insertCharacter(node, TAB_INSERTION_VALUE);
-        shiftCursor(node, TAB_INSERTION_VALUE.length);
+        shiftCaretByCount(node, TAB_INSERTION_VALUE.length);
     }
 
     function evaluateMathExpression(expression) {
@@ -798,31 +792,6 @@
     }
 
     /*
-        description: moves caret present in `node` by `shiftAmount`
-        `shiftAmount`: +tive or -tive integer. +tive if shift to right, else -tive.
-    */
-    function shiftCursor(node, shiftAmount) {
-        let win,
-            sel,
-            range,
-            loc;
-
-        if (pk.isContentEditable(node)) {
-            win = getNodeWindow(node);
-            sel = win.getSelection();
-            range = sel.getRangeAt(0);
-            loc = range.startOffset + shiftAmount;
-            // debugDir(node);debugDir(range);
-            range.setStart(range.startContainer, loc);
-            range.setEnd(range.endContainer, loc);
-            sel.removeAllRanges();
-            sel.addRange(range);
-        } else {
-            node.selectionStart = node.selectionEnd += shiftAmount;
-        }
-    }
-
-    /*
         Keyboard handling functions
     */
 
@@ -864,20 +833,13 @@
     }
 
     function getCharFollowingCaret(node) {
-        let win,
-            sel,
-            range,
-            container,
-            text,
-            caretPos;
-
         if (pk.isContentEditable(node)) {
-            win = getNodeWindow(node);
-            sel = win.getSelection();
-            range = sel.getRangeAt(0);
-            container = range.startContainer;
-            caretPos = range.startOffset;
-            text = pk.getHTML(container); // no .html() as can be text node
+            const win = getNodeWindow(node),
+                sel = win.getSelection(),
+                range = sel.getRangeAt(0),
+                caretPos = range.startOffset;
+            let container = range.startContainer,
+                text = pk.getHTML(container); // no .html() as can be text node
 
             if (caretPos < text.length) {
                 return text[caretPos];
@@ -901,18 +863,14 @@
     function previousCharactersForEmoji(node) {
         let emojisChars = [":", ":-"],
             previousChars,
-            win,
-            sel,
-            range,
-            rangeNode,
             position,
             nodeValue;
 
         if (pk.isContentEditable(node)) {
-            win = getNodeWindow(node);
-            sel = win.getSelection();
-            range = sel.getRangeAt(0);
-            rangeNode = range.startContainer;
+            const win = getNodeWindow(node),
+                sel = win.getSelection(),
+                range = sel.getRangeAt(0),
+                rangeNode = range.startContainer;
             position = range.startOffset;
             nodeValue = rangeNode.textContent;
         } else {
@@ -939,16 +897,15 @@
                 // holds integer on how much to increase
                 // Placeholder.toIndex by during Placeholder.mode
                 toIndexIncrease = 1,
-                win = getNodeWindow(node),
-                // //////////////////////////////////////////////////////////////////////////////////////////
-                // Why use `toIndexIncrease` ?  Because of following bug:                                ///
-                // Suppose, text is "%A% one two three %B%"                                              ///
-                // Placeholder.fromIndex is 0 and Placeholder.toIndex is 21 (length of string)           ///
-                // when user goes on %A% and types in text suppose 5 chars long                          ///
-                // then the %B% moves 5 chars right, and thus the text that comes                        ///
+                // //////
+                // Why use `toIndexIncrease`?  Because of following bug:
+                // Suppose, text is "%A% one two three %B%"
+                // Placeholder.fromIndex is 0 and Placeholder.toIndex is 21 (length of string)
+                // when user goes on %A% and types in text suppose 5 chars long
+                // then the %B% moves 5 chars right, and thus the text that comes
                 // within the range of Placeholder.fromIndex/Placeholder.toIndex becomes "12345 one two thre" -- missing "e %B%" ///
-                // and thus this eliminated the placeholders                                            ///
-                // //////////////////////////////////////////////////////////////////////////////////////////
+                // and thus this eliminated the placeholders
+                // ///////
 
                 // //////////////////////////////
                 // Char insertion technique start
@@ -958,15 +915,15 @@
 
             if (
                 autoInsertTyped
-                && autoInsertPairSecondChar !== null
+                && autoInsertPairSecondChar[0]
                 && getCharFollowingCaret(node) === charTyped
             ) {
                 e.preventDefault();
 
-                shiftCursor(node, 1);
+                shiftCaretByCount(node, 1);
 
                 autoInsertTyped = false;
-            } else if (autoInsertPairFirstChar !== null) {
+            } else if (autoInsertPairFirstChar[0]) {
                 // #197: disable auto-inserts for emojis
                 if (
                     !(
@@ -990,6 +947,7 @@
             // so check for that
             if (charTyped === "=") {
                 // wait till the = sign actually appears in node value
+                const win = getNodeWindow(node);
                 setTimeout(provideDoubleBracketFunctionality, 10, node, win);
             }
 
@@ -1016,7 +974,7 @@
         };
 
         handleKeyDown = function (e) {
-            let { keyCode } = e,
+            const { keyCode } = e,
                 node = e.target,
                 // do not use `this` instead of node; `this` can be document iframe
                 tgN = node.tagName,
@@ -1069,7 +1027,7 @@
                 }
             } else if (isSnippetSubstitutionKey(e, keyCode)) {
                 // snippet substitution hotkey
-                if (checkSnippetPresence(node)) {
+                if (isSnippetPresent(node)) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -1097,10 +1055,9 @@
         onKeyPressFunc = keyEventAttacher(handleKeyPress);
 
     function isSnippetSubstitutionKey(event, keyCode) {
-        const hk0 = Data.hotKey[0],
-            hk1 = Data.hotKey[1];
+        const [modifierKey, actualKey] = Data.hotKey;
 
-        return hk1 ? event[hk0] && keyCode === hk1 : keyCode === hk0;
+        return actualKey ? event[modifierKey] && keyCode === actualKey : keyCode === modifierKey;
     }
 
     function attachNecessaryHandlers(win, isBlocked) {
@@ -1127,19 +1084,14 @@
         debugLog("handlers attached on", win.document);
     }
 
-    /*
-        called when document.readyState is "complete"
-        to initialize work
-    */
-
     function init() {
-        debugLog("init", document);
         // if DB is not loaded then
         // try again after 1 second
         if (!pk.DB_loaded) {
             setTimeout(init, 1000);
             return;
         }
+        debugLog("init", document);
 
         // another instance is already running, time to escape
         if (document[UNIQ_CS_KEY] === true) {

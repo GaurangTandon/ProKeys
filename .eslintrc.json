@@ -28,6 +28,7 @@
         "no-global-assign": "warn",
         "no-tabs": "warn",
         "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
-        "no-nested-ternary": "warn"
+        "no-nested-ternary": "warn",
+        "no-use-before-define": "warn"
     }
 }
