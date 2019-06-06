@@ -20,9 +20,22 @@
         "gulp-jsonminify": "*",
         "gulp-terser": "*",
         "gulp-uglify": "^3.0.2",
-        "husky": "^2.3.0",
+        "husky": "^2.4.0",
+        "lint-staged": "^8.2.0",
         "prettier": "1.17.1",
         "pretty-quick": "^1.10.0"
+    },
+    "lint-staged": {
+        "js/*.js": [
+            "eslint --fix",
+            "git add"
+        ]
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "lint-staged",
+            "post-commit": "git update-index -g"
+        }
     },
     "repository": {
         "type": "git",

@@ -147,7 +147,7 @@ chrome.omnibox.onInputChanged.addListener((text, suggestCallback) => {
     });
 });
 
-chrome.omnibox.onInputEntered.addListener((omniboxText, disposition) => {
+chrome.omnibox.onInputEntered.addListener((omniboxText) => {
     let url,
         query;
 
@@ -243,16 +243,12 @@ chrome.runtime.onInstalled.addListener((details) => {
     injectScriptAllTabs();
 
     // the empty function and string is required < Chrome 42
-    chrome.notifications.create(
-        "",
-        {
-            type: "basic",
-            iconUrl: "imgs/r128.png",
-            title,
-            message: text,
-        },
-        (id) => {},
-    );
+    chrome.notifications.create("", {
+        type: "basic",
+        iconUrl: "imgs/r128.png",
+        title,
+        message: text,
+    });
 });
 
 function loadSnippetListIntoBGPage(list) {
