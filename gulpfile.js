@@ -13,6 +13,8 @@ gulp.task("styles", () => gulp
     .pipe(csso())
     .pipe(gulp.dest(`${DEST}/css`)));
 
+// TODO: we probably don't need this
+// when webpack already runs terser in prod mode
 gulp.task("scripts", () => {
     if (IS_PRODUCTION) {
         return gulp
