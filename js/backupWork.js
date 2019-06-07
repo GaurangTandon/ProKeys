@@ -4,8 +4,8 @@
 import { Q, q } from "./pre";
 import { Folder } from "./snippet_classes";
 import { initiateRestore } from "./restoreFns";
+import { LS_REVISIONS_PROP } from "./common_data_handlers";
 
-export const LS_REVISIONS_PROP = "prokeys_revisions";
 export function initBackup() {
     let dataToExport;
 

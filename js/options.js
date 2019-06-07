@@ -4,34 +4,14 @@
 /* global saveRevision */
 // above are defined in window. format
 
-import { SETTINGS_DEFAULTS } from "./common_data_handlers";
+import { SETTINGS_DEFAULTS, LS_REVISIONS_PROP } from "./common_data_handlers";
 import {
     isObject, q, Q, qClsSingle, qId, checkRuntimeError,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippet_classes";
 import { ensureRobustCompat } from "./restoreFns";
-import { initBackup, LS_REVISIONS_PROP } from "./backupWork";
+import { initBackup } from "./backupWork";
 import { initSnippetWork } from "./snippetWork";
-
-export function notifySnippetDataChanges() {
-    const msg = {
-        snippetList: Data.snippets.toArray(),
-    };
-
-    chrome.tabs.query({}, (tabs) => {
-        for (const tab of tabs) {
-            if (pk.isTabSafe(tab)) {
-                chrome.tabs.sendMessage(
-                    tab.id,
-                    msg,
-                    checkRuntimeError("notifySnippetDataChanges-innerloop"),
-                );
-            }
-        }
-    });
-
-    chrome.runtime.sendMessage(msg, checkRuntimeError("notifySnippetDataChanges"));
-}
 
 (function () {
     let $autoInsertTable,
@@ -44,7 +24,6 @@ export function notifySnippetDataChanges() {
         $blockSitesTextarea;
 
     const RESERVED_DELIMITER_LIST = "`~|\\^",
-        MAX_REVISIONS_STORED = 20,
         MAX_SYNC_DATA_SIZE = 102400,
         MAX_LOCAL_DATA_SIZE = 5242880,
         VERSION = chrome.runtime.getManifest().version;
@@ -53,18 +32,6 @@ export function notifySnippetDataChanges() {
     window.$panelSnippets = null;
     window.$containerFolderPath = null;
     window.latestRevisionLabel = "data created (added defaut snippets)";
-
-    window.saveRevision = function (dataString) {
-        let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
-        const latestRevision = {
-            label: `${Date.getFormattedDate()} - ${latestRevisionLabel}`,
-            data: dataString || Data.snippets,
-        };
-
-        parsed.unshift(latestRevision);
-        parsed = parsed.slice(0, MAX_REVISIONS_STORED);
-        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
-    };
 
     function notifyCtxEnableToggle() {
         const msg = { ctxEnabled: Data.ctxEnabled };

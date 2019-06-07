@@ -1,25 +1,59 @@
-/* global pk, Data, chrome, Folder */
-/* global saveRevision, notifySnippetDataChanges */
+/* global pk, Data, latestRevisionLabel */
 
 import { checkRuntimeError } from "./pre";
+import { Folder } from "./snippet_classes";
 
 const SETTINGS_DEFAULTS = {
-    snippets: Folder.getDefaultSnippetData(),
-    blockedSites: [],
-    charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
-    dataVersion: 1,
-    language: "English",
-    hotKey: ["shiftKey", 32],
-    dataUpdateVariable: true,
-    matchDelimitedWord: false,
-    tabKey: false,
-    visited: false,
-    snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
-    omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
-    wrapSelectionAutoInsert: true,
-    ctxEnabled: true,
-};
-export { SETTINGS_DEFAULTS };
+        snippets: Folder.getDefaultSnippetData(),
+        blockedSites: [],
+        charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
+        dataVersion: 1,
+        language: "English",
+        hotKey: ["shiftKey", 32],
+        dataUpdateVariable: true,
+        matchDelimitedWord: false,
+        tabKey: false,
+        visited: false,
+        snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+        omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
+        wrapSelectionAutoInsert: true,
+        ctxEnabled: true,
+    },
+    LS_REVISIONS_PROP = "prokeys_revisions";
+export { SETTINGS_DEFAULTS, LS_REVISIONS_PROP };
+
+function notifySnippetDataChanges() {
+    const msg = {
+        snippetList: Data.snippets.toArray(),
+    };
+
+    chrome.tabs.query({}, (tabs) => {
+        for (const tab of tabs) {
+            if (pk.isTabSafe(tab)) {
+                chrome.tabs.sendMessage(
+                    tab.id,
+                    msg,
+                    checkRuntimeError("notifySnippetDataChanges-innerloop"),
+                );
+            }
+        }
+    });
+
+    chrome.runtime.sendMessage(msg, checkRuntimeError("notifySnippetDataChanges"));
+}
+
+export function saveRevision(dataString) {
+    const MAX_REVISIONS_STORED = 20;
+    let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+    const latestRevision = {
+        label: `${Date.getFormattedDate()} - ${latestRevisionLabel}`,
+        data: dataString || Data.snippets,
+    };
+
+    parsed.unshift(latestRevision);
+    parsed = parsed.slice(0, MAX_REVISIONS_STORED);
+    localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+}
 
 (function () {
     const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
