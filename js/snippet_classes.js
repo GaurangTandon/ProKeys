@@ -3,8 +3,15 @@
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 import {
-    isObject, q, checkRuntimeError, escapeRegExp, OBJECT_NAME_LIMIT,
+    isObject,
+    q,
+    checkRuntimeError,
+    escapeRegExp,
+    OBJECT_NAME_LIMIT,
+    isTextNode,
+    SHOW_CLASS,
 } from "./pre";
+import { getText, genericFormatterCreator, formatOLULInListParentForCEnode } from "./textmethods";
 
 // functions common to Snip and Folder
 function Generic() {
@@ -776,7 +783,7 @@ Snip.makeHTMLSuitableForTextareaThroughString = function (html) {
             break;
         case "OL":
         case "UL":
-            Snip.formatOLULInListParentForCEnode(tle);
+            formatOLULInListParentForCEnode(tle);
             break;
             // these top-level elements are inserted by user
         default:
@@ -865,7 +872,7 @@ Snip.makeHTMLSuitableForTextarea = function (htmlNode) {
         Alignment classes are applied on the <p> element only
         */
 
-        if (pk.isTextNode(node)) {
+        if (isTextNode(node)) {
             // if textnode already contains ONE NEWLINE,
             // then remove it as caller is going to add one
             return node.textContent;
@@ -1054,7 +1061,7 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
     replacerThroughArray(fontFamilies, "ql-font-", "font-family");
     replacerThroughArray(textAligns, "ql-align-", "text-align");
 
-    $container.Q("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
+    $container.Q("ol, ul").forEach(formatOLULInListParentForCEnode);
 
     if (pk.isGmail) {
         $container
@@ -1223,29 +1230,8 @@ Snip.defaultLinkSanitize = function (linkVal) {
 
     return linkVal;
 };
-/**
- * add indents to `<li>`s; it is NOT innerHTML;
- * content is obtained through regex
- */
-(function () {
-    function genericFormatterCreator(sep0, sep1) {
-        return function (listParent) {
-            let resultString = sep1;
 
-            listParent.Q("li").forEach((li) => {
-                resultString += `${sep0}<li>${li.innerHTML}</li>${sep1}`;
-            });
-
-            listParent.innerHTML = resultString;
-        };
-    }
-
-    Snip.formatOLULInListParentForTextarea = genericFormatterCreator("    ", "\n");
-
-    // CE node does not have indentation otherwise
-    // &nbsp; will occupy the place and mess up display
-    Snip.formatOLULInListParentForCEnode = genericFormatterCreator("", "");
-}());
+Snip.formatOLULInListParentForTextarea = genericFormatterCreator("    ", "\n");
 
 /*
   main motto here is to leave the text "as is"
@@ -1677,7 +1663,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     };
 
     this.getUniqueSnippetAtCaretPos = function (node, pos) {
-        let val = pk.getText(node),
+        let val = getText(node),
             snip,
             stringToCheck = "",
             foundSnip = null,
@@ -2102,7 +2088,7 @@ function DualTextbox($container, isTryItEditor) {
         $pTextarea = q
             .new("P")
             .text("Textarea")
-            .addClass(pk.dom.SHOW_CLASS),
+            .addClass(SHOW_CLASS),
         $pRich = q.new("P").text("Styled textbox");
     let isCurrModePlain = true; // default is textarea
     $pTextarea.dataset.containerSelector = "textarea";
@@ -2118,9 +2104,7 @@ function DualTextbox($container, isTryItEditor) {
 
     // create rich/plain boxes
     // (textarea doesn't need a container; so assume itself to be the container)
-    let $textarea = q
-            .new("TEXTAREA")
-            .addClass([pk.dom.SHOW_CLASS, $pTextarea.dataset.containerSelector]),
+    let $textarea = q.new("TEXTAREA").addClass([SHOW_CLASS, $pTextarea.dataset.containerSelector]),
         $richEditorContainer = q.new("DIV").addClass(RICH_EDITOR_CONTAINER_CLASS),
         $richEditor = q.new("DIV"),
         quillObj;
@@ -2173,6 +2157,34 @@ function DualTextbox($container, isTryItEditor) {
         // cannot modify dangerouslyPasteHTML to have custom matcher
         // for font-size/-family. It's as much work as making Snip.makeHTMLSuitableForQuill
     }
+    // replaces string's `\n` with `<br>` or reverse
+    // `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
+    // false => convrt text for dislplay in text area (`.value`)
+    function convertBetweenHTMLTags(string, convertForHTML) {
+        const map = [["<br>", "\\n"], [" &nbsp;", "  "]],
+            regexIndex = +convertForHTML,
+            replacerIdx = +!convertForHTML,
+            len = map.length;
+        let elm,
+            i = 0;
+
+        for (; i < len; i++) {
+            elm = map[i];
+            string = string.replace(new RegExp(elm[regexIndex], "g"), elm[replacerIdx]);
+        }
+
+        const container = q.new("div").html(string),
+            selector = "pre + br, blockquote + br, li + br, ol > br, ol + br, ul + br, ul > br",
+            unnecessaryBRs = container.Q(selector),
+            count = unnecessaryBRs.length;
+
+        for (i = 0; i < count; i++) {
+            elm = unnecessaryBRs[i];
+            elm.parentNode.removeChild(elm);
+        }
+
+        return container.innerHTML.replace(/&nbsp; ?&nbsp;<li>/g, "<li>");
+    }
 
     // implement swapping of textbox and richEditor
     $nav.on("click", (e) => {
@@ -2181,7 +2193,7 @@ function DualTextbox($container, isTryItEditor) {
         if (
             !(node.tagName === "P")
             // only show if not already shown
-            || node.hasClass(pk.dom.SHOW_CLASS)
+            || node.hasClass(SHOW_CLASS)
         ) {
             return true;
         }
@@ -2195,18 +2207,18 @@ function DualTextbox($container, isTryItEditor) {
             return false;
         }
 
-        let currShown = $container.qCls(pk.dom.SHOW_CLASS),
+        let currShown = $container.qCls(SHOW_CLASS),
             currShownEditor = currShown[1],
             $newlyShownContainer,
             $newlyShownEditor;
-        currShown.removeClass(pk.dom.SHOW_CLASS);
+        currShown.removeClass(SHOW_CLASS);
         currShownEditor.removeAttribute("tab-index");
 
         // add show class to `p` and corresponding box
-        node.addClass(pk.dom.SHOW_CLASS);
+        node.addClass(SHOW_CLASS);
         $newlyShownContainer = $container.q(node.dataset.containerSelector);
         $newlyShownEditor = $container.q(node.dataset.editorSelector);
-        $newlyShownContainer.addClass(pk.dom.SHOW_CLASS);
+        $newlyShownContainer.addClass(SHOW_CLASS);
         $newlyShownEditor.attr("tab-index", 20).focus();
 
         isCurrModePlain = !isCurrModePlain; // reverse
@@ -2216,7 +2228,7 @@ function DualTextbox($container, isTryItEditor) {
             if (isCurrModePlain) {
                 this.setPlainText(this.getRichText());
             } else {
-                this.setRichText(pk.convertBetweenHTMLTags(this.getPlainText(), true));
+                this.setRichText(convertBetweenHTMLTags(this.getPlainText(), true));
             }
         }
 
@@ -2322,7 +2334,6 @@ function observeList(list) {
         });
     }
 }
-const { formatOLULInListParentForCEnode } = Snip;
 export {
-    Folder, Snip, Generic, formatOLULInListParentForCEnode, DualTextbox,
+    Folder, Snip, Generic, DualTextbox,
 };

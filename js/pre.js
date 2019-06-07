@@ -112,35 +112,6 @@ const debugLog = debugLogTemp,
     protoWWWReplaceRegex = /^(ht|f)tps?:\/\/(www\.)?/,
     OBJECT_NAME_LIMIT = 60;
 
-// replaces string's `\n` with `<br>` or reverse
-// `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
-// false => convrt text for dislplay in text area (`.value`)
-pk.convertBetweenHTMLTags = function (string, convertForHTML) {
-    const map = [["<br>", "\\n"], [" &nbsp;", "  "]],
-        regexIndex = +convertForHTML,
-        replacerIdx = +!convertForHTML,
-        len = map.length;
-    let elm,
-        i = 0;
-
-    for (; i < len; i++) {
-        elm = map[i];
-        string = string.replace(new RegExp(elm[regexIndex], "g"), elm[replacerIdx]);
-    }
-
-    const container = q.new("div").html(string),
-        selector = "pre + br, blockquote + br, li + br, ol > br, ol + br, ul + br, ul > br",
-        unnecessaryBRs = container.Q(selector),
-        count = unnecessaryBRs.length;
-
-    for (i = 0; i < count; i++) {
-        elm = unnecessaryBRs[i];
-        elm.parentNode.removeChild(elm);
-    }
-
-    return container.innerHTML.replace(/&nbsp; ?&nbsp;<li>/g, "<li>");
-};
-
 function isObjectEmpty(obj) {
     return Object.keys(obj).length === 0;
 }

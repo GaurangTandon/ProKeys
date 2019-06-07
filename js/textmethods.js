@@ -1,5 +1,24 @@
 import { isTextNode, q } from "./pre";
-import { formatOLULInListParentForCEnode } from "./snippet_classes";
+
+/**
+ * add indents to `<li>`s; it is NOT innerHTML;
+ * content is obtained through regex
+ */
+function genericFormatterCreator(sep0, sep1) {
+    return function (listParent) {
+        let resultString = sep1;
+
+        listParent.Q("li").forEach((li) => {
+            resultString += `${sep0}<li>${li.innerHTML}</li>${sep1}`;
+        });
+
+        listParent.innerHTML = resultString;
+    };
+}
+
+// CE node does not have indentation otherwise
+// &nbsp; will occupy the place and mess up display
+const formatOLULInListParentForCEnode = genericFormatterCreator("", "");
 
 function setHTMLPurificationForListSnippets(node) {
     // after we start splitting these text nodes and insert <br>s
@@ -131,5 +150,10 @@ function setHTML(node, newVal, prop, isListSnippets) {
 }
 
 export {
-    setHTML, setText, getHTML, getText,
+    setHTML,
+    setText,
+    getHTML,
+    getText,
+    genericFormatterCreator,
+    formatOLULInListParentForCEnode,
 };
