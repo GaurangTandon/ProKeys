@@ -315,6 +315,10 @@ import { getHTML } from "./textmethods";
     }
 
     function init() {
+        if (!window.primitivesExtended) {
+            setTimeout(init, 100);
+            return;
+        }
         // needs to be set before database actions
         $panelSnippets = qClsSingle("panel_snippets");
         $containerSnippets = $panelSnippets.qClsSingle("panel_content");
@@ -690,7 +694,6 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             DBLoad(DBLoadCallback);
         } else {
             pk.DB_loaded = true;
-            init();
         }
     }
 

@@ -2,7 +2,7 @@
 // it is indcluded with the other files
 
 import { DOM_HELPERS } from "./pre";
-import { extendNodePrototype } from "./protoExtend";
+import { extendNodePrototype, updateAllValuesPerWin } from "./protoExtend";
 import { getHTML, setHTML } from "./textmethods";
 
 (function () {
@@ -322,7 +322,16 @@ import { getHTML, setHTML } from "./textmethods";
     });
 
     for (const [funcName, func] of Object.entries(DOM_HELPERS)) {
-        window[funcName] = func.bind(document);
         extendNodePrototype(funcName, func);
     }
 }());
+
+function onPageLoad() {
+    if (document.readyState !== "complete") {
+        setTimeout(onPageLoad, 10);
+    } else {
+        updateAllValuesPerWin(window);
+        window.primitivesExtended = true;
+    }
+}
+onPageLoad();

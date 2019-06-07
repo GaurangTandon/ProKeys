@@ -1,8 +1,8 @@
 /* global pk, Data */
 
-import { updateAllValuesPerWin } from "./protoExtend";
-
 // this file contains all common utility functions
+// this file should not contain any code that needs to be executed outisde an exported function as
+// it is not included in final dist
 
 // will be used to store prokeys related variables (#204)
 window.pk = {};
@@ -41,26 +41,28 @@ function checkRuntimeError(uniqueIdentifier) {
 }
 
 const DOM_HELPERS = {
+        // they do not retain their `this` binding.
+        // on export; hence, the `this || window`
         /**
          * short hand for document.querySelector
          * @param {string} selector selector to match element
          */
         q(selector) {
-            return this.querySelector(selector);
+            return (this || document).querySelector(selector);
         },
         /**
          * short hand for document.querySelectorAll
          * @param {string} selector selector to match elements
          */
         Q(selector) {
-            return this.querySelectorAll(selector);
+            return (this || document).querySelectorAll(selector);
         },
         /**
          * short hand for document.getElementById
          * @param {string} id selector to match element
          */
         qId(id) {
-            return this.getElementById(id);
+            return (this || document).getElementById(id);
         },
         /**
          * short hand for document.getElementsByClassName
@@ -68,7 +70,7 @@ const DOM_HELPERS = {
          * @returns {Element[]} array (not HTMLCollection!) of matched elements
          */
         qCls(cls) {
-            return [...this.getElementsByClassName(cls)];
+            return [...(this || document).getElementsByClassName(cls)];
         },
         /**
          * short hand for document.getElementsByClassName;
@@ -77,7 +79,7 @@ const DOM_HELPERS = {
          * @returns {Node} matched element
          */
         qClsSingle(cls) {
-            const res = this.qCls(cls);
+            const res = (this || document).qCls(cls);
             return res ? res[0] : null;
         },
     },
@@ -257,8 +259,6 @@ function copyTextToClipboard(text) {
     document.body.removeChild(textArea);
 }
 
-updateAllValuesPerWin(window);
-
 /**
  * @param {String} url to check
  * @returns {Boolean} true if site is blocked by user, false otherwise
@@ -278,12 +278,12 @@ function isBlockedSite(url) {
 }
 
 export {
-    isObject,
     q,
     qCls,
     qClsSingle,
     qId,
     Q,
+    isObject,
     isTextNode,
     debugLog,
     debugDir,
