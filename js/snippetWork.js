@@ -1,6 +1,13 @@
-/* global q, Q, DualTextbox, pk, Data */
-/* global qClsSingle, qCls, qId, Folder, Snip, Generic */
+/* global pk, Data */
+// eslint-disable-next-line no-unused-vars
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
+
+import {
+    q, qCls, qClsSingle, qId, Q,
+} from "./pre";
+import {
+    Folder, Snip, Generic, DualTextbox,
+} from "./snippet_classes";
 
 (function () {
     let validateSnippetData,

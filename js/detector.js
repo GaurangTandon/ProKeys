@@ -1,5 +1,7 @@
 /* global q, Folder, Snip, chrome, Data, pk, debugLog */
 
+import { checkRuntimeError } from "./pre";
+
 (function () {
     let windowLoadChecker = setInterval(() => {
             if (window.document.readyState === "complete") {
@@ -314,7 +316,7 @@
 
             if (Placeholder.regex.test(selectedText)) {
                 checkPlaceholdersInNode(node, node.selectionEnd, to, false);
-                return false;
+                return;
             }
         }
 
@@ -964,7 +966,7 @@
 
             // possibly document iframe
             if (!tgN) {
-                return false;
+                return;
             }
 
             // [Tab] key for tab spacing/placeholder shifting
@@ -976,7 +978,7 @@
                     // thus, we check if the node has a form as a parent
                     // if it is, then it is a to or subject field node
                     // and we will not perform operation (return false)
-                    return false;
+                    return;
                 }
 
                 // in placeholder mode, tab => jumping of placeholders
@@ -1046,7 +1048,7 @@
         win.addEventListener("contextmenu", (event) => {
             ctxElm = event.target;
             ctxTimestamp = Date.now();
-            chrome.runtime.sendMessage({ ctxTimestamp }, pk.checkRuntimeError("attachHandlers"));
+            chrome.runtime.sendMessage({ ctxTimestamp }, checkRuntimeError("attachHandlers"));
         });
 
         win.addEventListener("error", (event) => {
@@ -1112,7 +1114,7 @@
                 if (PAGE_IS_IFRAME) {
                     chrome.runtime.sendMessage(
                         { openBlockSiteModalInParent: true, data: request },
-                        pk.checkRuntimeError("showModal"),
+                        checkRuntimeError("showModal"),
                     );
                 } else {
                     pk.showBlockSiteModal(request);
@@ -1141,7 +1143,7 @@
 
         // do not operate on blocked sites
         if (isBlocked) {
-            return true;
+            return;
         }
 
         setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);

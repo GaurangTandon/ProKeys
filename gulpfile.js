@@ -13,24 +13,7 @@ gulp.task("styles", () => gulp
     .pipe(csso())
     .pipe(gulp.dest(`${DEST}/css`)));
 
-// TODO: we probably don't need this
-// when webpack already runs terser in prod mode
-gulp.task("scripts", () => {
-    if (IS_PRODUCTION) {
-        return gulp
-            .src(`${DEST}/js/*.js`)
-            .pipe(
-                babel({
-                    presets: ["@babel/preset-env"],
-                }),
-            )
-            .pipe(jsminify())
-            .pipe(gulp.dest(`${DEST}/js`));
-    }
-    // when not in production,
-    // just don't do any minification or transpiling
-    return gulp.src(`${DEST}/js/*.js`).pipe(gulp.dest(`${DEST}/js`));
-});
+gulp.task("scripts", () => gulp.src([`${DEST}/js/*.js`, `${SRC}/js/editor.min.js`]).pipe(gulp.dest(`${DEST}/js`)));
 
 gulp.task("html", () => gulp
     .src(`${SRC}/html/*.html`)

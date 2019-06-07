@@ -1,11 +1,41 @@
-/* global q, Q, DualTextbox, pk, Data, qClsSingle, qId */
-/* global chrome, ensureRobustCompat, Folder, $containerFolderPath */
+/* global pk, Data */
+// eslint-disable-next-line no-unused-vars
+/* global chrome, Folder, $containerFolderPath */
+// eslint-disable-next-line no-unused-vars
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
-/* global initSnippetWork, saveRevision, notifySnippetDataChanges */
+/* global initSnippetWork, saveRevision */
 // above are defined in window. format
 
 // TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
 // TODO: latestRevisionLabel is shown read-only on eslint. Why?
+
+import { SETTINGS_DEFAULTS } from "./common_data_handlers";
+import {
+    isObject, q, Q, qClsSingle, qId, checkRuntimeError,
+} from "./pre";
+import { DualTextbox } from "./snippet_classes";
+import { ensureRobustCompat } from "./restoreFns";
+
+export function notifySnippetDataChanges() {
+    const msg = {
+        snippetList: Data.snippets.toArray(),
+    };
+
+    chrome.tabs.query({}, (tabs) => {
+        for (const tab of tabs) {
+            if (pk.isTabSafe(tab)) {
+                chrome.tabs.sendMessage(
+                    tab.id,
+                    msg,
+                    checkRuntimeError("notifySnippetDataChanges-innerloop"),
+                );
+            }
+        }
+    });
+
+    chrome.runtime.sendMessage(msg, checkRuntimeError("notifySnippetDataChanges"));
+}
+
 (function () {
     let $autoInsertTable,
         $tabKeyInput,
@@ -50,31 +80,9 @@
         localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
 
-    // notifies content script and background page
-    // about Data.snippets changes
-    window.notifySnippetDataChanges = function () {
-        const msg = {
-            snippetList: Data.snippets.toArray(),
-        };
-
-        chrome.tabs.query({}, (tabs) => {
-            for (const tab of tabs) {
-                if (pk.isTabSafe(tab)) {
-                    chrome.tabs.sendMessage(
-                        tab.id,
-                        msg,
-                        pk.checkRuntimeError("notifySnippetDataChanges-innerloop"),
-                    );
-                }
-            }
-        });
-
-        chrome.runtime.sendMessage(msg, pk.checkRuntimeError("notifySnippetDataChanges"));
-    };
-
     function notifyCtxEnableToggle() {
         const msg = { ctxEnabled: Data.ctxEnabled };
-        chrome.runtime.sendMessage(msg, pk.checkRuntimeError("NCET"));
+        chrome.runtime.sendMessage(msg, checkRuntimeError("NCET"));
     }
 
     function listBlockedSites() {
@@ -203,21 +211,6 @@
             listAutoInsertChars,
         );
     }
-
-    // goes through all default properties, and adds
-    // them to `data` if they are undefined
-    window.ensureRobustCompat = function (data) {
-        let missingProperties = false;
-
-        for (const prop of Object.keys(pk.SETTINGS_DEFAULTS)) {
-            if (typeof data[prop] === "undefined") {
-                data[prop] = pk.SETTINGS_DEFAULTS[prop];
-                missingProperties = true;
-            }
-        }
-
-        return missingProperties;
-    };
 
     // transfer data from one storage to another
     function migrateData(transferData, callback) {
@@ -575,7 +568,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         "Are you sure you want to replace the current list with the default delimiter list?",
                     )
                 ) {
-                    Data.snipNameDelimiterList = pk.SETTINGS_DEFAULTS.snipNameDelimiterList;
+                    Data.snipNameDelimiterList = SETTINGS_DEFAULTS.snipNameDelimiterList;
                     delimiterInit();
                     pk.saveOtherData();
                 }
@@ -748,11 +741,11 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             localStorage[pk.LS_REVISIONS_PROP] = "[]";
             localStorage.firstInstall = "false";
             // see issues/218#issuecomment-420487611
-            Data.snippets = JSON.parse(JSON.stringify(pk.SETTINGS_DEFAULTS.snippets));
+            Data.snippets = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS.snippets));
             saveRevision(Data.snippets);
         }
 
-        if (!pk.isObject(Data.snippets)) {
+        if (!isObject(Data.snippets)) {
             Data.snippets = Folder.fromArray(Data.snippets);
         }
 

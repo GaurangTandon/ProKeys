@@ -1,30 +1,34 @@
 /* global pk, Data, chrome, Folder */
 /* global saveRevision, notifySnippetDataChanges */
 
+import { checkRuntimeError } from "./pre";
+
+const SETTINGS_DEFAULTS = {
+    snippets: Folder.getDefaultSnippetData(),
+    blockedSites: [],
+    charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
+    dataVersion: 1,
+    language: "English",
+    hotKey: ["shiftKey", 32],
+    dataUpdateVariable: true,
+    matchDelimitedWord: false,
+    tabKey: false,
+    visited: false,
+    snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+    omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
+    wrapSelectionAutoInsert: true,
+    ctxEnabled: true,
+};
+export { SETTINGS_DEFAULTS };
+
 (function () {
     const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
     pk.storage = chrome.storage.local;
-    pk.SETTINGS_DEFAULTS = {
-        snippets: Folder.getDefaultSnippetData(),
-        blockedSites: [],
-        charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
-        dataVersion: 1,
-        language: "English",
-        hotKey: ["shiftKey", 32],
-        dataUpdateVariable: true,
-        matchDelimitedWord: false,
-        tabKey: false,
-        visited: false,
-        snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
-        omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
-        wrapSelectionAutoInsert: true,
-        ctxEnabled: true,
-    };
     pk.DB_loaded = false;
     // currently it's storing default data for first install;
     // after DB_load, it stores the latest data
     // snippets are later added
-    window.Data = JSON.parse(JSON.stringify(pk.SETTINGS_DEFAULTS));
+    window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
     pk.OLD_DATA_STORAGE_KEY = "UserSnippets";
     pk.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
     pk.DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
@@ -87,7 +91,7 @@
                 : Data.snippets;
             folderToList.listSnippets(objectNamesToHighlight);
 
-            pk.checkRuntimeError("databaseSave inside")();
+            checkRuntimeError("databaseSave inside")();
 
             if (callback) {
                 callback();
@@ -110,7 +114,7 @@
             } else if (typeof msg === "string") {
                 window.alert(msg);
             }
-            pk.checkRuntimeError("saveotherdata-options.js")();
+            checkRuntimeError("saveotherdata-options.js")();
 
             if (callback) {
                 callback();

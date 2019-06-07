@@ -1,4 +1,21 @@
-/* global pk, Data, Folder, q, ensureRobustCompat */
+/* global pk, Data */
+
+import { q } from "./pre";
+import { Folder } from "./snippet_classes";
+import { SETTINGS_DEFAULTS } from "./common_data_handlers";
+
+export function ensureRobustCompat(data) {
+    let missingProperties = false;
+
+    for (const prop of Object.keys(SETTINGS_DEFAULTS)) {
+        if (typeof data[prop] === "undefined") {
+            data[prop] = SETTINGS_DEFAULTS[prop];
+            missingProperties = true;
+        }
+    }
+
+    return missingProperties;
+}
 
 let validateRestoreData,
     initiateRestore;
@@ -235,7 +252,7 @@ let validateRestoreData,
 
         // delete user-added properties that ProKeys doesn't recognize
         for (const prop of Object.keys(data)) {
-            if (!Object.prototype.hasOwnProperty.call(pk.SETTINGS_DEFAULTS, prop)) {
+            if (!Object.prototype.hasOwnProperty.call(SETTINGS_DEFAULTS, prop)) {
                 delete data[prop];
             }
         }

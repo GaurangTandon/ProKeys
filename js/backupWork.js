@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 /* global Q, q, Data, Folder, pk, initiateRestore, deleteRevision, latestRevisionLabel */
 if (!pk.dom) {
     pk.dom = {};

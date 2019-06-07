@@ -1,8 +1,4 @@
-/* global q, pk, Snip, Data */
-
-// custom functions inspired from jQuery
-// special thanks to
-// bling.js - https://gist.github.com/paulirish/12fb951a8b893a454b32
+/* global pk, Data */
 
 // will be used to store prokeys related variables (#204)
 window.pk = {};
@@ -19,6 +15,25 @@ export function isTabSafe(tab) {
         && !/^chrome:/.test(tab.url)
         && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
     );
+}
+/*  stack trace is not beneficial being async, therefore
+        use a unique identifier to track down the origin */
+export function checkRuntimeError(uniqueIdentifier) {
+    return function checkREHelper() {
+        if (chrome.runtime.lastError) {
+            // TODO: remove
+            // alert(
+            // `An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is
+            // shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com
+            // .This will help me resolve your issue and improve my extension. Thanks!`
+            // );
+            // Chrome.Runtime.LastError:, do not use .error() as it prints
+            // out too many red messages :(
+            console.log(`CRLError (${uniqueIdentifier}): ${chrome.runtime.lastError.message}`);
+            return true;
+        }
+        return false;
+    };
 }
 
 /**
@@ -61,6 +76,69 @@ let extendNodePrototype;
         protoExtensions[prop] = func;
     };
 }());
+
+const DOM_HELPERS = {
+    /**
+     * short hand for document.querySelector
+     * @param {string} selector selector to match element
+     */
+    q(selector) {
+        return this.querySelector(selector);
+    },
+    /**
+     * short hand for document.querySelectorAll
+     * @param {string} selector selector to match elements
+     */
+    Q(selector) {
+        return this.querySelectorAll(selector);
+    },
+    /**
+     * short hand for document.getElementById
+     * @param {string} id selector to match element
+     */
+    qId(id) {
+        return this.getElementById(id);
+    },
+    /**
+     * short hand for document.getElementsByClassName
+     * @param {string} cls selector to match elements
+     * @returns {Element[]} array (not HTMLCollection!) of matched elements
+     */
+    qCls(cls) {
+        return [...this.getElementsByClassName(cls)];
+    },
+    /**
+     * short hand for document.getElementsByClassName;
+     * returns the first Node in the output (not a NodeList)
+     * @param {string} cls selector to match elements
+     * @returns {Node} matched element
+     */
+    qClsSingle(cls) {
+        const res = this.qCls(cls);
+        return res ? res[0] : null;
+    },
+};
+
+for (const [funcName, func] of DOM_HELPERS) {
+    extendNodePrototype(funcName, func);
+}
+const {
+    q, qCls, qClsSingle, qId, Q,
+} = DOM_HELPERS;
+q.new = function (tagName) {
+    return document.createElement(tagName);
+};
+function isObject(o) {
+    return Object.prototype.toString.call(o) === "[object Object]";
+}
+
+function isTextNode(node) {
+    return node.nodeType === 3;
+}
+
+export {
+    isObject, q, qCls, qClsSingle, qId, Q, isTextNode,
+};
 
 (function mainIIFE() {
     const DEBUGGING = false;
@@ -254,57 +332,6 @@ let extendNodePrototype;
         this.dispatchEvent(ev);
     });
 
-    const DOM_HELPERS = {
-        /**
-         * short hand for document.querySelector
-         * @param {string} selector selector to match element
-         */
-        q(selector) {
-            return this.querySelector(selector);
-        },
-        /**
-         * short hand for document.querySelectorAll
-         * @param {string} selector selector to match elements
-         */
-        Q(selector) {
-            return this.querySelectorAll(selector);
-        },
-        /**
-         * short hand for document.getElementById
-         * @param {string} id selector to match element
-         */
-        qId(id) {
-            return this.getElementById(id);
-        },
-        /**
-         * short hand for document.getElementsByClassName
-         * @param {string} cls selector to match elements
-         * @returns {Element[]} array (not HTMLCollection!) of matched elements
-         */
-        qCls(cls) {
-            return [...this.getElementsByClassName(cls)];
-        },
-        /**
-         * short hand for document.getElementsByClassName;
-         * returns the first Node in the output (not a NodeList)
-         * @param {string} cls selector to match elements
-         * @returns {Node} matched element
-         */
-        qClsSingle(cls) {
-            const res = this.qCls(cls);
-            return res ? res[0] : null;
-        },
-    };
-
-    for (const [funcName, func] of DOM_HELPERS) {
-        window[funcName] = func.bind(document);
-        extendNodePrototype(funcName, func);
-    }
-
-    q.new = function (tagName) {
-        return document.createElement(tagName);
-    };
-
     extendNodePrototype(
         "on",
         /**
@@ -390,145 +417,6 @@ let extendNodePrototype;
         return null;
     });
 
-    function setHTMLPurificationForListSnippets(node) {
-        // after we start splitting these text nodes and insert <br>s
-        // the original text nodes and their count gets lost
-        function getCurrentTextNodes() {
-            const textNodesInNode = [];
-            let child;
-
-            for (let i = 0, len = node.childNodes.length; i < len; i++) {
-                child = node.childNodes[i];
-                if (pk.isTextNode(child)) {
-                    textNodesInNode.push(child);
-                }
-            }
-
-            return textNodesInNode;
-        }
-        const list = getCurrentTextNodes(),
-            childCount = list.length;
-        let count = 0,
-            child,
-            textNodes,
-            i,
-            len,
-            tNode,
-            $br,
-            text;
-
-        for (; count < childCount; count++) {
-            child = list[count];
-
-            // if a textnode has a single newline
-            // => it is present between two element nodes
-            // otherwise it would have had some text as well
-            // so replace ONE newline first
-            // BUT BUT this leads to loss of newline after
-            // a simpler element node like <a> or <b>
-            // hence, DO NOT do this
-
-            textNodes = child.textContent.split(/\n/g);
-            i = 0;
-            len = textNodes.length;
-
-            for (; i < len; i++) {
-                text = textNodes[i];
-                tNode = document.createTextNode(text);
-                $br = q.new("br");
-                node.insertBefore($br, child);
-                node.insertBefore(tNode, $br);
-            }
-            // textNodes may be:
-            // ["a"] or ["a", "b"]
-            // the former implies there was NO newline in case like
-            // <pre></pre>a<bq></bq>
-            // hence have to remove the LAST newline that we've inserted
-            node.removeChild($br);
-            node.removeChild(child);
-        }
-
-        // block level elements already occupy a full line, hence, remove
-        // ONE <br> after them
-        node.Q("pre, blockquote, ol, ul").forEach((elm) => {
-            const br = elm.nextElementSibling;
-            if (br && br.tagName === "BR") {
-                br.parentNode.removeChild(br);
-            }
-        });
-
-        node.Q("ol, ul").forEach(Snip.formatOLULInListParentForCEnode);
-    }
-
-    // returns innerText
-    pk.getText = function (node) {
-        return pk.getHTML(node, "innerText");
-    };
-
-    // sets innerText
-    pk.setText = function (node, newVal) {
-        return pk.setHTML(node, newVal, "innerText");
-    };
-
-    pk.getHTML = function (node, prop) {
-        if (!node) {
-            return undefined;
-        }
-
-        if (pk.isTextNode(node)) {
-            return node.textContent.replace(/\u00a0/g, " ");
-        }
-
-        switch (node.tagName) {
-        case "TEXTAREA":
-        case "INPUT":
-            return node.value;
-        default:
-            return node[prop || "innerHTML"];
-        }
-    };
-
-    pk.setHTML = function (node, newVal, prop, isListSnippets) {
-        // in case number is passed; .replace won't work
-        newVal = newVal.toString();
-
-        if (pk.isTextNode(node)) {
-            node.textContent = newVal.replace(/ /g, "\u00a0");
-            return node;
-        }
-
-        switch (node.tagName) {
-        case "TEXTAREA":
-        case "INPUT":
-            node.value = newVal.replace("<br>", "\n").replace("&nbsp;", " ");
-            break;
-        default:
-            if (prop === "innerText") {
-                // but innertext will collapse consecutive spaces
-                // do not use textContent as it will collapse even single newlines
-                node.innerText = newVal.replace("<br>", "\n").replace("&nbsp;", " ");
-            } else {
-                // first .replace is required as at the end of any text
-                // as gmail will not display single space for unknown reason
-                try {
-                    node.innerHTML = newVal
-                        .replace(/ $/g, "&nbsp;")
-                        .replace(/ {2}/g, " &nbsp;");
-
-                    if (!isListSnippets) {
-                        node.innerHTML = node.innerHTML.replace(/\n/g, "<br>");
-                    } else {
-                        setHTMLPurificationForListSnippets(node);
-                    }
-                } catch (e) {
-                    console.log("From setHTML: `node` argment is undefined");
-                }
-            }
-        }
-
-        return node;
-    };
-
     // prototype alternative for setHTML/getHTML
     // use only when sure that Node is "not undefined"
     extendNodePrototype("html", function (textToSet, prop, isListSnippets) {
@@ -613,20 +501,12 @@ let extendNodePrototype;
         return (num <= 9 ? "0" : "") + num;
     };
 
-    pk.isObject = function (o) {
-        return Object.prototype.toString.call(o) === "[object Object]";
-    };
-
     // should use this since users may use foreign language
     // characters which use up more than two bytes
     pk.lengthInUtf8Bytes = function (str) {
         // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
         const m = encodeURIComponent(str).match(/%[89ABab]/g);
         return str.length + (m ? m.length : 0);
-    };
-
-    pk.isTextNode = function (node) {
-        return node.nodeType === 3;
     };
 
     // if it is a callForParent, means that a child node wants
@@ -676,26 +556,6 @@ let extendNodePrototype;
         } while (parent !== window.document);
 
         return false;
-    };
-
-    /*  stack trace is not beneficial being async, therefore
-        use a unique identifier to track down the origin */
-    pk.checkRuntimeError = function (uniqueIdentifier) {
-        return function checkREHelper() {
-            if (chrome.runtime.lastError) {
-                // TODO: remove
-                // alert(
-                // `An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is
-                // shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com
-                // .This will help me resolve your issue and improve my extension. Thanks!`
-                // );
-                // Chrome.Runtime.LastError:, do not use .error() as it prints
-                // out too many red messages :(
-                console.log(`CRLError (${uniqueIdentifier}): ${chrome.runtime.lastError.message}`);
-                return true;
-            }
-            return false;
-        };
     };
 
     // Returns a function, that, as long as it continues to be invoked, will not

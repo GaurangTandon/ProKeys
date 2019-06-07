@@ -43,6 +43,12 @@ First of all, thanks for your contribution! Every small bit of it counts! You ca
 5.  Share the word about ProKeys with people!
 6.  Monetary donations are gratefully accepted at email 1gaurangtandon@gmail.com using [PayPal](https://www.paypal.com/myaccount/transfer/buy)
 
+## Development
+
+To setup this repo, clone it, `cd` into it, and then run `npm run build`. This will create a unminified development build in `./dist` which you can then load into Chrome. This step is required because Chrome does not yet natively support `import`/`export` syntax for Chrome extensions.
+
+We use both global variables and `import`/`export` ones. The `import`/`export` ones are either functions or unmodified constants. Only those variables are declared under `window` or `pk` which need to be modified in different scripts.
+
 **Contact us** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
 
 ## [Known Issues](https://docs.google.com/document/d/1_MHKm1jtpJCWgksfbUdufExRFlF81S-IuTz1Czu7gOI/edit?usp=sharing)
