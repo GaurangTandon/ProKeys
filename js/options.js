@@ -1,10 +1,8 @@
 /* global pk, Data */
 // eslint-disable-next-line no-unused-vars
 /* global $containerFolderPath, latestRevisionLabel, $containerSnippets, $panelSnippets */
-/* global saveRevision */
-// above are defined in window. format
 
-import { SETTINGS_DEFAULTS, LS_REVISIONS_PROP } from "./common_data_handlers";
+import { SETTINGS_DEFAULTS, LS_REVISIONS_PROP, saveRevision } from "./common_data_handlers";
 import {
     isObject, q, Q, qClsSingle, qId, checkRuntimeError,
 } from "./pre";

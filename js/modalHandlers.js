@@ -1,4 +1,4 @@
-/* global pk, Data, saveData */
+/* global pk, Data */
 
 import { q } from "./pre";
 
@@ -55,7 +55,7 @@ import { q } from "./pre";
 
             if (shouldBlockSite) {
                 Data.blockedSites.push(URL);
-                saveData(success);
+                pk.saveOtherData(success);
             } else {
                 const idx = Data.blockedSites.indexOf(URL);
 
@@ -66,7 +66,7 @@ import { q } from "./pre";
                     // gets transferred to close modal btn
                     // closing the modal almost immediately.
                     // 1000ms delay experimentally established
-                    saveData(success);
+                    pk.saveOtherData(success);
                 } else {
                     // create regex after removing the part after /
                     const regex = new RegExp(URL.replace(/\/.*$/gi, ""), "gi"),
