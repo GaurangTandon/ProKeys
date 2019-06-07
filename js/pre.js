@@ -136,13 +136,25 @@ function isTextNode(node) {
     return node.nodeType === 3;
 }
 
+const DEBUGGING = false;
+let debugDirTemp,
+    debugLogTemp;
+// see https://stackoverflow.com/q/13815640
+if (DEBUGGING) {
+    debugLogTemp = console.log.bind(console);
+    debugDirTemp = console.dir.bind(console);
+} else {
+    debugLogTemp = function () {};
+    debugDirTemp = function () {};
+}
+const debugLog = debugLogTemp,
+    debugDir = debugDirTemp;
+
 export {
-    isObject, q, qCls, qClsSingle, qId, Q, isTextNode,
+    isObject, q, qCls, qClsSingle, qId, Q, isTextNode, debugLog, debugDir,
 };
 
 (function mainIIFE() {
-    const DEBUGGING = false;
-
     if (!pk.dom) {
         pk.dom = {};
     }
@@ -303,15 +315,6 @@ export {
         // "Sat Feb 20 2016 09:17:23 GMT+0530 (India Standard Time)"
         return d.substring(4, 15);
     };
-
-    // see https://stackoverflow.com/q/13815640
-    if (DEBUGGING) {
-        window.debugLog = console.log.bind(console);
-        window.debugDir = console.dir.bind(console);
-    } else {
-        window.debugLog = function () {};
-        window.debugDir = function () {};
-    }
 
     extendNodePrototype("trigger", function (eventName, obj) {
         const ev = new CustomEvent(eventName, {

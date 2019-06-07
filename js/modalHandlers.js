@@ -1,4 +1,6 @@
-/* global pk, q, Data, saveData */
+/* global pk, Data, saveData */
+
+import { q } from "./pre";
 
 // serves as an addon to the content script for handling
 // hiding/showing the modal

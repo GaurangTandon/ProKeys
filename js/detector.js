@@ -1,6 +1,7 @@
-/* global q, Folder, Snip, chrome, Data, pk, debugLog */
+/* global Data, pk */
 
-import { checkRuntimeError } from "./pre";
+import { q, checkRuntimeError, debugLog } from "./pre";
+import { Folder, Snip } from "./snippet_classes";
 
 (function () {
     let windowLoadChecker = setInterval(() => {
