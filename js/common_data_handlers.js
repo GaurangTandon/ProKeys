@@ -1,6 +1,6 @@
 /* global pk, Data, latestRevisionLabel */
 
-import { checkRuntimeError } from "./pre";
+import { checkRuntimeError, isObjectEmpty, isTabSafe } from "./pre";
 import { Folder } from "./snippet_classes";
 
 const SETTINGS_DEFAULTS = {
@@ -29,7 +29,7 @@ function notifySnippetDataChanges() {
 
     chrome.tabs.query({}, (tabs) => {
         for (const tab of tabs) {
-            if (pk.isTabSafe(tab)) {
+            if (isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
                     tab.id,
                     msg,
@@ -55,17 +55,21 @@ export function saveRevision(dataString) {
     localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
 }
 
-const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
+// store only those props which are mutable
 pk.storage = chrome.storage.local;
 pk.DB_loaded = false;
+pk.snipNameDelimiterListRegex = null;
+
 // currently it's storing default data for first install;
 // after DB_load, it stores the latest data
 // snippets are later added
 window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
-pk.OLD_DATA_STORAGE_KEY = "UserSnippets";
-pk.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
-pk.DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
-pk.snipNameDelimiterListRegex = null;
+
+const OLD_DATA_STORAGE_KEY = "UserSnippets",
+    IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
+// will use these when fixing the sync storage bug
+// NEW_DATA_STORAGE_KEY = "ProKeysUserData";
+// DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
 
 function databaseSetValue(name, value, callback) {
     const obj = {};
@@ -79,13 +83,13 @@ function databaseSetValue(name, value, callback) {
 }
 
 export function DBLoad(callback) {
-    pk.storage.get(pk.OLD_DATA_STORAGE_KEY, (r) => {
-        const req = r[pk.OLD_DATA_STORAGE_KEY];
+    pk.storage.get(OLD_DATA_STORAGE_KEY, (r) => {
+        const req = r[OLD_DATA_STORAGE_KEY];
 
         // converting to !== might break just in case this relies on 0 == undefined :/
         // eslint-disable-next-line eqeqeq
-        if (pk.isObjectEmpty(req) || req.dataVersion != Data.dataVersion) {
-            databaseSetValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
+        if (isObjectEmpty(req) || req.dataVersion != Data.dataVersion) {
+            databaseSetValue(OLD_DATA_STORAGE_KEY, Data, callback);
         } else {
             Data = req;
             if (callback) {
@@ -96,7 +100,7 @@ export function DBLoad(callback) {
 }
 
 export function databaseSave(callback) {
-    databaseSetValue(pk.OLD_DATA_STORAGE_KEY, Data, () => {
+    databaseSetValue(OLD_DATA_STORAGE_KEY, Data, () => {
         if (callback) {
             callback();
         }

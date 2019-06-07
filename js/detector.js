@@ -1,8 +1,19 @@
 /* global Data, pk */
 
-import { q, checkRuntimeError, debugLog } from "./pre";
+import {
+    q,
+    checkRuntimeError,
+    debugLog,
+    isContentEditable,
+    isTextNode,
+    isBlockedSite,
+    escapeRegExp,
+} from "./pre";
 import { Folder, Snip } from "./snippet_classes";
 import { changeStorageType, DBLoad } from "./common_data_handlers";
+import { updateAllValuesPerWin } from "./protoExtend";
+import { getHTML } from "./textmethods";
+import { showBlockSiteModal } from "./modalHandlers";
 
 (function () {
     let windowLoadChecker = setInterval(() => {
@@ -68,7 +79,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
             if (doc && !doc[UNIQ_CS_KEY]) {
                 doc[UNIQ_CS_KEY] = true;
                 doc[DOC_IS_IFRAME_KEY] = true;
-                pk.updateAllValuesPerWin(win);
+                updateAllValuesPerWin(win);
                 attachNecessaryHandlers(win);
                 setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
             }
@@ -237,7 +248,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
     // another function to insert snippet body
     function isSnippetPresent(node) {
         debugLog("checking snippet presence", node);
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             return isSnippetPresentCENode(node);
         }
 
@@ -401,7 +412,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
 
     // fired by the window.contextmenu event
     function insertSnippetFromCtx(snip, node) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             insertSnippetFromCtxContentEditable(snip, node);
             return;
         }
@@ -444,7 +455,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
 
     // auto-insert character functionality
     function insertCharacter(node, characterStart, characterEnd) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             insertCharacterContentEditable(node, characterStart, characterEnd);
         } else {
             let text = node.value,
@@ -581,7 +592,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
         let win,
             sel;
 
-        if (pk.isTextNode(node) || pk.isContentEditable(node)) {
+        if (isTextNode(node) || isContentEditable(node)) {
             win = getNodeWindow(node);
             sel = win.getSelection();
 
@@ -598,7 +609,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
             }
         } else {
             // textarea
-            return pk.getHTML(node).substring(node.selectionStart, node.selectionEnd);
+            return getHTML(node).substring(node.selectionStart, node.selectionEnd);
         }
     }
 
@@ -657,7 +668,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
      * @param {Number} shiftCount shift count (+tive towards right; -ive to left)
      */
     function shiftCaretByCount(node, shiftCount) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             const win = getNodeWindow(node),
                 sel = win.getSelection(),
                 range = sel.getRangeAt(0),
@@ -737,7 +748,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
         let sel = win.getSelection(),
             range = sel.getRangeAt(0),
             rangeNode = range.startContainer,
-            isCENode = pk.isContentEditable(node),
+            isCENode = isContentEditable(node),
             caretPos = isCENode ? range.endOffset : node.selectionEnd,
             value = isCENode ? rangeNode.textContent : node.value,
             operate = true,
@@ -803,7 +814,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
             retVal = data[CACHE_DATASET_STRING] === "true";
         } else if (isParent(node, null, ["CodeMirror", "ace", "monaco-editor"], 3)) {
             retVal = false;
-        } else if (tgN === "TEXTAREA" || pk.isContentEditable(node)) {
+        } else if (tgN === "TEXTAREA" || isContentEditable(node)) {
             retVal = true;
         } else if (tgN === "INPUT") {
             inputNodeType = node.attr("type");
@@ -819,13 +830,13 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
     }
 
     function getCharFollowingCaret(node) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             const win = getNodeWindow(node),
                 sel = win.getSelection(),
                 range = sel.getRangeAt(0),
                 caretPos = range.startOffset;
             let container = range.startContainer,
-                text = pk.getHTML(container); // no .html() as can be text node
+                text = getHTML(container); // no .html() as can be text node
 
             if (caretPos < text.length) {
                 return text[caretPos];
@@ -835,7 +846,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
             container = range.startContainer.nextSibling;
             // so take the following node
             if (container) {
-                text = pk.getHTML(container);
+                text = getHTML(container);
                 if (text.length !== 0) {
                     return text[0];
                 }
@@ -848,11 +859,10 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
 
     function previousCharactersForEmoji(node) {
         let emojisChars = [":", ":-"],
-            previousChars,
             position,
             nodeValue;
 
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             const win = getNodeWindow(node),
                 sel = win.getSelection(),
                 range = sel.getRangeAt(0),
@@ -864,7 +874,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
             position = node.selectionStart;
         }
 
-        previousChars = nodeValue.substring(position - 2, position);
+        const previousChars = nodeValue.substring(position - 2, position);
 
         return previousChars[1] === emojisChars[0] || previousChars === emojisChars[1];
     }
@@ -1100,7 +1110,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
             URL = window.location.href;
         }
 
-        const isBlocked = pk.isBlockedSite(URL);
+        const isBlocked = isBlockedSite(URL);
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             let timestamp;
 
@@ -1119,7 +1129,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
                         checkRuntimeError("showModal"),
                     );
                 } else {
-                    pk.showBlockSiteModal(request);
+                    showBlockSiteModal(request);
                 }
             } else if (typeof request.clickedSnippet !== "undefined") {
                 timestamp = parseInt(request.ctxTimestamp, 10);
@@ -1137,7 +1147,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
                 // when "Block this site" is called in iframe, iframe sends message
                 // to background.js to send msg to show dialog in parent window
                 // cannot access parent window directly due to CORS
-                pk.showBlockSiteModal(request.data);
+                showBlockSiteModal(request.data);
             }
         });
 
@@ -1149,7 +1159,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
         }
 
         setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);
-        pk.updateAllValuesPerWin(window);
+        updateAllValuesPerWin(window);
         debugLog("done initializing");
 
         pk.isGmail = /mail\.google/.test(window.location.href);
@@ -1160,7 +1170,7 @@ import { changeStorageType, DBLoad } from "./common_data_handlers";
         Data.snippets = Folder.fromArray(Data.snippets);
         Folder.setIndices();
         pk.snipNameDelimiterListRegex = new RegExp(
-            `[${pk.escapeRegExp(Data.snipNameDelimiterList)}]`,
+            `[${escapeRegExp(Data.snipNameDelimiterList)}]`,
         );
     }
 

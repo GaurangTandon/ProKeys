@@ -13,12 +13,20 @@ import {
     DBLoad,
 } from "./common_data_handlers";
 import {
-    isObject, q, Q, qClsSingle, qId, checkRuntimeError,
+    isObject,
+    q,
+    Q,
+    qClsSingle,
+    qId,
+    checkRuntimeError,
+    isBlockedSite,
+    escapeRegExp,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippet_classes";
 import { ensureRobustCompat } from "./restoreFns";
 import { initBackup } from "./backupWork";
 import { initSnippetWork } from "./snippetWork";
+import { getHTML } from "./textmethods";
 
 (function () {
     let $autoInsertTable,
@@ -253,7 +261,7 @@ import { initSnippetWork } from "./snippetWork";
         URL = URL.replace(pk.protoWWWReplaceRegex, "");
 
         // already a blocked site
-        if (pk.isBlockedSite(URL)) {
+        if (isBlockedSite(URL)) {
             window.alert(`Site ${URL} is already blocked.`);
             return false;
         }
@@ -476,7 +484,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
                 if (node.tagName === "BUTTON") {
                     saveAutoInsert(getAutoInsertPairFromSaveInput(node));
-                } else if (pk.getHTML(node) === "Remove") {
+                } else if (getHTML(node) === "Remove") {
                     removeAutoInsertChar(getAutoInsertPairFromRemoveInput(node));
                 }
             });
@@ -494,7 +502,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     reservedDelimiter;
                 for (; i < len; i++) {
                     reservedDelimiter = RESERVED_DELIMITER_LIST.charAt(i);
-                    if (stringList.match(pk.escapeRegExp(reservedDelimiter))) {
+                    if (stringList.match(escapeRegExp(reservedDelimiter))) {
                         return reservedDelimiter;
                     }
                 }
@@ -779,8 +787,6 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             }, 300),
         );
 
-        pk.snipNameDelimiterListRegex = new RegExp(
-            `[${pk.escapeRegExp(Data.snipNameDelimiterList)}]`,
-        );
+        pk.snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
     }
 }());

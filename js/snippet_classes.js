@@ -2,7 +2,9 @@
 /* global pk, Data, latestRevisionLabel */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
-import { isObject, q, checkRuntimeError } from "./pre";
+import {
+    isObject, q, checkRuntimeError, escapeRegExp,
+} from "./pre";
 
 // functions common to Snip and Folder
 function Generic() {
@@ -1491,7 +1493,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     };
 
     this.searchSnippets = function (text) {
-        text = pk.escapeRegExp(text);
+        text = escapeRegExp(text);
 
         if (!this.hasStrippedSnippets) {
             this.stripAllSnippetsTags();
@@ -1612,7 +1614,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
 
     function highlightMatchText(keyword, textToMatch) {
         return textToMatch.replace(
-            new RegExp(pk.escapeRegExp(keyword), "ig"),
+            new RegExp(escapeRegExp(keyword), "ig"),
             $0 => `<match>${$0}</match>`,
         );
     }

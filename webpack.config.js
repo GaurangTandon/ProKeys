@@ -8,7 +8,7 @@ module.exports = {
         background: `${__dirname}/js/background.js`,
         detector: `${__dirname}/js/detector.js`,
         options: `${__dirname}/js/options.js`,
-        protoExtenders: `${__dirname}/js/protoExtenders.js`,
+        primitiveExtend: `${__dirname}/js/primitiveExtend.js`,
     },
     output: {
         filename: "[name].js",

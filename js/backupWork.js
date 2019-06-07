@@ -1,7 +1,9 @@
 // eslint-disable-next-line no-unused-vars
 /* global Data, pk, latestRevisionLabel */
 
-import { Q, q } from "./pre";
+import {
+    Q, q, copyTextToClipboard, SHOW_CLASS,
+} from "./pre";
 import { Folder } from "./snippet_classes";
 import { initiateRestore } from "./restoreFns";
 import { LS_REVISIONS_PROP, saveSnippetData } from "./common_data_handlers";
@@ -36,7 +38,7 @@ export function initBackup() {
                 revisions: setUpPastRevisions,
             };
 
-        q(`#snippets .panel_popup.${buttonClass}`).addClass(pk.dom.SHOW_CLASS);
+        q(`#snippets .panel_popup.${buttonClass}`).addClass(SHOW_CLASS);
         functionMap[buttonClass]();
     });
 
@@ -64,7 +66,7 @@ export function initBackup() {
 
     const copyToClipboardLink = q(".export .copy-data-to-clipboard-btn");
     copyToClipboardLink.on("click", () => {
-        pk.copyTextToClipboard(dataToExport);
+        copyTextToClipboard(dataToExport);
     });
 
     Q(".export input").on("change", showDataForExport);

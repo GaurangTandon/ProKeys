@@ -4,47 +4,9 @@
 // it is indcluded with the other files
 
 import { DOM_HELPERS } from "./pre";
+import { extendNodePrototype } from "./protoExtend";
+import { getHTML } from "./textmethods";
 
-/**
- * extends NodeList prototype per iframe present in the webpage
- * @type {Function}
- */
-let extendNodePrototype;
-(function protoExtensionWork() {
-    const protoExtensions = {};
-
-    function setNodeListPropPerWindow(prop, func, win) {
-        // in case of custom created array of Nodes, Array.prototype is necessary
-        win.Array.prototype[prop] = win.NodeList.prototype[prop] = win.HTMLCollection.prototype[
-            prop
-        ] = function (...args) {
-            // HTMLCollection, etc. doesn't support forEach
-            for (let i = 0, len = this.length; i < len; i++) {
-                func.apply(this[i], args);
-            }
-
-            return this;
-        };
-
-        win.Node.prototype[prop] = func;
-    }
-
-    // called by detector.js
-    pk.updateAllValuesPerWin = function (win) {
-        for (const [name, func] of protoExtensions) {
-            setNodeListPropPerWindow(name, func, win);
-        }
-    };
-
-    /**
-     * extends protoype of Node, Array and NodeList
-     * @param {String} prop property to extend
-     * @param {Function} func function to execute per for each Node
-     */
-    extendNodePrototype = function (prop, func) {
-        protoExtensions[prop] = func;
-    };
-}());
 (function () {
     Date.MONTHS = [
         "January",
@@ -328,7 +290,7 @@ let extendNodePrototype;
         // can be zero/empty string; make sure it's undefined
         return typeof textToSet !== "undefined"
             ? pk.setHTML(this, textToSet, prop, isListSnippets)
-            : pk.getHTML(this, prop);
+            : getHTML(this, prop);
     });
 
     // prototype alternative for setText/getText
