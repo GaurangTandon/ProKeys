@@ -321,7 +321,8 @@ import { getHTML, setHTML } from "./textmethods";
         parent.removeChild(this);
     });
 
-    for (const [funcName, func] of DOM_HELPERS) {
+    for (const [funcName, func] of Object.entries(DOM_HELPERS)) {
+        window[funcName] = func.bind(document);
         extendNodePrototype(funcName, func);
     }
 }());

@@ -21,7 +21,7 @@ function setNodeListPropPerWindow(prop, func, win) {
  * @type {Function}
  */
 function updateAllValuesPerWin(win) {
-    for (const [name, func] of protoExtensions) {
+    for (const [name, func] of Object.entries(protoExtensions)) {
         setNodeListPropPerWindow(name, func, win);
     }
 }

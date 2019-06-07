@@ -85,7 +85,6 @@ function databaseSetValue(name, value, callback) {
 export function DBLoad(callback) {
     pk.storage.get(OLD_DATA_STORAGE_KEY, (r) => {
         const req = r[OLD_DATA_STORAGE_KEY];
-
         // converting to !== might break just in case this relies on 0 == undefined :/
         // eslint-disable-next-line eqeqeq
         if (isObjectEmpty(req) || req.dataVersion != Data.dataVersion) {
