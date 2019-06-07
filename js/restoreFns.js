@@ -1,6 +1,6 @@
-/* global pk, Data */
+/* global Data */
 
-import { q } from "./pre";
+import { q, OBJECT_NAME_LIMIT } from "./pre";
 import { Folder } from "./snippet_classes";
 import { SETTINGS_DEFAULTS, saveSnippetData } from "./common_data_handlers";
 
@@ -30,7 +30,7 @@ function handleDuplicatesInSnippets(inputFolderMain, shouldMergeDuplicateFolderC
     function both(object) {
         const objectNameLen = object.name.length;
 
-        if (objectNameLen <= pk.OBJECT_NAME_LIMIT - stringToAppendToImportedObject.length) {
+        if (objectNameLen <= OBJECT_NAME_LIMIT - stringToAppendToImportedObject.length) {
             object.name += stringToAppendToImportedObject;
         } else {
             object.name = object.name.substring(0, objectNameLen - 3) + stringToAppendToImportedObject;

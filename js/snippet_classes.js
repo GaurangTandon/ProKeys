@@ -3,7 +3,7 @@
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 import {
-    isObject, q, checkRuntimeError, escapeRegExp,
+    isObject, q, checkRuntimeError, escapeRegExp, OBJECT_NAME_LIMIT,
 } from "./pre";
 
 // functions common to Snip and Folder
@@ -253,10 +253,9 @@ Generic.isValidName = function (name, type) {
     if (name.length === 0) {
         return "Empty name field";
     }
-    if (name.length > pk.OBJECT_NAME_LIMIT) {
-        return `Name cannot be greater than ${
-            pk.OBJECT_NAME_LIMIT
-        } characters. Current name has ${name.length - pk.OBJECT_NAME_LIMIT} more characters.`;
+    if (name.length > OBJECT_NAME_LIMIT) {
+        return `Name cannot be greater than ${OBJECT_NAME_LIMIT} characters. Current name has ${name.length
+            - OBJECT_NAME_LIMIT} more characters.`;
     }
     return Data.snippets.getUniqueObject(name, type)
         ? Generic.getDuplicateObjectsText(name, type)
@@ -1683,7 +1682,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             stringToCheck = "",
             foundSnip = null,
             delimiterChar = val[pos - 1],
-            lim = pos < pk.OBJECT_NAME_LIMIT ? pos : pk.OBJECT_NAME_LIMIT;
+            lim = pos < OBJECT_NAME_LIMIT ? pos : OBJECT_NAME_LIMIT;
 
         for (let i = 1; i <= lim; i++) {
             // the previous delimiter char gets added to the

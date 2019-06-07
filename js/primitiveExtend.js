@@ -1,11 +1,9 @@
-/* global pk */
-
 // this file adds useful extensions to prototypes of various primitives
 // it is indcluded with the other files
 
 import { DOM_HELPERS } from "./pre";
 import { extendNodePrototype } from "./protoExtend";
-import { getHTML } from "./textmethods";
+import { getHTML, setHTML } from "./textmethods";
 
 (function () {
     Date.MONTHS = [
@@ -289,7 +287,7 @@ import { getHTML } from "./textmethods";
     extendNodePrototype("html", function (textToSet, prop, isListSnippets) {
         // can be zero/empty string; make sure it's undefined
         return typeof textToSet !== "undefined"
-            ? pk.setHTML(this, textToSet, prop, isListSnippets)
+            ? setHTML(this, textToSet, prop, isListSnippets)
             : getHTML(this, prop);
     });
 

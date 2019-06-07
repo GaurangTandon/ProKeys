@@ -107,16 +107,10 @@ if (DEBUGGING) {
     debugDirTemp = function () {};
 }
 const debugLog = debugLogTemp,
-    debugDir = debugDirTemp;
-
-if (!pk.dom) {
-    pk.dom = {};
-}
-
-const SHOW_CLASS = "show",
-    protoWWWReplaceRegex = /^(ht|f)tps?:\/\/(www\.)?/;
-
-pk.OBJECT_NAME_LIMIT = 60;
+    debugDir = debugDirTemp,
+    SHOW_CLASS = "show",
+    protoWWWReplaceRegex = /^(ht|f)tps?:\/\/(www\.)?/,
+    OBJECT_NAME_LIMIT = 60;
 
 // replaces string's `\n` with `<br>` or reverse
 // `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
@@ -333,4 +327,5 @@ export {
     escapeRegExp,
     protoWWWReplaceRegex,
     debounce,
+    OBJECT_NAME_LIMIT,
 };
