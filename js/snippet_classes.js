@@ -803,7 +803,6 @@ Snip.makeHTMLSuitableForTextareaThroughString = function (html) {
 
             if (child.nodeType !== 3) {
                 preProcessTopLevelElement(child);
-                // eslint-disable-next-line no-continue
                 continue;
             }
 

@@ -1,20 +1,17 @@
 /* global pk, Data */
 // eslint-disable-next-line no-unused-vars
-/* global chrome, Folder, $containerFolderPath */
-// eslint-disable-next-line no-unused-vars
-/* global latestRevisionLabel, $containerSnippets, $panelSnippets */
-/* global initSnippetWork, saveRevision */
+/* global $containerFolderPath, latestRevisionLabel, $containerSnippets, $panelSnippets */
+/* global saveRevision */
 // above are defined in window. format
-
-// TODO: else if branch in snippet-classes.js has unnecessary semicolon eslint error. Why?
-// TODO: latestRevisionLabel is shown read-only on eslint. Why?
 
 import { SETTINGS_DEFAULTS } from "./common_data_handlers";
 import {
     isObject, q, Q, qClsSingle, qId, checkRuntimeError,
 } from "./pre";
-import { DualTextbox } from "./snippet_classes";
+import { DualTextbox, Folder } from "./snippet_classes";
 import { ensureRobustCompat } from "./restoreFns";
+import { initBackup, LS_REVISIONS_PROP } from "./backupWork";
+import { initSnippetWork } from "./snippetWork";
 
 export function notifySnippetDataChanges() {
     const msg = {
@@ -51,25 +48,14 @@ export function notifySnippetDataChanges() {
         MAX_SYNC_DATA_SIZE = 102400,
         MAX_LOCAL_DATA_SIZE = 5242880,
         VERSION = chrome.runtime.getManifest().version;
-    pk.LS_REVISIONS_PROP = "prokeys_revisions";
     pk.IN_OPTIONS_PAGE = true;
     window.$containerSnippets = null;
     window.$panelSnippets = null;
     window.$containerFolderPath = null;
     window.latestRevisionLabel = "data created (added defaut snippets)";
 
-    // when we restore one revision, we have to remove it from its
-    // previous position; saveSnippetData will automatically insert it
-    // back at the top of the list again
-    window.deleteRevision = function (index) {
-        const parsed = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
-
-        parsed.splice(index, 1);
-        localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
-    };
-
     window.saveRevision = function (dataString) {
-        let parsed = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
+        let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
         const latestRevision = {
             label: `${Date.getFormattedDate()} - ${latestRevisionLabel}`,
             data: dataString || Data.snippets,
@@ -77,7 +63,7 @@ export function notifySnippetDataChanges() {
 
         parsed.unshift(latestRevision);
         parsed = parsed.slice(0, MAX_REVISIONS_STORED);
-        localStorage[pk.LS_REVISIONS_PROP] = JSON.stringify(parsed);
+        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
     };
 
     function notifyCtxEnableToggle() {
@@ -621,7 +607,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             });
         }());
 
-        pk.dom.initBackup();
+        initBackup();
 
         // prevent exposure of locals
         (function hotKeyWork() {
@@ -738,7 +724,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         if (firstInstall) {
             // refer github issues#4
             Data.dataUpdateVariable = !Data.dataUpdateVariable;
-            localStorage[pk.LS_REVISIONS_PROP] = "[]";
+            localStorage[LS_REVISIONS_PROP] = "[]";
             localStorage.firstInstall = "false";
             // see issues/218#issuecomment-420487611
             Data.snippets = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS.snippets));

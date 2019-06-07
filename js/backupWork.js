@@ -1,9 +1,12 @@
 // eslint-disable-next-line no-unused-vars
-/* global Q, q, Data, Folder, pk, initiateRestore, deleteRevision, latestRevisionLabel */
-if (!pk.dom) {
-    pk.dom = {};
-}
-pk.dom.initBackup = function () {
+/* global Data, pk, latestRevisionLabel */
+
+import { Q, q } from "./pre";
+import { Folder } from "./snippet_classes";
+import { initiateRestore } from "./restoreFns";
+
+export const LS_REVISIONS_PROP = "prokeys_revisions";
+export function initBackup() {
     let dataToExport;
 
     // flattens all folders
@@ -143,7 +146,7 @@ pk.dom.initBackup = function () {
     let selectedRevision;
 
     function setUpPastRevisions() {
-        const revisions = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
+        const revisions = JSON.parse(localStorage[LS_REVISIONS_PROP]);
 
         $select.html("");
 
@@ -158,6 +161,16 @@ pk.dom.initBackup = function () {
 
         $select.on("input", showRevision);
         showRevision();
+    }
+
+    // when we restore one revision, we have to remove it from its
+    // previous position; saveSnippetData will automatically insert it
+    // back at the top of the list again
+    function deleteRevision(index) {
+        const parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+
+        parsed.splice(index, 1);
+        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
     }
 
     $revisionsRestoreBtn.on("click", () => {
@@ -196,4 +209,4 @@ pk.dom.initBackup = function () {
             $caveatParagraph.html("");
         }
     });
-};
+}
