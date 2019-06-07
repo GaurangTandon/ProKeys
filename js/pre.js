@@ -171,7 +171,7 @@ function isContentEditable(node, callForParent) {
             return false;
         }
 
-        if (pk.isContentEditable(parent, true)) {
+        if (isContentEditable(parent, true)) {
             return true;
         }
     } while (parent !== window.document);

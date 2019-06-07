@@ -618,6 +618,10 @@ import { showBlockSiteModal } from "./modalHandlers";
     // max search upto 10 parent nodes (searchLimit)
     function isParent(node, parentSelector, classArray, searchLimit) {
         function classMatch(classToMatch) {
+            // sometimes this is undefined, dk why
+            if (!node.classList) {
+                return false;
+            }
             for (const cls of node.classList) {
                 if (cls.search(classToMatch) === 0) {
                     return true;
@@ -1169,9 +1173,7 @@ import { showBlockSiteModal } from "./modalHandlers";
         pk.DB_loaded = true;
         Data.snippets = Folder.fromArray(Data.snippets);
         Folder.setIndices();
-        pk.snipNameDelimiterListRegex = new RegExp(
-            `[${escapeRegExp(Data.snipNameDelimiterList)}]`,
-        );
+        pk.snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
     }
 
     DBLoad(() => {

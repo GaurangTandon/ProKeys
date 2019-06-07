@@ -281,7 +281,7 @@ import { getHTML } from "./textmethods";
             },
             DECIMAL_PLACES_TO_SHOW = 1;
 
-        for (const [suffix, power] of suffixPowerMap) {
+        for (const [suffix, power] of Object.entries(suffixPowerMap)) {
             const lim = 10 ** power;
 
             if (bytes >= lim) {
