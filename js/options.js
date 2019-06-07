@@ -2,7 +2,16 @@
 // eslint-disable-next-line no-unused-vars
 /* global $containerFolderPath, latestRevisionLabel, $containerSnippets, $panelSnippets */
 
-import { SETTINGS_DEFAULTS, LS_REVISIONS_PROP, saveRevision } from "./common_data_handlers";
+import {
+    getCurrentStorageType,
+    databaseSave,
+    SETTINGS_DEFAULTS,
+    LS_REVISIONS_PROP,
+    saveRevision,
+    saveSnippetData,
+    changeStorageType,
+    DBLoad,
+} from "./common_data_handlers";
 import {
     isObject, q, Q, qClsSingle, qId, checkRuntimeError,
 } from "./pre";
@@ -175,13 +184,13 @@ import { initSnippetWork } from "./snippetWork";
         // so that storage gets changed by DB_load
         Data.snippets = false;
 
-        pk.databaseSave(() => {
-            pk.changeStorageType();
+        databaseSave(() => {
+            changeStorageType();
 
             if (transferData) {
                 // get the copy
                 Data.snippets = str;
-                pk.databaseSave(afterMigrate);
+                databaseSave(afterMigrate);
             } else {
                 // don't do Data.snippets = Folder.fromArray(Data.snippets);
                 // here since Data.snippets is false and since this is
@@ -286,7 +295,7 @@ import { initSnippetWork } from "./snippetWork";
     // "You have x bytes left out of y bytes"
     function updateStorageAmount() {
         pk.storage.getBytesInUse((bytesInUse) => {
-            const bytesAvailable = pk.getCurrentStorageType() === "sync" ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
+            const bytesAvailable = getCurrentStorageType() === "sync" ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
 
             // set current bytes
             qClsSingle("currentBytes").html(roundByteSizeWithPercent(bytesInUse, bytesAvailable));
@@ -309,7 +318,7 @@ import { initSnippetWork } from "./snippetWork";
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         if (!pk.DB_loaded) {
-            setTimeout(pk.DB_load, 100, DBLoadCallback);
+            setTimeout(DBLoad, 100, DBLoadCallback);
             return;
         }
 
@@ -543,7 +552,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 }
 
                 pk.storage.getBytesInUse((bytesInUse) => {
-                    if (pk.getCurrentStorageType() === "local" && bytesInUse > MAX_SYNC_DATA_SIZE) {
+                    if (getCurrentStorageType() === "local" && bytesInUse > MAX_SYNC_DATA_SIZE) {
                         window.alert(
                             `You are currently using ${bytesInUse} bytes of data; while sync storage only permits a maximum of ${MAX_SYNC_DATA_SIZE} bytes.\n\nPlease reduce the size of data (by deleting, editing, exporting snippets) you're using to migreate to sync storage successfully.`,
                         );
@@ -667,9 +676,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         // wrong storage mode
         if (Data.snippets === false) {
             // change storage to other type
-            pk.changeStorageType();
+            changeStorageType();
 
-            pk.DB_load(DBLoadCallback);
+            DBLoad(DBLoadCallback);
         } else {
             pk.DB_loaded = true;
             init();
@@ -702,7 +711,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
         // save the default snippets ONLY
         if (firstInstall) {
-            pk.saveSnippetData();
+            saveSnippetData();
         }
 
         Folder.setIndices();
@@ -749,7 +758,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 local: [local, `${sync1}<br>${sync2}`],
                 sync: [sync, localT],
             },
-            currArr = textMap[pk.getCurrentStorageType()];
+            currArr = textMap[getCurrentStorageType()];
 
         q(".storageMode .current p").html(currArr[0]);
         q(".storageMode .transfer p").html(currArr[1]);

@@ -2,7 +2,7 @@
 
 import { q } from "./pre";
 import { Folder } from "./snippet_classes";
-import { SETTINGS_DEFAULTS } from "./common_data_handlers";
+import { SETTINGS_DEFAULTS, saveSnippetData } from "./common_data_handlers";
 
 export function ensureRobustCompat(data) {
     let missingProperties = false;
@@ -221,7 +221,7 @@ function initiateRestore(data) {
         Data.snippets = existingSnippets;
     }
 
-    pk.saveSnippetData(() => {
+    saveSnippetData(() => {
         if (window.confirm("Data saved! Reload the page for changes to take effect?")) {
             window.location.reload();
         }

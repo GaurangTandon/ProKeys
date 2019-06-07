@@ -1366,18 +1366,13 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
          * body is actually .list in case of folder
          */
         return function (name, body, timestamp) {
-            let folderName = this.name,
-                newObj;
-
-            newObj = isSnippet
+            const newObj = isSnippet
                 ? new Snip(name, body, timestamp)
                 : new Folder(name, body, timestamp);
 
             Folder.insertObject(newObj, this);
 
             latestRevisionLabel = `created ${newObj.type} "${newObj.name}"`;
-
-            pk.saveSnippetData(undefined, folderName, newObj.name);
         };
     }
 
@@ -1385,13 +1380,10 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
 
     function editer(type) {
         return function (oldName, newName, body) {
-            const object = Data.snippets.getUniqueObject(oldName, type),
-                parent = object.getParentFolder();
+            const object = Data.snippets.getUniqueObject(oldName, type);
 
             object.edit(newName, body);
             latestRevisionLabel = `edited ${type} "${oldName}"`;
-
-            pk.saveSnippetData(undefined, parent.name, newName);
         };
     }
 
@@ -1552,8 +1544,6 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
         }
 
         this.list = sort(folders).concat(sort(snippets));
-
-        pk.saveSnippetData(undefined, this.name);
     };
 
     this.listSnippets = function (objectNamesToHighlight) {

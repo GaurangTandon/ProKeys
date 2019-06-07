@@ -4,7 +4,7 @@
 import { Q, q } from "./pre";
 import { Folder } from "./snippet_classes";
 import { initiateRestore } from "./restoreFns";
-import { LS_REVISIONS_PROP } from "./common_data_handlers";
+import { LS_REVISIONS_PROP, saveSnippetData } from "./common_data_handlers";
 
 export function initBackup() {
     let dataToExport;
@@ -179,7 +179,7 @@ export function initBackup() {
                 Data.snippets = Folder.fromArray(JSON.parse($textarea.value));
                 deleteRevision($select.selectedIndex);
                 latestRevisionLabel = `restored revision (labelled: ${selectedRevision.label})`;
-                pk.saveSnippetData(() => {
+                saveSnippetData(() => {
                     $closeRevisionsPopupBtn.click();
                 });
             }

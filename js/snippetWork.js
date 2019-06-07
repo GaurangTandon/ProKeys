@@ -8,6 +8,7 @@ import {
 import {
     Folder, Snip, Generic, DualTextbox,
 } from "./snippet_classes";
+import { saveSnippetData } from "./common_data_handlers";
 
 let validateSnippetData,
     validateFolderData,
@@ -41,12 +42,14 @@ function handlerSaveObject(type) {
                     latestRevisionLabel = `moved "${name}" ${movedObject.type} to "${
                         newParentfolder.name
                     }"`;
-                    pk.saveSnippetData(undefined, newParentfolder.name, name);
+                    saveSnippetData(undefined, newParentfolder.name, name);
                 } else {
                     oldParentFolder[`edit${type}`](oldName, name, body);
+                    saveSnippetData(undefined, newParentfolder.name, name);
                 }
             } else {
                 newParentfolder[`add${type}`](name, body);
+                saveSnippetData(undefined, newParentfolder.name, name);
             }
         });
     };
@@ -362,7 +365,7 @@ export function initSnippetWork() {
 
             latestRevisionLabel = `deleted ${type} "${name}"`;
 
-            pk.saveSnippetData(undefined, folder.name);
+            saveSnippetData(undefined, folder.name);
         }
     }
 
@@ -373,7 +376,7 @@ export function initSnippetWork() {
 
         // keep the same snippet highlighted as well (object.name)
         // so that user can press clone button repeatedly
-        pk.saveSnippetData(undefined, objectClone.getParentFolder().name, [
+        saveSnippetData(undefined, objectClone.getParentFolder().name, [
             clickedObject.name,
             objectClone.name,
         ]);
@@ -451,8 +454,8 @@ export function initSnippetWork() {
         sortType = sortType === "Name" ? "alphabetic" : "date";
 
         folder.sort(sortType, descendingFlag);
-
         latestRevisionLabel = `sorted folder "${folder.name}"`;
+        saveSnippetData(undefined, folder.name);
     });
 
     $addNewBtns.on("click", function () {
@@ -601,7 +604,7 @@ export function initSnippetWork() {
                     selectedObjects.length
                 } objects to folder "${selectFolderName}"`;
 
-                pk.saveSnippetData(
+                saveSnippetData(
                     () => {
                         // hide the bulk action panel
                         $bulkActionBtn.click();
@@ -625,7 +628,7 @@ export function initSnippetWork() {
 
                 latestRevisionLabel = `deleted ${selectedObjects.length} objects`;
 
-                pk.saveSnippetData(() => {
+                saveSnippetData(() => {
                     // hide the bulk action panel
                     $bulkActionBtn.click();
                 }, Folder.getListedFolderName());

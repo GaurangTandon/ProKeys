@@ -55,120 +55,118 @@ export function saveRevision(dataString) {
     localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
 }
 
-(function () {
-    const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
-    pk.storage = chrome.storage.local;
-    pk.DB_loaded = false;
-    // currently it's storing default data for first install;
-    // after DB_load, it stores the latest data
-    // snippets are later added
-    window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
-    pk.OLD_DATA_STORAGE_KEY = "UserSnippets";
-    pk.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
-    pk.DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
-    pk.snipNameDelimiterListRegex = null;
+const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
+pk.storage = chrome.storage.local;
+pk.DB_loaded = false;
+// currently it's storing default data for first install;
+// after DB_load, it stores the latest data
+// snippets are later added
+window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
+pk.OLD_DATA_STORAGE_KEY = "UserSnippets";
+pk.NEW_DATA_STORAGE_KEY = "ProKeysUserData";
+pk.DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
+pk.snipNameDelimiterListRegex = null;
 
-    function databaseSetValue(name, value, callback) {
-        const obj = {};
-        obj[name] = value;
+function databaseSetValue(name, value, callback) {
+    const obj = {};
+    obj[name] = value;
 
-        pk.storage.set(obj, () => {
+    pk.storage.set(obj, () => {
+        if (callback) {
+            callback();
+        }
+    });
+}
+
+export function DBLoad(callback) {
+    pk.storage.get(pk.OLD_DATA_STORAGE_KEY, (r) => {
+        const req = r[pk.OLD_DATA_STORAGE_KEY];
+
+        // converting to !== might break just in case this relies on 0 == undefined :/
+        // eslint-disable-next-line eqeqeq
+        if (pk.isObjectEmpty(req) || req.dataVersion != Data.dataVersion) {
+            databaseSetValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
+        } else {
+            Data = req;
             if (callback) {
                 callback();
             }
-        });
-    }
+        }
+    });
+}
 
-    pk.DB_load = function (callback) {
-        pk.storage.get(pk.OLD_DATA_STORAGE_KEY, (r) => {
-            const req = r[pk.OLD_DATA_STORAGE_KEY];
+export function databaseSave(callback) {
+    databaseSetValue(pk.OLD_DATA_STORAGE_KEY, Data, () => {
+        if (callback) {
+            callback();
+        }
+    });
+}
 
-            // converting to !== might break just in case this relies on 0 == undefined :/
-            // eslint-disable-next-line eqeqeq
-            if (pk.isObjectEmpty(req) || req.dataVersion != Data.dataVersion) {
-                databaseSetValue(pk.OLD_DATA_STORAGE_KEY, Data, callback);
-            } else {
-                Data = req;
-                if (callback) {
-                    callback();
-                }
-            }
-        });
-    };
+/**
+ * PRECONDITION: Data.snippets is a Folder object
+ */
+export function saveSnippetData(callback, folderNameToList, objectNamesToHighlight) {
+    Data.snippets = Data.snippets.toArray();
 
-    pk.databaseSave = function (callback) {
-        databaseSetValue(pk.OLD_DATA_STORAGE_KEY, Data, () => {
-            if (callback) {
-                callback();
-            }
-        });
-    };
+    // refer github issues#4
+    Data.dataUpdateVariable = !Data.dataUpdateVariable;
 
-    /**
-     * PRECONDITION: Data.snippets is a Folder object
-     */
-    pk.saveSnippetData = function (callback, folderNameToList, objectNamesToHighlight) {
-        Data.snippets = Data.snippets.toArray();
+    databaseSave(() => {
+        if (IN_OPTIONS_PAGE) {
+            saveRevision(Data.snippets.toArray());
+            notifySnippetDataChanges();
+        }
 
-        // refer github issues#4
-        Data.dataUpdateVariable = !Data.dataUpdateVariable;
+        Folder.setIndices();
+        const folderToList = folderNameToList
+            ? Data.snippets.getUniqueFolder(folderNameToList)
+            : Data.snippets;
+        folderToList.listSnippets(objectNamesToHighlight);
 
-        pk.databaseSave(() => {
-            if (IN_OPTIONS_PAGE) {
-                saveRevision(Data.snippets.toArray());
-                notifySnippetDataChanges();
-            }
+        checkRuntimeError("databaseSave inside")();
 
-            Folder.setIndices();
-            const folderToList = folderNameToList
-                ? Data.snippets.getUniqueFolder(folderNameToList)
-                : Data.snippets;
-            folderToList.listSnippets(objectNamesToHighlight);
+        if (callback) {
+            callback();
+        }
+    });
 
-            checkRuntimeError("databaseSave inside")();
+    Data.snippets = Folder.fromArray(Data.snippets);
+}
 
-            if (callback) {
-                callback();
-            }
-        });
+// save data not involving snippets
+export function saveOtherData(msg = "Saved!", callback) {
+    Data.snippets = Data.snippets.toArray();
 
-        Data.snippets = Folder.fromArray(Data.snippets);
-    };
+    // issues#4
+    Data.dataUpdateVariable = !Data.dataUpdateVariable;
 
-    // save data not involving snippets
-    pk.saveOtherData = function (msg = "Saved!", callback) {
-        Data.snippets = Data.snippets.toArray();
+    databaseSave(() => {
+        if (typeof msg === "function") {
+            msg();
+        } else if (typeof msg === "string") {
+            window.alert(msg);
+        }
+        checkRuntimeError("saveotherdata-options.js")();
 
-        // issues#4
-        Data.dataUpdateVariable = !Data.dataUpdateVariable;
+        if (callback) {
+            callback();
+        }
+    });
 
-        pk.databaseSave(() => {
-            if (typeof msg === "function") {
-                msg();
-            } else if (typeof msg === "string") {
-                window.alert(msg);
-            }
-            checkRuntimeError("saveotherdata-options.js")();
+    // once databaseSave has been called, doesn't matter
+    // if this prop is object/array since storage.clear/set
+    // methods are using a separate storageObj
+    Data.snippets = Folder.fromArray(Data.snippets);
+}
 
-            if (callback) {
-                callback();
-            }
-        });
+// get type of current storage as string
+export function getCurrentStorageType() {
+    // property MAX_ITEMS is present only in sync
+    return pk.storage.MAX_ITEMS ? "sync" : "local";
+}
 
-        // once databaseSave has been called, doesn't matter
-        // if this prop is object/array since storage.clear/set
-        // methods are using a separate storageObj
-        Data.snippets = Folder.fromArray(Data.snippets);
-    };
-
-    // get type of current storage as string
-    pk.getCurrentStorageType = function () {
-        // property MAX_ITEMS is present only in sync
-        return pk.storage.MAX_ITEMS ? "sync" : "local";
-    };
-
-    // changes type of storage: local-sync, sync-local
-    pk.changeStorageType = function () {
-        pk.storage = pk.getCurrentStorageType() === "sync" ? chrome.storage.local : chrome.storage.sync;
-    };
-}());
+// changes type of storage: local-sync, sync-local
+export function changeStorageType() {
+    pk.storage = getCurrentStorageType() === "sync" ? chrome.storage.local : chrome.storage.sync;
+}

@@ -2,6 +2,7 @@
 
 import { q, checkRuntimeError, debugLog } from "./pre";
 import { Folder, Snip } from "./snippet_classes";
+import { changeStorageType, DBLoad } from "./common_data_handlers";
 
 (function () {
     let windowLoadChecker = setInterval(() => {
@@ -1163,10 +1164,10 @@ import { Folder, Snip } from "./snippet_classes";
         );
     }
 
-    pk.DB_load(() => {
+    DBLoad(() => {
         if (Data.snippets === false) {
-            pk.changeStorageType();
-            pk.DB_load(setEssentialItemsOnDBLoad);
+            changeStorageType();
+            DBLoad(setEssentialItemsOnDBLoad);
 
             return;
         }
