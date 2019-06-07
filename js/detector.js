@@ -1,4 +1,19 @@
-/* global q, Folder, Snip, chrome, Data, pk, debugLog */
+/* global Data, pk */
+
+import {
+    q,
+    checkRuntimeError,
+    debugLog,
+    isContentEditable,
+    isTextNode,
+    isBlockedSite,
+    escapeRegExp,
+} from "./pre";
+import { Folder, Snip } from "./snippet_classes";
+import { changeStorageType, DBLoad } from "./common_data_handlers";
+import { updateAllValuesPerWin } from "./protoExtend";
+import { getHTML } from "./textmethods";
+import { showBlockSiteModal } from "./modalHandlers";
 
 (function () {
     let windowLoadChecker = setInterval(() => {
@@ -64,7 +79,7 @@
             if (doc && !doc[UNIQ_CS_KEY]) {
                 doc[UNIQ_CS_KEY] = true;
                 doc[DOC_IS_IFRAME_KEY] = true;
-                pk.updateAllValuesPerWin(win);
+                updateAllValuesPerWin(win);
                 attachNecessaryHandlers(win);
                 setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
             }
@@ -233,7 +248,7 @@
     // another function to insert snippet body
     function isSnippetPresent(node) {
         debugLog("checking snippet presence", node);
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             return isSnippetPresentCENode(node);
         }
 
@@ -314,7 +329,7 @@
 
             if (Placeholder.regex.test(selectedText)) {
                 checkPlaceholdersInNode(node, node.selectionEnd, to, false);
-                return false;
+                return;
             }
         }
 
@@ -397,7 +412,7 @@
 
     // fired by the window.contextmenu event
     function insertSnippetFromCtx(snip, node) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             insertSnippetFromCtxContentEditable(snip, node);
             return;
         }
@@ -440,7 +455,7 @@
 
     // auto-insert character functionality
     function insertCharacter(node, characterStart, characterEnd) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             insertCharacterContentEditable(node, characterStart, characterEnd);
         } else {
             let text = node.value,
@@ -577,7 +592,7 @@
         let win,
             sel;
 
-        if (pk.isTextNode(node) || pk.isContentEditable(node)) {
+        if (isTextNode(node) || isContentEditable(node)) {
             win = getNodeWindow(node);
             sel = win.getSelection();
 
@@ -594,7 +609,7 @@
             }
         } else {
             // textarea
-            return pk.getHTML(node).substring(node.selectionStart, node.selectionEnd);
+            return getHTML(node).substring(node.selectionStart, node.selectionEnd);
         }
     }
 
@@ -603,6 +618,10 @@
     // max search upto 10 parent nodes (searchLimit)
     function isParent(node, parentSelector, classArray, searchLimit) {
         function classMatch(classToMatch) {
+            // sometimes this is undefined, dk why
+            if (!node.classList) {
+                return false;
+            }
             for (const cls of node.classList) {
                 if (cls.search(classToMatch) === 0) {
                     return true;
@@ -653,7 +672,7 @@
      * @param {Number} shiftCount shift count (+tive towards right; -ive to left)
      */
     function shiftCaretByCount(node, shiftCount) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             const win = getNodeWindow(node),
                 sel = win.getSelection(),
                 range = sel.getRangeAt(0),
@@ -733,7 +752,7 @@
         let sel = win.getSelection(),
             range = sel.getRangeAt(0),
             rangeNode = range.startContainer,
-            isCENode = pk.isContentEditable(node),
+            isCENode = isContentEditable(node),
             caretPos = isCENode ? range.endOffset : node.selectionEnd,
             value = isCENode ? rangeNode.textContent : node.value,
             operate = true,
@@ -799,7 +818,7 @@
             retVal = data[CACHE_DATASET_STRING] === "true";
         } else if (isParent(node, null, ["CodeMirror", "ace", "monaco-editor"], 3)) {
             retVal = false;
-        } else if (tgN === "TEXTAREA" || pk.isContentEditable(node)) {
+        } else if (tgN === "TEXTAREA" || isContentEditable(node)) {
             retVal = true;
         } else if (tgN === "INPUT") {
             inputNodeType = node.attr("type");
@@ -815,13 +834,13 @@
     }
 
     function getCharFollowingCaret(node) {
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             const win = getNodeWindow(node),
                 sel = win.getSelection(),
                 range = sel.getRangeAt(0),
                 caretPos = range.startOffset;
             let container = range.startContainer,
-                text = pk.getHTML(container); // no .html() as can be text node
+                text = getHTML(container); // no .html() as can be text node
 
             if (caretPos < text.length) {
                 return text[caretPos];
@@ -831,7 +850,7 @@
             container = range.startContainer.nextSibling;
             // so take the following node
             if (container) {
-                text = pk.getHTML(container);
+                text = getHTML(container);
                 if (text.length !== 0) {
                     return text[0];
                 }
@@ -844,11 +863,10 @@
 
     function previousCharactersForEmoji(node) {
         let emojisChars = [":", ":-"],
-            previousChars,
             position,
             nodeValue;
 
-        if (pk.isContentEditable(node)) {
+        if (isContentEditable(node)) {
             const win = getNodeWindow(node),
                 sel = win.getSelection(),
                 range = sel.getRangeAt(0),
@@ -860,7 +878,7 @@
             position = node.selectionStart;
         }
 
-        previousChars = nodeValue.substring(position - 2, position);
+        const previousChars = nodeValue.substring(position - 2, position);
 
         return previousChars[1] === emojisChars[0] || previousChars === emojisChars[1];
     }
@@ -964,7 +982,7 @@
 
             // possibly document iframe
             if (!tgN) {
-                return false;
+                return;
             }
 
             // [Tab] key for tab spacing/placeholder shifting
@@ -976,7 +994,7 @@
                     // thus, we check if the node has a form as a parent
                     // if it is, then it is a to or subject field node
                     // and we will not perform operation (return false)
-                    return false;
+                    return;
                 }
 
                 // in placeholder mode, tab => jumping of placeholders
@@ -1046,7 +1064,7 @@
         win.addEventListener("contextmenu", (event) => {
             ctxElm = event.target;
             ctxTimestamp = Date.now();
-            chrome.runtime.sendMessage({ ctxTimestamp }, pk.checkRuntimeError("attachHandlers"));
+            chrome.runtime.sendMessage({ ctxTimestamp }, checkRuntimeError("attachHandlers"));
         });
 
         win.addEventListener("error", (event) => {
@@ -1096,7 +1114,7 @@
             URL = window.location.href;
         }
 
-        const isBlocked = pk.isBlockedSite(URL);
+        const isBlocked = isBlockedSite(URL);
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             let timestamp;
 
@@ -1112,10 +1130,10 @@
                 if (PAGE_IS_IFRAME) {
                     chrome.runtime.sendMessage(
                         { openBlockSiteModalInParent: true, data: request },
-                        pk.checkRuntimeError("showModal"),
+                        checkRuntimeError("showModal"),
                     );
                 } else {
-                    pk.showBlockSiteModal(request);
+                    showBlockSiteModal(request);
                 }
             } else if (typeof request.clickedSnippet !== "undefined") {
                 timestamp = parseInt(request.ctxTimestamp, 10);
@@ -1133,7 +1151,7 @@
                 // when "Block this site" is called in iframe, iframe sends message
                 // to background.js to send msg to show dialog in parent window
                 // cannot access parent window directly due to CORS
-                pk.showBlockSiteModal(request.data);
+                showBlockSiteModal(request.data);
             }
         });
 
@@ -1141,11 +1159,11 @@
 
         // do not operate on blocked sites
         if (isBlocked) {
-            return true;
+            return;
         }
 
         setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);
-        pk.updateAllValuesPerWin(window);
+        updateAllValuesPerWin(window);
         debugLog("done initializing");
 
         pk.isGmail = /mail\.google/.test(window.location.href);
@@ -1155,15 +1173,13 @@
         pk.DB_loaded = true;
         Data.snippets = Folder.fromArray(Data.snippets);
         Folder.setIndices();
-        pk.snipNameDelimiterListRegex = new RegExp(
-            `[${pk.escapeRegExp(Data.snipNameDelimiterList)}]`,
-        );
+        pk.snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
     }
 
-    pk.DB_load(() => {
+    DBLoad(() => {
         if (Data.snippets === false) {
-            pk.changeStorageType();
-            pk.DB_load(setEssentialItemsOnDBLoad);
+            changeStorageType();
+            DBLoad(setEssentialItemsOnDBLoad);
 
             return;
         }

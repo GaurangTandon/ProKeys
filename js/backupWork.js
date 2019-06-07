@@ -1,8 +1,14 @@
-/* global Q, q, Data, Folder, pk, initiateRestore, deleteRevision, latestRevisionLabel */
-if (!pk.dom) {
-    pk.dom = {};
-}
-pk.dom.initBackup = function () {
+// eslint-disable-next-line no-unused-vars
+/* global Data, pk, latestRevisionLabel */
+
+import {
+    Q, q, copyTextToClipboard, SHOW_CLASS,
+} from "./pre";
+import { Folder } from "./snippet_classes";
+import { initiateRestore } from "./restoreFns";
+import { LS_REVISIONS_PROP, saveSnippetData } from "./common_data_handlers";
+
+export function initBackup() {
     let dataToExport;
 
     // flattens all folders
@@ -32,7 +38,7 @@ pk.dom.initBackup = function () {
                 revisions: setUpPastRevisions,
             };
 
-        q(`#snippets .panel_popup.${buttonClass}`).addClass(pk.dom.SHOW_CLASS);
+        q(`#snippets .panel_popup.${buttonClass}`).addClass(SHOW_CLASS);
         functionMap[buttonClass]();
     });
 
@@ -60,7 +66,7 @@ pk.dom.initBackup = function () {
 
     const copyToClipboardLink = q(".export .copy-data-to-clipboard-btn");
     copyToClipboardLink.on("click", () => {
-        pk.copyTextToClipboard(dataToExport);
+        copyTextToClipboard(dataToExport);
     });
 
     Q(".export input").on("change", showDataForExport);
@@ -142,7 +148,7 @@ pk.dom.initBackup = function () {
     let selectedRevision;
 
     function setUpPastRevisions() {
-        const revisions = JSON.parse(localStorage[pk.LS_REVISIONS_PROP]);
+        const revisions = JSON.parse(localStorage[LS_REVISIONS_PROP]);
 
         $select.html("");
 
@@ -159,13 +165,23 @@ pk.dom.initBackup = function () {
         showRevision();
     }
 
+    // when we restore one revision, we have to remove it from its
+    // previous position; saveSnippetData will automatically insert it
+    // back at the top of the list again
+    function deleteRevision(index) {
+        const parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+
+        parsed.splice(index, 1);
+        localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+    }
+
     $revisionsRestoreBtn.on("click", () => {
         try {
             if (window.confirm("Are you sure you want to use the selected revision?")) {
                 Data.snippets = Folder.fromArray(JSON.parse($textarea.value));
                 deleteRevision($select.selectedIndex);
                 latestRevisionLabel = `restored revision (labelled: ${selectedRevision.label})`;
-                pk.saveSnippetData(() => {
+                saveSnippetData(() => {
                     $closeRevisionsPopupBtn.click();
                 });
             }
@@ -195,4 +211,4 @@ pk.dom.initBackup = function () {
             $caveatParagraph.html("");
         }
     });
-};
+}

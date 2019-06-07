@@ -1,7 +1,14 @@
-/* global q, Folder, Data, Generic, chrome, pk */
+/* global Data, pk */
+
+// TODO:
+// 1. using global pk for sharing the list of snippet ctx IDs;
+// fix that since we won't have sc.js with us in dist/
+
+import { q, isTabSafe, checkRuntimeError } from "./pre";
+import { Folder, Generic } from "./snippet_classes";
+
 console.log(`Loaded once ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
-    // can recall at max 10 times
     // for gettting the blocked site status in case of unfinished loading of cs.js
     LIMIT_OF_RECALLS = 10,
     SNIPPET_MAIN_ID = "snippet_main",
@@ -66,7 +73,7 @@ function getPasteData() {
 }
 
 function injectScript(tab) {
-    if (!pk.isTabSafe(tab)) {
+    if (!isTabSafe(tab)) {
         return;
     }
 
@@ -100,7 +107,7 @@ let toggleBlockSiteCtxItem;
                     title: "reload page for blocking site",
                 },
                 () => {
-                    if (pk.checkRuntimeError("BSI-CREATE")()) {
+                    if (checkRuntimeError("BSI-CREATE")()) {
                         return;
                     }
                     currentlyShown = true;
@@ -108,7 +115,7 @@ let toggleBlockSiteCtxItem;
             );
         } else if (!Data.ctxEnabled && currentlyShown) {
             chrome.contextMenus.remove(BLOCK_SITE_ID, () => {
-                if (pk.checkRuntimeError("BSI-REM")()) {
+                if (checkRuntimeError("BSI-REM")()) {
                     return;
                 }
                 currentlyShown = false;
@@ -147,7 +154,7 @@ chrome.omnibox.onInputChanged.addListener((text, suggestCallback) => {
     });
 });
 
-chrome.omnibox.onInputEntered.addListener((omniboxText, disposition) => {
+chrome.omnibox.onInputEntered.addListener((omniboxText) => {
     let url,
         query;
 
@@ -193,7 +200,7 @@ let removeCtxSnippetList,
         }
         cachedSnippetList = "";
         if (defaultEntryExists) {
-            chrome.contextMenus.remove(SNIPPET_MAIN_ID, pk.checkRuntimeError("REMOVE-SMI"));
+            chrome.contextMenus.remove(SNIPPET_MAIN_ID, checkRuntimeError("REMOVE-SMI"));
             defaultEntryExists = false;
         }
     };
@@ -243,16 +250,12 @@ chrome.runtime.onInstalled.addListener((details) => {
     injectScriptAllTabs();
 
     // the empty function and string is required < Chrome 42
-    chrome.notifications.create(
-        "",
-        {
-            type: "basic",
-            iconUrl: "imgs/r128.png",
-            title,
-            message: text,
-        },
-        (id) => {},
-    );
+    chrome.notifications.create("", {
+        type: "basic",
+        iconUrl: "imgs/r128.png",
+        title,
+        message: text,
+    });
 });
 
 function loadSnippetListIntoBGPage(list) {
@@ -278,12 +281,12 @@ function updateContextMenu(isRecalled = false) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
 
-        if (!pk.isTabSafe(tab)) {
+        if (!isTabSafe(tab)) {
             return;
         }
 
         chrome.tabs.sendMessage(tab.id, { checkBlockedYourself: true }, (isBlocked) => {
-            if (pk.checkRuntimeError("CBY")()) {
+            if (checkRuntimeError("CBY")()) {
                 return;
             }
 
@@ -340,10 +343,10 @@ chrome.contextMenus.onClicked.addListener((info) => {
         };
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (!pk.isTabSafe(tabs[0])) {
+            if (!isTabSafe(tabs[0])) {
                 return;
             }
-            chrome.tabs.sendMessage(tabs[0].id, msg, pk.checkRuntimeError("ID==BSI"));
+            chrome.tabs.sendMessage(tabs[0].id, msg, checkRuntimeError("ID==BSI"));
         });
     } else if (Generic.CTX_SNIP_REGEX.test(id)) {
         startIndex = Generic.CTX_START[Generic.SNIP_TYPE].length;
@@ -351,14 +354,14 @@ chrome.contextMenus.onClicked.addListener((info) => {
 
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
-            if (pk.isTabSafe(tab)) {
+            if (isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
                     tab.id,
                     {
                         clickedSnippet: snip.toArray(),
                         ctxTimestamp: latestCtxTimestamp,
                     },
-                    pk.checkRuntimeError("CSRTI"),
+                    checkRuntimeError("CSRTI"),
                 );
             } else if (tab.url) {
                 alert(
@@ -383,7 +386,7 @@ function onTabActivatedOrUpdated({ tabId }) {
 
     if (needToGetLatestData) {
         chrome.tabs.sendMessage(tabId, { giveFreshData: true }, (data) => {
-            if (!data || pk.checkRuntimeError("GSL")()) {
+            if (!data || checkRuntimeError("GSL")()) {
                 return;
             }
             const { snippets, ctxEnabled } = data;
@@ -399,7 +402,7 @@ function onTabActivatedOrUpdated({ tabId }) {
     }
 
     chrome.tabs.get(tabId, (tab) => {
-        if (pk.isTabSafe(tab)) {
+        if (isTabSafe(tab)) {
             path = IMG_ACTIVE;
         } else {
             path = IMG_INACTIVE;
@@ -420,11 +423,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.openBlockSiteModalInParent === true) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
-            if (pk.isTabSafe(tab)) {
+            if (isTabSafe(tab)) {
                 chrome.tabs.sendMessage(
                     tab.id,
                     { showBlockSiteModal: true, data: request.data },
-                    pk.checkRuntimeError("OBSMIP"),
+                    checkRuntimeError("OBSMIP"),
                 );
             }
         });

@@ -30,6 +30,9 @@
         "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
         "no-nested-ternary": "warn",
         "no-use-before-define": "warn",
-        "prefer-destructuring": "warn"
+        "prefer-destructuring": "warn",
+        "import/prefer-default-export": "off",
+        "max-len": ["warn", { "code": 100 }],
+        "no-continue": "off"
     }
 }
