@@ -11,8 +11,10 @@ import {
     saveSnippetData,
     changeStorageType,
     DBLoad,
+    saveOtherData,
 } from "./common_data_handlers";
 import {
+    SHOW_CLASS,
     isObject,
     q,
     Q,
@@ -21,6 +23,8 @@ import {
     checkRuntimeError,
     isBlockedSite,
     escapeRegExp,
+    protoWWWReplaceRegex,
+    debounce,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippet_classes";
 import { ensureRobustCompat } from "./restoreFns";
@@ -166,7 +170,7 @@ import { getHTML } from "./textmethods";
         // first insert in user list
         Data.charsToAutoInsertUserList.push(autoInsertPair);
 
-        pk.saveOtherData(`Saved auto-insert pair - ${firstChar}${lastChar}`, listAutoInsertChars);
+        saveOtherData(`Saved auto-insert pair - ${firstChar}${lastChar}`, listAutoInsertChars);
     }
 
     function removeAutoInsertChar(autoInsertPair) {
@@ -174,10 +178,7 @@ import { getHTML } from "./textmethods";
 
         Data.charsToAutoInsertUserList.splice(index, 1);
 
-        pk.saveOtherData(
-            `Removed auto-insert pair '${autoInsertPair.join("")}'`,
-            listAutoInsertChars,
-        );
+        saveOtherData(`Removed auto-insert pair '${autoInsertPair.join("")}'`, listAutoInsertChars);
     }
 
     // transfer data from one storage to another
@@ -258,7 +259,7 @@ import { getHTML } from "./textmethods";
             return false;
         }
 
-        URL = URL.replace(pk.protoWWWReplaceRegex, "");
+        URL = URL.replace(protoWWWReplaceRegex, "");
 
         // already a blocked site
         if (isBlockedSite(URL)) {
@@ -429,14 +430,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             $tabKeyInput.on("change", function () {
                 Data.tabKey = this.checked;
 
-                pk.saveOtherData();
+                saveOtherData();
             });
 
             // on user input in tab key setting
             $ctxEnabledInput.on("change", function () {
                 Data.ctxEnabled = this.checked;
                 notifyCtxEnableToggle();
-                pk.saveOtherData();
+                saveOtherData();
             });
 
             $blockSitesTextarea.on("keydown", (event) => {
@@ -459,7 +460,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         Data.blockedSites.push(sanitizedURL);
                     }
 
-                    pk.saveOtherData("Saved successfully", listBlockedSites);
+                    saveOtherData("Saved successfully", listBlockedSites);
                 }
             });
 
@@ -492,8 +493,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             $snipMatchDelimitedWordInput.on("change", function () {
                 const isChecked = this.checked;
                 Data.matchDelimitedWord = isChecked;
-                $snipNameDelimiterListDIV.toggleClass(pk.dom.SHOW_CLASS);
-                pk.saveOtherData();
+                $snipNameDelimiterListDIV.toggleClass(SHOW_CLASS);
+                saveOtherData();
             });
 
             function validateDelimiterList(stringList) {
@@ -520,7 +521,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         return true;
                     }
                     Data.snipNameDelimiterList = this.value;
-                    pk.saveOtherData();
+                    saveOtherData();
                 }
 
                 return false;
@@ -538,7 +539,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 ) {
                     Data.snipNameDelimiterList = SETTINGS_DEFAULTS.snipNameDelimiterList;
                     delimiterInit();
-                    pk.saveOtherData();
+                    saveOtherData();
                 }
             });
 
@@ -648,7 +649,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 } else if (valid) {
                     Data.hotKey = combo.concat([keyCode]).slice(0);
 
-                    pk.saveOtherData(`Hotkey set to ${getCurrentHotkey()}`, () => {
+                    saveOtherData(`Hotkey set to ${getCurrentHotkey()}`, () => {
                         window.location.href = "#settings";
                         window.location.reload();
                     });
@@ -726,7 +727,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
         const propertiesChanged = ensureRobustCompat(Data);
         if (propertiesChanged) {
-            pk.saveOtherData();
+            saveOtherData();
         }
 
         // on load; set checkbox state to user preference
@@ -735,7 +736,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         $snipMatchDelimitedWordInput.checked = Data.matchDelimitedWord;
 
         if (Data.matchDelimitedWord) {
-            $snipNameDelimiterListDIV.addClass(pk.dom.SHOW_CLASS);
+            $snipNameDelimiterListDIV.addClass(SHOW_CLASS);
         }
 
         $blockSitesTextarea = q(".blocked-sites textarea");
@@ -748,7 +749,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         autoInsertWrapSelectionInput.checked = Data.wrapSelectionAutoInsert;
         autoInsertWrapSelectionInput.on("click", () => {
             Data.wrapSelectionAutoInsert = autoInsertWrapSelectionInput.checked;
-            pk.saveOtherData();
+            saveOtherData();
         });
 
         omniboxSearchURLInput = q(".search-provider input");
@@ -757,7 +758,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         omniboxSearchURLInput.on("keydown", function (e) {
             if (e.keyCode === 13) {
                 Data.omniboxSearchURL = this.value;
-                pk.saveOtherData();
+                saveOtherData();
             }
         });
 
@@ -781,7 +782,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         const logo = qClsSingle("logo");
         window.addEventListener(
             "resize",
-            pk.debounce(() => {
+            debounce(() => {
                 logo.style.width = `${logo.clientHeight}px`;
                 Folder.implementChevronInFolderPath();
             }, 300),

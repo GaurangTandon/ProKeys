@@ -1,6 +1,7 @@
-/* global pk, Data */
+/* global Data */
 
 import { q } from "./pre";
+import { saveOtherData } from "./common_data_handlers";
 
 // serves as an addon to the content script for handling
 // hiding/showing the modal
@@ -54,7 +55,7 @@ function attachModalHandlers(modal, shouldBlockSite) {
 
         if (shouldBlockSite) {
             Data.blockedSites.push(URL);
-            pk.saveOtherData(success);
+            saveOtherData(success);
         } else {
             const idx = Data.blockedSites.indexOf(URL);
 
@@ -65,7 +66,7 @@ function attachModalHandlers(modal, shouldBlockSite) {
                 // gets transferred to close modal btn
                 // closing the modal almost immediately.
                 // 1000ms delay experimentally established
-                pk.saveOtherData(success);
+                saveOtherData(success);
             } else {
                 // create regex after removing the part after /
                 const regex = new RegExp(URL.replace(/\/.*$/gi, ""), "gi"),

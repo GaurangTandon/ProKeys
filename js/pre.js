@@ -113,10 +113,10 @@ if (!pk.dom) {
     pk.dom = {};
 }
 
-const SHOW_CLASS = "show";
+const SHOW_CLASS = "show",
+    protoWWWReplaceRegex = /^(ht|f)tps?:\/\/(www\.)?/;
 
 pk.OBJECT_NAME_LIMIT = 60;
-pk.protoWWWReplaceRegex = /^(ht|f)tps?:\/\/(www\.)?/;
 
 // replaces string's `\n` with `<br>` or reverse
 // `convertForHTML` - true => convert text for display in html div (`.innerHTML`)
@@ -216,7 +216,7 @@ function isContentEditable(node, callForParent) {
 // be triggered. The function will be called after it stops being called for
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
-pk.debounce = function (func, wait, immediate) {
+function debounce(func, wait, immediate) {
     let timeout;
     return function (...args) {
         const context = this,
@@ -233,7 +233,7 @@ pk.debounce = function (func, wait, immediate) {
             func.apply(context, args);
         }
     };
-};
+}
 
 /**
  * credits: Dean Taylor https://stackoverflow.com/users/406712/dean-taylor on StackOverflow https://stackoverflow.com/a/30810322/2675672
@@ -294,14 +294,12 @@ function copyTextToClipboard(text) {
 
 updateAllValuesPerWin(window);
 
-pk.isTabSafe = isTabSafe;
-
 /**
  * @param {String} url to check
  * @returns {Boolean} true if site is blocked by user, false otherwise
  */
 function isBlockedSite(url) {
-    const domain = url.replace(pk.protoWWWReplaceRegex, "");
+    const domain = url.replace(protoWWWReplaceRegex, "");
 
     for (const blockedSite of Data.blockedSites) {
         const regex = new RegExp(`^${escapeRegExp(blockedSite)}`);
@@ -333,4 +331,6 @@ export {
     isContentEditable,
     isBlockedSite,
     escapeRegExp,
+    protoWWWReplaceRegex,
+    debounce,
 };

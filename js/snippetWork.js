@@ -3,7 +3,7 @@
 /* global latestRevisionLabel, $containerSnippets, $panelSnippets */
 
 import {
-    q, qCls, qClsSingle, qId, Q,
+    q, qCls, qClsSingle, qId, Q, debounce,
 } from "./pre";
 import {
     Folder, Snip, Generic, DualTextbox,
@@ -478,7 +478,7 @@ export function initSnippetWork() {
     $searchBtn.attr("title", "Search for folders or snips");
     $searchField.on(
         "keyup",
-        pk.debounce(function searchFieldHandler() {
+        debounce(function searchFieldHandler() {
             const searchText = this.value,
                 listedFolder = Folder.getListedFolder(),
                 searchResult = listedFolder.searchSnippets(searchText);
