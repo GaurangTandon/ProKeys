@@ -1,12 +1,9 @@
 const gulp = require("gulp"),
     csso = require("gulp-csso"),
     htmlmin = require("gulp-htmlmin"),
-    babel = require("gulp-babel"),
-    jsminify = require("gulp-uglify"),
     jsonminify = require("gulp-jsonminify"),
     SRC = ".",
-    DEST = "./dist",
-    IS_PRODUCTION = false;
+    DEST = "./dist";
 
 gulp.task("styles", () => gulp
     .src(`${SRC}/css/*.css`)
