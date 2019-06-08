@@ -4,10 +4,11 @@
 // 1. using global pk for sharing the list of snippet ctx IDs;
 // fix that since we won't have sc.js with us in dist/
 
-import { q, isTabSafe, checkRuntimeError } from "./pre";
-import { Folder, Generic } from "./snippet_classes";
+import { checkRuntimeError, isTabSafe, q } from "./pre";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
+import { Folder, Generic } from "./snippet_classes";
+import { saveRevision, LS_REVISIONS_PROP, SETTINGS_DEFAULTS } from "./common_data_handlers";
 
 primitiveExtender();
 updateAllValuesPerWin(window);
@@ -15,14 +16,10 @@ console.log(`Loaded once ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
     // for gettting the blocked site status in case of unfinished loading of cs.js
     LIMIT_OF_RECALLS = 10,
+    OLD_DATA_STORAGE_KEY = "UserSnippets",
     SNIPPET_MAIN_ID = "snippet_main",
     URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 let contextMenuActionBlockSite,
-    // boolean set to true on updating app as well as when extension loads
-    // or after browser restart
-    // so that user gets updated snippet list whenever he comes
-    // on valid website (not chrome://extension)
-    needToGetLatestData = true,
     recalls = 0,
     // received from cs.js; when there are mutliple iframes on a page
     // this helps remove the ambiguity as to which one was latest
@@ -33,12 +30,26 @@ let contextMenuActionBlockSite,
 
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
-window.Data = {};
-Data.snippets = new Folder("Snippets");
-Data.ctxEnabled = true;
 pk.listOfSnippetCtxIDs = [];
 
-Folder.setIndices();
+function databaseSetValue(name, value, callback) {
+    const obj = {};
+    obj[name] = value;
+
+    pk.storage.set(obj, () => {
+        if (callback) {
+            callback();
+        }
+    });
+}
+
+function DBSave(callback) {
+    databaseSetValue(OLD_DATA_STORAGE_KEY, Data, () => {
+        if (callback) {
+            callback();
+        }
+    });
+}
 
 function isURL(text) {
     return URL_REGEX.test(text.trim());
@@ -238,13 +249,16 @@ chrome.runtime.onInstalled.addListener((details) => {
         { version } = chrome.runtime.getManifest();
 
     if (reason === "install") {
-        localStorage.firstInstall = "true";
         title = "ProKeys successfully installed!";
         text = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
+        localStorage[LS_REVISIONS_PROP] = "[]";
+        window.Data = SETTINGS_DEFAULTS;
+        Folder.setIndices();
+        saveRevision(Data.snippets);
+        DBSave(Data);
     } else if (reason === "update") {
         title = `ProKeys updated to v${version}`;
         text = "Hooray! Please reload active tabs to use the new version.";
-        needToGetLatestData = true;
     } else {
         // do not process anything other than install or update
         return;
@@ -388,23 +402,6 @@ function onTabActivatedOrUpdated({ tabId }) {
         return;
     }
 
-    if (needToGetLatestData) {
-        chrome.tabs.sendMessage(tabId, { giveFreshData: true }, (data) => {
-            if (!data || checkRuntimeError("GSL")()) {
-                return;
-            }
-            const { snippets, ctxEnabled } = data;
-            if (Array.isArray(snippets)) {
-                needToGetLatestData = false;
-                loadSnippetListIntoBGPage(snippets);
-                addCtxSnippetList();
-            }
-            if (typeof ctxEnabled !== "undefined") {
-                Data.ctxEnabled = ctxEnabled;
-            }
-        });
-    }
-
     chrome.tabs.get(tabId, (tab) => {
         if (isTabSafe(tab)) {
             path = IMG_ACTIVE;
@@ -442,6 +439,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (typeof request.ctxEnabled !== "undefined") {
         Data.ctxEnabled = request.ctxEnabled;
         initContextMenu();
+    }
+    if (typeof request.giveData !== "undefined") {
+        sendResponse(Data);
+    } else if (typeof request.updateData !== "undefined") {
+        Data = request.updateData;
+        DBSave();
+        sendResponse();
     }
 });
 

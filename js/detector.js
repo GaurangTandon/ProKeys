@@ -11,7 +11,7 @@ import {
     PRIMITIVES_EXT_KEY,
 } from "./pre";
 import { Folder, Snip } from "./snippet_classes";
-import { changeStorageType, DBLoad } from "./common_data_handlers";
+import { DBget } from "./common_data_handlers";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { getHTML } from "./textmethods";
@@ -1096,7 +1096,7 @@ primitiveExtender();
         // if DB is not loaded then
         // try again after 1 second
         if (!pk.DB_loaded) {
-            setTimeout(init, 1000);
+            setTimeout(DBget, 1000, afterDBget);
             return;
         }
         if (!window[PRIMITIVES_EXT_KEY]) {
@@ -1181,21 +1181,10 @@ primitiveExtender();
         pk.isGmail = /mail\.google/.test(window.location.href);
     }
 
-    function setEssentialItemsOnDBLoad() {
+    function afterDBget(DataResponse) {
         pk.DB_loaded = true;
-        Data.snippets = Folder.fromArray(Data.snippets);
+        window.Data = DataResponse;
         Folder.setIndices();
         pk.snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
     }
-
-    DBLoad(() => {
-        if (Data.snippets === false) {
-            changeStorageType();
-            DBLoad(setEssentialItemsOnDBLoad);
-
-            return;
-        }
-
-        setEssentialItemsOnDBLoad();
-    });
 }());
