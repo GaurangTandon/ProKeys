@@ -243,22 +243,28 @@ let removeCtxSnippetList,
 }());
 
 chrome.runtime.onInstalled.addListener((details) => {
-    let text,
-        title;
+    let notifText,
+        notifTitle;
     const { reason } = details,
         { version } = chrome.runtime.getManifest();
 
     if (reason === "install") {
-        title = "ProKeys successfully installed!";
-        text = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
+        // set initial data
         localStorage[LS_REVISIONS_PROP] = "[]";
         window.Data = SETTINGS_DEFAULTS;
+        Data.snippets = Folder.fromArray(Data.snippets);
+        window.latestRevisionLabel = "data created (added defaut snippets)";
         Folder.setIndices();
+
+        // save it
         saveRevision(Data.snippets);
-        DBSave(Data);
+        DBSave();
+
+        notifTitle = "ProKeys successfully installed!";
+        notifText = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
     } else if (reason === "update") {
-        title = `ProKeys updated to v${version}`;
-        text = "Hooray! Please reload active tabs to use the new version.";
+        notifTitle = `ProKeys updated to v${version}`;
+        notifText = "Hooray! Please reload active tabs to use the new version.";
     } else {
         // do not process anything other than install or update
         return;
@@ -271,8 +277,8 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.notifications.create("", {
         type: "basic",
         iconUrl: "imgs/r128.png",
-        title,
-        message: text,
+        title: notifTitle,
+        message: notifText,
     });
 });
 

@@ -1,6 +1,6 @@
 /* global pk, Data */
 // eslint-disable-next-line no-unused-vars
-/* global $containerFolderPath, latestRevisionLabel, $containerSnippets, $panelSnippets */
+/* global $containerFolderPath, $containerSnippets, $panelSnippets */
 
 import {
     getCurrentStorageType,
@@ -49,7 +49,6 @@ primitiveExtender();
     window.$containerSnippets = null;
     window.$panelSnippets = null;
     window.$containerFolderPath = null;
-    window.latestRevisionLabel = "data created (added defaut snippets)";
 
     function notifyCtxEnableToggle() {
         const msg = { ctxEnabled: Data.ctxEnabled };
