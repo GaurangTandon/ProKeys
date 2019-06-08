@@ -217,6 +217,7 @@ import { getHTML } from "./textmethods";
     function getCurrentHotkey() {
         const combo = Data.hotKey.slice(0),
             specials = {
+                9: "Tab",
                 13: "Enter",
                 32: "Space",
                 188: ", (Comma)",
@@ -623,15 +624,16 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             // below code from https://stackoverflow.com/q/12467240
             // User shmiddty https://stackoverflow.com/u/1585400
             const nonControlKeyCodeRanges = [
-                [48, 57], // number keys
-                [65, 90], // letter keys
-                [96, 111], // numpad keys
-                [186, 192], // ;=,-./` (in order)
-                [219, 222], // [\]' (in order)
-                [32], // spacebar
-                [13], // return
-                [9], // tab
-            ];
+                    [48, 57], // number keys
+                    [65, 90], // letter keys
+                    [96, 111], // numpad keys
+                    [186, 192], // ;=,-./` (in order)
+                    [219, 222], // [\]' (in order)
+                    [32], // spacebar
+                    [13], // return
+                    [9], // tab
+                ],
+                arrayOfControlKeys = ["shiftKey", "altKey", "ctrlKey", "metaKey"];
 
             function isNonControlKey(keyCode) {
                 return nonControlKeyCodeRanges.some((range) => {
@@ -642,29 +644,45 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 });
             }
 
-            hotkeyListener.on("keydown", (event) => {
-                const { keyCode } = event,
-                    arrayOfControlKeys = ["shiftKey", "altKey", "ctrlKey", "metaKey"],
-                    valid = isNonControlKey(keyCode);
+            function setHotkey(hotkey) {
+                Data.hotKey = hotkey;
 
-                // escape to exit
-                if (keyCode === 27) {
-                    resetHotkeyBtn();
-                } else if (valid) {
-                    Data.hotKey = combo.concat([keyCode]).slice(0);
+                saveOtherData(`Hotkey set to ${getCurrentHotkey()}`, () => {
+                    window.location.href = "#settings";
+                    window.location.reload();
+                });
+            }
 
-                    saveOtherData(`Hotkey set to ${getCurrentHotkey()}`, () => {
-                        window.location.href = "#settings";
-                        window.location.reload();
-                    });
-                } else {
-                    arrayOfControlKeys.forEach((key) => {
-                        if (event[key] && combo.indexOf(key) === -1) {
-                            combo.unshift(key);
-                        }
-                    });
-                }
-            });
+            // tab key down can only be caught through window.document
+            // event listener and none other :O
+            window.document.on(
+                "keydown",
+                (event) => {
+                    if (event.target !== hotkeyListener) {
+                        return;
+                    }
+                    const { keyCode } = event,
+                        valid = isNonControlKey(keyCode);
+
+                    // escape to exit
+                    if (keyCode === 9) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setHotkey([9]);
+                    } else if (keyCode === 27) {
+                        resetHotkeyBtn();
+                    } else if (valid) {
+                        setHotkey(combo.concat([keyCode]).slice(0));
+                    } else {
+                        arrayOfControlKeys.forEach((key) => {
+                            if (event[key] && combo.indexOf(key) === -1) {
+                                combo.unshift(key);
+                            }
+                        });
+                    }
+                },
+                true,
+            );
 
             changeHotkeyBtn.on("click", function () {
                 this.html("Press new hotkeys").disabled = true; // disable the button
