@@ -2,10 +2,15 @@
 // it is indcluded with the other files
 
 import { DOM_HELPERS } from "./pre";
-import { extendNodePrototype, updateAllValuesPerWin } from "./protoExtend";
+import { extendNodePrototype } from "./protoExtend";
 import { getHTML, setHTML } from "./textmethods";
 
-(function () {
+/**
+ * There are three frames in which this needs to be executed
+ * options page, background page, and all frames of a webpage.
+ * This does not need to wait for page load.
+ */
+export function primitiveExtender() {
     Date.MONTHS = [
         "January",
         "February",
@@ -324,14 +329,4 @@ import { getHTML, setHTML } from "./textmethods";
     for (const [funcName, func] of Object.entries(DOM_HELPERS)) {
         extendNodePrototype(funcName, func);
     }
-}());
-
-function onPageLoad() {
-    if (document.readyState !== "complete") {
-        setTimeout(onPageLoad, 10);
-    } else {
-        updateAllValuesPerWin(window);
-        window.primitivesExtended = true;
-    }
 }
-onPageLoad();

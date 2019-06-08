@@ -111,6 +111,7 @@ if (DEBUGGING) {
 const debugLog = debugLogTemp,
     debugDir = debugDirTemp,
     SHOW_CLASS = "show",
+    PRIMITIVES_EXT_KEY = "primitivesExtended",
     protoWWWReplaceRegex = /^(ht|f)tps?:\/\/(www\.)?/,
     OBJECT_NAME_LIMIT = 60;
 
@@ -299,4 +300,5 @@ export {
     protoWWWReplaceRegex,
     debounce,
     OBJECT_NAME_LIMIT,
+    PRIMITIVES_EXT_KEY,
 };

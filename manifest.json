@@ -8,12 +8,12 @@
         "default_icon": "imgs/r16.png"
     },
     "background": {
-        "scripts": ["js/primitiveExtend.js", "js/background.js"],
+        "scripts": ["js/background.js"],
         "persistent": false
     },
     "content_scripts": [
         {
-            "js": ["js/primitiveExtend.js", "js/detector.js"],
+            "js": ["js/detector.js"],
             "css": ["css/blockSiteModal.css"],
             "matches": ["<all_urls>"],
             "run_at": "document_start",

@@ -8,13 +8,16 @@ import {
     isTextNode,
     isBlockedSite,
     escapeRegExp,
+    PRIMITIVES_EXT_KEY,
 } from "./pre";
 import { Folder, Snip } from "./snippet_classes";
 import { changeStorageType, DBLoad } from "./common_data_handlers";
+import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { getHTML } from "./textmethods";
 import { showBlockSiteModal } from "./modalHandlers";
 
+primitiveExtender();
 (function () {
     let windowLoadChecker = setInterval(() => {
             if (window.document.readyState === "complete") {
@@ -84,7 +87,7 @@ import { showBlockSiteModal } from "./modalHandlers";
                 setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, doc);
             }
         } catch (e) {
-            debugLog(e, iframe);
+            debugLog(e, iframe, doc, win);
         }
     }
 
@@ -1096,7 +1099,11 @@ import { showBlockSiteModal } from "./modalHandlers";
             setTimeout(init, 1000);
             return;
         }
-        debugLog("init", document);
+        if (!window[PRIMITIVES_EXT_KEY]) {
+            updateAllValuesPerWin(window);
+        }
+
+        debugLog("---\ninit", document);
 
         // another instance is already running, time to escape
         if (document[UNIQ_CS_KEY] === true) {

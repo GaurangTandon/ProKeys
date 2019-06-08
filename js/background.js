@@ -6,7 +6,11 @@
 
 import { q, isTabSafe, checkRuntimeError } from "./pre";
 import { Folder, Generic } from "./snippet_classes";
+import { primitiveExtender } from "./primitiveExtend";
+import { updateAllValuesPerWin } from "./protoExtend";
 
+primitiveExtender();
+updateAllValuesPerWin(window);
 console.log(`Loaded once ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
     // for gettting the blocked site status in case of unfinished loading of cs.js

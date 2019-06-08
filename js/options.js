@@ -25,13 +25,17 @@ import {
     escapeRegExp,
     protoWWWReplaceRegex,
     debounce,
+    PRIMITIVES_EXT_KEY,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippet_classes";
 import { ensureRobustCompat } from "./restoreFns";
 import { initBackup } from "./backupWork";
 import { initSnippetWork } from "./snippetWork";
 import { getHTML } from "./textmethods";
+import { updateAllValuesPerWin } from "./protoExtend";
+import { primitiveExtender } from "./primitiveExtend";
 
+primitiveExtender();
 (function () {
     let $autoInsertTable,
         $tabKeyInput,
@@ -316,9 +320,8 @@ import { getHTML } from "./textmethods";
     }
 
     function init() {
-        if (!window.primitivesExtended) {
-            setTimeout(init, 100);
-            return;
+        if (!window[PRIMITIVES_EXT_KEY]) {
+            updateAllValuesPerWin(window);
         }
         // needs to be set before database actions
         $panelSnippets = qClsSingle("panel_snippets");
