@@ -985,8 +985,19 @@ import { showBlockSiteModal } from "./modalHandlers";
                 return;
             }
 
-            // [Tab] key for tab spacing/placeholder shifting
+            if (isSnippetSubstitutionKey(e, keyCode)) {
+                // snippet substitution hotkey
+                if (isSnippetPresent(node)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+            }
+            // since tab key functions as all of snippet expansion,
+            // placeholder jumper as well as 4sp insert, we cannot
+            // put an else if here
             if (keyCode === 9 && metaKeyNotPressed) {
+                // [Tab] key for tab spacing/placeholder shifting
                 if (pk.isGmail && isParent(node, "form")) {
                     // in Gmail, the subject and to address field
                     // should not have any tab function.
@@ -1024,12 +1035,6 @@ import { showBlockSiteModal } from "./modalHandlers";
                     resetPlaceholderVariables();
                 } else {
                     resetPlaceholderVariables();
-                }
-            } else if (isSnippetSubstitutionKey(e, keyCode)) {
-                // snippet substitution hotkey
-                if (isSnippetPresent(node)) {
-                    e.preventDefault();
-                    e.stopPropagation();
                 }
             } else if ([38, 40].indexOf(keyCode) > -1) {
                 // pressing up/down arrows breaks out of placeholder mode
