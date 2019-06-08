@@ -1,3 +1,5 @@
+import { PRIMITIVES_EXT_KEY } from "./pre";
+
 const protoExtensions = {};
 
 function setNodeListPropPerWindow(prop, func, win) {
@@ -24,6 +26,7 @@ function updateAllValuesPerWin(win) {
     for (const [name, func] of Object.entries(protoExtensions)) {
         setNodeListPropPerWindow(name, func, win);
     }
+    win[PRIMITIVES_EXT_KEY] = true;
 }
 
 /**
