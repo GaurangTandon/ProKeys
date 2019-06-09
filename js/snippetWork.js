@@ -651,7 +651,7 @@ export function initSnippetWork() {
 
     Data.snippets.listSnippets();
 
-    /* executed in the very end since pk.saveOtherData async and
+    /* executed in the very end since saveOtherData async and
                 stringifies data.snippets */
     // till now, we don't have any use for data.visited
     // variable in any file; but still keeping it just in case

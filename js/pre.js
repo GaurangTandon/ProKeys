@@ -1,11 +1,8 @@
-/* global pk, Data */
+/* global Data */
 
 // this file contains all common utility functions
 // this file should not contain any code that needs to be executed outisde an exported function as
 // it is not included in final dist
-
-// will be used to store prokeys related variables (#204)
-window.pk = {};
 
 // attempting to send a message to a tab on chrome:// or webstore
 // page will fail with this error because no content script is running there
@@ -97,7 +94,7 @@ function isTextNode(node) {
     return node.nodeType === 3;
 }
 
-const DEBUGGING = false;
+const DEBUGGING = true;
 let debugDirTemp,
     debugLogTemp;
 // see https://stackoverflow.com/q/13815640
@@ -122,14 +119,6 @@ function isObjectEmpty(obj) {
 function escapeRegExp(str) {
     return str.replace(/[-[\]/{}())*+?.\\^$|]/g, "\\$&");
 }
-
-// should use this since users may use foreign language
-// characters which use up more than two bytes
-pk.lengthInUtf8Bytes = function (str) {
-    // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
-    const m = encodeURIComponent(str).match(/%[89ABab]/g);
-    return str.length + (m ? m.length : 0);
-};
 
 // if it is a callForParent, means that a child node wants
 // to get its parents checked

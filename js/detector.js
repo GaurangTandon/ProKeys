@@ -1,4 +1,4 @@
-/* global Data, pk */
+/* global Data, isGmail, IN_OPTIONS_PAGE */
 
 import {
     q,
@@ -7,7 +7,6 @@ import {
     isContentEditable,
     isTextNode,
     isBlockedSite,
-    escapeRegExp,
     PRIMITIVES_EXT_KEY,
 } from "./pre";
 import { Folder, Snip } from "./snippet_classes";
@@ -21,7 +20,7 @@ primitiveExtender();
 (function () {
     let windowLoadChecker = setInterval(() => {
             if (window.document.readyState === "complete") {
-                init();
+                onPageLoad();
                 clearInterval(windowLoadChecker);
             }
         }, 250),
@@ -1001,7 +1000,7 @@ primitiveExtender();
             // put an else if here
             if (keyCode === 9 && metaKeyNotPressed) {
                 // [Tab] key for tab spacing/placeholder shifting
-                if (pk.isGmail && isParent(node, "form")) {
+                if (isGmail && isParent(node, "form")) {
                     // in Gmail, the subject and to address field
                     // should not have any tab function.
                     // These two fields have a "form" as their parent.
@@ -1092,13 +1091,14 @@ primitiveExtender();
         debugLog("handlers attached on", win.document);
     }
 
-    function init() {
-        // if DB is not loaded then
-        // try again after 1 second
-        if (!pk.DB_loaded) {
-            setTimeout(DBget, 1000, afterDBget);
-            return;
-        }
+    function afterDBget(DataResponse) {
+        window.Data = DataResponse;
+        Data.snippets = Folder.fromArray(Data.snippets);
+        Folder.setIndices();
+        setPageDOM();
+    }
+
+    function setPageDOM() {
         if (!window[PRIMITIVES_EXT_KEY]) {
             updateAllValuesPerWin(window);
         }
@@ -1131,7 +1131,7 @@ primitiveExtender();
             let timestamp;
 
             // when user updates snippet data, reloading page is not required
-            if (typeof request.snippetList !== "undefined" && !pk.IN_OPTIONS_PAGE) {
+            if (typeof request.snippetList !== "undefined" && !IN_OPTIONS_PAGE) {
                 Data.snippets = Folder.fromArray(request.snippetList);
                 Folder.setIndices();
             } else if (request.checkBlockedYourself) {
@@ -1178,13 +1178,16 @@ primitiveExtender();
         updateAllValuesPerWin(window);
         debugLog("done initializing");
 
-        pk.isGmail = /mail\.google/.test(window.location.href);
+        window.isGmail = /mail\.google/.test(window.location.href);
     }
 
-    function afterDBget(DataResponse) {
-        pk.DB_loaded = true;
-        window.Data = DataResponse;
-        Folder.setIndices();
-        pk.snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
+    function onPageLoad() {
+        if (!IN_OPTIONS_PAGE) {
+            DBget(afterDBget);
+        } else {
+            // load a second after the init
+            // function in the options page has executed
+            setTimeout(setPageDOM, 1000);
+        }
     }
 }());

@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global pk, Data, latestRevisionLabel */
+/* global Data, latestRevisionLabel, isGmail, IN_OPTIONS_PAGE */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 import {
@@ -1063,7 +1063,7 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
 
     $container.Q("ol, ul").forEach(formatOLULInListParentForCEnode);
 
-    if (pk.isGmail) {
+    if (isGmail) {
         $container
             .Q("blockquote")
             // problem 9 issues#153
@@ -1321,7 +1321,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     this.isSearchResultFolder = !!isSearchResultFolder;
 
     // only options page mutates list
-    if (pk.IN_OPTIONS_PAGE) {
+    if (IN_OPTIONS_PAGE) {
         observeList(this.list);
     }
 
@@ -1677,13 +1677,15 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             delimiterChar = val[pos - 1 - i];
             snip = this.getUniqueSnip(stringToCheck);
 
+            const snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
+
             if (snip) {
-                if (Data.matchDelimitedWord && pk.snipNameDelimiterListRegex) {
+                if (Data.matchDelimitedWord && snipNameDelimiterListRegex) {
                     // delimiter char may not exist if snip name
                     // is at the beginning of the textbox
                     if (
                         !delimiterChar
-                        || pk.snipNameDelimiterListRegex.test(delimiterChar)
+                        || snipNameDelimiterListRegex.test(delimiterChar)
                         || delimiterChar === "\n"
                     ) {
                         // a new line character is always a delimiter
@@ -1720,8 +1722,6 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                 checkRuntimeError("CRX-CREATE-SCJS"),
             );
 
-            pk.listOfSnippetCtxIDs.push(id);
-
             if (Folder.isFolder(object)) {
                 object.createCtxMenuEntry(id);
             }
@@ -1739,8 +1739,6 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                 },
                 checkRuntimeError("SCJS-CTX-CRE"),
             );
-
-            pk.listOfSnippetCtxIDs.push(id);
         }
     };
 
@@ -1788,7 +1786,7 @@ Folder.fromArray = function (arr) {
     folder.list = arr.map(listElm => (Array.isArray(listElm) ? Folder.fromArray(listElm) : Snip.fromObject(listElm)));
 
     // only options page mutates list
-    if (pk.IN_OPTIONS_PAGE) {
+    if (IN_OPTIONS_PAGE) {
         observeList(folder.list);
     }
 

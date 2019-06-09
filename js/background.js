@@ -1,14 +1,20 @@
-/* global Data, pk */
+/* global Data, listOfSnippetCtxIDs */
 
 // TODO:
-// 1. using global pk for sharing the list of snippet ctx IDs;
+// 1. using global window for sharing the list of snippet ctx IDs;
 // fix that since we won't have sc.js with us in dist/
 
 import { checkRuntimeError, isTabSafe, q } from "./pre";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { Folder, Generic } from "./snippet_classes";
-import { saveRevision, LS_REVISIONS_PROP, SETTINGS_DEFAULTS } from "./common_data_handlers";
+import {
+    DBSave,
+    saveRevision,
+    LS_REVISIONS_PROP,
+    SETTINGS_DEFAULTS,
+    LS_STORAGE_TYPE_PROP,
+} from "./common_data_handlers";
 
 primitiveExtender();
 updateAllValuesPerWin(window);
@@ -16,7 +22,6 @@ console.log(`Loaded once ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
     // for gettting the blocked site status in case of unfinished loading of cs.js
     LIMIT_OF_RECALLS = 10,
-    OLD_DATA_STORAGE_KEY = "UserSnippets",
     SNIPPET_MAIN_ID = "snippet_main",
     URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 let contextMenuActionBlockSite,
@@ -26,30 +31,17 @@ let contextMenuActionBlockSite,
     // storing it in background.js so as to provide a global one-stop center
     // content scripts, which cannot interact among themselves
     latestCtxTimestamp,
-    modalHTML;
+    modalHTML,
+    /**
+     * Aim is that there should be only one copy of storage type present across
+     * the entire system. Hence, the background js is the safest place for it to be
+     * and others can message bg.js to interact with it
+     */
+    storage = chrome.storage.local;
 
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
-pk.listOfSnippetCtxIDs = [];
-
-function databaseSetValue(name, value, callback) {
-    const obj = {};
-    obj[name] = value;
-
-    pk.storage.set(obj, () => {
-        if (callback) {
-            callback();
-        }
-    });
-}
-
-function DBSave(callback) {
-    databaseSetValue(OLD_DATA_STORAGE_KEY, Data, () => {
-        if (callback) {
-            callback();
-        }
-    });
-}
+window.listOfSnippetCtxIDs = [];
 
 function isURL(text) {
     return URL_REGEX.test(text.trim());
@@ -72,6 +64,12 @@ function getDomain(url) {
     }
 
     return domain;
+}
+
+// get type of current storage as string
+function getCurrentStorageType() {
+    // property MAX_ITEMS is present only in sync
+    return storage.MAX_ITEMS ? "sync" : "local";
 }
 
 function getPasteData() {
@@ -210,8 +208,8 @@ let removeCtxSnippetList,
     let cachedSnippetList = "",
         defaultEntryExists = false;
     removeCtxSnippetList = function () {
-        while (pk.listOfSnippetCtxIDs.length > 0) {
-            chrome.contextMenus.remove(pk.listOfSnippetCtxIDs.pop());
+        while (listOfSnippetCtxIDs.length > 0) {
+            chrome.contextMenus.remove(listOfSnippetCtxIDs.pop());
         }
         cachedSnippetList = "";
         if (defaultEntryExists) {
@@ -251,6 +249,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     if (reason === "install") {
         // set initial data
         localStorage[LS_REVISIONS_PROP] = "[]";
+        localStorage[LS_STORAGE_TYPE_PROP] = "local";
         window.Data = SETTINGS_DEFAULTS;
         Data.snippets = Folder.fromArray(Data.snippets);
         window.latestRevisionLabel = "data created (added defaut snippets)";
@@ -265,6 +264,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     } else if (reason === "update") {
         notifTitle = `ProKeys updated to v${version}`;
         notifText = "Hooray! Please reload active tabs to use the new version.";
+        storage = chrome[localStorage[LS_STORAGE_TYPE_PROP]];
     } else {
         // do not process anything other than install or update
         return;
@@ -447,11 +447,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         initContextMenu();
     }
     if (typeof request.giveData !== "undefined") {
-        sendResponse(Data);
+        const orgSnippets = Data.snippets;
+        Data.snippets = Data.snippets.toArray();
+        const resp = JSON.parse(JSON.stringify(Data));
+        Data.snippets = orgSnippets;
+
+        sendResponse(resp);
     } else if (typeof request.updateData !== "undefined") {
         Data = request.updateData;
         DBSave();
-        sendResponse();
+    } else if (typeof request.getStorageType !== "undefined") {
+        sendResponse(getCurrentStorageType());
+    } else if (typeof request.changeStorageType !== "undefined") {
+        const storages = ["local", "sync"],
+            targetStorage = storages[1 - storages.indexOf(getCurrentStorageType())];
+
+        storage = chrome.storage[targetStorage];
+        localStorage[LS_STORAGE_TYPE_PROP] = targetStorage;
+    } else if (typeof request.getBytesInUse !== "undefined") {
+        storage.getBytesInUse((...args) => sendResponse(...args));
     }
 });
 

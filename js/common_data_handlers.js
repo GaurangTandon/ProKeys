@@ -1,4 +1,4 @@
-/* global Data, pk, latestRevisionLabel */
+/* global Data, latestRevisionLabel */
 
 import { checkRuntimeError, isTabSafe } from "./pre";
 import { Folder } from "./snippet_classes";
@@ -19,7 +19,9 @@ const SETTINGS_DEFAULTS = {
         wrapSelectionAutoInsert: true,
         ctxEnabled: true,
     },
-    LS_REVISIONS_PROP = "prokeys_revisions";
+    OLD_DATA_STORAGE_KEY = "UserSnippets",
+    LS_REVISIONS_PROP = "prokeys_revisions",
+    LS_STORAGE_TYPE_PROP = "pkStorageType";
 
 function notifySnippetDataChanges(snippetList) {
     const msg = {
@@ -54,15 +56,7 @@ function saveRevision(dataString) {
     localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
 }
 
-// store only those props which are mutable
-pk.storage = chrome.storage.local;
-pk.DB_loaded = false;
-pk.snipNameDelimiterListRegex = null;
-
 const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
-// will use these when fixing the sync storage bug
-// NEW_DATA_STORAGE_KEY = "ProKeysUserData";
-// DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
 
 /**
  * requests data from background page and
@@ -77,6 +71,26 @@ function DBget(callback) {
  */
 function DBupdate(callback) {
     chrome.runtime.sendMessage({ updateData: Data }, callback);
+}
+
+function databaseSetValue(name, value, callback) {
+    const obj = {};
+    obj[name] = value;
+    chrome.runtime.sendMessage({ getStorageType: true }, (storageType) => {
+        chrome[storageType].set(obj, () => {
+            if (callback) {
+                callback();
+            }
+        });
+    });
+}
+
+function DBSave(callback) {
+    databaseSetValue(OLD_DATA_STORAGE_KEY, Data, () => {
+        if (callback) {
+            callback();
+        }
+    });
 }
 
 /**
@@ -137,17 +151,6 @@ function saveOtherData(msg = "Saved!", callback) {
     Data.snippets = Folder.fromArray(Data.snippets);
 }
 
-// get type of current storage as string
-function getCurrentStorageType() {
-    // property MAX_ITEMS is present only in sync
-    return pk.storage.MAX_ITEMS ? "sync" : "local";
-}
-
-// changes type of storage: local-sync, sync-local
-function changeStorageType() {
-    pk.storage = getCurrentStorageType() === "sync" ? chrome.storage.local : chrome.storage.sync;
-}
-
 // transfer data from one storage to another
 function migrateData(transferData, callback) {
     function afterMigrate() {
@@ -161,20 +164,24 @@ function migrateData(transferData, callback) {
     Data.snippets = false;
 
     DBupdate(() => {
-        changeStorageType();
-
-        if (transferData) {
-            // get the copy
-            Data.snippets = str;
-            DBupdate(afterMigrate);
-        } else {
-            // don't do Data.snippets = Folder.fromArray(Data.snippets);
-            // here since Data.snippets is false and since this is
-            // the sync2 option, we need to retain the data that user had
-            // previously synced on another PC
-            callback();
-        }
+        chrome.runtime.sendMessage({ changeStorageType: true }, () => {
+            if (transferData) {
+                // get the copy
+                Data.snippets = str;
+                DBupdate(afterMigrate);
+            } else {
+                // don't do Data.snippets = Folder.fromArray(Data.snippets);
+                // here since Data.snippets is false and since this is
+                // the sync2 option, we need to retain the data that user had
+                // previously synced on another PC
+                callback();
+            }
+        });
     });
+}
+
+function getBytesInUse(callback) {
+    chrome.runtime.sendMessage({ getBytesInUse: true }, callback);
 }
 
 /**
@@ -189,7 +196,9 @@ export {
     saveOtherData,
     migrateData,
     saveRevision,
-    getCurrentStorageType,
     SETTINGS_DEFAULTS,
     LS_REVISIONS_PROP,
+    LS_STORAGE_TYPE_PROP,
+    getBytesInUse,
+    DBSave,
 };
