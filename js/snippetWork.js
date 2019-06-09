@@ -1,6 +1,6 @@
 /* global Data */
 // eslint-disable-next-line no-unused-vars
-/* global latestRevisionLabel, $containerSnippets, $panelSnippets */
+/* global $containerSnippets, $panelSnippets */
 
 import {
     q, qCls, qClsSingle, qId, Q, debounce, SHOW_CLASS,
@@ -8,7 +8,7 @@ import {
 import {
     Folder, Snip, Generic, DualTextbox,
 } from "./snippet_classes";
-import { saveSnippetData, saveOtherData } from "./common_data_handlers";
+import { saveSnippetData } from "./common_data_handlers";
 
 let validateSnippetData,
     validateFolderData,
@@ -39,7 +39,7 @@ function handlerSaveObject(type) {
                         movedObject.body = body;
                     }
 
-                    latestRevisionLabel = `moved "${name}" ${movedObject.type} to "${
+                    window.latestRevisionLabel = `moved "${name}" ${movedObject.type} to "${
                         newParentfolder.name
                     }"`;
                     saveSnippetData(undefined, newParentfolder.name, name);
@@ -363,7 +363,7 @@ export function initSnippetWork() {
             object.remove();
             this.parentNode.removeChild(this);
 
-            latestRevisionLabel = `deleted ${type} "${name}"`;
+            window.latestRevisionLabel = `deleted ${type} "${name}"`;
 
             saveSnippetData(undefined, folder.name);
         }
@@ -372,7 +372,7 @@ export function initSnippetWork() {
     function cloneBtnOnClick() {
         const clickedObject = Generic.getObjectThroughDOMListElm(this),
             objectClone = clickedObject.clone();
-        latestRevisionLabel = `cloned ${clickedObject.type} "${clickedObject.name}"`;
+        window.latestRevisionLabel = `cloned ${clickedObject.type} "${clickedObject.name}"`;
 
         // keep the same snippet highlighted as well (object.name)
         // so that user can press clone button repeatedly
@@ -451,7 +451,7 @@ export function initSnippetWork() {
         sortType = sortType === "Name" ? "alphabetic" : "date";
 
         folder.sort(sortType, descendingFlag);
-        latestRevisionLabel = `sorted folder "${folder.name}"`;
+        window.latestRevisionLabel = `sorted folder "${folder.name}"`;
         saveSnippetData(undefined, folder.name);
     });
 
@@ -597,7 +597,7 @@ export function initSnippetWork() {
                     return;
                 }
 
-                latestRevisionLabel = `moved ${
+                window.latestRevisionLabel = `moved ${
                     selectedObjects.length
                 } objects to folder "${selectFolderName}"`;
 
@@ -623,7 +623,7 @@ export function initSnippetWork() {
                     selObj.remove();
                 });
 
-                latestRevisionLabel = `deleted ${selectedObjects.length} objects`;
+                window.latestRevisionLabel = `deleted ${selectedObjects.length} objects`;
 
                 saveSnippetData(() => {
                     // hide the bulk action panel
@@ -650,15 +650,4 @@ export function initSnippetWork() {
     }());
 
     Data.snippets.listSnippets();
-
-    /* executed in the very end since pk.saveOtherData async and
-                stringifies data.snippets */
-    // till now, we don't have any use for data.visited
-    // variable in any file; but still keeping it just in case
-    // it comes handy later
-    const isFreshInstall = !Data.visited;
-    if (isFreshInstall) {
-        Data.visited = true;
-        saveOtherData();
-    }
 }

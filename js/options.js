@@ -1,26 +1,21 @@
-/* global pk, Data */
+/* global Data */
 // eslint-disable-next-line no-unused-vars
-/* global $containerFolderPath, latestRevisionLabel, $containerSnippets, $panelSnippets */
+/* global $containerFolderPath, $containerSnippets, $panelSnippets */
 
 import {
-    getCurrentStorageType,
-    databaseSave,
     SETTINGS_DEFAULTS,
-    LS_REVISIONS_PROP,
-    saveRevision,
-    saveSnippetData,
-    changeStorageType,
-    DBLoad,
+    DBget,
     saveOtherData,
+    migrateData,
+    LS_STORAGE_TYPE_PROP,
 } from "./common_data_handlers";
 import {
     SHOW_CLASS,
-    isObject,
     q,
     Q,
     qClsSingle,
     qId,
-    checkRuntimeError,
+    chromeAPICallWrapper,
     isBlockedSite,
     escapeRegExp,
     protoWWWReplaceRegex,
@@ -35,6 +30,7 @@ import { getHTML } from "./textmethods";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { primitiveExtender } from "./primitiveExtend";
 
+window.IN_OPTIONS_PAGE = true;
 primitiveExtender();
 (function () {
     let $autoInsertTable,
@@ -50,15 +46,21 @@ primitiveExtender();
         MAX_SYNC_DATA_SIZE = 102400,
         MAX_LOCAL_DATA_SIZE = 5242880,
         VERSION = chrome.runtime.getManifest().version;
-    pk.IN_OPTIONS_PAGE = true;
     window.$containerSnippets = null;
     window.$panelSnippets = null;
     window.$containerFolderPath = null;
-    window.latestRevisionLabel = "data created (added defaut snippets)";
+
+    function getCurrentStorageType() {
+        return localStorage[LS_STORAGE_TYPE_PROP];
+    }
+
+    function getBytesInUse(callback) {
+        chrome.runtime.sendMessage({ getBytesInUse: true }, chromeAPICallWrapper(callback));
+    }
 
     function notifyCtxEnableToggle() {
         const msg = { ctxEnabled: Data.ctxEnabled };
-        chrome.runtime.sendMessage(msg, checkRuntimeError("NCET"));
+        chrome.runtime.sendMessage(msg, chromeAPICallWrapper());
     }
 
     function listBlockedSites() {
@@ -185,35 +187,6 @@ primitiveExtender();
         saveOtherData(`Removed auto-insert pair '${autoInsertPair.join("")}'`, listAutoInsertChars);
     }
 
-    // transfer data from one storage to another
-    function migrateData(transferData, callback) {
-        function afterMigrate() {
-            Data.snippets = Folder.fromArray(Data.snippets);
-            callback();
-        }
-        const str = Data.snippets.toArray(); // maintain a copy
-
-        // make current storage unusable
-        // so that storage gets changed by DB_load
-        Data.snippets = false;
-
-        databaseSave(() => {
-            changeStorageType();
-
-            if (transferData) {
-                // get the copy
-                Data.snippets = str;
-                databaseSave(afterMigrate);
-            } else {
-                // don't do Data.snippets = Folder.fromArray(Data.snippets);
-                // here since Data.snippets is false and since this is
-                // the sync2 option, we need to retain the data that user had
-                // previously synced on another PC
-                callback();
-            }
-        });
-    }
-
     /**
      * returns the current hotkey in string format
      * example: `["shiftKey", 32]` returns `Shift+Space`
@@ -308,7 +281,7 @@ primitiveExtender();
     // updates the storage header in #headArea
     // "You have x bytes left out of y bytes"
     function updateStorageAmount() {
-        pk.storage.getBytesInUse((bytesInUse) => {
+        getBytesInUse((bytesInUse) => {
             const bytesAvailable = getCurrentStorageType() === "sync" ? MAX_SYNC_DATA_SIZE : MAX_LOCAL_DATA_SIZE;
 
             // set current bytes
@@ -319,30 +292,7 @@ primitiveExtender();
         });
     }
 
-    function init() {
-        if (!window[PRIMITIVES_EXT_KEY]) {
-            updateAllValuesPerWin(window);
-        }
-        // needs to be set before database actions
-        $panelSnippets = qClsSingle("panel_snippets");
-        $containerSnippets = $panelSnippets.qClsSingle("panel_content");
-        // initialized here; but used in snippet_classes.js
-        $containerFolderPath = $panelSnippets.qClsSingle("folder_path");
-
-        $snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
-        $tabKeyInput = qId("tabKey");
-        $ctxEnabledInput = qId("ctxEnable");
-        $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
-
-        if (!pk.DB_loaded) {
-            setTimeout(DBLoad, 100, DBLoadCallback);
-            return;
-        }
-
-        // should only be called when DB has loaded
-        // and page has been initialized
-        setEssentialItemsOnDBLoad();
-
+    function afterDBLoad() {
         const changeHotkeyBtn = qClsSingle("change_hotkey"),
             hotkeyListener = qClsSingle("hotkey_listener");
 
@@ -568,7 +518,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                     return;
                 }
 
-                pk.storage.getBytesInUse((bytesInUse) => {
+                getBytesInUse((bytesInUse) => {
                     if (getCurrentStorageType() === "local" && bytesInUse > MAX_SYNC_DATA_SIZE) {
                         window.alert(
                             `You are currently using ${bytesInUse} bytes of data; while sync storage only permits a maximum of ${MAX_SYNC_DATA_SIZE} bytes.\n\nPlease reduce the size of data (by deleting, editing, exporting snippets) you're using to migreate to sync storage successfully.`,
@@ -699,54 +649,29 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         }());
     }
 
-    window.addEventListener("load", init);
-
-    function DBLoadCallback() {
-        /* Consider two PCs. Each has local data set.
-            When I migrate data on PC1 to sync. The other PC's local data remains.
-            And then it overrides the sync storage. The following lines
-            manage that */
-        // console.dir(Data.snippets);
-        // wrong storage mode
-        if (Data.snippets === false) {
-            // change storage to other type
-            changeStorageType();
-
-            DBLoad(DBLoadCallback);
-        } else {
-            pk.DB_loaded = true;
-        }
-    }
-
     const local = "<b>Local</b> - storage only on one's own PC. More storage space than sync",
         localT = "<label for=\"local\"><input type=\"radio\" id=\"local\" data-storagetoset=\"local\"/><b>Local</b></label> - storage only on one's own PC locally. Safer than sync, and has more storage space. Note that on migration from sync to local, data stored on sync across all PCs would be deleted, and transfered into Local storage on this PC only.",
         sync1 = "<label for=\"sync\"><input type=\"radio\" id=\"sync\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if this is the first PC on which you are setting sync storage",
         sync2 = "<label for=\"sync2\"><input type=\"radio\" id=\"sync2\" data-storagetoset=\"sync\"/><b>Sync</b></label> - select if you have already set up sync storage on another PC and want that PCs data to be transferred here.",
         sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
-    function setEssentialItemsOnDBLoad() {
-        // user installs extension; set ls prop
-        const firstInstall = localStorage.firstInstall === "true";
-
-        if (firstInstall) {
-            // refer github issues#4
-            Data.dataUpdateVariable = !Data.dataUpdateVariable;
-            localStorage[LS_REVISIONS_PROP] = "[]";
-            localStorage.firstInstall = "false";
-            // see issues/218#issuecomment-420487611
-            Data.snippets = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS.snippets));
-            saveRevision(Data.snippets);
+    function onDBLoad(DataResponse) {
+        if (!window[PRIMITIVES_EXT_KEY]) {
+            updateAllValuesPerWin(window);
         }
+        // needs to be set before database actions
+        $panelSnippets = qClsSingle("panel_snippets");
+        $containerSnippets = $panelSnippets.qClsSingle("panel_content");
+        // initialized here; but used in snippet_classes.js
+        $containerFolderPath = $panelSnippets.qClsSingle("folder_path");
 
-        if (!isObject(Data.snippets)) {
-            Data.snippets = Folder.fromArray(Data.snippets);
-        }
+        $snipMatchDelimitedWordInput = q(".snippet_match_whole_word input[type=checkbox]");
+        $tabKeyInput = qId("tabKey");
+        $ctxEnabledInput = qId("ctxEnable");
+        $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
-        // save the default snippets ONLY
-        if (firstInstall) {
-            saveSnippetData();
-        }
-
+        window.Data = DataResponse;
+        Folder.makeFolderIfList(Data);
         Folder.setIndices();
 
         const propertiesChanged = ensureRobustCompat(Data);
@@ -812,6 +737,12 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             }, 300),
         );
 
-        pk.snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
+        afterDBLoad();
     }
+
+    function onWindowLoad() {
+        DBget(onDBLoad);
+    }
+
+    window.addEventListener("load", onWindowLoad);
 }());

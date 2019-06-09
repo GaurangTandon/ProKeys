@@ -1,6 +1,6 @@
-/* global pk, Data, latestRevisionLabel */
+/* global Data */
 
-import { checkRuntimeError, isObjectEmpty, isTabSafe } from "./pre";
+import { chromeAPICallWrapper, isTabSafe } from "./pre";
 import { Folder } from "./snippet_classes";
 
 const SETTINGS_DEFAULTS = {
@@ -13,40 +13,36 @@ const SETTINGS_DEFAULTS = {
         dataUpdateVariable: true,
         matchDelimitedWord: false,
         tabKey: false,
-        visited: false,
         snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
         omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
         wrapSelectionAutoInsert: true,
         ctxEnabled: true,
     },
-    LS_REVISIONS_PROP = "prokeys_revisions";
-export { SETTINGS_DEFAULTS, LS_REVISIONS_PROP };
+    OLD_DATA_STORAGE_KEY = "UserSnippets",
+    LS_REVISIONS_PROP = "prokeys_revisions",
+    LS_STORAGE_TYPE_PROP = "pkStorageType";
 
-function notifySnippetDataChanges() {
+function notifySnippetDataChanges(snippetList) {
     const msg = {
-        snippetList: Data.snippets.toArray(),
+        snippetList,
     };
 
     chrome.tabs.query({}, (tabs) => {
         for (const tab of tabs) {
             if (isTabSafe(tab)) {
-                chrome.tabs.sendMessage(
-                    tab.id,
-                    msg,
-                    checkRuntimeError("notifySnippetDataChanges-innerloop"),
-                );
+                chrome.tabs.sendMessage(tab.id, msg, chromeAPICallWrapper());
             }
         }
     });
 
-    chrome.runtime.sendMessage(msg, checkRuntimeError("notifySnippetDataChanges"));
+    chrome.runtime.sendMessage({ updateCtx: true }, chromeAPICallWrapper());
 }
 
-export function saveRevision(dataString) {
+function saveRevision(dataString) {
     const MAX_REVISIONS_STORED = 20;
     let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
     const latestRevision = {
-        label: `${Date.getFormattedDate()} - ${latestRevisionLabel}`,
+        label: `${Date.getFormattedDate()} - ${window.latestRevisionLabel}`,
         data: dataString || Data.snippets,
     };
 
@@ -55,51 +51,35 @@ export function saveRevision(dataString) {
     localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
 }
 
-// store only those props which are mutable
-pk.storage = chrome.storage.local;
-pk.DB_loaded = false;
-pk.snipNameDelimiterListRegex = null;
+const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
 
-// currently it's storing default data for first install;
-// after DB_load, it stores the latest data
-// snippets are later added
-window.Data = JSON.parse(JSON.stringify(SETTINGS_DEFAULTS));
+/**
+ * requests data from background page and
+ * passes the Data to the callback
+ */
+function DBget(callback) {
+    chrome.runtime.sendMessage({ giveData: true }, callback);
+}
 
-const OLD_DATA_STORAGE_KEY = "UserSnippets",
-    IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);
-// will use these when fixing the sync storage bug
-// NEW_DATA_STORAGE_KEY = "ProKeysUserData";
-// DATA_KEY_COUNT_PROP = `${pk.NEW_DATA_STORAGE_KEY}_-1`;
+/**
+ * sends updated data to background page for storage
+ */
+function DBupdate(callback) {
+    // cannot send Folder type Data snippets over sendMessage
+    // as it loses all its methods, only properties remain
+    Folder.makeListIfFolder(Data);
+    chrome.runtime.sendMessage({ updateData: Data }, chromeAPICallWrapper(callback));
+    Folder.makeFolderIfList(Data);
+}
 
 function databaseSetValue(name, value, callback) {
     const obj = {};
     obj[name] = value;
 
-    pk.storage.set(obj, () => {
-        if (callback) {
-            callback();
-        }
-    });
-}
-
-export function DBLoad(callback) {
-    pk.storage.get(OLD_DATA_STORAGE_KEY, (r) => {
-        const req = r[OLD_DATA_STORAGE_KEY];
-        // converting to !== might break just in case this relies on 0 == undefined :/
-        // eslint-disable-next-line eqeqeq
-        if (isObjectEmpty(req) || req.dataVersion != Data.dataVersion) {
-            databaseSetValue(OLD_DATA_STORAGE_KEY, Data, callback);
-        } else {
-            Data = req;
-            if (callback) {
-                callback();
-            }
-        }
-    });
-}
-
-export function databaseSave(callback) {
-    databaseSetValue(OLD_DATA_STORAGE_KEY, Data, () => {
+    // the localStorage[LS_STORAGE_TYPE_PROP] works on the assumption
+    // that this function will always be called from the bg.js frame
+    // hence sending a runtime msg to get the storage type won't work
+    chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]].set(obj, () => {
         if (callback) {
             callback();
         }
@@ -107,18 +87,35 @@ export function databaseSave(callback) {
 }
 
 /**
- * PRECONDITION: Data.snippets is a Folder object
+ * @param {Function} callback fn to call after save
  */
-export function saveSnippetData(callback, folderNameToList, objectNamesToHighlight) {
-    Data.snippets = Data.snippets.toArray();
+function DBSave(callback) {
+    Folder.makeListIfFolder(Data);
 
-    // refer github issues#4
+    // issues#4
     Data.dataUpdateVariable = !Data.dataUpdateVariable;
 
-    databaseSave(() => {
+    databaseSetValue(OLD_DATA_STORAGE_KEY, Data, () => {
+        if (callback) {
+            callback();
+        }
+    });
+
+    // once databaseSetValue has been called, doesn't matter
+    // if this prop is object/array since storage.clear/set
+    // methods are using a separate storageObj
+    Folder.makeFolderIfList(Data);
+}
+
+/**
+ * PRECONDITION: Data.snippets is a Folder object
+ */
+function saveSnippetData(callback, folderNameToList, objectNamesToHighlight) {
+    DBupdate(() => {
         if (IN_OPTIONS_PAGE) {
-            saveRevision(Data.snippets.toArray());
-            notifySnippetDataChanges();
+            const snippetList = Data.snippets.toArray();
+            saveRevision(snippetList);
+            notifySnippetDataChanges(snippetList);
         }
 
         Folder.setIndices();
@@ -127,49 +124,71 @@ export function saveSnippetData(callback, folderNameToList, objectNamesToHighlig
             : Data.snippets;
         folderToList.listSnippets(objectNamesToHighlight);
 
-        checkRuntimeError("databaseSave inside")();
-
         if (callback) {
             callback();
         }
     });
-
-    Data.snippets = Folder.fromArray(Data.snippets);
 }
 
 // save data not involving snippets
-export function saveOtherData(msg = "Saved!", callback) {
-    Data.snippets = Data.snippets.toArray();
-
-    // issues#4
-    Data.dataUpdateVariable = !Data.dataUpdateVariable;
-
-    databaseSave(() => {
+function saveOtherData(msg = "Saved!", callback) {
+    DBupdate(() => {
         if (typeof msg === "function") {
             msg();
         } else if (typeof msg === "string") {
             window.alert(msg);
         }
-        checkRuntimeError("saveotherdata-options.js")();
 
         if (callback) {
             callback();
         }
     });
-
-    // once databaseSave has been called, doesn't matter
-    // if this prop is object/array since storage.clear/set
-    // methods are using a separate storageObj
-    Data.snippets = Folder.fromArray(Data.snippets);
 }
 
-// get type of current storage as string
-export function getCurrentStorageType() {
-    // property MAX_ITEMS is present only in sync
-    return pk.storage.MAX_ITEMS ? "sync" : "local";
+// transfer data from one storage to another
+function migrateData(transferData, callback) {
+    function afterMigrate() {
+        Data.snippets = Folder.fromArray(Data.snippets);
+        callback();
+    }
+    const str = Data.snippets.toArray(); // maintain a copy
+
+    // make current storage unusable
+    // so that storage gets changed by DB_load
+    Data.snippets = false;
+
+    DBupdate(() => {
+        chrome.runtime.sendMessage({ changeStorageType: true }, () => {
+            if (transferData) {
+                // get the copy
+                Data.snippets = str;
+                DBupdate(afterMigrate);
+            } else {
+                // don't do Data.snippets = Folder.fromArray(Data.snippets);
+                // here since Data.snippets is false and since this is
+                // the sync2 option, we need to retain the data that user had
+                // previously synced on another PC
+                callback();
+            }
+        });
+    });
 }
 
-// changes type of storage: local-sync, sync-local
-export function changeStorageType() {
-    pk.storage = getCurrentStorageType() === "sync" ? chrome.storage.local : chrome.storage.sync;
-}
+/**
+ * these are the only methods
+ * which should be used by other scripts
+ * under our new data storage policy (#266)
+ * Be cautious while changing it.
+ */
+export {
+    DBget,
+    saveSnippetData,
+    saveOtherData,
+    migrateData,
+    saveRevision,
+    SETTINGS_DEFAULTS,
+    LS_REVISIONS_PROP,
+    LS_STORAGE_TYPE_PROP,
+    OLD_DATA_STORAGE_KEY,
+    DBSave,
+};

@@ -1,11 +1,8 @@
-/* global pk, Data */
+/* global Data */
 
 // this file contains all common utility functions
 // this file should not contain any code that needs to be executed outisde an exported function as
 // it is not included in final dist
-
-// will be used to store prokeys related variables (#204)
-window.pk = {};
 
 // attempting to send a message to a tab on chrome:// or webstore
 // page will fail with this error because no content script is running there
@@ -20,10 +17,31 @@ function isTabSafe(tab) {
         && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
     );
 }
-/*  stack trace is not beneficial being async, therefore
-        use a unique identifier to track down the origin */
-function checkRuntimeError(uniqueIdentifier) {
-    return function checkREHelper() {
+
+function getStackTrace() {
+    let stack;
+
+    try {
+        throw new Error("");
+    } catch (error) {
+        stack = error.stack || "";
+    }
+
+    stack = stack.split("\n").map(line => line.trim());
+    return stack.splice(stack[0] === "Error" ? 2 : 1);
+}
+
+/**
+ * Only and always use this function as an argument to chrome API calls
+ * Never use this as an argument to wrappers like DBupdate/etc.
+ * @param {String} uniqueIdentifier for the function who called me
+ * @param {Function} callback fn to execute if no error
+ * @returns {Function} which is used in Chrome API calls
+ */
+function chromeAPICallWrapper(callback) {
+    const stackTrace = getStackTrace().join("\n");
+
+    return function checkRE(...args) {
         if (chrome.runtime.lastError) {
             // TODO: remove
             // alert(
@@ -31,12 +49,12 @@ function checkRuntimeError(uniqueIdentifier) {
             // shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com
             // .This will help me resolve your issue and improve my extension. Thanks!`
             // );
-            // Chrome.Runtime.LastError:, do not use .error() as it prints
-            // out too many red messages :(
-            console.log(`CRLError (${uniqueIdentifier}): ${chrome.runtime.lastError.message}`);
-            return true;
+            console.log(`CRLError: ${chrome.runtime.lastError.message}`);
+            console.log(stackTrace);
         }
-        return false;
+        if (callback) {
+            callback(...args);
+        }
     };
 }
 
@@ -122,14 +140,6 @@ function isObjectEmpty(obj) {
 function escapeRegExp(str) {
     return str.replace(/[-[\]/{}())*+?.\\^$|]/g, "\\$&");
 }
-
-// should use this since users may use foreign language
-// characters which use up more than two bytes
-pk.lengthInUtf8Bytes = function (str) {
-    // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
-    const m = encodeURIComponent(str).match(/%[89ABab]/g);
-    return str.length + (m ? m.length : 0);
-};
 
 // if it is a callForParent, means that a child node wants
 // to get its parents checked
@@ -293,7 +303,7 @@ export {
     copyTextToClipboard,
     SHOW_CLASS,
     isTabSafe,
-    checkRuntimeError,
+    chromeAPICallWrapper,
     isContentEditable,
     isBlockedSite,
     escapeRegExp,

@@ -1,13 +1,21 @@
-/* global Data, pk */
+/* global Data, listOfSnippetCtxIDs */
 
 // TODO:
-// 1. using global pk for sharing the list of snippet ctx IDs;
+// 1. using global window for sharing the list of snippet ctx IDs;
 // fix that since we won't have sc.js with us in dist/
 
-import { q, isTabSafe, checkRuntimeError } from "./pre";
-import { Folder, Generic } from "./snippet_classes";
+import { chromeAPICallWrapper, isTabSafe, q } from "./pre";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
+import { Folder, Generic } from "./snippet_classes";
+import {
+    DBSave,
+    saveRevision,
+    LS_REVISIONS_PROP,
+    SETTINGS_DEFAULTS,
+    LS_STORAGE_TYPE_PROP,
+    OLD_DATA_STORAGE_KEY,
+} from "./common_data_handlers";
 
 primitiveExtender();
 updateAllValuesPerWin(window);
@@ -18,27 +26,24 @@ const BLOCK_SITE_ID = "blockSite",
     SNIPPET_MAIN_ID = "snippet_main",
     URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 let contextMenuActionBlockSite,
-    // boolean set to true on updating app as well as when extension loads
-    // or after browser restart
-    // so that user gets updated snippet list whenever he comes
-    // on valid website (not chrome://extension)
-    needToGetLatestData = true,
     recalls = 0,
     // received from cs.js; when there are mutliple iframes on a page
     // this helps remove the ambiguity as to which one was latest
     // storing it in background.js so as to provide a global one-stop center
     // content scripts, which cannot interact among themselves
     latestCtxTimestamp,
-    modalHTML;
+    modalHTML,
+    /**
+     * Aim is that there should be only one copy of storage type present across
+     * the entire system. Hence, the background js is the safest place for it to be
+     * and others can message bg.js to interact with it
+     */
+    storage = chrome.storage.local;
 
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
-window.Data = {};
-Data.snippets = new Folder("Snippets");
-Data.ctxEnabled = true;
-pk.listOfSnippetCtxIDs = [];
-
-Folder.setIndices();
+window.listOfSnippetCtxIDs = [];
+window.IN_OPTIONS_PAGE = false;
 
 function isURL(text) {
     return URL_REGEX.test(text.trim());
@@ -61,6 +66,12 @@ function getDomain(url) {
     }
 
     return domain;
+}
+
+// get type of current storage as string
+function getCurrentStorageType() {
+    // property MAX_ITEMS is present only in sync
+    return storage.MAX_ITEMS ? "sync" : "local";
 }
 
 function getPasteData() {
@@ -110,20 +121,17 @@ let toggleBlockSiteCtxItem;
                     id: BLOCK_SITE_ID,
                     title: "reload page for blocking site",
                 },
-                () => {
-                    if (checkRuntimeError("BSI-CREATE")()) {
-                        return;
-                    }
+                chromeAPICallWrapper(() => {
                     currentlyShown = true;
-                },
+                }),
             );
         } else if (!Data.ctxEnabled && currentlyShown) {
-            chrome.contextMenus.remove(BLOCK_SITE_ID, () => {
-                if (checkRuntimeError("BSI-REM")()) {
-                    return;
-                }
-                currentlyShown = false;
-            });
+            chrome.contextMenus.remove(
+                BLOCK_SITE_ID,
+                chromeAPICallWrapper(() => {
+                    currentlyShown = true;
+                }),
+            );
         }
     };
 }());
@@ -194,24 +202,28 @@ chrome.omnibox.onInputEntered.addListener((omniboxText) => {
 }());
 
 let removeCtxSnippetList,
-    addCtxSnippetList;
+    makeCtxSnippetList;
 (function snippetListCtxClosure() {
     let cachedSnippetList = "",
         defaultEntryExists = false;
     removeCtxSnippetList = function () {
-        while (pk.listOfSnippetCtxIDs.length > 0) {
-            chrome.contextMenus.remove(pk.listOfSnippetCtxIDs.pop());
+        while (listOfSnippetCtxIDs.length > 0) {
+            chrome.contextMenus.remove(listOfSnippetCtxIDs.pop());
         }
         cachedSnippetList = "";
         if (defaultEntryExists) {
-            chrome.contextMenus.remove(SNIPPET_MAIN_ID, checkRuntimeError("REMOVE-SMI"));
+            chrome.contextMenus.remove(SNIPPET_MAIN_ID, chromeAPICallWrapper());
             defaultEntryExists = false;
         }
     };
 
-    addCtxSnippetList = function (snippets) {
-        snippets = snippets || Data.snippets;
-        const newInput = JSON.stringify(snippets.toArray());
+    /**
+     * if new input did not change snippets
+     * do not do anything; otherwise remove all snippets and readd them
+     */
+    makeCtxSnippetList = function () {
+        const { snippets } = Data,
+            newInput = JSON.stringify(snippets.toArray());
         if (newInput === cachedSnippetList) {
             return;
         }
@@ -231,24 +243,11 @@ let removeCtxSnippetList,
     };
 }());
 
-chrome.runtime.onInstalled.addListener((details) => {
-    let text,
-        title;
-    const { reason } = details,
-        { version } = chrome.runtime.getManifest();
-
-    if (reason === "install") {
-        localStorage.firstInstall = "true";
-        title = "ProKeys successfully installed!";
-        text = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
-    } else if (reason === "update") {
-        title = `ProKeys updated to v${version}`;
-        text = "Hooray! Please reload active tabs to use the new version.";
-        needToGetLatestData = true;
-    } else {
-        // do not process anything other than install or update
-        return;
-    }
+function afterBGPageReload({
+    notifText, notifTitle, version, reason,
+}) {
+    Folder.makeFolderIfList(Data);
+    Folder.setIndices();
 
     openSnippetsPage(version, reason);
     injectScriptAllTabs();
@@ -257,16 +256,59 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.notifications.create("", {
         type: "basic",
         iconUrl: "imgs/r128.png",
-        title,
-        message: text,
+        title: notifTitle,
+        message: notifText,
     });
-});
-
-function loadSnippetListIntoBGPage(list) {
-    Data.snippets = Folder.fromArray(list);
-    Folder.setIndices();
-    return Data.snippets;
 }
+
+chrome.runtime.onInstalled.addListener((details) => {
+    let notifText,
+        notifTitle;
+    const { reason } = details,
+        { version } = chrome.runtime.getManifest();
+
+    if (reason === "install") {
+        // set initial data
+        localStorage[LS_REVISIONS_PROP] = "[]";
+        localStorage[LS_STORAGE_TYPE_PROP] = "local";
+        window.Data = SETTINGS_DEFAULTS;
+        window.latestRevisionLabel = "data created (added defaut snippets)";
+
+        saveRevision(Data.snippets);
+        DBSave();
+
+        notifTitle = "ProKeys successfully installed!";
+        notifText = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
+
+        afterBGPageReload({
+            notifText,
+            notifTitle,
+            version,
+            reason,
+        });
+    } else if (reason === "update") {
+        notifTitle = `ProKeys updated to v${version}`;
+        notifText = "Hooray! Please reload active tabs to use the new version.";
+        storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
+
+        window.latestRevisionLabel = "";
+        storage.get(
+            OLD_DATA_STORAGE_KEY,
+            chromeAPICallWrapper((response) => {
+                window.Data = response[OLD_DATA_STORAGE_KEY];
+
+                afterBGPageReload({
+                    notifText,
+                    notifTitle,
+                    version,
+                    reason,
+                });
+            }),
+        );
+    } else {
+        // do not process anything other than install or update
+    }
+});
 
 // isRecalled: if the function has been called
 // if the response from content script was undefined
@@ -289,30 +331,30 @@ function updateContextMenu(isRecalled = false) {
             return;
         }
 
-        chrome.tabs.sendMessage(tab.id, { checkBlockedYourself: true }, (isBlocked) => {
-            if (checkRuntimeError("CBY")()) {
-                return;
-            }
-
-            if (typeof isBlocked === "undefined") {
-                contextMenuActionBlockSite = "Unable to block/unblock";
-                if (recalls <= LIMIT_OF_RECALLS) {
-                    setTimeout(updateContextMenu, 500, true);
-                }
-            } else {
-                contextMenuActionBlockSite = isBlocked ? "Unblock" : "Block";
-
-                if (isBlocked) {
-                    removeCtxSnippetList();
+        chrome.tabs.sendMessage(
+            tab.id,
+            { checkBlockedYourself: true },
+            chromeAPICallWrapper((isBlocked) => {
+                if (typeof isBlocked === "undefined") {
+                    contextMenuActionBlockSite = "Unable to block/unblock";
+                    if (recalls <= LIMIT_OF_RECALLS) {
+                        setTimeout(updateContextMenu, 500, true);
+                    }
                 } else {
-                    addCtxSnippetList();
-                }
-            }
+                    contextMenuActionBlockSite = isBlocked ? "Unblock" : "Block";
 
-            chrome.contextMenus.update(BLOCK_SITE_ID, {
-                title: `${contextMenuActionBlockSite} this site`,
-            });
-        });
+                    if (isBlocked) {
+                        removeCtxSnippetList();
+                    } else {
+                        makeCtxSnippetList();
+                    }
+                }
+
+                chrome.contextMenus.update(BLOCK_SITE_ID, {
+                    title: `${contextMenuActionBlockSite} this site`,
+                });
+            }),
+        );
     });
 }
 
@@ -350,7 +392,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
             if (!isTabSafe(tabs[0])) {
                 return;
             }
-            chrome.tabs.sendMessage(tabs[0].id, msg, checkRuntimeError("ID==BSI"));
+            chrome.tabs.sendMessage(tabs[0].id, msg, chromeAPICallWrapper());
         });
     } else if (Generic.CTX_SNIP_REGEX.test(id)) {
         startIndex = Generic.CTX_START[Generic.SNIP_TYPE].length;
@@ -365,7 +407,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
                         clickedSnippet: snip.toArray(),
                         ctxTimestamp: latestCtxTimestamp,
                     },
-                    checkRuntimeError("CSRTI"),
+                    chromeAPICallWrapper(),
                 );
             } else if (tab.url) {
                 alert(
@@ -388,23 +430,6 @@ function onTabActivatedOrUpdated({ tabId }) {
         return;
     }
 
-    if (needToGetLatestData) {
-        chrome.tabs.sendMessage(tabId, { giveFreshData: true }, (data) => {
-            if (!data || checkRuntimeError("GSL")()) {
-                return;
-            }
-            const { snippets, ctxEnabled } = data;
-            if (Array.isArray(snippets)) {
-                needToGetLatestData = false;
-                loadSnippetListIntoBGPage(snippets);
-                addCtxSnippetList();
-            }
-            if (typeof ctxEnabled !== "undefined") {
-                Data.ctxEnabled = ctxEnabled;
-            }
-        });
-    }
-
     chrome.tabs.get(tabId, (tab) => {
         if (isTabSafe(tab)) {
             path = IMG_ACTIVE;
@@ -422,8 +447,8 @@ chrome.tabs.onUpdated.addListener(onTabActivatedOrUpdated);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // when user updates snippet data, reloading page is not required
-    if (typeof request.snippetList !== "undefined") {
-        addCtxSnippetList(loadSnippetListIntoBGPage(request.snippetList));
+    if (typeof request.updateCtx !== "undefined") {
+        makeCtxSnippetList();
     } else if (request.openBlockSiteModalInParent === true) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
@@ -431,7 +456,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 chrome.tabs.sendMessage(
                     tab.id,
                     { showBlockSiteModal: true, data: request.data },
-                    checkRuntimeError("OBSMIP"),
+                    chromeAPICallWrapper(),
                 );
             }
         });
@@ -442,7 +467,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (typeof request.ctxEnabled !== "undefined") {
         Data.ctxEnabled = request.ctxEnabled;
         initContextMenu();
+    } else if (typeof request.giveData !== "undefined") {
+        const orgSnippets = Data.snippets;
+        Data.snippets = Data.snippets.toArray();
+        const resp = JSON.parse(JSON.stringify(Data));
+        Data.snippets = orgSnippets;
+
+        sendResponse(resp);
+    } else if (typeof request.updateData !== "undefined") {
+        Data = request.updateData;
+        DBSave();
+        // necessary everytime we reassign data
+        // otherwise search function doesn't work as expected
+        Folder.setIndices();
+    } else if (typeof request.getStorageType !== "undefined") {
+        sendResponse(getCurrentStorageType());
+    } else if (typeof request.changeStorageType !== "undefined") {
+        const storages = ["local", "sync"],
+            targetStorage = storages[1 - storages.indexOf(getCurrentStorageType())];
+
+        storage = chrome.storage[targetStorage];
+        localStorage[LS_STORAGE_TYPE_PROP] = targetStorage;
+    } else if (typeof request.getBytesInUse !== "undefined") {
+        storage.getBytesInUse(
+            chromeAPICallWrapper((bytesInUse) => {
+                sendResponse(bytesInUse);
+            }),
+        );
+        // indicates async sendResponse
+        return true;
     }
+
+    // indicates synced sendResponse
+    return false;
 });
 
 // open a new tab whenever popup icon is clicked

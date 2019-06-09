@@ -1,11 +1,10 @@
-// eslint-disable-next-line no-unused-vars
-/* global pk, Data, latestRevisionLabel */
+/* global Data, listOfSnippetCtxIDs */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 import {
     isObject,
     q,
-    checkRuntimeError,
+    chromeAPICallWrapper,
     escapeRegExp,
     OBJECT_NAME_LIMIT,
     isTextNode,
@@ -553,10 +552,12 @@ function Snip(name, body, timestamp) {
         });
 
         if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
-            chrome.runtime.sendMessage("givePasteData", (pasteData) => {
-                checkRuntimeError("givePasteData")();
-                callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
-            });
+            chrome.runtime.sendMessage(
+                "givePasteData",
+                chromeAPICallWrapper((pasteData) => {
+                    callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
+                }),
+            );
         } else {
             callback(snipBody);
         }
@@ -1063,7 +1064,7 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
 
     $container.Q("ol, ul").forEach(formatOLULInListParentForCEnode);
 
-    if (pk.isGmail) {
+    if (window.isGmail) {
         $container
             .Q("blockquote")
             // problem 9 issues#153
@@ -1321,7 +1322,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     this.isSearchResultFolder = !!isSearchResultFolder;
 
     // only options page mutates list
-    if (pk.IN_OPTIONS_PAGE) {
+    if (window.IN_OPTIONS_PAGE) {
         observeList(this.list);
     }
 
@@ -1359,7 +1360,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
 
             Folder.insertObject(newObj, this);
 
-            latestRevisionLabel = `created ${newObj.type} "${newObj.name}"`;
+            window.latestRevisionLabel = `created ${newObj.type} "${newObj.name}"`;
         };
     }
 
@@ -1370,7 +1371,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             const object = Data.snippets.getUniqueObject(oldName, type);
 
             object.edit(newName, body);
-            latestRevisionLabel = `edited ${type} "${oldName}"`;
+            window.latestRevisionLabel = `edited ${type} "${oldName}"`;
         };
     }
 
@@ -1677,13 +1678,17 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             delimiterChar = val[pos - 1 - i];
             snip = this.getUniqueSnip(stringToCheck);
 
+            const snipNameDelimiterListRegex = new RegExp(
+                `[${escapeRegExp(Data.snipNameDelimiterList)}]`,
+            );
+
             if (snip) {
-                if (Data.matchDelimitedWord && pk.snipNameDelimiterListRegex) {
+                if (Data.matchDelimitedWord && snipNameDelimiterListRegex) {
                     // delimiter char may not exist if snip name
                     // is at the beginning of the textbox
                     if (
                         !delimiterChar
-                        || pk.snipNameDelimiterListRegex.test(delimiterChar)
+                        || snipNameDelimiterListRegex.test(delimiterChar)
                         || delimiterChar === "\n"
                     ) {
                         // a new line character is always a delimiter
@@ -1717,10 +1722,10 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                     title: object.name,
                     parentId,
                 },
-                checkRuntimeError("CRX-CREATE-SCJS"),
+                chromeAPICallWrapper(),
             );
 
-            pk.listOfSnippetCtxIDs.push(id);
+            listOfSnippetCtxIDs.push(id);
 
             if (Folder.isFolder(object)) {
                 object.createCtxMenuEntry(id);
@@ -1737,10 +1742,9 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                     title: emptyFolderText,
                     parentId,
                 },
-                checkRuntimeError("SCJS-CTX-CRE"),
+                chromeAPICallWrapper(),
             );
-
-            pk.listOfSnippetCtxIDs.push(id);
+            listOfSnippetCtxIDs.push(id);
         }
     };
 
@@ -1769,7 +1773,10 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
 }
 Folder.prototype = new Generic();
 
-// returns a Folder object based on Array
+/**
+ * @param {Object[]} `arr` representation of the folder
+ * @returns {Folder} based on `arr`
+ */
 Folder.fromArray = function (arr) {
     // during 2.8.0 version, first element of arr
     // was not the name of folder
@@ -1782,13 +1789,10 @@ Folder.fromArray = function (arr) {
         arr.splice(1, 0, Date.now());
     }
 
-    // name of folder is arr's first element
     const folder = new Folder(arr.shift(), undefined, arr.shift());
-
     folder.list = arr.map(listElm => (Array.isArray(listElm) ? Folder.fromArray(listElm) : Snip.fromObject(listElm)));
 
-    // only options page mutates list
-    if (pk.IN_OPTIONS_PAGE) {
+    if (window.IN_OPTIONS_PAGE) {
         observeList(folder.list);
     }
 
@@ -1799,6 +1803,16 @@ Folder.isValidName = function (name) {
 };
 Folder.isFolder = function (elm) {
     return elm.type === Generic.FOLDER_TYPE;
+};
+Folder.makeFolderIfList = function (data) {
+    if (Array.isArray(data.snippets)) {
+        data.snippets = Folder.fromArray(data.snippets);
+    }
+};
+Folder.makeListIfFolder = function (data) {
+    if (Folder.isFolder(data.snippets)) {
+        data.snippets = data.snippets.toArray();
+    }
 };
 Folder.MAIN_SNIPPETS_NAME = "Snippets";
 Folder.SEARCH_RESULTS_NAME = "Search Results in ";
