@@ -90,9 +90,7 @@ function databaseSetValue(name, value, callback) {
  * @param {Function} callback fn to call after save
  */
 function DBSave(callback) {
-    if (Folder.isFolder(Data.snippets)) {
-        Data.snippets = Data.snippets.toArray();
-    }
+    Folder.makeListIfFolder(Data);
 
     // issues#4
     Data.dataUpdateVariable = !Data.dataUpdateVariable;

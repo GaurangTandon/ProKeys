@@ -40,9 +40,7 @@ function getStackTrace() {
  */
 function chromeAPICallWrapper(callback) {
     const stackTrace = getStackTrace().join("\n");
-    /**
-     * @returns {Boolean} whether runtime last error occurred or not
-     */
+
     return function checkRE(...args) {
         if (chrome.runtime.lastError) {
             // TODO: remove
@@ -53,12 +51,10 @@ function chromeAPICallWrapper(callback) {
             // );
             console.log(`CRLError: ${chrome.runtime.lastError.message}`);
             console.log(stackTrace);
-            return true;
         }
         if (callback) {
             callback(...args);
         }
-        return false;
     };
 }
 
