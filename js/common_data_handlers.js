@@ -65,7 +65,11 @@ function DBget(callback) {
  * sends updated data to background page for storage
  */
 function DBupdate(callback) {
+    // cannot send Folder type Data snippets over sendMessage
+    // as it loses all its methods, only properties remain
+    Folder.makeListIfFolder(Data);
     chrome.runtime.sendMessage({ updateData: Data }, chromeAPICallWrapper(callback));
+    Folder.makeFolderIfList(Data);
 }
 
 function databaseSetValue(name, value, callback) {
@@ -102,7 +106,7 @@ function DBSave(callback) {
     // once databaseSetValue has been called, doesn't matter
     // if this prop is object/array since storage.clear/set
     // methods are using a separate storageObj
-    Folder.makeFolderFromList(Data);
+    Folder.makeFolderIfList(Data);
 }
 
 /**

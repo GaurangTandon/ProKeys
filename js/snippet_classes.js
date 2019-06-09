@@ -1773,7 +1773,10 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
 }
 Folder.prototype = new Generic();
 
-// returns a Folder object based on Array
+/**
+ * @param {Object[]} `arr` representation of the folder
+ * @returns {Folder} based on `arr`
+ */
 Folder.fromArray = function (arr) {
     // during 2.8.0 version, first element of arr
     // was not the name of folder
@@ -1786,12 +1789,9 @@ Folder.fromArray = function (arr) {
         arr.splice(1, 0, Date.now());
     }
 
-    // name of folder is arr's first element
     const folder = new Folder(arr.shift(), undefined, arr.shift());
-
     folder.list = arr.map(listElm => (Array.isArray(listElm) ? Folder.fromArray(listElm) : Snip.fromObject(listElm)));
 
-    // only options page mutates list
     if (IN_OPTIONS_PAGE) {
         observeList(folder.list);
     }
@@ -1804,9 +1804,14 @@ Folder.isValidName = function (name) {
 Folder.isFolder = function (elm) {
     return elm.type === Generic.FOLDER_TYPE;
 };
-Folder.makeFolderFromList = function (data) {
+Folder.makeFolderIfList = function (data) {
     if (Array.isArray(data.snippets)) {
         data.snippets = Folder.fromArray(data.snippets);
+    }
+};
+Folder.makeListIfFolder = function (data) {
+    if (Folder.isFolder(data.snippets)) {
+        data.snippets = data.snippets.toArray();
     }
 };
 Folder.MAIN_SNIPPETS_NAME = "Snippets";

@@ -671,7 +671,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         window.Data = DataResponse;
-        Folder.makeFolderFromList(Data);
+        Folder.makeFolderIfList(Data);
         Folder.setIndices();
 
         const propertiesChanged = ensureRobustCompat(Data);

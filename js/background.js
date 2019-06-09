@@ -242,7 +242,7 @@ let removeCtxSnippetList,
 function afterBGPageReload({
     notifText, notifTitle, version, reason,
 }) {
-    Folder.makeFolderFromList(Data);
+    Folder.makeFolderIfList(Data);
     Folder.setIndices();
 
     openSnippetsPage(version, reason);
@@ -481,6 +481,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (typeof request.updateData !== "undefined") {
         Data = request.updateData;
         DBSave();
+        sendResponse(true);
+        return true;
     } else if (typeof request.getStorageType !== "undefined") {
         sendResponse(getCurrentStorageType());
     } else if (typeof request.changeStorageType !== "undefined") {

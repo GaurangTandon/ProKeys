@@ -1093,7 +1093,7 @@ primitiveExtender();
 
     function afterDBget(DataResponse) {
         window.Data = DataResponse;
-        Folder.makeFolderFromList(Data);
+        Folder.makeFolderIfList(Data);
         Folder.setIndices();
         setPageDOM();
     }
