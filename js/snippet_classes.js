@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global Data, latestRevisionLabel, isGmail, IN_OPTIONS_PAGE */
+/* global Data, latestRevisionLabel, isGmail, IN_OPTIONS_PAGE, listOfSnippetCtxIDs */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 import {
@@ -1722,6 +1722,8 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                 checkRuntimeError("CRX-CREATE-SCJS"),
             );
 
+            listOfSnippetCtxIDs.push(id);
+
             if (Folder.isFolder(object)) {
                 object.createCtxMenuEntry(id);
             }
@@ -1739,6 +1741,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                 },
                 checkRuntimeError("SCJS-CTX-CRE"),
             );
+            listOfSnippetCtxIDs.push(id);
         }
     };
 
