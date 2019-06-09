@@ -1,8 +1,8 @@
 /* global Data */
 
 import { q, OBJECT_NAME_LIMIT } from "./pre";
-import { Folder } from "./snippet_classes";
-import { SETTINGS_DEFAULTS, saveSnippetData } from "./common_data_handlers";
+import { Folder } from "./snippetClasses";
+import { SETTINGS_DEFAULTS, saveSnippetData } from "./commonDataHandlers";
 
 export function ensureRobustCompat(data) {
     let missingProperties = false;

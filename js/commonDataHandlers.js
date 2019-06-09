@@ -1,7 +1,7 @@
 /* global Data */
 
 import { chromeAPICallWrapper, isTabSafe } from "./pre";
-import { Folder } from "./snippet_classes";
+import { Folder } from "./snippetClasses";
 
 const SETTINGS_DEFAULTS = {
         snippets: Folder.getDefaultSnippetData(),

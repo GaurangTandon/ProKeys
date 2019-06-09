@@ -1,7 +1,7 @@
 /* global Data */
 
 import { q } from "./pre";
-import { saveOtherData } from "./common_data_handlers";
+import { saveOtherData } from "./commonDataHandlers";
 
 // serves as an addon to the content script for handling
 // hiding/showing the modal

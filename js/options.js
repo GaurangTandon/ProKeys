@@ -8,7 +8,7 @@ import {
     saveOtherData,
     migrateData,
     LS_STORAGE_TYPE_PROP,
-} from "./common_data_handlers";
+} from "./commonDataHandlers";
 import {
     SHOW_CLASS,
     q,
@@ -22,7 +22,7 @@ import {
     debounce,
     PRIMITIVES_EXT_KEY,
 } from "./pre";
-import { DualTextbox, Folder } from "./snippet_classes";
+import { DualTextbox, Folder } from "./snippetClasses";
 import { ensureRobustCompat } from "./restoreFns";
 import { initBackup } from "./backupWork";
 import { initSnippetWork } from "./snippetWork";

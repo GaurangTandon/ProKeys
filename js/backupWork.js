@@ -3,9 +3,9 @@
 import {
     Q, q, copyTextToClipboard, SHOW_CLASS,
 } from "./pre";
-import { Folder } from "./snippet_classes";
+import { Folder } from "./snippetClasses";
 import { initiateRestore } from "./restoreFns";
-import { LS_REVISIONS_PROP, saveSnippetData } from "./common_data_handlers";
+import { LS_REVISIONS_PROP, saveSnippetData } from "./commonDataHandlers";
 
 export function initBackup() {
     let dataToExport;

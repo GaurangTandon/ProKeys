@@ -9,8 +9,8 @@ import {
     isBlockedSite,
     PRIMITIVES_EXT_KEY,
 } from "./pre";
-import { Folder, Snip } from "./snippet_classes";
-import { DBget } from "./common_data_handlers";
+import { Folder, Snip } from "./snippetClasses";
+import { DBget } from "./commonDataHandlers";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { getHTML } from "./textmethods";

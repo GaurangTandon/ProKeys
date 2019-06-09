@@ -7,8 +7,8 @@ import {
 } from "./pre";
 import {
     Folder, Snip, Generic, DualTextbox,
-} from "./snippet_classes";
-import { saveSnippetData } from "./common_data_handlers";
+} from "./snippetClasses";
+import { saveSnippetData } from "./commonDataHandlers";
 
 let validateSnippetData,
     validateFolderData,

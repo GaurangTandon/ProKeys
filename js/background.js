@@ -7,7 +7,7 @@
 import { chromeAPICallWrapper, isTabSafe, q } from "./pre";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
-import { Folder, Generic } from "./snippet_classes";
+import { Folder, Generic } from "./snippetClasses";
 import {
     DBSave,
     saveRevision,
@@ -15,7 +15,7 @@ import {
     SETTINGS_DEFAULTS,
     LS_STORAGE_TYPE_PROP,
     OLD_DATA_STORAGE_KEY,
-} from "./common_data_handlers";
+} from "./commonDataHandlers";
 
 primitiveExtender();
 updateAllValuesPerWin(window);
