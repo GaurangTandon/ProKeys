@@ -42,6 +42,7 @@ let contextMenuActionBlockSite,
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
 window.listOfSnippetCtxIDs = [];
+window.IN_OPTIONS_PAGE = false;
 
 function isURL(text) {
     return URL_REGEX.test(text.trim());

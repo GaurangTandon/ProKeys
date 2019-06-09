@@ -76,12 +76,14 @@ function DBupdate(callback) {
 function databaseSetValue(name, value, callback) {
     const obj = {};
     obj[name] = value;
-    chrome.runtime.sendMessage({ getStorageType: true }, (storageType) => {
-        chrome[storageType].set(obj, () => {
-            if (callback) {
-                callback();
-            }
-        });
+
+    // the localStorage[LS_STORAGE_TYPE_PROP] works on the assumption
+    // that this function will always be called from the bg.js frame
+    // hence sending a runtime msg to get the storage type won't work
+    chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]].set(obj, () => {
+        if (callback) {
+            callback();
+        }
     });
 }
 
