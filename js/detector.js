@@ -1,4 +1,4 @@
-/* global Data, isGmail, IN_OPTIONS_PAGE */
+/* global Data */
 
 import {
     q,
@@ -1000,7 +1000,7 @@ primitiveExtender();
             // put an else if here
             if (keyCode === 9 && metaKeyNotPressed) {
                 // [Tab] key for tab spacing/placeholder shifting
-                if (isGmail && isParent(node, "form")) {
+                if (window.isGmail && isParent(node, "form")) {
                     // in Gmail, the subject and to address field
                     // should not have any tab function.
                     // These two fields have a "form" as their parent.
@@ -1131,7 +1131,7 @@ primitiveExtender();
             let timestamp;
 
             // when user updates snippet data, reloading page is not required
-            if (typeof request.snippetList !== "undefined" && !IN_OPTIONS_PAGE) {
+            if (typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE) {
                 Data.snippets = Folder.fromArray(request.snippetList);
                 Folder.setIndices();
             } else if (request.checkBlockedYourself) {
@@ -1182,7 +1182,7 @@ primitiveExtender();
     }
 
     function onPageLoad() {
-        if (!IN_OPTIONS_PAGE) {
+        if (!window.IN_OPTIONS_PAGE) {
             DBget(afterDBget);
         } else {
             // load a second after the init

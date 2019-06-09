@@ -202,7 +202,7 @@ chrome.omnibox.onInputEntered.addListener((omniboxText) => {
 }());
 
 let removeCtxSnippetList,
-    addCtxSnippetList;
+    makeCtxSnippetList;
 (function snippetListCtxClosure() {
     let cachedSnippetList = "",
         defaultEntryExists = false;
@@ -217,9 +217,13 @@ let removeCtxSnippetList,
         }
     };
 
-    addCtxSnippetList = function (snippets) {
-        snippets = snippets || Data.snippets;
-        const newInput = JSON.stringify(snippets.toArray());
+    /**
+     * if new input did not change snippets
+     * do not do anything; otherwise remove all snippets and readd them
+     */
+    makeCtxSnippetList = function () {
+        const { snippets } = Data,
+            newInput = JSON.stringify(snippets.toArray());
         if (newInput === cachedSnippetList) {
             return;
         }
@@ -342,7 +346,7 @@ function updateContextMenu(isRecalled = false) {
                     if (isBlocked) {
                         removeCtxSnippetList();
                     } else {
-                        addCtxSnippetList();
+                        makeCtxSnippetList();
                     }
                 }
 
@@ -444,7 +448,7 @@ chrome.tabs.onUpdated.addListener(onTabActivatedOrUpdated);
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // when user updates snippet data, reloading page is not required
     if (typeof request.updateCtx !== "undefined") {
-        addCtxSnippetList();
+        makeCtxSnippetList();
     } else if (request.openBlockSiteModalInParent === true) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
@@ -473,6 +477,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (typeof request.updateData !== "undefined") {
         Data = request.updateData;
         DBSave();
+        // necessary everytime we reassign data
+        // otherwise search function doesn't work as expected
+        Folder.setIndices();
     } else if (typeof request.getStorageType !== "undefined") {
         sendResponse(getCurrentStorageType());
     } else if (typeof request.changeStorageType !== "undefined") {

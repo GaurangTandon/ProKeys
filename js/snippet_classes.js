@@ -1,4 +1,4 @@
-/* global Data, isGmail, IN_OPTIONS_PAGE, listOfSnippetCtxIDs */
+/* global Data, listOfSnippetCtxIDs */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 import {
@@ -1064,7 +1064,7 @@ Snip.makeHTMLValidForExternalEmbed = function (html, isListingSnippets) {
 
     $container.Q("ol, ul").forEach(formatOLULInListParentForCEnode);
 
-    if (isGmail) {
+    if (window.isGmail) {
         $container
             .Q("blockquote")
             // problem 9 issues#153
@@ -1322,7 +1322,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     this.isSearchResultFolder = !!isSearchResultFolder;
 
     // only options page mutates list
-    if (IN_OPTIONS_PAGE) {
+    if (window.IN_OPTIONS_PAGE) {
         observeList(this.list);
     }
 
@@ -1792,7 +1792,7 @@ Folder.fromArray = function (arr) {
     const folder = new Folder(arr.shift(), undefined, arr.shift());
     folder.list = arr.map(listElm => (Array.isArray(listElm) ? Folder.fromArray(listElm) : Snip.fromObject(listElm)));
 
-    if (IN_OPTIONS_PAGE) {
+    if (window.IN_OPTIONS_PAGE) {
         observeList(folder.list);
     }
 
