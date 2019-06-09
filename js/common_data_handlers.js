@@ -35,7 +35,7 @@ function notifySnippetDataChanges(snippetList) {
         }
     });
 
-    chrome.runtime.sendMessage(msg, chromeAPICallWrapper());
+    chrome.runtime.sendMessage({ updateCtx: true }, chromeAPICallWrapper());
 }
 
 function saveRevision(dataString) {

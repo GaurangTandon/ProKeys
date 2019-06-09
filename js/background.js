@@ -306,12 +306,6 @@ chrome.runtime.onInstalled.addListener((details) => {
     }
 });
 
-function loadSnippetListIntoBGPage(list) {
-    Data.snippets = Folder.fromArray(list);
-    Folder.setIndices();
-    return Data.snippets;
-}
-
 // isRecalled: if the function has been called
 // if the response from content script was undefined
 // why content script sends undefined response is i don't know
@@ -449,8 +443,8 @@ chrome.tabs.onUpdated.addListener(onTabActivatedOrUpdated);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // when user updates snippet data, reloading page is not required
-    if (typeof request.snippetList !== "undefined") {
-        addCtxSnippetList(loadSnippetListIntoBGPage(request.snippetList));
+    if (typeof request.updateCtx !== "undefined") {
+        addCtxSnippetList();
     } else if (request.openBlockSiteModalInParent === true) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const tab = tabs[0];
@@ -469,9 +463,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (typeof request.ctxEnabled !== "undefined") {
         Data.ctxEnabled = request.ctxEnabled;
         initContextMenu();
-    }
-
-    if (typeof request.giveData !== "undefined") {
+    } else if (typeof request.giveData !== "undefined") {
         const orgSnippets = Data.snippets;
         Data.snippets = Data.snippets.toArray();
         const resp = JSON.parse(JSON.stringify(Data));
