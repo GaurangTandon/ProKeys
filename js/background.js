@@ -14,6 +14,7 @@ import {
     LS_REVISIONS_PROP,
     SETTINGS_DEFAULTS,
     LS_STORAGE_TYPE_PROP,
+    OLD_DATA_STORAGE_KEY,
 } from "./common_data_handlers";
 
 primitiveExtender();
@@ -238,35 +239,11 @@ let removeCtxSnippetList,
     };
 }());
 
-chrome.runtime.onInstalled.addListener((details) => {
-    let notifText,
-        notifTitle;
-    const { reason } = details,
-        { version } = chrome.runtime.getManifest();
-
-    if (reason === "install") {
-        // set initial data
-        localStorage[LS_REVISIONS_PROP] = "[]";
-        localStorage[LS_STORAGE_TYPE_PROP] = "local";
-        window.Data = SETTINGS_DEFAULTS;
-        Data.snippets = Folder.fromArray(Data.snippets);
-        window.latestRevisionLabel = "data created (added defaut snippets)";
-        Folder.setIndices();
-
-        // save it
-        saveRevision(Data.snippets);
-        DBSave();
-
-        notifTitle = "ProKeys successfully installed!";
-        notifText = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
-    } else if (reason === "update") {
-        notifTitle = `ProKeys updated to v${version}`;
-        notifText = "Hooray! Please reload active tabs to use the new version.";
-        storage = chrome[localStorage[LS_STORAGE_TYPE_PROP]];
-    } else {
-        // do not process anything other than install or update
-        return;
-    }
+function afterBGPageReload({
+    notifText, notifTitle, version, reason,
+}) {
+    Folder.makeFolderFromList(Data);
+    Folder.setIndices();
 
     openSnippetsPage(version, reason);
     injectScriptAllTabs();
@@ -278,6 +255,55 @@ chrome.runtime.onInstalled.addListener((details) => {
         title: notifTitle,
         message: notifText,
     });
+}
+
+chrome.runtime.onInstalled.addListener((details) => {
+    let notifText,
+        notifTitle;
+    const { reason } = details,
+        { version } = chrome.runtime.getManifest();
+
+    if (reason === "install") {
+        // set initial data
+        localStorage[LS_REVISIONS_PROP] = "[]";
+        localStorage[LS_STORAGE_TYPE_PROP] = "local";
+        window.Data = SETTINGS_DEFAULTS;
+        window.latestRevisionLabel = "data created (added defaut snippets)";
+
+        saveRevision(Data.snippets);
+        DBSave();
+
+        notifTitle = "ProKeys successfully installed!";
+        notifText = "Thank you for installing ProKeys! Please reload all active tabs for changes to take effect.";
+
+        afterBGPageReload({
+            notifText,
+            notifTitle,
+            version,
+            reason,
+        });
+    } else if (reason === "update") {
+        notifTitle = `ProKeys updated to v${version}`;
+        notifText = "Hooray! Please reload active tabs to use the new version.";
+        storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
+
+        window.latestRevisionLabel = "";
+        storage.get(
+            OLD_DATA_STORAGE_KEY,
+            chromeAPICallWrapper((response) => {
+                window.Data = response[OLD_DATA_STORAGE_KEY];
+
+                afterBGPageReload({
+                    notifText,
+                    notifTitle,
+                    version,
+                    reason,
+                });
+            }),
+        );
+    } else {
+        // do not process anything other than install or update
+    }
 });
 
 function loadSnippetListIntoBGPage(list) {
@@ -444,6 +470,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         Data.ctxEnabled = request.ctxEnabled;
         initContextMenu();
     }
+
     if (typeof request.giveData !== "undefined") {
         const orgSnippets = Data.snippets;
         Data.snippets = Data.snippets.toArray();

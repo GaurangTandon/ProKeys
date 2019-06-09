@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-unused-vars
-/* global Data, latestRevisionLabel, isGmail, IN_OPTIONS_PAGE, listOfSnippetCtxIDs */
+/* global Data, isGmail, IN_OPTIONS_PAGE, listOfSnippetCtxIDs */
 /* global Quill, $containerFolderPath, $containerSnippets */
 
 import {
@@ -1361,7 +1360,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
 
             Folder.insertObject(newObj, this);
 
-            latestRevisionLabel = `created ${newObj.type} "${newObj.name}"`;
+            window.latestRevisionLabel = `created ${newObj.type} "${newObj.name}"`;
         };
     }
 
@@ -1372,7 +1371,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             const object = Data.snippets.getUniqueObject(oldName, type);
 
             object.edit(newName, body);
-            latestRevisionLabel = `edited ${type} "${oldName}"`;
+            window.latestRevisionLabel = `edited ${type} "${oldName}"`;
         };
     }
 
@@ -1804,6 +1803,11 @@ Folder.isValidName = function (name) {
 };
 Folder.isFolder = function (elm) {
     return elm.type === Generic.FOLDER_TYPE;
+};
+Folder.makeFolderFromList = function (data) {
+    if (Array.isArray(data.snippets)) {
+        data.snippets = Folder.fromArray(data.snippets);
+    }
 };
 Folder.MAIN_SNIPPETS_NAME = "Snippets";
 Folder.SEARCH_RESULTS_NAME = "Search Results in ";

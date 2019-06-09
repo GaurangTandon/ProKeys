@@ -1,4 +1,4 @@
-/* global Data, latestRevisionLabel */
+/* global Data */
 
 import { chromeAPICallWrapper, isTabSafe } from "./pre";
 import { Folder } from "./snippet_classes";
@@ -13,7 +13,6 @@ const SETTINGS_DEFAULTS = {
         dataUpdateVariable: true,
         matchDelimitedWord: false,
         tabKey: false,
-        visited: false,
         snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
         omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
         wrapSelectionAutoInsert: true,
@@ -43,7 +42,7 @@ function saveRevision(dataString) {
     const MAX_REVISIONS_STORED = 20;
     let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
     const latestRevision = {
-        label: `${Date.getFormattedDate()} - ${latestRevisionLabel}`,
+        label: `${Date.getFormattedDate()} - ${window.latestRevisionLabel}`,
         data: dataString || Data.snippets,
     };
 
@@ -83,23 +82,33 @@ function databaseSetValue(name, value, callback) {
     });
 }
 
+/**
+ * @param {Function} callback fn to call after save
+ */
 function DBSave(callback) {
+    if (Folder.isFolder(Data.snippets)) {
+        Data.snippets = Data.snippets.toArray();
+    }
+
+    // issues#4
+    Data.dataUpdateVariable = !Data.dataUpdateVariable;
+
     databaseSetValue(OLD_DATA_STORAGE_KEY, Data, () => {
         if (callback) {
             callback();
         }
     });
+
+    // once databaseSetValue has been called, doesn't matter
+    // if this prop is object/array since storage.clear/set
+    // methods are using a separate storageObj
+    Folder.makeFolderFromList(Data);
 }
 
 /**
  * PRECONDITION: Data.snippets is a Folder object
  */
 function saveSnippetData(callback, folderNameToList, objectNamesToHighlight) {
-    Data.snippets = Data.snippets.toArray();
-
-    // refer github issues#4
-    Data.dataUpdateVariable = !Data.dataUpdateVariable;
-
     DBupdate(() => {
         if (IN_OPTIONS_PAGE) {
             const snippetList = Data.snippets.toArray();
@@ -117,17 +126,10 @@ function saveSnippetData(callback, folderNameToList, objectNamesToHighlight) {
             callback();
         }
     });
-
-    Data.snippets = Folder.fromArray(Data.snippets);
 }
 
 // save data not involving snippets
 function saveOtherData(msg = "Saved!", callback) {
-    Data.snippets = Data.snippets.toArray();
-
-    // issues#4
-    Data.dataUpdateVariable = !Data.dataUpdateVariable;
-
     DBupdate(() => {
         if (typeof msg === "function") {
             msg();
@@ -139,11 +141,6 @@ function saveOtherData(msg = "Saved!", callback) {
             callback();
         }
     });
-
-    // once databaseSave has been called, doesn't matter
-    // if this prop is object/array since storage.clear/set
-    // methods are using a separate storageObj
-    Data.snippets = Folder.fromArray(Data.snippets);
 }
 
 // transfer data from one storage to another
@@ -190,5 +187,6 @@ export {
     SETTINGS_DEFAULTS,
     LS_REVISIONS_PROP,
     LS_STORAGE_TYPE_PROP,
+    OLD_DATA_STORAGE_KEY,
     DBSave,
 };

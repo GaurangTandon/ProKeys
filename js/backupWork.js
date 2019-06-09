@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-unused-vars
-/* global Data, pk, latestRevisionLabel */
+/* global Data */
 
 import {
     Q, q, copyTextToClipboard, SHOW_CLASS,
@@ -49,9 +48,10 @@ export function initBackup() {
         if (dataUse === "print") {
             dataToExport = getSnippetPrintData(Data.snippets);
         } else {
+            const orgData = Data;
             Data.snippets = Data.snippets.toArray();
             dataToExport = JSON.stringify(dataUse === "data" ? Data : Data.snippets, undefined, 2);
-            Data.snippets = Folder.fromArray(Data.snippets);
+            Data = orgData;
         }
 
         const blob = new Blob([dataToExport], {
@@ -180,7 +180,9 @@ export function initBackup() {
             if (window.confirm("Are you sure you want to use the selected revision?")) {
                 Data.snippets = Folder.fromArray(JSON.parse($textarea.value));
                 deleteRevision($select.selectedIndex);
-                latestRevisionLabel = `restored revision (labelled: ${selectedRevision.label})`;
+                window.latestRevisionLabel = `restored revision (labelled: ${
+                    selectedRevision.label
+                })`;
                 saveSnippetData(() => {
                     $closeRevisionsPopupBtn.click();
                 });

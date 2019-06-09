@@ -55,10 +55,7 @@ primitiveExtender();
     }
 
     function getBytesInUse(callback) {
-        chrome.runtime.sendMessage(
-            { getBytesInUse: true },
-            chromeAPICallWrapper(callback),
-        );
+        chrome.runtime.sendMessage({ getBytesInUse: true }, chromeAPICallWrapper(callback));
     }
 
     function notifyCtxEnableToggle() {
@@ -674,7 +671,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         window.Data = DataResponse;
-        Data.snippets = Folder.fromArray(Data.snippets);
+        Folder.makeFolderFromList(Data);
         Folder.setIndices();
 
         const propertiesChanged = ensureRobustCompat(Data);
