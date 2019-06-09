@@ -1,6 +1,6 @@
 /* global Data, latestRevisionLabel */
 
-import { checkRuntimeError, isTabSafe } from "./pre";
+import { chromeAPICallWrapper, isTabSafe } from "./pre";
 import { Folder } from "./snippet_classes";
 
 const SETTINGS_DEFAULTS = {
@@ -31,16 +31,12 @@ function notifySnippetDataChanges(snippetList) {
     chrome.tabs.query({}, (tabs) => {
         for (const tab of tabs) {
             if (isTabSafe(tab)) {
-                chrome.tabs.sendMessage(
-                    tab.id,
-                    msg,
-                    checkRuntimeError("notifySnippetDataChanges-innerloop"),
-                );
+                chrome.tabs.sendMessage(tab.id, msg, chromeAPICallWrapper());
             }
         }
     });
 
-    chrome.runtime.sendMessage(msg, checkRuntimeError("notifySnippetDataChanges"));
+    chrome.runtime.sendMessage(msg, chromeAPICallWrapper());
 }
 
 function saveRevision(dataString) {
@@ -70,7 +66,7 @@ function DBget(callback) {
  * sends updated data to background page for storage
  */
 function DBupdate(callback) {
-    chrome.runtime.sendMessage({ updateData: Data }, callback);
+    chrome.runtime.sendMessage({ updateData: Data }, chromeAPICallWrapper(callback));
 }
 
 function databaseSetValue(name, value, callback) {
@@ -117,8 +113,6 @@ function saveSnippetData(callback, folderNameToList, objectNamesToHighlight) {
             : Data.snippets;
         folderToList.listSnippets(objectNamesToHighlight);
 
-        checkRuntimeError("databaseSave inside")();
-
         if (callback) {
             callback();
         }
@@ -140,7 +134,6 @@ function saveOtherData(msg = "Saved!", callback) {
         } else if (typeof msg === "string") {
             window.alert(msg);
         }
-        checkRuntimeError("saveotherdata-options.js")();
 
         if (callback) {
             callback();
@@ -182,10 +175,6 @@ function migrateData(transferData, callback) {
     });
 }
 
-function getBytesInUse(callback) {
-    chrome.runtime.sendMessage({ getBytesInUse: true }, callback);
-}
-
 /**
  * these are the only methods
  * which should be used by other scripts
@@ -201,6 +190,5 @@ export {
     SETTINGS_DEFAULTS,
     LS_REVISIONS_PROP,
     LS_STORAGE_TYPE_PROP,
-    getBytesInUse,
     DBSave,
 };

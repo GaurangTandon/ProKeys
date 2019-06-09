@@ -4,7 +4,7 @@
 // 1. using global window for sharing the list of snippet ctx IDs;
 // fix that since we won't have sc.js with us in dist/
 
-import { checkRuntimeError, isTabSafe, q } from "./pre";
+import { chromeAPICallWrapper, isTabSafe, q } from "./pre";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { Folder, Generic } from "./snippet_classes";
@@ -120,20 +120,17 @@ let toggleBlockSiteCtxItem;
                     id: BLOCK_SITE_ID,
                     title: "reload page for blocking site",
                 },
-                () => {
-                    if (checkRuntimeError("BSI-CREATE")()) {
-                        return;
-                    }
+                chromeAPICallWrapper(() => {
                     currentlyShown = true;
-                },
+                }),
             );
         } else if (!Data.ctxEnabled && currentlyShown) {
-            chrome.contextMenus.remove(BLOCK_SITE_ID, () => {
-                if (checkRuntimeError("BSI-REM")()) {
-                    return;
-                }
-                currentlyShown = false;
-            });
+            chrome.contextMenus.remove(
+                BLOCK_SITE_ID,
+                chromeAPICallWrapper(() => {
+                    currentlyShown = true;
+                }),
+            );
         }
     };
 }());
@@ -214,7 +211,7 @@ let removeCtxSnippetList,
         }
         cachedSnippetList = "";
         if (defaultEntryExists) {
-            chrome.contextMenus.remove(SNIPPET_MAIN_ID, checkRuntimeError("REMOVE-SMI"));
+            chrome.contextMenus.remove(SNIPPET_MAIN_ID, chromeAPICallWrapper());
             defaultEntryExists = false;
         }
     };
@@ -310,30 +307,30 @@ function updateContextMenu(isRecalled = false) {
             return;
         }
 
-        chrome.tabs.sendMessage(tab.id, { checkBlockedYourself: true }, (isBlocked) => {
-            if (checkRuntimeError("CBY")()) {
-                return;
-            }
-
-            if (typeof isBlocked === "undefined") {
-                contextMenuActionBlockSite = "Unable to block/unblock";
-                if (recalls <= LIMIT_OF_RECALLS) {
-                    setTimeout(updateContextMenu, 500, true);
-                }
-            } else {
-                contextMenuActionBlockSite = isBlocked ? "Unblock" : "Block";
-
-                if (isBlocked) {
-                    removeCtxSnippetList();
+        chrome.tabs.sendMessage(
+            tab.id,
+            { checkBlockedYourself: true },
+            chromeAPICallWrapper((isBlocked) => {
+                if (typeof isBlocked === "undefined") {
+                    contextMenuActionBlockSite = "Unable to block/unblock";
+                    if (recalls <= LIMIT_OF_RECALLS) {
+                        setTimeout(updateContextMenu, 500, true);
+                    }
                 } else {
-                    addCtxSnippetList();
-                }
-            }
+                    contextMenuActionBlockSite = isBlocked ? "Unblock" : "Block";
 
-            chrome.contextMenus.update(BLOCK_SITE_ID, {
-                title: `${contextMenuActionBlockSite} this site`,
-            });
-        });
+                    if (isBlocked) {
+                        removeCtxSnippetList();
+                    } else {
+                        addCtxSnippetList();
+                    }
+                }
+
+                chrome.contextMenus.update(BLOCK_SITE_ID, {
+                    title: `${contextMenuActionBlockSite} this site`,
+                });
+            }),
+        );
     });
 }
 
@@ -371,7 +368,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
             if (!isTabSafe(tabs[0])) {
                 return;
             }
-            chrome.tabs.sendMessage(tabs[0].id, msg, checkRuntimeError("ID==BSI"));
+            chrome.tabs.sendMessage(tabs[0].id, msg, chromeAPICallWrapper());
         });
     } else if (Generic.CTX_SNIP_REGEX.test(id)) {
         startIndex = Generic.CTX_START[Generic.SNIP_TYPE].length;
@@ -386,7 +383,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
                         clickedSnippet: snip.toArray(),
                         ctxTimestamp: latestCtxTimestamp,
                     },
-                    checkRuntimeError("CSRTI"),
+                    chromeAPICallWrapper(),
                 );
             } else if (tab.url) {
                 alert(
@@ -435,7 +432,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 chrome.tabs.sendMessage(
                     tab.id,
                     { showBlockSiteModal: true, data: request.data },
-                    checkRuntimeError("OBSMIP"),
+                    chromeAPICallWrapper(),
                 );
             }
         });
@@ -466,8 +463,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         storage = chrome.storage[targetStorage];
         localStorage[LS_STORAGE_TYPE_PROP] = targetStorage;
     } else if (typeof request.getBytesInUse !== "undefined") {
-        storage.getBytesInUse((...args) => sendResponse(...args));
+        storage.getBytesInUse(
+            chromeAPICallWrapper((bytesInUse) => {
+                sendResponse(bytesInUse);
+            }),
+        );
+        // indicates async sendResponse
+        return true;
     }
+
+    // indicates synced sendResponse
+    return false;
 });
 
 // open a new tab whenever popup icon is clicked

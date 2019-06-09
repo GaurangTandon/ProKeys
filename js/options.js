@@ -7,7 +7,6 @@ import {
     DBget,
     saveOtherData,
     migrateData,
-    getBytesInUse,
     LS_STORAGE_TYPE_PROP,
 } from "./common_data_handlers";
 import {
@@ -16,7 +15,7 @@ import {
     Q,
     qClsSingle,
     qId,
-    checkRuntimeError,
+    chromeAPICallWrapper,
     isBlockedSite,
     escapeRegExp,
     protoWWWReplaceRegex,
@@ -55,9 +54,16 @@ primitiveExtender();
         return localStorage[LS_STORAGE_TYPE_PROP];
     }
 
+    function getBytesInUse(callback) {
+        chrome.runtime.sendMessage(
+            { getBytesInUse: true },
+            chromeAPICallWrapper(callback),
+        );
+    }
+
     function notifyCtxEnableToggle() {
         const msg = { ctxEnabled: Data.ctxEnabled };
-        chrome.runtime.sendMessage(msg, checkRuntimeError("NCET"));
+        chrome.runtime.sendMessage(msg, chromeAPICallWrapper());
     }
 
     function listBlockedSites() {

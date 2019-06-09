@@ -5,7 +5,7 @@
 import {
     isObject,
     q,
-    checkRuntimeError,
+    chromeAPICallWrapper,
     escapeRegExp,
     OBJECT_NAME_LIMIT,
     isTextNode,
@@ -553,10 +553,12 @@ function Snip(name, body, timestamp) {
         });
 
         if (Snip.PASTE_MACRO_REGEX.test(snipBody)) {
-            chrome.runtime.sendMessage("givePasteData", (pasteData) => {
-                checkRuntimeError("givePasteData")();
-                callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
-            });
+            chrome.runtime.sendMessage(
+                "givePasteData",
+                chromeAPICallWrapper((pasteData) => {
+                    callback(snipBody.replace(Snip.PASTE_MACRO_REGEX, pasteData));
+                }),
+            );
         } else {
             callback(snipBody);
         }
@@ -1677,7 +1679,9 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             delimiterChar = val[pos - 1 - i];
             snip = this.getUniqueSnip(stringToCheck);
 
-            const snipNameDelimiterListRegex = new RegExp(`[${escapeRegExp(Data.snipNameDelimiterList)}]`);
+            const snipNameDelimiterListRegex = new RegExp(
+                `[${escapeRegExp(Data.snipNameDelimiterList)}]`,
+            );
 
             if (snip) {
                 if (Data.matchDelimitedWord && snipNameDelimiterListRegex) {
@@ -1719,7 +1723,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                     title: object.name,
                     parentId,
                 },
-                checkRuntimeError("CRX-CREATE-SCJS"),
+                chromeAPICallWrapper(),
             );
 
             listOfSnippetCtxIDs.push(id);
@@ -1739,7 +1743,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                     title: emptyFolderText,
                     parentId,
                 },
-                checkRuntimeError("SCJS-CTX-CRE"),
+                chromeAPICallWrapper(),
             );
             listOfSnippetCtxIDs.push(id);
         }

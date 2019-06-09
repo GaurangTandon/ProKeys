@@ -2,7 +2,7 @@
 
 import {
     q,
-    checkRuntimeError,
+    chromeAPICallWrapper,
     debugLog,
     isContentEditable,
     isTextNode,
@@ -1071,7 +1071,7 @@ primitiveExtender();
         win.addEventListener("contextmenu", (event) => {
             ctxElm = event.target;
             ctxTimestamp = Date.now();
-            chrome.runtime.sendMessage({ ctxTimestamp }, checkRuntimeError("attachHandlers"));
+            chrome.runtime.sendMessage({ ctxTimestamp }, chromeAPICallWrapper());
         });
 
         win.addEventListener("error", (event) => {
@@ -1142,7 +1142,7 @@ primitiveExtender();
                 if (PAGE_IS_IFRAME) {
                     chrome.runtime.sendMessage(
                         { openBlockSiteModalInParent: true, data: request },
-                        checkRuntimeError("showModal"),
+                        chromeAPICallWrapper(),
                     );
                 } else {
                     showBlockSiteModal(request);

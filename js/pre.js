@@ -17,10 +17,33 @@ function isTabSafe(tab) {
         && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
     );
 }
-/*  stack trace is not beneficial being async, therefore
-        use a unique identifier to track down the origin */
-function checkRuntimeError(uniqueIdentifier) {
-    return function checkREHelper() {
+
+function getStackTrace() {
+    let stack;
+
+    try {
+        throw new Error("");
+    } catch (error) {
+        stack = error.stack || "";
+    }
+
+    stack = stack.split("\n").map(line => line.trim());
+    return stack.splice(stack[0] === "Error" ? 2 : 1);
+}
+
+/**
+ * Only and always use this function as an argument to chrome API calls
+ * Never use this as an argument to wrappers like DBupdate/etc.
+ * @param {String} uniqueIdentifier for the function who called me
+ * @param {Function} callback fn to execute if no error
+ * @returns {Function} which is used in Chrome API calls
+ */
+function chromeAPICallWrapper(callback) {
+    const stackTrace = getStackTrace().join("\n");
+    /**
+     * @returns {Boolean} whether runtime last error occurred or not
+     */
+    return function checkRE(...args) {
         if (chrome.runtime.lastError) {
             // TODO: remove
             // alert(
@@ -28,10 +51,12 @@ function checkRuntimeError(uniqueIdentifier) {
             // shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com
             // .This will help me resolve your issue and improve my extension. Thanks!`
             // );
-            // Chrome.Runtime.LastError:, do not use .error() as it prints
-            // out too many red messages :(
-            console.log(`CRLError (${uniqueIdentifier}): ${chrome.runtime.lastError.message}`);
+            console.log(`CRLError: ${chrome.runtime.lastError.message}`);
+            console.log(stackTrace);
             return true;
+        }
+        if (callback) {
+            callback(...args);
         }
         return false;
     };
@@ -94,7 +119,7 @@ function isTextNode(node) {
     return node.nodeType === 3;
 }
 
-const DEBUGGING = true;
+const DEBUGGING = false;
 let debugDirTemp,
     debugLogTemp;
 // see https://stackoverflow.com/q/13815640
@@ -282,7 +307,7 @@ export {
     copyTextToClipboard,
     SHOW_CLASS,
     isTabSafe,
-    checkRuntimeError,
+    chromeAPICallWrapper,
     isContentEditable,
     isBlockedSite,
     escapeRegExp,
