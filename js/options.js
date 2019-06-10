@@ -192,6 +192,9 @@ primitiveExtender();
      * example: `["shiftKey", 32]` returns `Shift+Space`
      */
     function getCurrentHotkey() {
+        function isNumPadKey(keyCode) {
+            return keyCode >= 96 && keyCode <= 105;
+        }
         const combo = Data.hotKey.slice(0),
             specials = {
                 9: "Tab",
@@ -216,6 +219,10 @@ primitiveExtender();
             kC = combo[1];
         } else {
             kC = combo[0];
+        }
+
+        if (isNumPadKey(kC)) {
+            result += "NumPad";
         }
 
         // numpad keys
