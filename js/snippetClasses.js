@@ -1606,29 +1606,30 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     }
 
     this.filterSnippetsForOmnibox = function (text, callback) {
-        let snipArray = [],
-            description,
+        const snipArray = [],
             searchResults = this.searchSnippets(text);
 
         searchResults.forEachSnippet((snip) => {
             snip.formatMacros((snipBody) => {
                 snipBody = stripHTMLTags(snipBody);
-                description = `<url>${highlightMatchText(text, snip.name)}</url> - `;
-                description += `<dim>${highlightMatchText(text, snipBody)}</dim>`;
+                const description = `<url>${highlightMatchText(text, snip.name)}</url> - `
+                    + `<dim>${highlightMatchText(text, snipBody)}</dim>`;
 
                 snipArray.push({
                     content: snipBody,
                     description,
+                    deletable: true,
                 });
             });
         });
 
+        // since formatMacros is an async operation
         const checkFullyLoaded = setInterval(() => {
             if (snipArray.length === searchResults.getSnippetCount()) {
                 clearInterval(checkFullyLoaded);
                 callback(snipArray);
             }
-        }, 200);
+        }, 100);
     };
 
     this.getFolderSelectList = function (nameToNotShow) {

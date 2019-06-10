@@ -19,11 +19,12 @@ import {
 
 primitiveExtender();
 updateAllValuesPerWin(window);
-console.log(`Loaded once ${new Date()}`);
+console.log(`Loaded at: ${new Date()}`);
 const BLOCK_SITE_ID = "blockSite",
     // for gettting the blocked site status in case of unfinished loading of cs.js
     LIMIT_OF_RECALLS = 10,
     SNIPPET_MAIN_ID = "snippet_main",
+    LS_BG_PAGE_SUSPENDED_KEY = "pkBgWasSuspended",
     URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 let contextMenuActionBlockSite,
     recalls = 0,
@@ -38,12 +39,33 @@ let contextMenuActionBlockSite,
      * the entire system. Hence, the background js is the safest place for it to be
      * and others can message bg.js to interact with it
      */
-    storage = chrome.storage.local;
+    storage = chrome.storage.local,
+    runtimeOnInstalledFired = false;
 
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
 window.listOfSnippetCtxIDs = [];
 window.IN_OPTIONS_PAGE = false;
+
+// preprocessing Data includes setting indicess and making snippets Folder
+// needs to be called everytime window.data is changed.
+function makeDataReady() {
+    Folder.makeFolderIfList(Data);
+    Folder.setIndices();
+}
+
+if (localStorage[LS_BG_PAGE_SUSPENDED_KEY] === "true") {
+    storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
+    storage.get(OLD_DATA_STORAGE_KEY, (response) => {
+        // in case extension was reloaded, and onInstalled finished before this was called
+        // then we should not override the data set by runtimeOnInstall
+        if (!runtimeOnInstalledFired) {
+            window.Data = response[OLD_DATA_STORAGE_KEY];
+            makeDataReady();
+        }
+    });
+    localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "false";
+}
 
 function isURL(text) {
     return URL_REGEX.test(text.trim());
@@ -246,8 +268,7 @@ let removeCtxSnippetList,
 function afterBGPageReload({
     notifText, notifTitle, version, reason,
 }) {
-    Folder.makeFolderIfList(Data);
-    Folder.setIndices();
+    makeDataReady();
 
     openSnippetsPage(version, reason);
     injectScriptAllTabs();
@@ -262,6 +283,12 @@ function afterBGPageReload({
 }
 
 chrome.runtime.onInstalled.addListener((details) => {
+    runtimeOnInstalledFired = true;
+    // unset it after five seconds, reasonable time
+    setTimeout(() => {
+        runtimeOnInstalledFired = false;
+    }, 5000);
+
     let notifText,
         notifTitle;
     const { reason } = details,
@@ -508,3 +535,7 @@ chrome.browserAction.onClicked.addListener(openSnippetsPage);
 chrome.runtime.setUninstallURL(
     "https://docs.google.com/forms/d/e/1FAIpQLSdDAd8a1Edf4eUXhM4E1GALziNk6j1QYjI6gUqGdAXdYrueaw/viewform",
 );
+
+chrome.runtime.onSuspend.addListener(() => {
+    localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "true";
+});
