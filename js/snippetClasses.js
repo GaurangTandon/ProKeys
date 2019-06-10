@@ -435,7 +435,6 @@ function Snip(name, body, timestamp) {
                 let macro,
                     macroRegex,
                     macroRegexString,
-                    elm,
                     macroFunc,
                     dateArithmeticChange,
                     date = new Date(),
@@ -456,7 +455,7 @@ function Snip(name, body, timestamp) {
                         if (/M/.test(macroRegexString)) {
                             timeChange
                                 += Date.getTotalDeviationFrom30DaysMonth(dateArithmeticMatch)
-                                * Date.MILLISECONDS_IN_A_DAY;
+                                * MILLISECONDS_IN_A_DAY;
                         }
 
                         timeChange += dateArithmeticChange * dateArithmeticMatch;
@@ -482,11 +481,9 @@ function Snip(name, body, timestamp) {
 
                 // operate on text (it is the one inside brackets of %d)
                 for (let i = 0, len = Snip.MACROS.length; i < len; i++) {
-                    // macros has regex-function pairs
                     macro = Snip.MACROS[i];
-                    [macroRegexString, elm] = macro;
+                    [macroRegexString, [macroFunc, dateArithmeticChange]] = macro;
                     macroRegex = new RegExp(macroRegexString, "g");
-                    [macroFunc, dateArithmeticChange] = elm;
 
                     userInputMacroText.replace(macroRegex, dateReplacer);
                 }
@@ -573,9 +570,11 @@ Snip.CARET_POSITION_STUFFED_REGEX = /\[\[%c\([v^<>\d]+\)\]\]/;
 Snip.CARET_POSITION_SELECTION_START_REGEX = /\[\[%c\(s\)\]\]/;
 Snip.CARET_POSITION_SELECTION_END_REGEX = /\[\[%c\(e\)\]\]/;
 Snip.CARET_POSITION_SELECTION_END_STRING = "[[%c(e)]]";
+
+const MILLISECONDS_IN_A_DAY = 86400 * 1000;
 Snip.MACROS = [
     [
-        "\\bs([+-]\\d+)?\\b",
+        "s([+-]\\d+)?",
         [
             function (date) {
                 return Number.padNumber(date.getSeconds());
@@ -584,7 +583,7 @@ Snip.MACROS = [
         ],
     ],
     [
-        "\\bm([+-]\\d+)?\\b",
+        "m([+-]\\d+)?",
         [
             function (date) {
                 return Number.padNumber(date.getMinutes());
@@ -593,7 +592,7 @@ Snip.MACROS = [
         ],
     ],
     [
-        "\\bhh([+-]\\d+)?\\b",
+        "hh([+-]\\d+)?",
         [
             function (date) {
                 return Number.padNumber(date.getHours());
@@ -602,7 +601,7 @@ Snip.MACROS = [
         ],
     ],
     [
-        "\\bh([+-]\\d+)?\\b",
+        "h([+-]\\d+)?",
         [
             function (date) {
                 return Number.padNumber(Date.to12Hrs(date.getHours())[0]);
@@ -611,97 +610,97 @@ Snip.MACROS = [
         ],
     ],
     [
-        "\\ba\\b",
+        "a",
         [
             function (date) {
                 return Date.to12Hrs(date.getHours())[1];
             },
-            Date.MILLISECONDS_IN_A_DAY,
+            MILLISECONDS_IN_A_DAY,
         ],
     ],
     [
-        "\\bDo([+-]\\d+)?\\b",
+        "Do([+-]\\d+)?",
         [
             function (date) {
                 return Date.formatDate(date.getDate());
             },
-            Date.MILLISECONDS_IN_A_DAY,
+            MILLISECONDS_IN_A_DAY,
         ],
     ],
     [
-        "\\bD([+-]\\d+)?\\b",
+        "D([+-]\\d+)?",
         [
             function (date) {
                 return Number.padNumber(date.getDate());
             },
-            Date.MILLISECONDS_IN_A_DAY,
+            MILLISECONDS_IN_A_DAY,
         ],
     ],
     [
-        "\\bdddd([+-]\\d+)?\\b",
+        "dddd([+-]\\d+)?",
         [
             function (date) {
                 return Date.parseDay(date.getDay(), "full");
             },
-            Date.MILLISECONDS_IN_A_DAY,
+            MILLISECONDS_IN_A_DAY,
         ],
     ],
     [
-        "\\bddd([+-]\\d+)?\\b",
+        "ddd([+-]\\d+)?",
         [
             function (date) {
                 return Date.parseDay(date.getDay(), "half");
             },
-            Date.MILLISECONDS_IN_A_DAY,
+            MILLISECONDS_IN_A_DAY,
         ],
     ],
     [
-        "\\bMMMM([+-]\\d+)?\\b",
+        "MMMM([+-]\\d+)?",
         [
             function (date) {
                 return Date.parseMonth(date.getMonth(), "full");
             },
-            Date.MILLISECONDS_IN_A_DAY * 30,
+            MILLISECONDS_IN_A_DAY * 30,
         ],
     ],
     [
-        "\\bMMM([+-]\\d+)?\\b",
+        "MMM([+-]\\d+)?",
         [
             function (date) {
                 return Date.parseMonth(date.getMonth(), "half");
             },
-            Date.MILLISECONDS_IN_A_DAY * 30,
+            MILLISECONDS_IN_A_DAY * 30,
         ],
     ],
     [
-        "\\bMM([+-]\\d+)?\\b",
+        "MM([+-]\\d+)?",
         [
             function (date) {
                 return Number.padNumber(date.getMonth() + 1);
             },
-            Date.MILLISECONDS_IN_A_DAY * 30,
+            MILLISECONDS_IN_A_DAY * 30,
         ],
     ],
     [
-        "\\bYYYY([+-]\\d+)?\\b",
+        "YYYY([+-]\\d+)?",
         [
             function (date) {
                 return date.getFullYear();
             },
-            Date.MILLISECONDS_IN_A_DAY * 365,
+            MILLISECONDS_IN_A_DAY * 365,
         ],
     ],
     [
-        "\\bYY([+-]\\d+)?\\b",
+        "YY([+-]\\d+)?",
         [
             function (date) {
                 return date.getFullYear() % 100;
             },
-            Date.MILLISECONDS_IN_A_DAY * 365,
+            MILLISECONDS_IN_A_DAY * 365,
         ],
     ],
     [
-        "\\bZZ\\b",
+        "ZZ",
         [
             function (date) {
                 return date.toString().match(/\((.*)\)/)[1];
@@ -710,7 +709,7 @@ Snip.MACROS = [
         ],
     ],
     [
-        "\\bZ\\b",
+        "Z",
         [
             function (date) {
                 return date
@@ -723,7 +722,7 @@ Snip.MACROS = [
         ],
     ],
     [
-        "\\bz\\b",
+        "z",
         [
             function (date) {
                 return date.toString().match(/GMT(.*?) /)[1];
@@ -732,7 +731,7 @@ Snip.MACROS = [
         ],
     ],
     [
-        "\\bJ\\b",
+        "J",
         [
             function (date) {
                 return date.getDayOfYear();
@@ -740,8 +739,8 @@ Snip.MACROS = [
             0,
         ],
     ],
-    ["\\bdate\\b", [Date.getFormattedDate, 0]],
-    ["\\btime\\b", [Date.getCurrentTimestamp, 0]],
+    ["date", [Date.getFormattedDate, 0]],
+    ["time", [Date.getCurrentTimestamp, 0]],
 ];
 Snip.fromObject = function (snip) {
     const nSnip = new Snip(snip.name, snip.body);
