@@ -446,10 +446,9 @@ chrome.contextMenus.onClicked.addListener((info) => {
 });
 
 /**
- *
  * @param {Number} tabId id of tab
  */
-function onTabActivatedOrUpdated({ tabId }) {
+function onTabActivatedOrUpdated(tabId) {
     const IMG_ACTIVE = "../imgs/r16.png",
         IMG_INACTIVE = "../imgs/r16grey.png";
     let path = "";
@@ -469,8 +468,15 @@ function onTabActivatedOrUpdated({ tabId }) {
     initContextMenu();
 }
 
-chrome.tabs.onActivated.addListener(onTabActivatedOrUpdated);
-chrome.tabs.onUpdated.addListener(onTabActivatedOrUpdated);
+chrome.tabs.onActivated.addListener(({ tabId }) => onTabActivatedOrUpdated(tabId));
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    // querying partially loaded is not possible
+    // as content script isn't ready till then
+    // so we get lots of CRLErros
+    if (tab.status === "complete") {
+        onTabActivatedOrUpdated(tabId);
+    }
+});
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // when user updates snippet data, reloading page is not required
