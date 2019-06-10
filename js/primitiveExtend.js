@@ -11,22 +11,21 @@ import { getHTML, setHTML } from "./textmethods";
  * This does not need to wait for page load.
  */
 export function primitiveExtender() {
-    Date.MONTHS = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-    ];
-    Date.DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    Date.MILLISECONDS_IN_A_DAY = 86400 * 1000;
+    const MONTHS = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ],
+        DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     // eslint-disable-next-line no-proto
     NodeList.prototype.__proto__ = Array.prototype;
 
@@ -130,13 +129,13 @@ export function primitiveExtender() {
     };
 
     Date.parseDay = function (dayNum, type) {
-        return type === "full" ? Date.DAYS[dayNum] : Date.DAYS[dayNum].slice(0, 3);
+        return type === "full" ? DAYS[dayNum] : DAYS[dayNum].slice(0, 3);
     };
 
     // accepts num (0-11); returns month
     // type means full, or half
     Date.parseMonth = function (month, type) {
-        return type === "full" ? Date.MONTHS[month] : Date.MONTHS[month].slice(0, 3);
+        return type === "full" ? MONTHS[month] : MONTHS[month].slice(0, 3);
     };
 
     // appends th, st, nd, to date
