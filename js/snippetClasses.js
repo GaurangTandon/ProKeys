@@ -1850,8 +1850,9 @@ Folder.setIndices = function () {
     Folder.indices = {};
     Folder.indices[Generic.FOLDER_TYPE] = {};
     Folder.indices[Generic.SNIP_TYPE] = {};
-
-    repeat(Data.snippets, []);
+    if (Data.snippets !== false) {
+        repeat(Data.snippets, []);
+    }
 };
 Folder.copyContents = function (fromFolder, toFolder) {
     const { list } = fromFolder,

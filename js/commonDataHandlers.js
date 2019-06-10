@@ -147,27 +147,22 @@ function saveOtherData(msg = "Saved!", callback) {
 
 // transfer data from one storage to another
 function migrateData(transferData, callback) {
-    function afterMigrate() {
-        Data.snippets = Folder.fromArray(Data.snippets);
-        callback();
-    }
-    const str = Data.snippets.toArray(); // maintain a copy
+    const copyOfTheOldData = Data.snippets.toArray();
 
     // make current storage unusable
-    // so that storage gets changed by DB_load
     Data.snippets = false;
 
     DBupdate(() => {
         chrome.runtime.sendMessage({ changeStorageType: true }, () => {
             if (transferData) {
-                // get the copy
-                Data.snippets = str;
-                DBupdate(afterMigrate);
-            } else {
+                Data.snippets = copyOfTheOldData;
+                DBupdate(callback);
+            } else if (callback) {
                 // don't do Data.snippets = Folder.fromArray(Data.snippets);
                 // here since Data.snippets is false and since this is
                 // the sync2 option, we need to retain the data that user had
                 // previously synced on another PC
+
                 callback();
             }
         });

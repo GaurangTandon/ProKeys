@@ -503,10 +503,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse(resp);
     } else if (typeof request.updateData !== "undefined") {
         Data = request.updateData;
-        DBSave();
-        // necessary everytime we reassign data
+        // setIndices necessary everytime we reassign data
         // otherwise search function doesn't work as expected
-        Folder.setIndices();
+        DBSave(() => Folder.setIndices());
     } else if (typeof request.getStorageType !== "undefined") {
         sendResponse(getCurrentStorageType());
     } else if (typeof request.changeStorageType !== "undefined") {
