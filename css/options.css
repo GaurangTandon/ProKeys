@@ -109,6 +109,10 @@ th {
     display: block !important;
 }
 
+.dualBoxContainer .nav .show {
+    display: inline-block !important;
+}
+
 .sidebar {
     position: fixed;
     height: 100%;
