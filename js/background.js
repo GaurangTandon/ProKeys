@@ -265,6 +265,24 @@ let removeCtxSnippetList,
     };
 }());
 
+/**
+ * when upgrading from old versions to 3.5.0, we need to set
+ * the localStorage property which indicates what type of storage
+ * the user is using. This fn detects correct storage
+ * @param {Function} callback fn called after correctly setting type of
+ * storage in localStorage
+ */
+function updateCompatForOldData(callback) {
+    localStorage[LS_STORAGE_TYPE_PROP] = "local";
+    chrome.storage.local.get(OLD_DATA_STORAGE_KEY, (response) => {
+        const Data = response[OLD_DATA_STORAGE_KEY];
+        if (Data.snippets === false) {
+            localStorage[LS_STORAGE_TYPE_PROP] = "sync";
+        }
+        callback();
+    });
+}
+
 function afterBGPageReload({
     notifText, notifTitle, version, reason,
 }) {
@@ -280,6 +298,20 @@ function afterBGPageReload({
         title: notifTitle,
         message: notifText,
     });
+}
+
+function handleExtUpdate(notifProps) {
+    storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
+
+    window.latestRevisionLabel = "";
+    storage.get(
+        OLD_DATA_STORAGE_KEY,
+        chromeAPICallWrapper((response) => {
+            window.Data = response[OLD_DATA_STORAGE_KEY];
+
+            afterBGPageReload(notifProps);
+        }),
+    );
 }
 
 chrome.runtime.onInstalled.addListener((details) => {
@@ -316,22 +348,17 @@ chrome.runtime.onInstalled.addListener((details) => {
     } else if (reason === "update") {
         notifTitle = `ProKeys updated to v${version}`;
         notifText = "Hooray! Please reload active tabs to use the new version.";
-        storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
-
-        window.latestRevisionLabel = "";
-        storage.get(
-            OLD_DATA_STORAGE_KEY,
-            chromeAPICallWrapper((response) => {
-                window.Data = response[OLD_DATA_STORAGE_KEY];
-
-                afterBGPageReload({
-                    notifText,
-                    notifTitle,
-                    version,
-                    reason,
-                });
-            }),
-        );
+        const args = {
+            notifText,
+            notifTitle,
+            version,
+            reason,
+        };
+        if (typeof localStorage[LS_STORAGE_TYPE_PROP] === "undefined") {
+            updateCompatForOldData(() => handleExtUpdate(args));
+        } else {
+            handleExtUpdate(args);
+        }
     } else {
         // do not process anything other than install or update
     }
