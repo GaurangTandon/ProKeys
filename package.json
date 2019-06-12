@@ -25,6 +25,7 @@
         "gulp-terser": "*",
         "gulp-uglify": "^3.0.2",
         "husky": "^2.4.0",
+        "jest": "^24.8.0",
         "lint-staged": "^8.2.0",
         "prettier": "1.17.1",
         "pretty-quick": "^1.10.0",
@@ -46,7 +47,8 @@
     },
     "scripts": {
         "build": "webpack && gulp",
-        "test": "CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox node tests/test.js"
+        "test": "CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox node tests/test.js",
+        "jest": "CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox jest"
     },
     "repository": {
         "type": "git",
