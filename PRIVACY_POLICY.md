@@ -1,3 +1,5 @@
+# Privacy policy
+
 W.r.t. the Chrome Privacy Policy requirement (16/04/2016), here is the Privacy Policy for [ProKeys](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn):
 
 1. The word "user data" refers to the data stored by the user in Snippets or in Settings.

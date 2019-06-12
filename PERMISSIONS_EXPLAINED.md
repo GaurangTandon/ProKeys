@@ -1,3 +1,5 @@
+# Permission explanation
+
 ProKeys needs the following permissions for corresponding reasons:
 
 ## Chrome and Opera
