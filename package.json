@@ -32,6 +32,10 @@
         "js/*.js": [
             "eslint --fix",
             "git add"
+        ],
+        "ignore": [
+            "**/dist/*.js",
+            "**/editor.min.js"
         ]
     },
     "husky": {
