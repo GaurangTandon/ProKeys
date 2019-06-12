@@ -64,7 +64,8 @@ async function positionCursor(page, change) {
         const delta = change[i];
 
         if (delta in changeMap) {
-            // !! reqd
+            // !! reqd, since can't parallelize button presses
+            // eslint-disable-next-line no-await-in-loop
             await page.keyboard.press(changeMap[delta]);
         }
     }
@@ -114,14 +115,15 @@ async function testSnippetExpand(
 (async () => {
     const pathToExtension = path.join(__dirname, "../dist"),
         browser = await loadBrowserWithExt(pathToExtension),
-        page = await browser.newPage();
-
-    await page.setViewport({ width: 1920, height: 1080 });
-
-    const testURLs = [
+        testURLs = [
             {
                 url:
           "https://stackoverflow.com/questions/50990292/using-octal-character-gives-warning-multi-character-character-constant",
+                textBoxQueryString: "#wmd-input",
+            },
+            {
+                url:
+          "https://serverfault.com/questions/971011/how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
                 textBoxQueryString: "#wmd-input",
             },
         ],
@@ -138,7 +140,12 @@ async function testSnippetExpand(
             },
         ];
 
+    /* eslint-disable no-await-in-loop */
+    // TODO: parallelize the snip expansion on diff pages
     for (let pageIndex = 0; pageIndex < testURLs.length; pageIndex++) {
+        const page = await browser.newPage();
+        await page.setViewport({ width: 1920, height: 1080 });
+
         const testPage = testURLs[pageIndex],
             { url } = testPage,
             { textBoxQueryString } = testPage;
@@ -159,8 +166,11 @@ async function testSnippetExpand(
                 cursorChange,
             );
         }
+
+        await page.close();
     }
+    /* eslint-enable no-await-in-loop */
 
     console.log("Tests over");
-    browser.close();
+    await browser.close();
 })();
