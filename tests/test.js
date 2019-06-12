@@ -16,7 +16,7 @@ function sleep(milliseconds) {
 async function loadBrowserWithExt(pathToExtension) {
     const browser = await puppeteer.launch({
     //  uncomment this to `see` what happens
-    //  hedless: false,
+    //  headless: false,
         args: [
             `--disable-extensions-except=${pathToExtension}`,
             `--load-extension=${pathToExtension}`,
@@ -125,9 +125,9 @@ async function testSnippetExpand(
         ],
         testSnippets = [
             {
-                snipText: "brb",
-                expansion: "be right back",
-                cursorChange: "",
+                snipText: "abrbc",
+                expansion: "abe right backc",
+                cursorChange: "h",
             },
         ];
 
