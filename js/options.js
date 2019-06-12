@@ -425,7 +425,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                         Data.blockedSites.push(sanitizedURL);
                     }
 
-                    saveOtherData("Saved successfully", listBlockedSites);
+                    saveOtherData(listBlockedSites);
                 }
             });
 
@@ -683,7 +683,8 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 
         const propertiesChanged = ensureRobustCompat(Data);
         if (propertiesChanged) {
-            saveOtherData();
+            // do not alert a useless "Saved!" message
+            saveOtherData(false);
         }
 
         // on load; set checkbox state to user preference
