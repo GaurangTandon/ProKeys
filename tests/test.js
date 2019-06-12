@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer"),
-    path = require("path");
+    path = require("path"),
+    assert = require("./assert");
 
 /*
  * Wait for given milliseconds
@@ -15,12 +16,13 @@ function sleep(milliseconds) {
 
 async function loadBrowserWithExt(pathToExtension) {
     const browser = await puppeteer.launch({
-    //  uncomment this to `see` what happens
-    //  headless: false,
+    // FIXIT: for some reason, this doesn't work without headless
+        headless: false,
         args: [
             `--disable-extensions-except=${pathToExtension}`,
             `--load-extension=${pathToExtension}`,
         ],
+        sloMo: 250,
     });
 
     return browser;
@@ -101,7 +103,7 @@ async function testSnippetExpand(
     // retrieve the expanded value
     const expandedText = await page.evaluate(txt => txt.value, textBox);
 
-    console.assert(expandedText === expansion);
+    assert(expandedText === expansion);
 
     // reset the input field for next expansion
     await page.evaluate((txtBox) => {
@@ -129,16 +131,23 @@ async function testSnippetExpand(
                 expansion: "abe right backc",
                 cursorChange: "h",
             },
+            {
+                snipText: "brb",
+                expansion: "be right back",
+                cursorChange: "",
+            },
         ];
 
-    testURLs.forEach(async (testPage) => {
-        const { url } = testPage,
+    for (let pageIndex = 0; pageIndex < testURLs.length; pageIndex++) {
+        const testPage = testURLs[pageIndex],
+            { url } = testPage,
             { textBoxQueryString } = testPage;
 
         await page.goto(url);
 
-        testSnippets.forEach(async (testSnippet) => {
-            const { snipText } = testSnippet,
+        for (let snipIndex = 0; snipIndex < testSnippets.length; snipIndex++) {
+            const testSnippet = testSnippets[snipIndex],
+                { snipText } = testSnippet,
                 { expansion } = testSnippet,
                 { cursorChange } = testSnippet;
 
@@ -149,6 +158,9 @@ async function testSnippetExpand(
                 expansion,
                 cursorChange,
             );
-        });
-    });
+        }
+    }
+
+    console.log("Tests over");
+    browser.close();
 })();
