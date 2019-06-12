@@ -1,0 +1,60 @@
+{
+  "blockedSites": [
+    "so.com"
+  ],
+  "charsToAutoInsertUserList": [
+    [
+      "(",
+      ")"
+    ],
+    [
+      "[",
+      "]"
+    ]
+  ],
+  "dataUpdateVariable": true,
+  "dataVersion": 1,
+  "hotKey": [
+    32
+  ],
+  "language": "English",
+  "matchDelimitedWord": true,
+  "omniboxSearchURL": "https://www.google.com/search?q=SEARCH",
+  "snipNameDelimiterList": "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+  "snippets": [
+    "Snippets",
+    1560319171318,
+    [
+      "sampleFolder",
+      1560319171318,
+      {
+        "name": "brb",
+        "body": "be right back",
+        "timestamp": 1560319171318
+      },
+      {
+        "name": "dateArithmetic",
+        "body": "Use this snippet in any webpage, and you'll see that the following: [[%d(Do MMMM YYYY hh:m:s)]] is replaced by the current date and time.\n\nMoreover, you can perform date/time arithmetic. The following: [[%d(D+5 MMMM+5 YYYY+5 hh-5:m-5:s-5)]] gives the date, month, year, forward by five; and hour, minutes, and seconds backward by 5.\n\nMore info on this in the Help section.",
+        "timestamp": 1560319171318
+      },
+      {
+        "name": "letter",
+        "body": "(Sample snippet to demonstrate the power of ProKeys snippets; for more detail on Placeholders, see the Help section)\n\nHello %name%,\n\nYour complaint number %complaint% has been noted. We will work at our best pace to get this issue solved for you. If you experience any more problems, please feel free to contact at me@organization.com.\n\nRegards,\n%my_name%,\nDate: [[%d(D-MM-YYYY)]]",
+        "timestamp": 1560319171318
+      },
+      {
+        "name": "my_sign",
+        "body": "<b>Aquila Softworks ©</b>\n<i>Creator Of ProKeys</i>\n<u>prokeys.feedback@gmail.com</u>",
+        "timestamp": 1560319171318
+      }
+    ],
+    {
+      "name": "123",
+      "body": "Hello new user! Thank you for using ProKeys!\n\nThis is a sample snippet. Try using it on any webpage by typing 'sampleSnippet' (snippet name; without quotes), and press the hotkey (default: Shift+Space), and this whole text would come in place of it.",
+      "timestamp": 1560319171318
+    }
+  ],
+  "tabKey": false,
+  "visited": true,
+  "wrapSelectionAutoInsert": true
+}
