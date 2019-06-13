@@ -114,11 +114,15 @@ async function getExpandedSnippet(
 
     return expandedText;
 }
+// this helps enforce synchronous tests
+// the next test runs only when previous has completed
+// (with the page having closed)
+function testOnNthPage(testPageIdx) {
+    const testPage = testURLs[testPageIdx];
 
-/* eslint-disable no-await-in-loop */
-
-
-for (const testPage of testURLs) {
+    if (testPageIdx === testURLs.length) {
+        return;
+    }
     describe(`SnipppetExpands on ${testPage}`, () => {
         const { url, textBoxQueryString } = testPage;
 
@@ -131,21 +135,16 @@ for (const testPage of testURLs) {
             const { snipText, expansion, cursorChange } = testSnippet;
 
             it("Should match", async () => {
-                await expect(
-                    await getExpandedSnippet(
-                        page,
-                        textBoxQueryString,
-                        snipText,
-                        cursorChange,
-                    ),
-                ).toBe(expansion);
+                const expandedText = await getExpandedSnippet(page, textBoxQueryString, snipText, cursorChange);
+                await expect(expandedText).toBe(expansion);
             });
         }
 
-        (async () => {
-            await page.close();
-        })();
+        // why do we need to close the page???
+        // (async () => {
+        //     await page.close();
+        // })();
     });
-    sleep(5000);
+    testOnNthPage(testPageIdx + 1);
 }
-/* eslint-enable no-await-in-loop */
+testOnNthPage(0);
