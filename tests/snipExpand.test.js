@@ -115,21 +115,35 @@ async function getExpandedSnippet(
     return expandedText;
 }
 
-testURLs.forEach(({ url, textBoxQueryString }) => {
+
+const usablePages = [];
+beforeAll(async () => {
+    for (let i = 0, len = testURLs.length; i < len; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        const newpage = await browser.newPage();
+        // eslint-disable-next-line no-await-in-loop
+        await newpage.setViewport({ width: 1920, height: 1080 });
+        usablePages.push(newpage);
+    }
+});
+
+testURLs.forEach(({ url, textBoxQueryString }, index) => {
     describe(`SnipppetExpands on ${url.match(/https?:\/\/(\w+\.)+\w+/)[0]}`, () => {
         // using the same page for every testURL results in a
         // "Are you sure you want to leave?" everytime we
         // goto a new url
-        let newpage;
+
+        let usablePage;
         beforeAll(async () => {
-            newpage = await browser.newPage();
-            await newpage.setViewport({ width: 1920, height: 1080 });
-            await newpage.goto(url);
+            usablePage = usablePages[index];
+            await usablePage.goto(url);
+            // unless we bring it to front, it does not activate snippets
+            await usablePage.bringToFront();
         });
 
         testSnippets.forEach(({ snipText, expansion, cursorChange }) => {
-            it("Should match", async () => {
-                const expandedText = await getExpandedSnippet(newpage, textBoxQueryString, snipText, cursorChange);
+            it(`${snipText} should match`, async () => {
+                const expandedText = await getExpandedSnippet(usablePage, textBoxQueryString, snipText, cursorChange);
                 await expect(expandedText).toBe(expansion);
             });
         });
