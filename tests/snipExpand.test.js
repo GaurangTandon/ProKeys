@@ -1,14 +1,14 @@
 const testURLs = [
         {
             url:
-        "https://stackoverflow.com/questions/50990292/"
-        + "using-octal-character-gives-warning-multi-character-character-constant",
+            "https://stackoverflow.com/questions/50990292/"
+            + "using-octal-character-gives-warning-multi-character-character-constant",
             textBoxQueryString: "#wmd-input",
         },
         {
             url:
-        "https://serverfault.com/questions/971011/"
-        + "how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
+            "https://serverfault.com/questions/971011/"
+            + "how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
             textBoxQueryString: "#wmd-input",
         },
     ],
@@ -68,9 +68,7 @@ async function positionCursor(page, change) {
         l: "ArrowRight",
     };
 
-    for (let i = 0; i < change.length; i++) {
-        const delta = change[i];
-
+    for (const delta of change) {
         if (delta in changeMap) {
             // !! reqd, since can't parallelize button presses
             // eslint-disable-next-line no-await-in-loop
@@ -122,20 +120,15 @@ describe("SnipppetExpand", () => {
         await page.setViewport({ width: 1920, height: 1080 });
     });
 
-    for (let pageIndex = 0; pageIndex < testURLs.length; pageIndex++) {
-        const testPage = testURLs[pageIndex],
-            { url } = testPage,
-            { textBoxQueryString } = testPage;
+    for (const testPage of testURLs) {
+        const { url, textBoxQueryString } = testPage;
 
         (async () => {
             await page.goto(url);
         })();
 
-        for (let snipIndex = 0; snipIndex < testSnippets.length; snipIndex++) {
-            const testSnippet = testSnippets[snipIndex],
-                { snipText } = testSnippet,
-                { expansion } = testSnippet,
-                { cursorChange } = testSnippet;
+        for (const testSnippet of testSnippets) {
+            const { snipText, expansion, cursorChange } = testSnippet;
 
             it("Should match", async () => {
                 await expect(

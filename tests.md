@@ -1,7 +1,8 @@
 # Testing
+
 Currently, we use [Puppeteer](https://github.com/GoogleChrome/puppeteer/) for testing.
 
-To run the test, just type `npm run test`, and you are done!
+To run the test, just type `npm run test`, and you are done! In case you get a Chrome sandbox error, run `npm i puppeteer`. This will install the correct version of Chromium for use with testing.
 
 If for some reason puppetter is not working, check
 [this](https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md).
