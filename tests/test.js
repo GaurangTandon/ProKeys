@@ -1,6 +1,5 @@
 const puppeteer = require("puppeteer"),
-    path = require("path"),
-    assert = require("./assert");
+    path = require("path");
 
 /*
  * Wait for given milliseconds
@@ -16,7 +15,7 @@ function sleep(milliseconds) {
 
 async function loadBrowserWithExt(pathToExtension) {
     const browser = await puppeteer.launch({
-    // FIXIT: for some reason, this doesn't work without headless
+        // FIXIT: for some reason, this doesn't work without headless
         headless: false,
         args: [
             `--disable-extensions-except=${pathToExtension}`,
@@ -104,8 +103,6 @@ async function testSnippetExpand(
     // retrieve the expanded value
     const expandedText = await page.evaluate(txt => txt.value, textBox);
 
-    assert(expandedText === expansion);
-
     // reset the input field for next expansion
     await page.evaluate((txtBox) => {
         txtBox.value = "";
@@ -118,12 +115,12 @@ async function testSnippetExpand(
         testURLs = [
             {
                 url:
-          "https://stackoverflow.com/questions/50990292/using-octal-character-gives-warning-multi-character-character-constant",
+                    "https://stackoverflow.com/questions/50990292/using-octal-character-gives-warning-multi-character-character-constant",
                 textBoxQueryString: "#wmd-input",
             },
             {
                 url:
-          "https://serverfault.com/questions/971011/how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
+                    "https://serverfault.com/questions/971011/how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
                 textBoxQueryString: "#wmd-input",
             },
         ],
