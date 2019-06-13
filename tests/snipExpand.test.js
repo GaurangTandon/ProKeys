@@ -114,15 +114,8 @@ async function getExpandedSnippet(
 
     return expandedText;
 }
-// this helps enforce synchronous tests
-// the next test runs only when previous has completed
-// (with the page having closed)
-function testOnNthPage(testPageIdx) {
-    const testPage = testURLs[testPageIdx];
 
-    if (testPageIdx === testURLs.length) {
-        return;
-    }
+for (const testPage of testURLs) {
     const { url, textBoxQueryString } = testPage;
 
     describe(`SnipppetExpands on ${url.match(/https?:\/\/(\w+\.)+\w+/)[0]}`, () => {
@@ -140,11 +133,6 @@ function testOnNthPage(testPageIdx) {
             });
         }
 
-        // why do we need to close the page???
-        // (async () => {
-        //     await page.close();
-        // })();
+        afterAll(() => page.close());
     });
-    testOnNthPage(testPageIdx + 1);
 }
-testOnNthPage(0);
