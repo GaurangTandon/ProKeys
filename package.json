@@ -25,6 +25,8 @@
         "gulp-terser": "*",
         "gulp-uglify": "^3.0.2",
         "husky": "^2.4.0",
+        "jest": "^24.8.0",
+        "jest-puppeteer": "^4.2.0",
         "lint-staged": "^8.2.0",
         "prettier": "1.17.1",
         "pretty-quick": "^1.10.0",
@@ -33,7 +35,7 @@
         "webpack-cli": "^3.3.2"
     },
     "lint-staged": {
-        "js/*.js": [
+        "*.js": [
             "eslint --fix",
             "git add"
         ],
@@ -47,6 +49,9 @@
             "pre-commit": "lint-staged",
             "post-commit": "git update-index -g"
         }
+    },
+    "jest": {
+        "preset": "jest-puppeteer"
     },
     "scripts": {
         "build": "webpack && gulp",
