@@ -24,8 +24,9 @@ const testURLs = [
             cursorChange: "",
         },
     ];
-/*
+/**
  * Wait for given milliseconds
+ * @param {Number} milliseconds to wait
  */
 function sleep(milliseconds) {
     const start = new Date().getTime();
@@ -115,17 +116,16 @@ async function getExpandedSnippet(
 }
 
 /* eslint-disable no-await-in-loop */
-describe("SnipppetExpand", () => {
-    beforeAll(async () => {
-        await page.setViewport({ width: 1920, height: 1080 });
-    });
 
-    for (const testPage of testURLs) {
+
+for (const testPage of testURLs) {
+    describe(`SnipppetExpands on ${testPage}`, () => {
         const { url, textBoxQueryString } = testPage;
 
-        (async () => {
+        beforeAll(async () => {
+            await page.setViewport({ width: 1920, height: 1080 });
             await page.goto(url);
-        })();
+        });
 
         for (const testSnippet of testSnippets) {
             const { snipText, expansion, cursorChange } = testSnippet;
@@ -145,6 +145,7 @@ describe("SnipppetExpand", () => {
         (async () => {
             await page.close();
         })();
-    }
-});
+    });
+    sleep(5000);
+}
 /* eslint-enable no-await-in-loop */
