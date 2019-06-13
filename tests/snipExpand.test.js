@@ -123,9 +123,9 @@ function testOnNthPage(testPageIdx) {
     if (testPageIdx === testURLs.length) {
         return;
     }
-    describe(`SnipppetExpands on ${testPage}`, () => {
-        const { url, textBoxQueryString } = testPage;
+    const { url, textBoxQueryString } = testPage;
 
+    describe(`SnipppetExpands on ${url.match(/https?:\/\/(\w+\.)+\w+/)[0]}`, () => {
         beforeAll(async () => {
             await page.setViewport({ width: 1920, height: 1080 });
             await page.goto(url);
