@@ -132,7 +132,5 @@ for (const testPage of testURLs) {
                 await expect(expandedText).toBe(expansion);
             });
         }
-
-        afterAll(() => page.close());
     });
 }
