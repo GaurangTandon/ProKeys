@@ -6,7 +6,7 @@ module.exports = {
         args: [
             `--disable-extensions-except=${pathToExtension}`,
             `--load-extension=${pathToExtension}`,
-            "--single-process"
+            "--single-process",
         ],
         sloMo: 250,
     },
