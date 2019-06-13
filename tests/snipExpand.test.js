@@ -1,14 +1,24 @@
+/*
+ * add this since jest's default timeout is 5s only
+ * Loading a page might take longer
+ */
+
+const JEST_TIMEOUT = 30000,
+    extensionDelay = 300;
+
+jest.setTimeout(JEST_TIMEOUT);
+
 const testURLs = [
         {
             url:
-            "https://stackoverflow.com/questions/50990292/"
-            + "using-octal-character-gives-warning-multi-character-character-constant",
+        "https://stackoverflow.com/questions/50990292/"
+        + "using-octal-character-gives-warning-multi-character-character-constant",
             textBoxQueryString: "#wmd-input",
         },
         {
             url:
-            "https://serverfault.com/questions/971011/"
-            + "how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
+        "https://serverfault.com/questions/971011/"
+        + "how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
             textBoxQueryString: "#wmd-input",
         },
     ],
@@ -42,7 +52,7 @@ function sleep(milliseconds) {
  */
 async function expandSnippet(page) {
     // give some time [sometimes, the text didn't get expanded]
-    await sleep(300);
+    await sleep(extensionDelay);
 
     // emulate default expand snip
     await page.keyboard.down("Shift");
@@ -102,7 +112,7 @@ async function getExpandedSnippet(
     await expandSnippet(page);
 
     // wait for some time
-    await sleep(300);
+    await sleep(extensionDelay);
 
     // retrieve the expanded value
     const expandedText = await page.evaluate(txt => txt.value, textBox);
@@ -124,19 +134,24 @@ const usablePages = [];
 
 beforeAll(async () => {
     for (const testURL of testURLs) {
-        // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line no-await-in-loop
         const usablePage = await browser.newPage();
         // eslint-disable-next-line no-await-in-loop
         await usablePage.setViewport({ width: 1920, height: 1080 });
-        usablePages.push({ usablePage, loadedPromise: usablePage.goto(testURL.url) });
+        usablePages.push({
+            usablePage,
+            loadedPromise: usablePage.goto(testURL.url),
+        });
     }
 });
 
 testURLs.forEach(({ url, textBoxQueryString }, index) => {
-    describe(`SnipppetExpands on ${url.match(/https?:\/\/(\w+\.)+\w+/)[0]}`, () => {
-        // using the same page for every testURL results in a
-        // "Are you sure you want to leave?" everytime we
-        // goto a new url
+    describe(`SnipppetExpands on ${
+        url.match(/https?:\/\/(\w+\.)+\w+/)[0]
+    }`, () => {
+    // using the same page for every testURL results in a
+    // "Are you sure you want to leave?" everytime we
+    // goto a new url
 
         let usablePage,
             loadedPromise;
@@ -150,7 +165,12 @@ testURLs.forEach(({ url, textBoxQueryString }, index) => {
 
         testSnippets.forEach(({ snipText, expansion, cursorChange }) => {
             it(`${snipText} should match`, async () => {
-                const expandedText = await getExpandedSnippet(usablePage, textBoxQueryString, snipText, cursorChange);
+                const expandedText = await getExpandedSnippet(
+                    usablePage,
+                    textBoxQueryString,
+                    snipText,
+                    cursorChange,
+                );
                 await expect(expandedText).toBe(expansion);
             });
         });
