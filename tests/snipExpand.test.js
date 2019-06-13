@@ -131,6 +131,7 @@ async function getExpandedSnippet(
  * at once. The associated page objects and their `gotoURL` Promises are stored here
  */
 const usablePages = [];
+let extWelcomePage;
 
 beforeAll(async () => {
     for (const testURL of testURLs) {
@@ -145,24 +146,21 @@ beforeAll(async () => {
     }
 });
 
+// Test snip expansion
 testURLs.forEach(({ url, textBoxQueryString }, index) => {
-    describe(`SnipppetExpands on ${
+    let usablePage,
+        loadedPromise;
+
+    beforeAll(async () => {
+        ({ usablePage, loadedPromise } = usablePages[index]);
+        await loadedPromise;
+        // unless we bring it to front, it does not activate snippets
+        await usablePage.bringToFront();
+    });
+
+    describe(`Snipppet expands on ${
         url.match(/https?:\/\/(\w+\.)+\w+/)[0]
     }`, () => {
-    // using the same page for every testURL results in a
-    // "Are you sure you want to leave?" everytime we
-    // goto a new url
-
-        let usablePage,
-            loadedPromise;
-
-        beforeAll(async () => {
-            ({ usablePage, loadedPromise } = usablePages[index]);
-            await loadedPromise;
-            // unless we bring it to front, it does not activate snippets
-            await usablePage.bringToFront();
-        });
-
         testSnippets.forEach(({ snipText, expansion, cursorChange }) => {
             it(`${snipText} should match`, async () => {
                 const expandedText = await getExpandedSnippet(
@@ -174,5 +172,23 @@ testURLs.forEach(({ url, textBoxQueryString }, index) => {
                 await expect(expandedText).toBe(expansion);
             });
         });
+    });
+});
+
+describe("Open options page", () => {
+    beforeAll(async () => {
+        const allPages = await browser.pages();
+
+        extWelcomePage = allPages.find(async (pg) => {
+            const title = await pg.title();
+            return title === "ProKeys | Options";
+        });
+
+        await extWelcomePage.bringToFront();
+    });
+
+    it("Should load prokeys options page", async () => {
+        const title = await extWelcomePage.title();
+        await expect(title).toBe("ProKeys | Options");
     });
 });
