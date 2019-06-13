@@ -115,15 +115,20 @@ async function getExpandedSnippet(
     return expandedText;
 }
 
-
+/**
+ * How do parallel tests work?
+ * The following `beforeAll` sends a `gotoURL` call to all of the pages
+ * at once. The associated page objects and their `gotoURL` Promises are stored here
+ */
 const usablePages = [];
+
 beforeAll(async () => {
-    for (let i = 0, len = testURLs.length; i < len; i++) {
+    for (const testURL of testURLs) {
         // eslint-disable-next-line no-await-in-loop
-        const newpage = await browser.newPage();
+        const usablePage = await browser.newPage();
         // eslint-disable-next-line no-await-in-loop
-        await newpage.setViewport({ width: 1920, height: 1080 });
-        usablePages.push(newpage);
+        await usablePage.setViewport({ width: 1920, height: 1080 });
+        usablePages.push({ usablePage, loadedPromise: usablePage.goto(testURL.url) });
     }
 });
 
@@ -133,10 +138,12 @@ testURLs.forEach(({ url, textBoxQueryString }, index) => {
         // "Are you sure you want to leave?" everytime we
         // goto a new url
 
-        let usablePage;
+        let usablePage,
+            loadedPromise;
+
         beforeAll(async () => {
-            usablePage = usablePages[index];
-            await usablePage.goto(url);
+            ({ usablePage, loadedPromise } = usablePages[index]);
+            await loadedPromise;
             // unless we bring it to front, it does not activate snippets
             await usablePage.bringToFront();
         });
