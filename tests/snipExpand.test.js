@@ -115,22 +115,23 @@ async function getExpandedSnippet(
     return expandedText;
 }
 
-for (const testPage of testURLs) {
-    const { url, textBoxQueryString } = testPage;
-
+testURLs.forEach(({ url, textBoxQueryString }) => {
     describe(`SnipppetExpands on ${url.match(/https?:\/\/(\w+\.)+\w+/)[0]}`, () => {
+        // using the same page for every testURL results in a
+        // "Are you sure you want to leave?" everytime we
+        // goto a new url
+        let newpage;
         beforeAll(async () => {
-            await page.setViewport({ width: 1920, height: 1080 });
-            await page.goto(url);
+            newpage = await browser.newPage();
+            await newpage.setViewport({ width: 1920, height: 1080 });
+            await newpage.goto(url);
         });
 
-        for (const testSnippet of testSnippets) {
-            const { snipText, expansion, cursorChange } = testSnippet;
-
+        testSnippets.forEach(({ snipText, expansion, cursorChange }) => {
             it("Should match", async () => {
-                const expandedText = await getExpandedSnippet(page, textBoxQueryString, snipText, cursorChange);
+                const expandedText = await getExpandedSnippet(newpage, textBoxQueryString, snipText, cursorChange);
                 await expect(expandedText).toBe(expansion);
             });
-        }
+        });
     });
-}
+});
