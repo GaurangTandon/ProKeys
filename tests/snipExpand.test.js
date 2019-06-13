@@ -135,7 +135,7 @@ let extWelcomePage;
 
 beforeAll(async () => {
     for (const testURL of testURLs) {
-    // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop
         const usablePage = await browser.newPage();
         // eslint-disable-next-line no-await-in-loop
         await usablePage.setViewport({ width: 1920, height: 1080 });
@@ -145,6 +145,37 @@ beforeAll(async () => {
         });
     }
 });
+
+/**
+ * Options page is launched by ext automatically on install
+ * Need to search for it
+ */
+describe("Open options page", () => {
+    const optionsPageTitle = "ProKeys | Options";
+    beforeAll(async () => {
+        const allPages = await browser.pages();
+
+        // .find() method is synchronous, so it has to return a value immediately
+        // so if it asynchronous fn argument, it probably acts weird
+        // hence use for loop
+        for (const pg of allPages) {
+            // eslint-disable-next-line no-await-in-loop
+            const title = await pg.title();
+            if (title === optionsPageTitle) {
+                extWelcomePage = pg;
+                break;
+            }
+        }
+
+        await extWelcomePage.bringToFront();
+    });
+
+    it("Should load prokeys options page", async () => {
+        const title = await extWelcomePage.title();
+        await expect(title).toBe(optionsPageTitle);
+    });
+});
+
 
 // Test snip expansion
 testURLs.forEach(({ url, textBoxQueryString }, index) => {
@@ -172,23 +203,5 @@ testURLs.forEach(({ url, textBoxQueryString }, index) => {
                 await expect(expandedText).toBe(expansion);
             });
         });
-    });
-});
-
-describe("Open options page", () => {
-    beforeAll(async () => {
-        const allPages = await browser.pages();
-
-        extWelcomePage = allPages.find(async (pg) => {
-            const title = await pg.title();
-            return title === "ProKeys | Options";
-        });
-
-        await extWelcomePage.bringToFront();
-    });
-
-    it("Should load prokeys options page", async () => {
-        const title = await extWelcomePage.title();
-        await expect(title).toBe("ProKeys | Options");
     });
 });
