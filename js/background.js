@@ -579,6 +579,14 @@ function lengthInUtf8Bytes(str) {
     return str.length + (m ? m.length : 0);
 }
 
+/**
+ * stores given object after json stringification in Chrome sync storage
+ * using chunking strategy to prevent quota per item exceed error
+ * @param {String} storageKey
+ * @param {Object} objectToStore
+ * @param {Function} callback
+ */
+// eslint-disable-next-line no-unused-vars
 function syncStore(storageKey, objectToStore, callback) {
     const storageObj = {},
         // (note: QUOTA_BYTES_PER_ITEM only on sync storage)
@@ -589,8 +597,6 @@ function syncStore(storageKey, objectToStore, callback) {
 
     let jsonStr = JSON.stringify(objectToStore),
         segIndex = 0;
-
-    console.log(`jsonstr length is ${lengthInUtf8Bytes(jsonStr)}`);
 
     // split jsonstr into chunks and store them in an object as {segKey, segValue} pairs
     while (jsonStr.length > 0) {
@@ -610,23 +616,9 @@ function syncStore(storageKey, objectToStore, callback) {
 
     // later used by retriever function
     storageObj[`${storageKey}PropsStored`] = segIndex;
-    console.log(`${segIndex + 1} keys used (= key + key_i)`);
     // in case user clears previously stored snippets, we need to clear those extra chunks
     // since we can't determine how far those chunks so far, we just simply clear entire storage
     chrome.storage.sync.clear(() => {
-        console.log(storageObj);
-        console.log(chrome.storage.sync);
         chrome.storage.sync.set(storageObj, callback);
     });
 }
-
-const len = 102000,
-    string = [...new Array(len)].map(() => 1).join(""),
-    DataToStore = {
-        my_text: string,
-    },
-    keyToStore = "key";
-
-syncStore(keyToStore, DataToStore, () => {
-    console.log(chrome.runtime.lastError && chrome.runtime.lastError.message);
-});
