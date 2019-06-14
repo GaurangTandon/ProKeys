@@ -571,3 +571,62 @@ chrome.runtime.setUninstallURL(
 chrome.runtime.onSuspend.addListener(() => {
     localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "true";
 });
+
+function lengthInUtf8Bytes(str) {
+    // by: https://stackoverflow.com/a/5515960/2675672
+    // Matches only the 10.. bytes that are non-initial characters in a multi-byte sequence.
+    const m = encodeURIComponent(str).match(/%[89ABab]/g);
+    return str.length + (m ? m.length : 0);
+}
+
+function syncStore(storageKey, objectToStore, callback) {
+    const storageObj = {},
+        // (note: QUOTA_BYTES_PER_ITEM only on sync storage)
+        // use a nice round number like 8000, actual limit is 8192
+        // use minimum just in case specs decrease sync space in future
+        // -100 is for safety (see https://stackoverflow.com/q/41805621/)
+        maxBytesPerItem = Math.min(chrome.storage.sync.QUOTA_BYTES_PER_ITEM - 100, 8000);
+
+    let jsonStr = JSON.stringify(objectToStore),
+        segIndex = 0;
+
+    console.log(`jsonstr length is ${lengthInUtf8Bytes(jsonStr)}`);
+
+    // split jsonstr into chunks and store them in an object as {segKey, segValue} pairs
+    while (jsonStr.length > 0) {
+        const segKey = `${storageKey}${segIndex++}`,
+            maxValueBytes = maxBytesPerItem - lengthInUtf8Bytes(segKey);
+
+        let segLenUsed = maxValueBytes,
+            segValue = jsonStr.substr(0, segLenUsed);
+
+        while (lengthInUtf8Bytes(segValue) > maxValueBytes) {
+            segValue = jsonStr.substr(0, --segLenUsed);
+        }
+
+        storageObj[segKey] = segValue;
+        jsonStr = jsonStr.substr(segLenUsed);
+    }
+
+    // later used by retriever function
+    storageObj[`${storageKey}PropsStored`] = segIndex;
+    console.log(`${segIndex + 1} keys used (= key + key_i)`);
+    // in case user clears previously stored snippets, we need to clear those extra chunks
+    // since we can't determine how far those chunks so far, we just simply clear entire storage
+    chrome.storage.sync.clear(() => {
+        console.log(storageObj);
+        console.log(chrome.storage.sync);
+        chrome.storage.sync.set(storageObj, callback);
+    });
+}
+
+const len = 102000,
+    string = [...new Array(len)].map(() => 1).join(""),
+    DataToStore = {
+        my_text: string,
+    },
+    keyToStore = "key";
+
+syncStore(keyToStore, DataToStore, () => {
+    console.log(chrome.runtime.lastError && chrome.runtime.lastError.message);
+});
