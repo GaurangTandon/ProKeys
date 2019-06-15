@@ -1,4 +1,4 @@
-const { extSettings, getExpandedSnippet, updateSettings } = require("./utils"),
+const { getExpandedSnippet } = require("./utils"),
     testURLs = require("./testURLs");
 
 const testSnippets = [
@@ -55,20 +55,6 @@ function testSnippetExpansion(usablePages) {
  *  check if snippets obey delimited settings
  */
 function testSnippetExpansionDelimited(usablePages) {
-    // enable delimited in settings
-    beforeAll(async () => {
-        await updateSettings(
-            extSettings({ matchDelimitedWord: true, tabKeyExpandSpace: false }),
-        );
-    });
-
-    // disable delimited in settings
-    afterAll(async () => {
-        await updateSettings(
-            extSettings({ matchDelimitedWord: false, tabKeyExpandSpace: false }),
-        );
-    });
-
     testURLs.forEach(({ url, textBoxQueryString }, index) => {
         let usablePage;
 

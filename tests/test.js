@@ -2,7 +2,7 @@ const {
         testSnippetExpansion,
         testSnippetExpansionDelimited,
     } = require("./snipExpand"),
-    { dismissDialog } = require("./utils"),
+    { acceptDialog } = require("./utils"),
     testURLs = require("./testURLs");
 
 const usablePages = [],
@@ -21,7 +21,7 @@ beforeAll(async () => {
         const usablePage = await browser.newPage();
         await usablePage.setViewport({ width: 1920, height: 1080 });
 
-        usablePage.on("dialog", dismissDialog);
+        usablePage.on("dialog", acceptDialog);
         usablePages.push({
             usablePage,
             loadedPromise: usablePage.goto(testURL.url),

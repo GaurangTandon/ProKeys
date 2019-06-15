@@ -1164,6 +1164,10 @@ primitiveExtender();
                 // to background.js to send msg to show dialog in parent window
                 // cannot access parent window directly due to CORS
                 showBlockSiteModal(request.data);
+            } else if (request.updateTestData) {
+                Data = JSON.parse(request.updateTestData);
+                Folder.makeFolderIfList(Data);
+                Folder.setIndices();
             }
         });
 

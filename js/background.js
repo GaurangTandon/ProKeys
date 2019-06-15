@@ -578,3 +578,23 @@ chrome.runtime.setUninstallURL(
 chrome.runtime.onSuspend.addListener(() => {
     localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "true";
 });
+
+/**
+ * this function is used by puppeteer ot manipulate our data
+ * @param {Object} newProps list of keys to override
+ * @param {Function} callback called once all tabs have been updated with new data
+ */
+// eslint-disable-next-line no-unused-vars
+function updateMyDataForTests(newProps, callback) {
+    for (const key of Object.keys(newProps)) {
+        Data[key] = newProps[key];
+    }
+    Folder.makeListIfFolder(Data);
+    chrome.tabs.query({}, (tab) => {
+        if (isTabSafe(tab)) {
+            chrome.tabs.sendMessage(tab.id, { updateTestData: JSON.stringify(Data) });
+        }
+    });
+    // generously assume all tabs update in 3seconds or less
+    setTimeout(callback, 3000);
+}
