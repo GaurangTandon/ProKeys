@@ -115,7 +115,9 @@ async function dismissDialog(dialog) {
     //  [cannot accept dialog which is already handled]
     try {
         await dialog.accept();
-    } catch (e) {}
+    } catch (e) {
+    // no error to catch since it is ok
+    }
 }
 
 async function getPageByTitle(pageList, pageTitle) {
@@ -192,5 +194,6 @@ module.exports = {
     getPageByTitle,
     positionCursor,
     sleep,
+    getExtOptionsPage,
     updateSettings,
 };
