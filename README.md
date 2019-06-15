@@ -1,8 +1,8 @@
 [![prokeys logo](https://i.stack.imgur.com/HrCnC.png)](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn)
 
 **Developed by**: Aquila Softworks ([Gaurang Tandon](https://github.com/GaurangTandon) and [Varun Singh](https://github.com/iWrote))  
-**Latest version**: 3.4.3
-**Status**: active, stable build (last update 15/Sep/2018 IST)
+![version](https://img.shields.io/chrome-web-store/v/ekfnbpgmmeahnnlpjibofkobpdkifapn.svg?label=version&style=flat-square) ![users](https://img.shields.io/chrome-web-store/users/ekfnbpgmmeahnnlpjibofkobpdkifapn.svg?style=flat-square) ![rating](https://img.shields.io/chrome-web-store/rating/ekfnbpgmmeahnnlpjibofkobpdkifapn.svg?style=flat-square)  
+![deps](https://img.shields.io/librariesio/github/GaurangTandon/ProKeys.svg) ![repo size](https://img.shields.io/github/repo-size/GaurangTandon/ProKeys.svg) ![](https://img.shields.io/github/commit-activity/w/GaurangTandon/ProKeys.svg) ![](https://img.shields.io/github/last-commit/GaurangTandon/ProKeys.svg)  
 
 ProKeys is a completely free, [Google Chrome](https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn) and [Opera](https://addons.opera.com/en/extensions/details/prokeys/?display=en) extension that lets you be productive in online text-related work with its number of features like:
 
@@ -47,7 +47,7 @@ First of all, thanks for your contribution! Every small bit of it counts! You ca
 
 To setup this repo, clone it, `cd` into it, and then run `npm run build`. This will create a unminified development build in `./dist` which you can then load into Chrome. This step is required because Chrome does not yet natively support `import`/`export` syntax for Chrome extensions.
 
-We use both global variables and `import`/`export` ones. The `import`/`export` ones are either functions or unmodified constants. Only those variables are declared under `window` or `pk` which need to be modified in different scripts.
+We use both global variables and `import`/`export` ones. The `import`/`export` ones are either functions or unmodified constants. Only those variables are declared under `window` which need to be modified in different scripts.
 
 **Contact us** - prokeys.feedback@gmail.com - to discuss anything related to the above if you want to.
 
