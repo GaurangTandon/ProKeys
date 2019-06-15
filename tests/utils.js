@@ -111,7 +111,11 @@ async function getExpandedSnippet(
  * function to dismiss all dialogs
  */
 async function dismissDialog(dialog) {
-    await dialog.accept();
+    // try catch to avoid console.error on mutiple call
+    //  [cannot accept dialog which is already handled]
+    try {
+        await dialog.accept();
+    } catch (e) {}
 }
 
 async function getPageByTitle(pageList, pageTitle) {
@@ -132,12 +136,26 @@ async function getPageByTitle(pageList, pageTitle) {
     return requiredPage;
 }
 
-async function updateSettings(extWelcomePage, newSettings) {
+async function getExtOptionsPage() {
+    const optionsPageTitle = "ProKeys | Options",
+        allPages = await browser.pages(),
+        extWelcomePage = await getPageByTitle(allPages, optionsPageTitle);
+
+    expect(extWelcomePage).toBeTruthy();
+
+    // dismiss dialog on page
+    extWelcomePage.on("dialog", dismissDialog);
+
+    return extWelcomePage;
+}
+
+async function updateSettings(newSettings) {
     const settingsFile = "extSettings.txt",
         extUploadFileFormID = "#file_input_elm",
         importButtonQuerySelector = "button[class='import']",
         restoreButtonQuerySelector = "button[class='restore']",
-        settingsPath = path.join(__dirname, settingsFile);
+        settingsPath = path.join(__dirname, settingsFile),
+        extWelcomePage = await getExtOptionsPage();
 
     // write the settings file
     fs.writeFile(settingsPath, newSettings, (err) => {
