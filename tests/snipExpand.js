@@ -54,11 +54,10 @@ function testSnippetExpansion(usablePages) {
  * TEST:
  *  check if snippets obey delimited settings
  */
-function testSnippetExpansionDelimited(usablePages, extWelcomePage) {
+function testSnippetExpansionDelimited(usablePages) {
     // enable delimited in settings
     beforeAll(async () => {
         await updateSettings(
-            extWelcomePage,
             extSettings({ matchDelimitedWord: true, tabKeyExpandSpace: false }),
         );
     });
@@ -66,7 +65,6 @@ function testSnippetExpansionDelimited(usablePages, extWelcomePage) {
     // disable delimited in settings
     afterAll(async () => {
         await updateSettings(
-            extWelcomePage,
             extSettings({ matchDelimitedWord: false, tabKeyExpandSpace: false }),
         );
     });
