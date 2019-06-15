@@ -137,6 +137,8 @@ function getFormattedDate(timestamp) {
 }
 
 const DATE_MACROS = [
+    // use word boundary in only those macros which
+    // overlap with any other subsequent macro
     [
         "s([+-]\\d+)?",
         [
@@ -147,7 +149,7 @@ const DATE_MACROS = [
         ],
     ],
     [
-        "m([+-]\\d+)?",
+        "\\bm([+-]\\d+)?\\b",
         [
             function (date) {
                 return Number.padNumber(date.getMinutes());
