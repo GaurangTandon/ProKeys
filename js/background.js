@@ -50,8 +50,10 @@ window.IN_OPTIONS_PAGE = false;
 // preprocessing Data includes setting indicess and making snippets Folder
 // needs to be called everytime window.data is changed.
 function makeDataReady() {
-    Folder.makeFolderIfList(Data);
-    Folder.setIndices();
+    if (Data.snippets) {
+        Folder.makeFolderIfList(Data);
+        Folder.setIndices();
+    }
 }
 
 if (localStorage[LS_BG_PAGE_SUSPENDED_KEY] === "true") {
@@ -538,7 +540,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         Data = request.updateData;
         // setIndices necessary everytime we reassign data
         // otherwise search function doesn't work as expected
-        DBSave(() => Folder.setIndices());
+        DBSave(() => {
+            if (Data.snippets) { makeDataReady(); }
+            sendResponse("done");
+        });
+        return true;
     } else if (typeof request.getStorageType !== "undefined") {
         sendResponse(getCurrentStorageType());
     } else if (typeof request.changeStorageType !== "undefined") {
@@ -547,13 +553,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         storage = chrome.storage[targetStorage];
         localStorage[LS_STORAGE_TYPE_PROP] = targetStorage;
+        storage.get((response) => {
+            window.Data = response[OLD_DATA_STORAGE_KEY];
+            makeDataReady();
+            // just to make sure that options page
+            // reloads after I'm done setting Data here
+            sendResponse("done");
+        });
+        return true;
     } else if (typeof request.getBytesInUse !== "undefined") {
         storage.getBytesInUse(
             chromeAPICallWrapper((bytesInUse) => {
                 sendResponse(bytesInUse);
             }),
         );
-        // indicates async sendResponse
         return true;
     }
 
