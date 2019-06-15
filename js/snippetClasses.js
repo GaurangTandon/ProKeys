@@ -1637,7 +1637,7 @@ Folder.isFolder = function (elm) {
     return elm && elm.type === Generic.FOLDER_TYPE;
 };
 Folder.makeFolderIfList = function (data) {
-    if (Array.isArray(data.snippets)) {
+    if (data && Array.isArray(data.snippets)) {
         data.snippets = Folder.fromArray(data.snippets);
     }
 };
