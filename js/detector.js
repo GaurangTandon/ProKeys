@@ -15,6 +15,7 @@ import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { getHTML } from "./textmethods";
 import { showBlockSiteModal } from "./modalHandlers";
+import { getCurrentTimestamp, getFormattedDate } from "./dateFns";
 
 primitiveExtender();
 (function () {
@@ -661,9 +662,9 @@ primitiveExtender();
 
     function formatVariable(str) {
         return /date/i.test(str)
-            ? Date.getFormattedDate()
+            ? getFormattedDate()
             : /time/i.test(str)
-                ? Date.getCurrentTimestamp()
+                ? getCurrentTimestamp()
                 : /version/i.test(str)
                     ? navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ")
                     : null;

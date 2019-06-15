@@ -2,6 +2,7 @@
 
 import { chromeAPICallWrapper, isTabSafe } from "./pre";
 import { Folder } from "./snippetClasses";
+import { getFormattedDate } from "./dateFns";
 
 const SETTINGS_DEFAULTS = {
         snippets: Folder.getDefaultSnippetData(),
@@ -42,7 +43,7 @@ function saveRevision(dataString) {
     const MAX_REVISIONS_STORED = 20;
     let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
     const latestRevision = {
-        label: `${Date.getFormattedDate()} - ${window.latestRevisionLabel}`,
+        label: `${getFormattedDate()} - ${window.latestRevisionLabel}`,
         data: dataString || Data.snippets,
     };
 
