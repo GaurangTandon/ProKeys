@@ -268,13 +268,10 @@ let removeCtxSnippetList,
 }());
 
 /**
- * when upgrading from old versions to 3.5.0, we need to set
- * the localStorage property which indicates what type of storage
- * the user is using. This fn detects correct storage
  * @param {Function} callback fn called after correctly setting type of
  * storage in localStorage
  */
-function updateCompatForOldData(callback) {
+function decideCorrectStorageType(callback) {
     localStorage[LS_STORAGE_TYPE_PROP] = "local";
     chrome.storage.local.get(OLD_DATA_STORAGE_KEY, (response) => {
         const Data = response[OLD_DATA_STORAGE_KEY];
@@ -356,11 +353,7 @@ chrome.runtime.onInstalled.addListener((details) => {
             version,
             reason,
         };
-        if (typeof localStorage[LS_STORAGE_TYPE_PROP] === "undefined") {
-            updateCompatForOldData(() => handleExtUpdate(args));
-        } else {
-            handleExtUpdate(args);
-        }
+        decideCorrectStorageType(() => handleExtUpdate(args));
     } else {
         // do not process anything other than install or update
     }
