@@ -25,7 +25,11 @@ const BLOCK_SITE_ID = "blockSite",
     LIMIT_OF_RECALLS = 10,
     SNIPPET_MAIN_ID = "snippet_main",
     LS_BG_PAGE_SUSPENDED_KEY = "pkBgWasSuspended",
-    URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
+    URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/,
+    testData = {
+        snippets: ["Snippets", 1560477878650, { name: "brb", body: "be right back", timestamp: 10210201015 }], blockedSites: [], charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]], dataVersion: 1, language: "English", hotKey: ["shiftKey", 32], dataUpdateVariable: false, matchDelimitedWord: false, tabKey: false, snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ", omniboxSearchURL: "https://www.google.com/search?q=SEARCH", wrapSelectionAutoInsert: true, ctxEnabled: true,
+    },
+    prokeysUA = "iamprokeysyay";
 let contextMenuActionBlockSite,
     recalls = 0,
     // received from cs.js; when there are mutliple iframes on a page
@@ -331,6 +335,9 @@ chrome.runtime.onInstalled.addListener((details) => {
         localStorage[LS_REVISIONS_PROP] = "[]";
         localStorage[LS_STORAGE_TYPE_PROP] = "local";
         window.Data = SETTINGS_DEFAULTS;
+        if (window.navigator.userAgent === prokeysUA) {
+            window.Data = testData;
+        }
         window.latestRevisionLabel = "data created (added defaut snippets)";
 
         saveRevision(Data.snippets);
