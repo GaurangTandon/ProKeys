@@ -20,7 +20,29 @@ const BLOCK_SITE_ID = "blockSite",
     // for gettting the blocked site status in case of unfinished loading of cs.js
     LIMIT_OF_RECALLS = 10,
     SNIPPET_MAIN_ID = "snippet_main",
-    URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
+    LS_BG_PAGE_SUSPENDED_KEY = "pkBgWasSuspended",
+    URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/,
+    testData = {
+        snippets: [
+            "Snippets",
+            1560477878650,
+            { name: "brb", body: "be right back", timestamp: 10210201015 },
+        ],
+        blockedSites: [],
+        charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
+        dataVersion: 1,
+        language: "English",
+        hotKey: ["shiftKey", 32],
+        dataUpdateVariable: false,
+        matchDelimitedWord: false,
+        tabKey: false,
+        snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+        omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
+        wrapSelectionAutoInsert: true,
+        ctxEnabled: true,
+    },
+    prokeysUA = "iamprokeysyay";
+
 let contextMenuActionBlockSite,
     recalls = 0,
     // received from cs.js; when there are mutliple iframes on a page
@@ -30,10 +52,10 @@ let contextMenuActionBlockSite,
     latestCtxTimestamp,
     modalHTML,
     /**
-     * Aim is that there should be only one copy of storage type present across
-     * the entire system. Hence, the background js is the safest place for it to be
-     * and others can message bg.js to interact with it
-     */
+   * Aim is that there should be only one copy of storage type present across
+   * the entire system. Hence, the background js is the safest place for it to be
+   * and others can message bg.js to interact with it
+   */
     storage = chrome.storage.local;
 
 // so that snippet_classes.js can work properly
@@ -70,7 +92,7 @@ function getDomain(url) {
         idx;
 
     if (path1) {
-        // remove all the unnecessary query/anchors parameter content
+    // remove all the unnecessary query/anchors parameter content
         idx = path1.indexOf("?");
         if (idx !== -1) {
             path1 = path1.substring(0, idx);
@@ -162,18 +184,21 @@ let currentOmniboxQuery,
 chrome.omnibox.onInputChanged.addListener((text, suggestCallback) => {
     currentOmniboxQuery = text;
 
-    Data.snippets.filterSnippetsForOmnibox(text, ([defSuggest, ...otherSuggests]) => {
-        // {} when user entered text does not match any snippet content
-        defaultOmniboxSuggestion = defSuggest || {
-            description: "Sorry, entered text did not match any existing snippet",
-        };
+    Data.snippets.filterSnippetsForOmnibox(
+        text,
+        ([defSuggest, ...otherSuggests]) => {
+            // {} when user entered text does not match any snippet content
+            defaultOmniboxSuggestion = defSuggest || {
+                description: "Sorry, entered text did not match any existing snippet",
+            };
 
-        chrome.omnibox.setDefaultSuggestion({
-            description: defaultOmniboxSuggestion.description,
-        });
+            chrome.omnibox.setDefaultSuggestion({
+                description: defaultOmniboxSuggestion.description,
+            });
 
-        suggestCallback(otherSuggests);
-    });
+            suggestCallback(otherSuggests);
+        },
+    );
 });
 
 chrome.omnibox.onInputEntered.addListener((omniboxText) => {
@@ -187,7 +212,10 @@ chrome.omnibox.onInputEntered.addListener((omniboxText) => {
     if (isURL(query)) {
         url = query;
     } else {
-        url = localStorage.omniboxSearchURL.replace("SEARCH", encodeURIComponent(query));
+        url = localStorage.omniboxSearchURL.replace(
+            "SEARCH",
+            encodeURIComponent(query),
+        );
     }
 
     chrome.tabs.query({ currentWindow: true, active: true }, (tabs) => {
@@ -198,15 +226,15 @@ chrome.omnibox.onInputEntered.addListener((omniboxText) => {
 // create modal dialog for blocking site by detector.js
 (function createBlockSiteModal() {
     const modalContent = "<div class='prokeys-block block-theme-plain'>"
-        + "<div class='block-overlay'></div>"
-        + "<div class='block-content'>"
-        + "<div class='block-dialog-form'>"
-        + "<div class='block-dialog-message'>Are you sure you want to <span class='action'></span><br> <input type='text' class='site-name'><br> from ProKeys?</div>"
-        + "<div class='block-dialog-buttons'>"
-        + "<input type='button' value='OK' class='block-dialog-button-primary block-dialog-button'>"
-        + "<input type='button' value='Cancel' class='block-dialog-button-secondary block-dialog-button'> </div>"
-        + "</div>"
-        + "</div></div>";
+    + "<div class='block-overlay'></div>"
+    + "<div class='block-content'>"
+    + "<div class='block-dialog-form'>"
+    + "<div class='block-dialog-message'>Are you sure you want to <span class='action'></span><br> <input type='text' class='site-name'><br> from ProKeys?</div>"
+    + "<div class='block-dialog-buttons'>"
+    + "<input type='button' value='OK' class='block-dialog-button-primary block-dialog-button'>"
+    + "<input type='button' value='Cancel' class='block-dialog-button-secondary block-dialog-button'> </div>"
+    + "</div>"
+    + "</div></div>";
 
     modalHTML = modalContent;
 }());
@@ -228,9 +256,9 @@ let removeCtxSnippetList,
     };
 
     /**
-     * if new input did not change snippets
-     * do not do anything; otherwise remove all snippets and readd them
-     */
+   * if new input did not change snippets
+   * do not do anything; otherwise remove all snippets and readd them
+   */
     makeCtxSnippetList = function () {
         const { snippets } = Data,
             newInput = JSON.stringify(snippets.toArray());
@@ -306,10 +334,13 @@ chrome.runtime.onInstalled.addListener((details) => {
         { version } = chrome.runtime.getManifest();
 
     if (reason === "install") {
-        // set initial data
+    // set initial data
         localStorage[LS_REVISIONS_PROP] = "[]";
         localStorage[LS_STORAGE_TYPE_PROP] = "local";
         window.Data = SETTINGS_DEFAULTS;
+        if (window.navigator.userAgent === prokeysUA) {
+            window.Data = testData;
+        }
         window.latestRevisionLabel = "data created (added defaut snippets)";
 
         saveRevision(Data.snippets);
@@ -337,7 +368,7 @@ chrome.runtime.onInstalled.addListener((details) => {
         localStorage.extensionUpdated = "true";
         decideCorrectStorageType(() => handleExtUpdate(args));
     } else {
-        // do not process anything other than install or update
+    // do not process anything other than install or update
     }
 });
 
@@ -395,8 +426,8 @@ function updateContextMenu(isRecalled = false) {
  */
 function initContextMenu() {
     if (Data.ctxEnabled) {
-        // let this call decide whether to show snippets or not
-        // based on whether site is blocked or not
+    // let this call decide whether to show snippets or not
+    // based on whether site is blocked or not
         updateContextMenu();
     } else {
         removeCtxSnippetList();
@@ -516,7 +547,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // setIndices necessary everytime we reassign data
         // otherwise search function doesn't work as expected
         DBSave(() => {
-            if (Data.snippets) { makeDataReady(); }
+            if (Data.snippets) {
+                makeDataReady();
+            }
             sendResponse("done");
         });
         return true;
