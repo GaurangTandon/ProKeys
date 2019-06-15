@@ -2,11 +2,10 @@ const {
         testSnippetExpansion,
         testSnippetExpansionDelimited,
     } = require("./snipExpand"),
-    { dismissDialog, getPageByTitle } = require("./utils"),
+    { dismissDialog } = require("./utils"),
     testURLs = require("./testURLs");
 
 const usablePages = [],
-    optionsPageTitle = "ProKeys | Options",
     JEST_TIMEOUT = 60000;
 
 /*
@@ -15,9 +14,7 @@ const usablePages = [],
  */
 jest.setTimeout(JEST_TIMEOUT);
 
-let extWelcomePage;
-
-beforeAll(async (done) => {
+beforeAll(async () => {
     // load all the pages
     /* eslint-disable no-await-in-loop */
     for (const testURL of testURLs) {
@@ -31,17 +28,6 @@ beforeAll(async (done) => {
         });
     }
     /* eslint-enable no-await-in-loop */
-
-    const allPages = await browser.pages();
-    extWelcomePage = await getPageByTitle(allPages, optionsPageTitle);
-
-    // dismiss dialog on page
-    extWelcomePage.on("dialog", dismissDialog);
-
-    // was loaded here:
-    console.log("b4al:", await extWelcomePage.title());
-
-    done();
 });
 
 /*
@@ -52,6 +38,5 @@ describe("Test snippet expansion", () => {
 });
 
 describe("Test snipppet expansion delimited", () => {
-    testSnippetExpansionDelimited(usablePages, extWelcomePage);
-    console.log("after test", extWelcomePage);
+    testSnippetExpansionDelimited(usablePages);
 });
