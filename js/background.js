@@ -39,8 +39,7 @@ let contextMenuActionBlockSite,
      * the entire system. Hence, the background js is the safest place for it to be
      * and others can message bg.js to interact with it
      */
-    storage = chrome.storage.local,
-    runtimeOnInstalledFired = false;
+    storage = chrome.storage.local;
 
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
@@ -50,7 +49,8 @@ window.IN_OPTIONS_PAGE = false;
 // preprocessing Data includes setting indicess and making snippets Folder
 // needs to be called everytime window.data is changed.
 function makeDataReady() {
-    if (Data.snippets) {
+    // these checks are necessary
+    if (Data && Data.snippets) {
         Folder.makeFolderIfList(Data);
         Folder.setIndices();
     }
@@ -59,12 +59,8 @@ function makeDataReady() {
 if (localStorage[LS_BG_PAGE_SUSPENDED_KEY] === "true") {
     storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
     storage.get(OLD_DATA_STORAGE_KEY, (response) => {
-        // in case extension was reloaded, and onInstalled finished before this was called
-        // then we should not override the data set by runtimeOnInstall
-        if (!runtimeOnInstalledFired) {
-            window.Data = response[OLD_DATA_STORAGE_KEY];
-            makeDataReady();
-        }
+        window.Data = response[OLD_DATA_STORAGE_KEY];
+        makeDataReady();
     });
     localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "false";
 }
@@ -314,12 +310,6 @@ function handleExtUpdate(notifProps) {
 }
 
 chrome.runtime.onInstalled.addListener((details) => {
-    runtimeOnInstalledFired = true;
-    // unset it after five seconds, reasonable time
-    setTimeout(() => {
-        runtimeOnInstalledFired = false;
-    }, 5000);
-
     let notifText,
         notifTitle;
     const { reason } = details,
@@ -574,6 +564,7 @@ chrome.runtime.setUninstallURL(
     "https://docs.google.com/forms/d/e/1FAIpQLSdDAd8a1Edf4eUXhM4E1GALziNk6j1QYjI6gUqGdAXdYrueaw/viewform",
 );
 
+// only fired on suspension, not on reload
 chrome.runtime.onSuspend.addListener(() => {
     localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "true";
 });

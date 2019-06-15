@@ -1634,7 +1634,7 @@ Folder.isValidName = function (name) {
     return Generic.isValidName(name, Generic.FOLDER_TYPE);
 };
 Folder.isFolder = function (elm) {
-    return elm.type === Generic.FOLDER_TYPE;
+    return elm && elm.type === Generic.FOLDER_TYPE;
 };
 Folder.makeFolderIfList = function (data) {
     if (Array.isArray(data.snippets)) {
