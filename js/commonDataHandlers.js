@@ -12,7 +12,7 @@ const SETTINGS_DEFAULTS = {
         language: "English",
         hotKey: ["shiftKey", 32],
         dataUpdateVariable: true,
-        matchDelimitedWord: false,
+        matchDelimitedWord: true,
         tabKey: false,
         snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
         omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
