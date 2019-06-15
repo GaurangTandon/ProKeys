@@ -14,7 +14,7 @@ const SETTINGS_DEFAULTS = {
         dataUpdateVariable: true,
         matchDelimitedWord: true,
         tabKey: false,
-        snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+        snipNameDelimiterList: " @#$%&*+-=(){}[]:\"'/_<>?!.,",
         omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
         wrapSelectionAutoInsert: true,
         ctxEnabled: true,
