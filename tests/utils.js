@@ -99,7 +99,7 @@ async function acceptDialog(dialog) {
     try {
         await dialog.accept();
     } catch (e) {
-    // no error to catch since it is ok
+        // no error to catch since it is ok
     }
 }
 
@@ -116,11 +116,8 @@ async function getBackgroundPage() {
 async function updateSettings(newProps) {
     const bgPage = await getBackgroundPage();
 
-    await bgPage.evaluateHandle(() => {
-        window.updateMyDataForTests(
-            newProps,
-            // something which indicates that this part is done [your callback]
-        );
+    await bgPage.evaluateHandle(async () => {
+        await window.updateMyDataForTests(newProps);
     });
 }
 

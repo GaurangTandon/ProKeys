@@ -584,8 +584,7 @@ chrome.runtime.onSuspend.addListener(() => {
  * @param {Object} newProps list of keys to override
  * @param {Function} callback called once all tabs have been updated with new data
  */
-// eslint-disable-next-line no-unused-vars
-function updateMyDataForTests(newProps, callback) {
+window.updateMyDataForTests = function (newProps) {
     for (const key of Object.keys(newProps)) {
         Data[key] = newProps[key];
     }
@@ -595,6 +594,8 @@ function updateMyDataForTests(newProps, callback) {
             chrome.tabs.sendMessage(tab.id, { updateTestData: JSON.stringify(Data) });
         }
     });
-    // generously assume all tabs update in 3seconds or less
-    setTimeout(callback, 3000);
-}
+    return Promise((resolve) => {
+        // generously assume all tabs receive msgs in 3secs
+        setTimeout(() => resolve(), 3000);
+    });
+};
