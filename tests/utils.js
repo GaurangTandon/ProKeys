@@ -99,14 +99,37 @@ async function acceptDialog(dialog) {
     try {
         await dialog.accept();
     } catch (e) {
-        // no error to catch since it is ok
+    // no error to catch since it is ok
     }
+}
+
+async function getBackgroundPage() {
+    const targets = await browser.targets(),
+        backgroundPageTarget = targets.find(
+            target => target.type() === "background_page",
+        ),
+        backgroundPage = await backgroundPageTarget.page();
+
+    return backgroundPage;
+}
+
+async function updateSettings(newProps) {
+    const bgPage = await getBackgroundPage();
+
+    await bgPage.evaluateHandle(() => {
+        window.updateMyDataForTests(
+            newProps,
+            // something which indicates that this part is done [your callback]
+        );
+    });
 }
 
 module.exports = {
     acceptDialog,
     expandSnippet,
+    getBackgroundPage,
     getExpandedSnippet,
     positionCursor,
     sleep,
+    updateSettings,
 };

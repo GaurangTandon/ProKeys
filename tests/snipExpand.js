@@ -1,4 +1,4 @@
-const { getExpandedSnippet } = require("./utils"),
+const { getExpandedSnippet, updateSettings } = require("./utils"),
     testURLs = require("./testURLs");
 
 const testSnippets = [
@@ -63,6 +63,8 @@ function testSnippetExpansionDelimited(usablePages) {
             // unless we bring it to front, it does not activate snippets
             await usablePage.bringToFront();
             await usablePage.reload();
+
+            await updateSettings({ matchDelimitedWord: true });
         });
 
         describe(`Snipppet expands on ${
