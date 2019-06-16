@@ -1,6 +1,5 @@
 const { getExpandedSnippet, updateSettings } = require("./utils"),
-    testURLs = require("./testURLs"),
-    { sleep } = require("./utils.js");
+    testURLs = require("./testURLs");
 
 const testSnippets = [
     {
@@ -57,20 +56,18 @@ function testSnippetExpansion(usablePages) {
  */
 function testSnippetExpansionDelimited(usablePages) {
     testURLs.forEach(({ url, textBoxQueryString }, index) => {
-        let usablePage;
-
-        beforeAll(async () => {
-            await sleep(30000);
-
-            ({ usablePage } = usablePages[index]);
-            // unless we bring it to front, it does not activate snippets
-            await usablePage.bringToFront();
-            await updateSettings({ matchDelimitedWord: true });
-        });
-
         describe(`Snipppet expands on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
+            let usablePage;
+
+            beforeAll(async () => {
+                ({ usablePage } = usablePages[index]);
+                // unless we bring it to front, it does not activate snippets
+                await usablePage.bringToFront();
+                await updateSettings({ matchDelimitedWord: true });
+            });
+
             // for ext changes
             testSnippets.forEach(({ snipText, cursorChange, delimitedExpansion }) => {
                 it(`${snipText} should become ${delimitedExpansion}`, async () => {

@@ -63,6 +63,10 @@ async function getExpandedSnippet(
     const textBox = await page.$(textBoxQueryString);
     await page.focus(textBoxQueryString);
 
+    // clear the textbox and focus it again
+    await page.evaluate((textBoxArg) => { textBoxArg.value = ""; }, textBox);
+    await page.focus(textBoxQueryString);
+
     // type the snip text [and some extra, if reqd]
     await page.keyboard.type(snipText);
 

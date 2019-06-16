@@ -588,9 +588,12 @@ window.updateMyDataForTests = function (newProps) {
         Data[key] = newProps[key];
     }
     Folder.makeListIfFolder(Data);
-    chrome.tabs.query({}, (tab) => {
-        if (isTabSafe(tab)) {
-            chrome.tabs.sendMessage(tab.id, { updateTestData: JSON.stringify(Data) });
+    chrome.tabs.query({}, (tabs) => {
+        if (!tabs) { return; }
+        for (const tab of tabs) {
+            if (isTabSafe(tab)) {
+                chrome.tabs.sendMessage(tab.id, { updateTestData: JSON.stringify(Data) });
+            }
         }
     });
     return new Promise((resolve) => {
