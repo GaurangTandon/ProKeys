@@ -594,7 +594,7 @@ window.updateMyDataForTests = function (newProps) {
         }
     });
     return new Promise((resolve) => {
-        // generously assume all tabs receive msgs in 3secs
-        setTimeout(() => resolve(), 3000);
+        // generously assume all tabs receive msgs in 2secs or less
+        setTimeout(() => resolve(), 2000);
     });
 };
