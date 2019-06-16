@@ -582,7 +582,6 @@ chrome.runtime.onSuspend.addListener(() => {
 /**
  * this function is used by puppeteer ot manipulate our data
  * @param {Object} newProps list of keys to override
- * @param {Function} callback called once all tabs have been updated with new data
  */
 window.updateMyDataForTests = function (newProps) {
     for (const key of Object.keys(newProps)) {
@@ -594,7 +593,7 @@ window.updateMyDataForTests = function (newProps) {
             chrome.tabs.sendMessage(tab.id, { updateTestData: JSON.stringify(Data) });
         }
     });
-    return Promise((resolve) => {
+    return new Promise((resolve) => {
         // generously assume all tabs receive msgs in 3secs
         setTimeout(() => resolve(), 3000);
     });
