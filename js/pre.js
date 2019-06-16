@@ -15,6 +15,7 @@ function isTabSafe(tab) {
         && !/^chrome-extension:/.test(tab.url)
         && !/^chrome:/.test(tab.url)
         && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
+        && !/^about:blank/.test(tab.url)
     );
 }
 
@@ -59,43 +60,43 @@ function chromeAPICallWrapper(callback) {
 }
 
 const DOM_HELPERS = {
-        // they do not retain their `this` binding.
-        // on export; hence, the `this || window`
-        /**
-         * short hand for document.querySelector
-         * @param {string} selector selector to match element
-         */
+    // they do not retain their `this` binding.
+    // on export; hence, the `this || window`
+    /**
+     * short hand for document.querySelector
+     * @param {string} selector selector to match element
+     */
         q(selector) {
             return (this || document).querySelector(selector);
         },
         /**
-         * short hand for document.querySelectorAll
-         * @param {string} selector selector to match elements
-         */
+     * short hand for document.querySelectorAll
+     * @param {string} selector selector to match elements
+     */
         Q(selector) {
             return (this || document).querySelectorAll(selector);
         },
         /**
-         * short hand for document.getElementById
-         * @param {string} id selector to match element
-         */
+     * short hand for document.getElementById
+     * @param {string} id selector to match element
+     */
         qId(id) {
             return (this || document).getElementById(id);
         },
         /**
-         * short hand for document.getElementsByClassName
-         * @param {string} cls selector to match elements
-         * @returns {Element[]} array (not HTMLCollection!) of matched elements
-         */
+     * short hand for document.getElementsByClassName
+     * @param {string} cls selector to match elements
+     * @returns {Element[]} array (not HTMLCollection!) of matched elements
+     */
         qCls(cls) {
             return [...(this || document).getElementsByClassName(cls)];
         },
         /**
-         * short hand for document.getElementsByClassName;
-         * returns the first Node in the output (not a NodeList)
-         * @param {string} cls selector to match elements
-         * @returns {Node} matched element
-         */
+     * short hand for document.getElementsByClassName;
+     * returns the first Node in the output (not a NodeList)
+     * @param {string} cls selector to match elements
+     * @returns {Node} matched element
+     */
         qClsSingle(cls) {
             const res = (this || document).qCls(cls);
             return res ? res[0] : null;
@@ -123,8 +124,8 @@ if (DEBUGGING) {
     debugLogTemp = console.log.bind(console);
     debugDirTemp = console.dir.bind(console);
 } else {
-    debugLogTemp = function () {};
-    debugDirTemp = function () {};
+    debugLogTemp = function () { };
+    debugDirTemp = function () { };
 }
 const debugLog = debugLogTemp,
     debugDir = debugDirTemp,

@@ -22,7 +22,7 @@ const testSnippets = [
  */
 function testSnippetExpansion(usablePages) {
     beforeAll(async () => {
-        await updateSettings({ matchDelimitedWord: true });
+        await updateSettings({ matchDelimitedWord: false });
     });
 
     testURLs.forEach(({ url, textBoxQueryString }, index) => {

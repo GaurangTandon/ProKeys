@@ -115,9 +115,11 @@ async function getBackgroundPage() {
 }
 
 async function updateSettings(newProps) {
-    const bgPage = await getBackgroundPage();
-
-    await bgPage.evaluateHandle(newPropsArg => `window.updateMyDataForTests(${JSON.stringify(newPropsArg)})`, newProps);
+    const bgPage = await getBackgroundPage(),
+        argString = `window.updateMyDataForTests(${JSON.stringify(newProps)})`;
+    await sleep(30000);
+    await bgPage.evaluateHandle(argString);
+    await sleep(15000);
 }
 
 module.exports = {

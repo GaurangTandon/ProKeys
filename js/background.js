@@ -60,7 +60,7 @@ window.updateMyDataForTests = function (newProps) {
         Data[key] = newProps[key];
     }
     Folder.makeListIfFolder(Data);
-
+    console.log(Data);
     chrome.tabs.query({}, (tabs) => {
         console.log(chrome.runtime.lastError && chrome.runtime.lastError.message);
         console.log("made query");
