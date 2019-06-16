@@ -386,11 +386,11 @@ function updateContextMenu(isRecalled = false) {
     }
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const tab = tabs[0];
-
-        if (!isTabSafe(tab)) {
+        if (!tabs || !isTabSafe(tabs[0])) {
             return;
         }
+
+        const tab = tabs[0];
 
         chrome.tabs.sendMessage(
             tab.id,
