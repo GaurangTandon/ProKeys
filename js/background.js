@@ -51,6 +51,33 @@ let contextMenuActionBlockSite,
 window.listOfSnippetCtxIDs = [];
 window.IN_OPTIONS_PAGE = false;
 
+/**
+ * this function is used by puppeteer ot manipulate our data
+ * @param {Object} newProps list of keys to override
+ */
+window.updateMyDataForTests = function (newProps) {
+    for (const key of Object.keys(newProps)) {
+        Data[key] = newProps[key];
+    }
+    Folder.makeListIfFolder(Data);
+
+    chrome.tabs.query({}, (tabs) => {
+        console.log(chrome.runtime.lastError && chrome.runtime.lastError.message);
+        console.log("made query");
+        if (!tabs) { return; }
+        for (const tab of tabs) {
+            if (isTabSafe(tab)) {
+                chrome.tabs.sendMessage(tab.id, { updateTestData: JSON.stringify(Data) });
+            }
+        }
+    });
+    return new Promise((resolve) => {
+        // generously assume all tabs receive msgs in 2secs or less
+        setTimeout(() => resolve(), 5000);
+    });
+};
+
+
 // preprocessing Data includes setting indicess and making snippets Folder
 // needs to be called everytime window.data is changed.
 function makeDataReady() {
@@ -578,26 +605,3 @@ chrome.runtime.setUninstallURL(
 chrome.runtime.onSuspend.addListener(() => {
     localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "true";
 });
-
-/**
- * this function is used by puppeteer ot manipulate our data
- * @param {Object} newProps list of keys to override
- */
-window.updateMyDataForTests = function (newProps) {
-    for (const key of Object.keys(newProps)) {
-        Data[key] = newProps[key];
-    }
-    Folder.makeListIfFolder(Data);
-    chrome.tabs.query({}, (tabs) => {
-        if (!tabs) { return; }
-        for (const tab of tabs) {
-            if (isTabSafe(tab)) {
-                chrome.tabs.sendMessage(tab.id, { updateTestData: JSON.stringify(Data) });
-            }
-        }
-    });
-    return new Promise((resolve) => {
-        // generously assume all tabs receive msgs in 2secs or less
-        setTimeout(() => resolve(), 2000);
-    });
-};

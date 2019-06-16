@@ -21,20 +21,27 @@ const testSnippets = [
  *  check if snippets are expanding normally
  */
 function testSnippetExpansion(usablePages) {
+    beforeAll(async () => {
+        await updateSettings({ matchDelimitedWord: true });
+    });
+
     testURLs.forEach(({ url, textBoxQueryString }, index) => {
         let usablePage,
             loadedPromise;
 
-        beforeAll(async () => {
-            ({ usablePage, loadedPromise } = usablePages[index]);
-            await loadedPromise;
-            // unless we bring it to front, it does not activate snippets
-            await usablePage.bringToFront();
-        });
-
         describe(`Snipppet expands on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
+            // before all being inside kind of means that
+            // before all tests for snippet expansion on this page,
+            // load this page and bring it to front
+            beforeAll(async () => {
+                ({ usablePage, loadedPromise } = usablePages[index]);
+                await loadedPromise;
+                // unless we bring it to front, it does not activate snippets
+                await usablePage.bringToFront();
+            });
+
             testSnippets.forEach(({ snipText, expansion, cursorChange }) => {
                 it(`${snipText} should expand`, async () => {
                     const expandedText = await getExpandedSnippet(
@@ -55,19 +62,22 @@ function testSnippetExpansion(usablePages) {
  *  check if snippets obey delimited settings
  */
 function testSnippetExpansionDelimited(usablePages) {
+    beforeAll(async () => {
+        await updateSettings({ matchDelimitedWord: true });
+    });
+
     testURLs.forEach(({ url, textBoxQueryString }, index) => {
+        let usablePage;
+
+
         describe(`Snipppet expands on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
-            let usablePage;
-
             beforeAll(async () => {
                 ({ usablePage } = usablePages[index]);
                 // unless we bring it to front, it does not activate snippets
                 await usablePage.bringToFront();
-                await updateSettings({ matchDelimitedWord: true });
             });
-
             // for ext changes
             testSnippets.forEach(({ snipText, cursorChange, delimitedExpansion }) => {
                 it(`${snipText} should become ${delimitedExpansion}`, async () => {
