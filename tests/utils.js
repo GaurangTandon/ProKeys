@@ -72,6 +72,12 @@ async function positionCursor(page, change) {
     }
 }
 
+async function clearText(page, textBox) {
+    await page.evaluate((txtBox) => {
+        txtBox.value = "";
+    }, textBox);
+}
+
 /*
  * Function to return the expanded value of a snippet
  */
@@ -84,6 +90,8 @@ async function getExpandedSnippet(
     // find the textbox and focus it
     const textBox = await page.$(textBoxQueryString);
     await page.focus(textBoxQueryString);
+
+    await clearText(page, textBox);
 
     // type the snip text [and some extra, if reqd]
     await page.keyboard.type(snipText);
@@ -101,11 +109,6 @@ async function getExpandedSnippet(
     // retrieve the expanded value
     const expandedText = await page.evaluate(txt => txt.value, textBox);
 
-    // reset the input field for next expansion
-    await page.evaluate((txtBox) => {
-        txtBox.value = "";
-    }, textBox);
-
     return expandedText;
 }
 
@@ -118,6 +121,8 @@ async function getExpandedPlaceHolderSnippet(
     // find the textbox and focus it
     const textBox = await page.$(textBoxQueryString);
     await page.focus(textBoxQueryString);
+
+    await clearText(page, textBox);
 
     // type the snip text [and some extra, if reqd]
     await page.keyboard.type(snipText);
@@ -145,12 +150,22 @@ async function getExpandedPlaceHolderSnippet(
     // retrieve the expanded value
     const expandedText = await page.evaluate(txt => txt.value, textBox);
 
-    // reset the input field for next expansion
-    await page.evaluate((txtBox) => {
-        txtBox.value = "";
-    }, textBox);
-
     return expandedText;
+}
+
+async function getTabToSpaceExpansion(page, textBoxQueryString) {
+    const textBox = await page.$(textBoxQueryString);
+
+    await clearText(page, textBox);
+
+    // click since focus and then tab would shift focus to next element
+    await page.click(textBoxQueryString);
+
+    await page.keyboard.press("Tab");
+
+    const text = await page.evaluate(txt => txt.value, textBox);
+
+    return text;
 }
 
 /*
@@ -240,6 +255,7 @@ module.exports = {
     getExpandedSnippet,
     getExtOptionsPage,
     getPageByTitle,
+    getTabToSpaceExpansion,
     positionCursor,
     sleep,
     updateSettings,

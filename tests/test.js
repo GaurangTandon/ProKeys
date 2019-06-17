@@ -3,6 +3,7 @@ const {
         testSnippetExpansionDelimited,
     } = require("./snipExpand"),
     { testPlaceHolderSnippetExpansion } = require("./placeHolders"),
+    { testTabToSpaceExpansion } = require("./tabToSpace"),
     { dismissDialog } = require("./utils"),
     testURLs = require("./testURLs");
 
@@ -44,4 +45,8 @@ describe("Test snipppet expansion delimited", () => {
 
 describe("Test placeholder expansion", () => {
     testPlaceHolderSnippetExpansion(usablePages);
+});
+
+describe("Test tab to space behaviour", () => {
+    testTabToSpaceExpansion(usablePages);
 });
