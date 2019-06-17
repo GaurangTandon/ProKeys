@@ -55,11 +55,13 @@ function makeDataReady() {
     }
 }
 
-storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
-storage.get(OLD_DATA_STORAGE_KEY, (response) => {
-    window.Data = response[OLD_DATA_STORAGE_KEY];
-    makeDataReady();
-});
+if (localStorage[LS_STORAGE_TYPE_PROP]) {
+    storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
+    storage.get(OLD_DATA_STORAGE_KEY, (response) => {
+        window.Data = response[OLD_DATA_STORAGE_KEY];
+        makeDataReady();
+    });
+}
 
 function isURL(text) {
     return URL_REGEX.test(text.trim());
