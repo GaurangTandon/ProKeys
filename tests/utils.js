@@ -31,7 +31,9 @@ async function expandSnippet(page) {
 
 function extSettings(opts) {
     return (
-        "{\"snippets\":[\"Snippets\",1560477878650],"
+        "{\"snippets\":[\"Snippets\",1560477878650,"
+    + "{ \"name\": \"test\", \"body\": \"hello %world% %again%\", \"timestamp\": 1560747743398 }"
+    + "],"
     + "\"blockedSites\":[],"
     + "\"charsToAutoInsertUserList\":"
     + "[[\"(\",\")\"],[\"{\",\"}\"],[\"\\\"\",\"\\\"\"],[\"[\",\"]\"]],"
@@ -95,6 +97,50 @@ async function getExpandedSnippet(
 
     // wait for some time
     await sleep(extensionDelay);
+
+    // retrieve the expanded value
+    const expandedText = await page.evaluate(txt => txt.value, textBox);
+
+    // reset the input field for next expansion
+    await page.evaluate((txtBox) => {
+        txtBox.value = "";
+    }, textBox);
+
+    return expandedText;
+}
+
+async function getExpandedPlaceHolderSnippet(
+    page,
+    textBoxQueryString,
+    snipText,
+    values,
+) {
+    // find the textbox and focus it
+    const textBox = await page.$(textBoxQueryString);
+    await page.focus(textBoxQueryString);
+
+    // type the snip text [and some extra, if reqd]
+    await page.keyboard.type(snipText);
+
+    // expand the snippet
+    await expandSnippet(page);
+
+    // wait for some time
+    await sleep(extensionDelay);
+
+    // first place holder is already selected
+    await page.keyboard.type(values[0]);
+
+    /* eslint-disable no-await-in-loop */
+    for (
+        let placeHolderFillerIndex = 1;
+        placeHolderFillerIndex < values.length;
+        placeHolderFillerIndex++
+    ) {
+        await page.keyboard.press("Tab");
+        await page.keyboard.type(values[placeHolderFillerIndex]);
+    }
+    /* eslint-enable no-await-in-loop */
 
     // retrieve the expanded value
     const expandedText = await page.evaluate(txt => txt.value, textBox);
@@ -190,10 +236,11 @@ module.exports = {
     dismissDialog,
     expandSnippet,
     extSettings,
+    getExpandedPlaceHolderSnippet,
     getExpandedSnippet,
+    getExtOptionsPage,
     getPageByTitle,
     positionCursor,
     sleep,
-    getExtOptionsPage,
     updateSettings,
 };

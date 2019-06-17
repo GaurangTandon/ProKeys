@@ -2,6 +2,7 @@ const {
         testSnippetExpansion,
         testSnippetExpansionDelimited,
     } = require("./snipExpand"),
+    { testPlaceHolderSnippetExpansion } = require("./placeHolders"),
     { dismissDialog } = require("./utils"),
     testURLs = require("./testURLs");
 
@@ -39,4 +40,8 @@ describe("Test snippet expansion", () => {
 
 describe("Test snipppet expansion delimited", () => {
     testSnippetExpansionDelimited(usablePages);
+});
+
+describe("Test placeholder expansion", () => {
+    testPlaceHolderSnippetExpansion(usablePages);
 });
