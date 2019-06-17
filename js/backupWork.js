@@ -1,10 +1,10 @@
 /* global Data */
 
 import {
-    Q, q, copyTextToClipboard, SHOW_CLASS,
+    Q, q, copyTextToClipboard, SHOW_CLASS, qClsSingle,
 } from "./pre";
 import { Folder } from "./snippetClasses";
-import { initiateRestore } from "./restoreFns";
+import { initiateRestore, convertSnippetsToCSV, generateDataFromCSV } from "./restoreFns";
 import { LS_REVISIONS_PROP, saveSnippetData } from "./commonDataHandlers";
 import { getFormattedDate } from "./dateFns";
 
@@ -42,27 +42,37 @@ export function initBackup() {
         functionMap[buttonClass]();
     });
 
+    /**
+     * @param {Element} link the anchor element which initiates download
+     * @param {String} data to create file out of
+     * @param {String} filename name of downloadable file
+     */
+    function appendBlobToLink(link, data, filename) {
+        const blob = new Blob([data], {
+            type: "text/js",
+        });
+
+        link.href = URL.createObjectURL(blob);
+        link.download = `${filename} ${getFormattedDate()}.txt`;
+    }
+
     function showDataForExport() {
         const dataUse = q(".export .steps :first-child input:checked").value,
-            downloadLink = q(".export a:first-child");
+            downloadLinkTxt = q(".export a.text-download"),
+            downloadLinkCsv = q(".export a.csv-download");
 
         if (dataUse === "print") {
             dataToExport = getSnippetPrintData(Data.snippets);
         } else {
-            const orgData = Data;
+            const orgSnippets = Data.snippets;
             Data.snippets = Data.snippets.toArray();
             dataToExport = JSON.stringify(dataUse === "data" ? Data : Data.snippets, undefined, 2);
-            Data = orgData;
+            Data.snippets = orgSnippets;
         }
 
-        const blob = new Blob([dataToExport], {
-            type: "text/js",
-        });
-
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = `${
-            dataUse === "print" ? "ProKeys print snippets" : `ProKeys ${dataUse}`
-        } ${getFormattedDate()}.txt`;
+        const filename = dataUse === "print" ? "ProKeys print snippets" : `ProKeys ${dataUse}`;
+        appendBlobToLink(downloadLinkCsv, convertSnippetsToCSV(Data.snippets), filename);
+        appendBlobToLink(downloadLinkTxt, dataToExport, filename);
     }
 
     const copyToClipboardLink = q(".export .copy-data-to-clipboard-btn");
@@ -90,6 +100,10 @@ export function initBackup() {
 
     q(".import .restore").on("click", () => {
         if (importFileData) {
+            const isCsv = qClsSingle("csv-check-import").checked;
+            if (isCsv) {
+                importFileData = generateDataFromCSV(importFileData);
+            }
             initiateRestore(importFileData);
         } else {
             window.alert("Please choose a file.");

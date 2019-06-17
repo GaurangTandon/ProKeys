@@ -165,6 +165,53 @@ function convertClipboardPrintSnippetsTextToJSON(string) {
     return result;
 }
 
+// receives data object and checks whether
+// it has only those properties which are required
+// and none other
+function validateRestoreData(data, snippets) {
+    // if data is of pre-3.0.0 times
+    // it will not have folders and everything
+    ensureRobustCompat(data);
+
+    const snippetsValidation = Folder.validate(snippets);
+
+    if (snippetsValidation !== "true") {
+        return snippetsValidation;
+    }
+
+    // all the checks following this line should be of "data" type
+    if (typeOfData !== "data") {
+        return "true";
+    }
+
+
+    // delete user-added properties that ProKeys doesn't recognize
+    for (const prop of Object.keys(data)) {
+        if (!Object.prototype.hasOwnProperty.call(SETTINGS_DEFAULTS, prop)) {
+            delete data[prop];
+        }
+    }
+
+    const vld2 = validateCharListArray(data.charsToAutoInsertUserList);
+    if (vld2 !== "true") {
+        return vld2;
+    }
+
+    for (const [idx, blockedSite] of data.blockedSites.entries()) {
+        // check type
+        if (typeof blockedSite !== "string") {
+            return `Element ${blockedSite} of blocked sites was not a string.`;
+        }
+
+        data.blockedSites[idx] = blockedSite.replace(/^www/, "");
+    }
+
+    // remove all duplicates in one step
+    data.blockedSites = Array.from(new Set(data.blockedSites));
+
+    return "true";
+}
+
 function initiateRestore(data) {
     const importPopup = q(".panel.import"),
         selectList = importPopup.qClsSingle("selectList"),
@@ -228,50 +275,39 @@ function initiateRestore(data) {
     });
 }
 
-// receives data object and checks whether
-// it has only those properties which are required
-// and none other
-function validateRestoreData(data, snippets) {
-    // if data is of pre-3.0.0 times
-    // it will not have folders and everything
-    const snippetsValidation = Folder.validate(snippets);
+/**
+ * @param {String} csv contents of csv file; one snip per line
+ * @param {String} delimiter the delimiter to use
+ */
+function generateDataFromCSV(csv, delimiter = ",") {
+    // all properties will be default except Data.snippets
+    const Data = SETTINGS_DEFAULTS,
+        snips = csv.split("\n");
 
-    if (snippetsValidation !== "true") {
-        return snippetsValidation;
+    Data.snippets = new Folder(Folder.MAIN_SNIPPETS_NAME);
+    for (const snip of snips) {
+        const splited = snip.split(delimiter),
+            [name, body] = [splited[0], splited.slice(1).join(delimiter)];
+        if (name === "" || body === "") { continue; }
+        Data.snippets.addSnip(name, body.replace(/\\n/g, "<br>"));
     }
+    Data.snippets = Data.snippets.toArray();
 
-    // all the checks following this line should be of "data" type
-    if (typeOfData !== "data") {
-        return "true";
-    }
-
-    ensureRobustCompat(data);
-
-    // delete user-added properties that ProKeys doesn't recognize
-    for (const prop of Object.keys(data)) {
-        if (!Object.prototype.hasOwnProperty.call(SETTINGS_DEFAULTS, prop)) {
-            delete data[prop];
-        }
-    }
-
-    const vld2 = validateCharListArray(data.charsToAutoInsertUserList);
-    if (vld2 !== "true") {
-        return vld2;
-    }
-
-    for (const [idx, blockedSite] of data.blockedSites.entries()) {
-        // check type
-        if (typeof blockedSite !== "string") {
-            return `Element ${blockedSite} of blocked sites was not a string.`;
-        }
-
-        data.blockedSites[idx] = blockedSite.replace(/^www/, "");
-    }
-
-    // remove all duplicates in one step
-    data.blockedSites = Array.from(new Set(data.blockedSites));
-
-    return "true";
+    return JSON.stringify(Data);
 }
 
-export { validateRestoreData, initiateRestore };
+/**
+ * @param {Folder} snippetFolder the` folder to make csv of
+ * @param {String} delimiter the delimiter to use
+ */
+function convertSnippetsToCSV(snippetFolder, delimiter = ",") {
+    let out = "";
+
+    snippetFolder.forEachSnippet((snip) => { out += `${snip.name + delimiter + snip.body.replace(/\n/g, "\\n")}\n`; });
+
+    return out;
+}
+
+export {
+    validateRestoreData, initiateRestore, generateDataFromCSV, convertSnippetsToCSV,
+};

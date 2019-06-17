@@ -234,7 +234,7 @@
 									<input type="radio" name="data_use" value="print">Print snippets</label>
 							</li>
 							<li>
-								<a href="" download="">Download your data as a text file</a>, or, <br><br>
+								Download your data as a <a href="" download="" class="text-download">text file</a>, <a href="" download="" class="csv-download">your snippets as a csv</a> or, <br><br>
 								<span class="copy-data-to-clipboard-btn fake-anchor">Copy your data to clipboard.</s>
 							</li>
 						</ol>
@@ -280,6 +280,9 @@
 								<label for="file_input_elm" class="file_input"></label>
 								<input id="file_input_elm" type="file" accept=".txt, .doc, .docx, .rtf">
 								or, <span class="import-data-clipboard-btn fake-anchor">just press Ctrl-V to paste data from your clipboard.</span>
+							</li>
+							<li>
+								<label><input type="checkbox" class="csv-check-import">This is a CSV snippets import</label>
 							</li>
 						</ol>
 						<button class="restore">Restore</button>
@@ -1015,7 +1018,7 @@
 
 		<footer>
 			Version:
-			<span class="version"></span> - Gaurang Tandon, Varun Singh &copy; 2018
+			<span class="version"></span> - Gaurang Tandon, Varun Singh &copy; 2019
 			<br> Check out the
 			<a href="https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md">change log</a> and
 			<a href="https://github.com/GaurangTandon/ProKeys">source code on GitHub!</a>
