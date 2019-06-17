@@ -121,7 +121,7 @@ async function updateSettings(newProps) {
         argString = `window.updateMyDataForTests(${JSON.stringify(newProps)})`;
     console.log(await bgPage.url());
     await sleep(15000);
-    await bgPage.evaluateHandle(argString);
+    //  await bgPage.evaluateHandle(argString);
     await sleep(30000);
 }
 
