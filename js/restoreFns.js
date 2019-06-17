@@ -289,7 +289,7 @@ function generateDataFromCSV(csv, delimiter = ",") {
         const splited = snip.split(delimiter),
             [name, body] = [splited[0], splited.slice(1).join(delimiter)];
         if (name === "" || body === "") { continue; }
-        Data.snippets.addSnip(name, body);
+        Data.snippets.addSnip(name, body.replace(/\\n/g, "<br>"));
     }
     Data.snippets = Data.snippets.toArray();
 
