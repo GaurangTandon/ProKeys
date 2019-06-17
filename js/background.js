@@ -24,7 +24,6 @@ const BLOCK_SITE_ID = "blockSite",
     // for gettting the blocked site status in case of unfinished loading of cs.js
     LIMIT_OF_RECALLS = 10,
     SNIPPET_MAIN_ID = "snippet_main",
-    LS_BG_PAGE_SUSPENDED_KEY = "pkBgWasSuspended",
     URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 let contextMenuActionBlockSite,
     recalls = 0,
@@ -56,14 +55,11 @@ function makeDataReady() {
     }
 }
 
-if (localStorage[LS_BG_PAGE_SUSPENDED_KEY] === "true") {
-    storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
-    storage.get(OLD_DATA_STORAGE_KEY, (response) => {
-        window.Data = response[OLD_DATA_STORAGE_KEY];
-        makeDataReady();
-    });
-    localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "false";
-}
+storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
+storage.get(OLD_DATA_STORAGE_KEY, (response) => {
+    window.Data = response[OLD_DATA_STORAGE_KEY];
+    makeDataReady();
+});
 
 function isURL(text) {
     return URL_REGEX.test(text.trim());
@@ -563,8 +559,3 @@ chrome.browserAction.onClicked.addListener(openSnippetsPage);
 chrome.runtime.setUninstallURL(
     "https://docs.google.com/forms/d/e/1FAIpQLSdDAd8a1Edf4eUXhM4E1GALziNk6j1QYjI6gUqGdAXdYrueaw/viewform",
 );
-
-// only fired on suspension, not on reload
-chrome.runtime.onSuspend.addListener(() => {
-    localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "true";
-});
