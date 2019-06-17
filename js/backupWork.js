@@ -64,10 +64,10 @@ export function initBackup() {
         if (dataUse === "print") {
             dataToExport = getSnippetPrintData(Data.snippets);
         } else {
-            const orgData = Data;
+            const orgSnippets = Data.snippets;
             Data.snippets = Data.snippets.toArray();
             dataToExport = JSON.stringify(dataUse === "data" ? Data : Data.snippets, undefined, 2);
-            Data = orgData;
+            Data.snippets = orgSnippets;
         }
 
         const filename = dataUse === "print" ? "ProKeys print snippets" : `ProKeys ${dataUse}`;
