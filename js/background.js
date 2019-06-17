@@ -24,7 +24,6 @@ const BLOCK_SITE_ID = "blockSite",
     // for gettting the blocked site status in case of unfinished loading of cs.js
     LIMIT_OF_RECALLS = 10,
     SNIPPET_MAIN_ID = "snippet_main",
-    LS_BG_PAGE_SUSPENDED_KEY = "pkBgWasSuspended",
     URL_REGEX = /^(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?$/;
 let contextMenuActionBlockSite,
     recalls = 0,
@@ -39,8 +38,7 @@ let contextMenuActionBlockSite,
      * the entire system. Hence, the background js is the safest place for it to be
      * and others can message bg.js to interact with it
      */
-    storage = chrome.storage.local,
-    runtimeOnInstalledFired = false;
+    storage = chrome.storage.local;
 
 // so that snippet_classes.js can work properly
 // doesn't clash with the Data variable in options.js
@@ -50,21 +48,19 @@ window.IN_OPTIONS_PAGE = false;
 // preprocessing Data includes setting indicess and making snippets Folder
 // needs to be called everytime window.data is changed.
 function makeDataReady() {
-    Folder.makeFolderIfList(Data);
-    Folder.setIndices();
+    // these checks are necessary
+    if (Data && Data.snippets) {
+        Folder.makeFolderIfList(Data);
+        Folder.setIndices();
+    }
 }
 
-if (localStorage[LS_BG_PAGE_SUSPENDED_KEY] === "true") {
+if (localStorage[LS_STORAGE_TYPE_PROP]) {
     storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
     storage.get(OLD_DATA_STORAGE_KEY, (response) => {
-        // in case extension was reloaded, and onInstalled finished before this was called
-        // then we should not override the data set by runtimeOnInstall
-        if (!runtimeOnInstalledFired) {
-            window.Data = response[OLD_DATA_STORAGE_KEY];
-            makeDataReady();
-        }
+        window.Data = response[OLD_DATA_STORAGE_KEY];
+        makeDataReady();
     });
-    localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "false";
 }
 
 function isURL(text) {
@@ -266,13 +262,10 @@ let removeCtxSnippetList,
 }());
 
 /**
- * when upgrading from old versions to 3.5.0, we need to set
- * the localStorage property which indicates what type of storage
- * the user is using. This fn detects correct storage
  * @param {Function} callback fn called after correctly setting type of
  * storage in localStorage
  */
-function updateCompatForOldData(callback) {
+function decideCorrectStorageType(callback) {
     localStorage[LS_STORAGE_TYPE_PROP] = "local";
     chrome.storage.local.get(OLD_DATA_STORAGE_KEY, (response) => {
         const Data = response[OLD_DATA_STORAGE_KEY];
@@ -315,12 +308,6 @@ function handleExtUpdate(notifProps) {
 }
 
 chrome.runtime.onInstalled.addListener((details) => {
-    runtimeOnInstalledFired = true;
-    // unset it after five seconds, reasonable time
-    setTimeout(() => {
-        runtimeOnInstalledFired = false;
-    }, 5000);
-
     let notifText,
         notifTitle;
     const { reason } = details,
@@ -354,11 +341,7 @@ chrome.runtime.onInstalled.addListener((details) => {
             version,
             reason,
         };
-        if (typeof localStorage[LS_STORAGE_TYPE_PROP] === "undefined") {
-            updateCompatForOldData(() => handleExtUpdate(args));
-        } else {
-            handleExtUpdate(args);
-        }
+        decideCorrectStorageType(() => handleExtUpdate(args));
     } else {
         // do not process anything other than install or update
     }
@@ -538,22 +521,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         Data = request.updateData;
         // setIndices necessary everytime we reassign data
         // otherwise search function doesn't work as expected
-        DBSave(() => Folder.setIndices());
+        DBSave(() => {
+            if (Data.snippets) { makeDataReady(); }
+            sendResponse("done");
+        });
+        return true;
     } else if (typeof request.getStorageType !== "undefined") {
         sendResponse(getCurrentStorageType());
     } else if (typeof request.changeStorageType !== "undefined") {
         const storages = ["local", "sync"],
-            targetStorage = storages[1 - storages.indexOf(getCurrentStorageType())];
+            currStorage = getCurrentStorageType(),
+            targetStorage = storages[1 - storages.indexOf(currStorage)],
+            oldData = Data;
 
         storage = chrome.storage[targetStorage];
         localStorage[LS_STORAGE_TYPE_PROP] = targetStorage;
+        storage.get((response) => {
+            window.Data = response[OLD_DATA_STORAGE_KEY];
+            if (typeof Data === "undefined" && !request.overridingSync) {
+                // reset everuthing to before
+                window.Data = oldData;
+                makeDataReady();
+                storage = chrome.storage[currStorage];
+                localStorage[LS_STORAGE_TYPE_PROP] = currStorage;
+                sendResponse({ completed: false });
+            } else {
+                makeDataReady();
+                sendResponse({ completed: true });
+            }
+        });
+        return true;
     } else if (typeof request.getBytesInUse !== "undefined") {
         storage.getBytesInUse(
             chromeAPICallWrapper((bytesInUse) => {
                 sendResponse(bytesInUse);
             }),
         );
-        // indicates async sendResponse
         return true;
     }
 
@@ -567,7 +570,3 @@ chrome.browserAction.onClicked.addListener(openSnippetsPage);
 chrome.runtime.setUninstallURL(
     "https://docs.google.com/forms/d/e/1FAIpQLSdDAd8a1Edf4eUXhM4E1GALziNk6j1QYjI6gUqGdAXdYrueaw/viewform",
 );
-
-chrome.runtime.onSuspend.addListener(() => {
-    localStorage[LS_BG_PAGE_SUSPENDED_KEY] = "true";
-});

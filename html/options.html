@@ -39,9 +39,12 @@
 				<span>Changelog</span>
 			</p>
 			<div class="content">
-				<p>
-					We've made some changes. Make sure you review these important ones:
-				</p>
+				<h2>&#x25cf; Regressions</h2>
+				<ul>
+					<li>Date time macros should now be behaving as usual.</li>
+					<li>Some users have had their delimiter settings accidentally reset (so the snippet "pet" expands when you write "carpet"). Please goto the Settings page and re-enable the "Snippet Delimiters".</li>
+					<li>Thanks for the bug reports! If you have any issues, feel free to contact prokeys.feedback@gmail.com</li>
+				</ul>
 				<!--<h2>&#x25cf; UI changes</h2>
 				<ul>
 					<li>Help page has been redone.</li>
@@ -65,16 +68,10 @@
 							<li>Broken import by file input.</li>
 							<li><b>Snippet insertion broke in iframe editors.</b></li>
 						</ul> -->
-				<h2>&#x25cf; Functional changes</h2>
-				<ul>
-				<li>This update was primarily focused on making the code structure more flexible and modern. We migrated the entire codebase
-					to the latest version of JavaScript, setup a neat build setup, as well as modularized most of our files.</li>
-				</ul>
 				<h2>&#x25cf; What's coming up soon?</h2>
 				<ul>
 					<li>Version 4.0.0 is in the works, and we are more than excited to showcase our brand new UI!
 					</li>
-					<li>Moreover, many of you have been kindly reported bugs, we'll ensure releasing fixes for them soon.</li>
 				</ul>
 			</div>
 			<!--<div class="notice">
@@ -385,7 +382,7 @@
 				<div class="box snippet_match_whole_word">
 					<div class="content">
 						<label>
-							<input type="checkbox"> Snippet name should match with whole word instead of a part?
+							<input type="checkbox"> <b>Snippet Delimiters</b> - Snippet name should match with whole word instead of a part?
 							<br> ('pet' snip name should match in 'I have a pet' but not in 'I have a carpet')</label>
 						<div class="delimiter_list">
 							<br> Add or remove a delimiter (single character), hit Enter to Save
@@ -446,12 +443,19 @@
 									<li>Watch as the child sync devices automatically catch the update and restore their normal operation.</li>
 								</ol>
 							</dd>
+							<dt>Synced data does not update in one PC when updating in another.</dt>
+							<dd> This is because the extension caches the last fetched sync data. To force get new data:
+								<ol>
+									<li>Please close all instances of Chrome where you are signed in.</li>
+									<li>Wait a minute or two.</li>
+									<li>Reopen the browser and now new snippets should appear.</li>
+								</ol>
+							</dd>
 							<dt>Is it possible to have a snippet expand without a hotkey?</dt>
 							<dd>Sorry, but given the way ProKeys is built, it is necessary to have a hotkey to execute a snippet.</dd>
 							<dt>Why doesn't ProKeys work in email and password fields?</dt>
 							<dd>Email field doesn't support caret manipulation, so ProKeys can't detect caret movements there, and hence
-								can't
-								function. ProKeys is disabled on password fields for obvious privacy reasons.</dd>
+								can't function. ProKeys is disabled on password fields for obvious privacy reasons.</dd>
 						</dl>
 					</div>
 					<div class="box">
@@ -655,6 +659,11 @@
 											<td>z</td>
 											<td>timezone offset wrt GMT</td>
 											<td>+0530</td>
+										</tr>
+										<tr>
+											<td>J</td>
+											<td>get current day number</td>
+											<td>166 (15th june)</td>
 										</tr>
 										<tr>
 											<td>date</td>

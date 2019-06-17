@@ -2,6 +2,7 @@
 
 import { chromeAPICallWrapper, isTabSafe } from "./pre";
 import { Folder } from "./snippetClasses";
+import { getFormattedDate } from "./dateFns";
 
 const SETTINGS_DEFAULTS = {
         snippets: Folder.getDefaultSnippetData(),
@@ -11,9 +12,9 @@ const SETTINGS_DEFAULTS = {
         language: "English",
         hotKey: ["shiftKey", 32],
         dataUpdateVariable: true,
-        matchDelimitedWord: false,
+        matchDelimitedWord: true,
         tabKey: false,
-        snipNameDelimiterList: "@#$%&*+-=(){}[]:\"'/_<>?!., ",
+        snipNameDelimiterList: " @#$%&*+-=(){}[]:\"'/_<>?!.,",
         omniboxSearchURL: "https://www.google.com/search?q=SEARCH",
         wrapSelectionAutoInsert: true,
         ctxEnabled: true,
@@ -42,7 +43,7 @@ function saveRevision(dataString) {
     const MAX_REVISIONS_STORED = 20;
     let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
     const latestRevision = {
-        label: `${Date.getFormattedDate()} - ${window.latestRevisionLabel}`,
+        label: `${getFormattedDate()} - ${window.latestRevisionLabel}`,
         data: dataString || Data.snippets,
     };
 
@@ -153,17 +154,24 @@ function migrateData(transferData, callback) {
     Data.snippets = false;
 
     DBupdate(() => {
-        chrome.runtime.sendMessage({ changeStorageType: true }, () => {
+        chrome.runtime.sendMessage({ changeStorageType: true, overridingSync: transferData }, (response) => {
+            if (response.completed === false) {
+                Data.snippets = copyOfTheOldData;
+                DBupdate(() => {
+                    callback(false);
+                });
+                return;
+            }
             if (transferData) {
                 Data.snippets = copyOfTheOldData;
-                DBupdate(callback);
+                DBupdate(() => callback(true));
             } else if (callback) {
                 // don't do Data.snippets = Folder.fromArray(Data.snippets);
                 // here since Data.snippets is false and since this is
                 // the sync2 option, we need to retain the data that user had
                 // previously synced on another PC
 
-                callback();
+                callback(true);
             }
         });
     });

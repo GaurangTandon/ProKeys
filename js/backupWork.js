@@ -6,6 +6,7 @@ import {
 import { Folder } from "./snippetClasses";
 import { initiateRestore } from "./restoreFns";
 import { LS_REVISIONS_PROP, saveSnippetData } from "./commonDataHandlers";
+import { getFormattedDate } from "./dateFns";
 
 export function initBackup() {
     let dataToExport;
@@ -61,7 +62,7 @@ export function initBackup() {
         downloadLink.href = URL.createObjectURL(blob);
         downloadLink.download = `${
             dataUse === "print" ? "ProKeys print snippets" : `ProKeys ${dataUse}`
-        } ${Date.getFormattedDate()}.txt`;
+        } ${getFormattedDate()}.txt`;
     }
 
     const copyToClipboardLink = q(".export .copy-data-to-clipboard-btn");
@@ -116,7 +117,7 @@ export function initBackup() {
 
             fileInputLink.html(
                 `File '${file.name}' is READY.`
-                    + " Click Restore button to begin. Click here again to choose another file.",
+                + " Click Restore button to begin. Click here again to choose another file.",
             );
         });
 
@@ -125,7 +126,7 @@ export function initBackup() {
                 `File '${
                     importFileData.name
                 }' could not be read! Please send following error to prokeys.feedback@gmail.com `
-                    + ` so that I can fix it. Thanks! ERROR: ${event.target.error.code}`,
+                + ` so that I can fix it. Thanks! ERROR: ${event.target.error.code}`,
             );
             fileInputLink.html(initialLinkText);
         });
@@ -199,12 +200,12 @@ export function initBackup() {
             if ($preserveExistingContentInput.checked) {
                 $caveatParagraph.html(
                     "<b>Caveat</b>: Unique content of "
-                        + "folders with the same name will not be imported.",
+                    + "folders with the same name will not be imported.",
                 );
             } else if ($preserveImportedContentInput.checked) {
                 $caveatParagraph.html(
                     "<b>Caveat</b>: Unique content of existing folders "
-                        + "with the same name will be lost.",
+                    + "with the same name will be lost.",
                 );
             } else {
                 $caveatParagraph.html("");
