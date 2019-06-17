@@ -92,11 +92,11 @@ window.updateMyDataForTests = function (newProps) {
         }
     });
     return new Promise((resolve) => {
-    // generously assume all tabs receive msgs in 2secs or less
+        // generously assume all tabs receive msgs in 2secs or less
         setTimeout(() => resolve(), 5000);
     });
 };
-
+console.log("Fn is defined", window.updateMyDataForTests);
 // preprocessing Data includes setting indicess and making snippets Folder
 // needs to be called everytime window.data is changed.
 function makeDataReady() {
@@ -107,8 +107,8 @@ function makeDataReady() {
 if (localStorage[LS_BG_PAGE_SUSPENDED_KEY] === "true") {
     storage = chrome.storage[localStorage[LS_STORAGE_TYPE_PROP]];
     storage.get(OLD_DATA_STORAGE_KEY, (response) => {
-    // in case extension was reloaded, and onInstalled finished before this was called
-    // then we should not override the data set by runtimeOnInstall
+        // in case extension was reloaded, and onInstalled finished before this was called
+        // then we should not override the data set by runtimeOnInstall
         if (!runtimeOnInstalledFired) {
             window.Data = response[OLD_DATA_STORAGE_KEY];
             makeDataReady();
@@ -128,7 +128,7 @@ function getDomain(url) {
         idx;
 
     if (path1) {
-    // remove all the unnecessary query/anchors parameter content
+        // remove all the unnecessary query/anchors parameter content
         idx = path1.indexOf("?");
         if (idx !== -1) {
             path1 = path1.substring(0, idx);
@@ -266,15 +266,15 @@ chrome.omnibox.onInputEntered.addListener((omniboxText) => {
 // create modal dialog for blocking site by detector.js
 (function createBlockSiteModal() {
     const modalContent = "<div class='prokeys-block block-theme-plain'>"
-    + "<div class='block-overlay'></div>"
-    + "<div class='block-content'>"
-    + "<div class='block-dialog-form'>"
-    + "<div class='block-dialog-message'>Are you sure you want to <span class='action'></span><br> <input type='text' class='site-name'><br> from ProKeys?</div>"
-    + "<div class='block-dialog-buttons'>"
-    + "<input type='button' value='OK' class='block-dialog-button-primary block-dialog-button'>"
-    + "<input type='button' value='Cancel' class='block-dialog-button-secondary block-dialog-button'> </div>"
-    + "</div>"
-    + "</div></div>";
+        + "<div class='block-overlay'></div>"
+        + "<div class='block-content'>"
+        + "<div class='block-dialog-form'>"
+        + "<div class='block-dialog-message'>Are you sure you want to <span class='action'></span><br> <input type='text' class='site-name'><br> from ProKeys?</div>"
+        + "<div class='block-dialog-buttons'>"
+        + "<input type='button' value='OK' class='block-dialog-button-primary block-dialog-button'>"
+        + "<input type='button' value='Cancel' class='block-dialog-button-secondary block-dialog-button'> </div>"
+        + "</div>"
+        + "</div></div>";
 
     modalHTML = modalContent;
 }());
@@ -383,13 +383,13 @@ chrome.runtime.onInstalled.addListener((details) => {
         { version } = chrome.runtime.getManifest();
 
     if (reason === "install") {
-    // set initial data
+        // set initial data
         localStorage[LS_REVISIONS_PROP] = "[]";
         localStorage[LS_STORAGE_TYPE_PROP] = "local";
         window.Data = SETTINGS_DEFAULTS;
         if (window.navigator.userAgent === prokeysUA) {
             window.Data = testData;
-            console.log("yay");
+            console.log("window Data loaded");
         }
         window.latestRevisionLabel = "data created (added defaut snippets)";
 
@@ -420,7 +420,7 @@ chrome.runtime.onInstalled.addListener((details) => {
             handleExtUpdate(args);
         }
     } else {
-    // do not process anything other than install or update
+        // do not process anything other than install or update
     }
 });
 
@@ -478,8 +478,8 @@ function updateContextMenu(isRecalled = false) {
  */
 function initContextMenu() {
     if (Data.ctxEnabled) {
-    // let this call decide whether to show snippets or not
-    // based on whether site is blocked or not
+        // let this call decide whether to show snippets or not
+        // based on whether site is blocked or not
         updateContextMenu();
     } else {
         removeCtxSnippetList();

@@ -102,7 +102,7 @@ async function acceptDialog(dialog) {
     try {
         await dialog.accept();
     } catch (e) {
-    // no error to catch since it is ok
+        // no error to catch since it is ok
     }
 }
 
@@ -119,10 +119,10 @@ async function getBackgroundPage() {
 async function updateSettings(newProps) {
     const bgPage = await getBackgroundPage(),
         argString = `window.updateMyDataForTests(${JSON.stringify(newProps)})`;
-    console.log(await bgPage.url());
+    // console.log(await bgPage.url());
     await sleep(15000);
-    //  await bgPage.evaluateHandle(argString);
-    await sleep(30000);
+    await bgPage.evaluateHandle(argString);
+    await sleep(15000);
 }
 
 module.exports = {
