@@ -538,7 +538,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         localStorage[LS_STORAGE_TYPE_PROP] = targetStorage;
         storage.get((response) => {
             window.Data = response[OLD_DATA_STORAGE_KEY];
-            if (typeof Data === "undefined") {
+            if (typeof Data === "undefined" && !request.overridingSync) {
                 // reset everuthing to before
                 window.Data = oldData;
                 makeDataReady();

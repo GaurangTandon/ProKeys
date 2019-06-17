@@ -154,7 +154,7 @@ function migrateData(transferData, callback) {
     Data.snippets = false;
 
     DBupdate(() => {
-        chrome.runtime.sendMessage({ changeStorageType: true }, (response) => {
+        chrome.runtime.sendMessage({ changeStorageType: true, overridingSync: transferData }, (response) => {
             if (response.completed === false) {
                 Data.snippets = copyOfTheOldData;
                 DBupdate(() => {
