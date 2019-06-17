@@ -274,4 +274,38 @@ function validateRestoreData(data, snippets) {
     return "true";
 }
 
-export { validateRestoreData, initiateRestore };
+/**
+ * @param {String} csv contents of csv file; one snip per line
+ * @param {String} delimiter the delimiter to use
+ */
+function generateDataFromCSV(csv, delimiter = ",") {
+    // all properties will be default except Data.snippets
+    const Data = SETTINGS_DEFAULTS,
+        snips = csv.split("\n");
+
+    Data.snippets = new Folder();
+    for (const snip of snips) {
+        const splited = snip.split(delimiter),
+            [name, body] = [splited[0], splited.slice(1).join(delimiter)];
+        Data.snippets.addSnip(name, body);
+    }
+    Data.snippets = Data.snippets.toArray();
+
+    return Data;
+}
+
+/**
+ * @param {Folder} snippetFolder the folder to make csv of
+ * @param {String} delimiter the delimiter to use
+ */
+function convertSnippetsToCSV(snippetFolder, delimiter = ",") {
+    let out = "";
+
+    snippetFolder.forEachSnippet((snip) => { out += `${snip.name + delimiter + snip.body}\n`; });
+
+    return out;
+}
+
+export {
+    validateRestoreData, initiateRestore, generateDataFromCSV, convertSnippetsToCSV,
+};
