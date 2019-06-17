@@ -531,9 +531,16 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                             `You are currently using ${bytesInUse} bytes of data; while sync storage only permits a maximum of ${MAX_SYNC_DATA_SIZE} bytes.\n\nPlease reduce the size of data (by deleting, editing, exporting snippets) you're using to migreate to sync storage successfully.`,
                         );
                     } else {
-                        migrateData(transferData, () => {
-                            window.alert(`Done! Data migrated to ${str} storage successfully!`);
-                            window.location.reload();
+                        migrateData(transferData, (wasSuccessful) => {
+                            if (wasSuccessful) {
+                                window.alert(`Done! Data migrated to ${str} storage successfully!`);
+                                window.location.reload();
+                            } else {
+                                window.alert(`It seems the target storage ${str} hasn't loaded yet.
+In case of sync data, it may be because of Google sync not having finished yet.
+Please wait at least five minutes and try again.`);
+                                window.location.reload();
+                            }
                         });
                     }
                 });

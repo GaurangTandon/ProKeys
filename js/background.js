@@ -530,16 +530,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse(getCurrentStorageType());
     } else if (typeof request.changeStorageType !== "undefined") {
         const storages = ["local", "sync"],
-            targetStorage = storages[1 - storages.indexOf(getCurrentStorageType())];
+            currStorage = getCurrentStorageType(),
+            targetStorage = storages[1 - storages.indexOf(currStorage)],
+            oldData = Data;
 
         storage = chrome.storage[targetStorage];
         localStorage[LS_STORAGE_TYPE_PROP] = targetStorage;
         storage.get((response) => {
             window.Data = response[OLD_DATA_STORAGE_KEY];
-            makeDataReady();
-            // just to make sure that options page
-            // reloads after I'm done setting Data here
-            sendResponse("done");
+            if (typeof Data === "undefined") {
+                // reset everuthing to before
+                window.Data = oldData;
+                makeDataReady();
+                storage = chrome.storage[currStorage];
+                localStorage[LS_STORAGE_TYPE_PROP] = currStorage;
+                sendResponse({ completed: false });
+            } else {
+                makeDataReady();
+                sendResponse({ completed: true });
+            }
         });
         return true;
     } else if (typeof request.getBytesInUse !== "undefined") {
