@@ -15,6 +15,7 @@ function isTabSafe(tab) {
         && !/^chrome-extension:/.test(tab.url)
         && !/^chrome:/.test(tab.url)
         && !/^https?:\/\/chrome\.google\.com/.test(tab.url)
+        && !/^about:blank/.test(tab.url)
     );
 }
 
