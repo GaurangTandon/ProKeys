@@ -443,12 +443,19 @@
 									<li>Watch as the child sync devices automatically catch the update and restore their normal operation.</li>
 								</ol>
 							</dd>
+							<dt>Synced data does not update in one PC when updating in another.</dt>
+							<dd> This is because the extension caches the last fetched sync data. To force get new data:
+								<ol>
+									<li>Please close all instances of Chrome where you are signed in.</li>
+									<li>Wait a minute or two.</li>
+									<li>Reopen the browser and now new snippets should appear.</li>
+								</ol>
+							</dd>
 							<dt>Is it possible to have a snippet expand without a hotkey?</dt>
 							<dd>Sorry, but given the way ProKeys is built, it is necessary to have a hotkey to execute a snippet.</dd>
 							<dt>Why doesn't ProKeys work in email and password fields?</dt>
 							<dd>Email field doesn't support caret manipulation, so ProKeys can't detect caret movements there, and hence
-								can't
-								function. ProKeys is disabled on password fields for obvious privacy reasons.</dd>
+								can't function. ProKeys is disabled on password fields for obvious privacy reasons.</dd>
 						</dl>
 					</div>
 					<div class="box">
