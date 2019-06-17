@@ -1,10 +1,10 @@
 /* global Data */
 
 import {
-    Q, q, copyTextToClipboard, SHOW_CLASS,
+    Q, q, copyTextToClipboard, SHOW_CLASS, qClsSingle,
 } from "./pre";
 import { Folder } from "./snippetClasses";
-import { initiateRestore, convertSnippetsToCSV } from "./restoreFns";
+import { initiateRestore, convertSnippetsToCSV, generateDataFromCSV } from "./restoreFns";
 import { LS_REVISIONS_PROP, saveSnippetData } from "./commonDataHandlers";
 import { getFormattedDate } from "./dateFns";
 
@@ -100,6 +100,10 @@ export function initBackup() {
 
     q(".import .restore").on("click", () => {
         if (importFileData) {
+            const isCsv = qClsSingle("csv-check-import").checked;
+            if (isCsv) {
+                importFileData = generateDataFromCSV(importFileData);
+            }
             initiateRestore(importFileData);
         } else {
             window.alert("Please choose a file.");
