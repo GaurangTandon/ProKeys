@@ -301,7 +301,7 @@ function generateDataFromCSV(csv, delimiter = ",") {
 function convertSnippetsToCSV(snippetFolder, delimiter = ",") {
     let out = "";
 
-    snippetFolder.forEachSnippet((snip) => { out += `${snip.name + delimiter + snip.body}\n`; });
+    snippetFolder.forEachSnippet((snip) => { out += `${snip.name + delimiter + snip.body.replace(/\n/, "\\n")}\n`; });
 
     return out;
 }
