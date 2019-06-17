@@ -43,8 +43,8 @@ primitiveExtender();
         $blockSitesTextarea;
 
     const RESERVED_DELIMITER_LIST = "`~|\\^",
-        MAX_SYNC_DATA_SIZE = 102400,
-        MAX_LOCAL_DATA_SIZE = 5242880,
+        MAX_SYNC_DATA_SIZE = chrome.storage.sync.QUOTA_BYTES,
+        MAX_LOCAL_DATA_SIZE = chrome.storage.local.QUOTA_BYTES,
         VERSION = chrome.runtime.getManifest().version;
     window.$containerSnippets = null;
     window.$panelSnippets = null;
@@ -280,7 +280,7 @@ primitiveExtender();
     function roundByteSizeWithPercent(bytes, bytesLim) {
         const roundedByteSize = roundByteSize(bytes),
             // nearest multiple of five
-            percent = Math.round((bytes / bytesLim) * 20) * 5;
+            percent = Math.round((bytes / bytesLim) * 100);
 
         return `${roundedByteSize} (${percent}%)`;
     }
