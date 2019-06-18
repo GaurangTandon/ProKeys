@@ -299,12 +299,12 @@ primitiveExtender();
         });
     }
 
-    function afterDBLoad() {
-        const changeHotkeyBtn = qClsSingle("change_hotkey"),
-            hotkeyListener = qClsSingle("hotkey_listener");
-
+    /**
+     * Setup those parts of the DOM first which can function decently even
+     * if Data isn't loaded
+     */
+    function nonDBDOMSetup() {
         chrome.storage.onChanged.addListener(updateStorageAmount);
-
         Q("span.version").forEach((span) => {
             span.innerHTML = VERSION;
         });
@@ -386,6 +386,22 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 <u>supports</u></i><b> HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.`,
                 );
         }());
+    }
+
+    /**
+     * If Data didn't load as expected, show an error to the user
+     * and suggest them options as to how they can recover the data
+     */
+    function showNoDataLoadErrorMsg() {
+        qClsSingle("no-db-error").addClass("show");
+    }
+
+    /**
+     * Called when Data is defined and has correctly loaded
+     */
+    function afterDBLoad() {
+        const changeHotkeyBtn = qClsSingle("change_hotkey"),
+            hotkeyListener = qClsSingle("hotkey_listener");
 
         (function settingsPageHandlers() {
             const $delimiterCharsInput = q(".delimiter_list input"),
@@ -685,6 +701,12 @@ Please wait at least five minutes and try again.`);
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         window.Data = DataResponse;
+
+        if (!Data) {
+            showNoDataLoadErrorMsg();
+            return;
+        }
+
         Folder.makeFolderIfList(Data);
         Folder.setIndices();
 
@@ -756,6 +778,7 @@ Please wait at least five minutes and try again.`);
     }
 
     function onWindowLoad() {
+        nonDBDOMSetup();
         DBget(onDBLoad);
     }
 
