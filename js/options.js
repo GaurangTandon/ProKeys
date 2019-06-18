@@ -301,72 +301,62 @@ primitiveExtender();
         });
     }
 
+    // used when buttons in navbar are clicked
+    // or when the url contains an id of a div
+    function showHideMainPanels(DIVName) {
+        const containerSel = "#content > ",
+            DIVSelector = `#${DIVName}`,
+            btnSelector = `.sidebar .buttons button[data-divid =${DIVName}]`,
+            selectedBtnClass = "selected",
+            selectedDIV = q(`${containerSel}.show`),
+            selectedBtn = q(`.sidebar .buttons .${selectedBtnClass}`);
+
+        if (DIVName === "snippets") {
+            Data.snippets.listSnippets();
+        }
+
+        if (selectedDIV) {
+            selectedDIV.removeClass("show");
+        }
+        q(containerSel + DIVSelector).addClass("show");
+
+        if (selectedBtn) {
+            selectedBtn.removeClass(selectedBtnClass);
+        }
+        q(btnSelector).addClass(selectedBtnClass);
+
+        let { href } = window.location,
+            selIndex = href.indexOf("#");
+
+        if (selIndex !== -1) {
+            href = href.substring(0, selIndex);
+        }
+
+        window.location.href = href + DIVSelector;
+
+        // the page shifts down a little
+        // for the exact location of the div;
+        // so move it back to the top
+        document.body.scrollTop = 0;
+    }
+
     /**
      * Setup those parts of the DOM first which can function decently even
      * if Data isn't loaded
      */
-    function nonDBDOMSetup() {
+    function domBeforeDBLoad() {
         chrome.storage.onChanged.addListener(updateStorageAmount);
         Q("span.version").forEach((span) => {
             span.innerHTML = VERSION;
         });
 
-        // panels are - #content div
-        (function panelWork() {
-            const url = window.location.href;
+        console.log(Q(".sidebar .buttons button"));
 
-            // used when buttons in navbar are clicked
-            // or when the url contains an id of a div
-            function showHideDIVs(DIVName) {
-                const containerSel = "#content > ",
-                    DIVSelector = `#${DIVName}`,
-                    btnSelector = `.sidebar .buttons button[data-divid =${DIVName}]`,
-                    selectedBtnClass = "selected",
-                    selectedDIV = q(`${containerSel}.show`),
-                    selectedBtn = q(`.sidebar .buttons .${selectedBtnClass}`);
-
-                if (DIVName === "snippets") {
-                    Data.snippets.listSnippets();
-                }
-
-                if (selectedDIV) {
-                    selectedDIV.removeClass("show");
-                }
-                q(containerSel + DIVSelector).addClass("show");
-
-                if (selectedBtn) {
-                    selectedBtn.removeClass(selectedBtnClass);
-                }
-                q(btnSelector).addClass(selectedBtnClass);
-
-                let { href } = window.location,
-                    selIndex = href.indexOf("#");
-
-                if (selIndex !== -1) {
-                    href = href.substring(0, selIndex);
-                }
-
-                window.location.href = href + DIVSelector;
-
-                // the page shifts down a little
-                // for the exact location of the div;
-                // so move it back to the top
-                document.body.scrollTop = 0;
-            }
-
-            if (/#\w+$/.test(url) && !/tryit|symbolsList/.test(url)) {
-                // get the id and show divs based on that
-                showHideDIVs(url.match(/#(\w+)$/)[1]);
-            } else {
-                showHideDIVs("settings");
-            } // default panel
-
-            // the left hand side nav buttons
-            // Help, Settings, Backup&Restore, About
-            Q(".sidebar .buttons button").on("click", function () {
-                showHideDIVs(this.dataset.divid);
-            });
-        }());
+        // the left hand side nav buttons
+        // Help, Settings, Backup&Restore, About
+        Q(".sidebar .buttons button").on("click", function () {
+            showHideMainPanels(this.dataset.divid);
+        });
 
         (function helpPageHandlers() {
             /* set up accordion in help page */
@@ -446,9 +436,17 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
     /**
      * Called when Data is defined and has correctly loaded
      */
-    function afterDBLoad() {
+    function DOMafterDBLoad() {
         const changeHotkeyBtn = qClsSingle("change_hotkey"),
-            hotkeyListener = qClsSingle("hotkey_listener");
+            hotkeyListener = qClsSingle("hotkey_listener"),
+            url = window.location.href;
+
+        if (/#\w+$/.test(url) && !/tryit|symbolsList/.test(url)) {
+            // get the id and show divs based on that
+            showHideMainPanels(url.match(/#(\w+)$/)[1]);
+        } else {
+            showHideMainPanels("settings");
+        } // default panel
 
         (function settingsPageHandlers() {
             const $delimiterCharsInput = q(".delimiter_list input"),
@@ -822,11 +820,11 @@ Please wait at least five minutes and try again.`);
             }, 300),
         );
 
-        afterDBLoad();
+        DOMafterDBLoad();
     }
 
     function onWindowLoad() {
-        nonDBDOMSetup();
+        domBeforeDBLoad();
         DBget(onDBLoad);
     }
 
