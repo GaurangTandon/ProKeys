@@ -1,6 +1,7 @@
 // this file adds useful extensions to prototypes of various primitives
 // it is indcluded with the other files
 
+import { DOM_HELPERS } from "./pre";
 import { extendNodePrototype } from "./protoExtend";
 import { getHTML, setHTML } from "./textmethods";
 import { isLeapYear } from "./dateFns";
@@ -169,4 +170,8 @@ export function primitiveExtender() {
         // can be zero/empty string; make sure it's undefined
         return this.html(textToSet, "innerText");
     });
+
+    for (const [funcName, func] of Object.entries(DOM_HELPERS)) {
+        extendNodePrototype(funcName, func);
+    }
 }

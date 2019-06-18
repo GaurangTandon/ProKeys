@@ -23,7 +23,6 @@ import {
     debounce,
     PRIMITIVES_EXT_KEY,
     appendBlobToLink,
-    qCls,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippetClasses";
 import { ensureRobustCompat } from "./restoreFns";
@@ -384,19 +383,14 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 );
         }());
 
+        // snippetWork.js handles the change-log box
         (function setupPopupBoxHandlers() {
-            const largeBoxes = qCls("large-box"),
-                $closeButton = largeBoxes.q("button"),
-                // ls set by background page
-                isUpdate = localStorage.extensionUpdated === "true";
+            const noDBErrorBox = qClsSingle("no-db-error"),
+                $closeButton = noDBErrorBox.q("button");
 
-            $closeButton.on("click", function () {
-                this.removeClass(SHOW_CLASS);
+            $closeButton.on("click", () => {
+                noDBErrorBox.removeClass(SHOW_CLASS);
             });
-
-            if (isUpdate) {
-                largeBoxes.addClass(SHOW_CLASS);
-            }
         }());
     }
 
@@ -761,7 +755,6 @@ Please wait at least five minutes and try again.`);
 
         window.Data = DataResponse;
 
-        prepareNoDataFoundPopup();
         if (!Data) {
             prepareNoDataFoundPopup();
             return;
