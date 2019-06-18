@@ -23,6 +23,7 @@ import {
     debounce,
     PRIMITIVES_EXT_KEY,
     appendBlobToLink,
+    qCls,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippetClasses";
 import { ensureRobustCompat } from "./restoreFns";
@@ -345,16 +346,20 @@ primitiveExtender();
      * if Data isn't loaded
      */
     function domBeforeDBLoad() {
+        if (!window[PRIMITIVES_EXT_KEY]) {
+            updateAllValuesPerWin(window);
+        }
+
         chrome.storage.onChanged.addListener(updateStorageAmount);
         Q("span.version").forEach((span) => {
             span.innerHTML = VERSION;
         });
 
-        console.log(Q(".sidebar .buttons button"));
+        const sidebarButtons = Q(".sidebar .buttons button");
 
         // the left hand side nav buttons
         // Help, Settings, Backup&Restore, About
-        Q(".sidebar .buttons button").on("click", function () {
+        sidebarButtons.on("click", function () {
             showHideMainPanels(this.dataset.divid);
         });
 
@@ -378,6 +383,21 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
 <u>supports</u></i><b> HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.`,
                 );
         }());
+
+        (function setupPopupBoxHandlers() {
+            const largeBoxes = qCls("large-box"),
+                $closeButton = largeBoxes.q("button"),
+                // ls set by background page
+                isUpdate = localStorage.extensionUpdated === "true";
+
+            $closeButton.on("click", function () {
+                this.removeClass(SHOW_CLASS);
+            });
+
+            if (isUpdate) {
+                largeBoxes.addClass(SHOW_CLASS);
+            }
+        }());
     }
 
     /**
@@ -390,27 +410,22 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
          */
         function prepareAsFile(type) {
             const link = qClsSingle(`${type}-found`);
-            function nothingFound() {
+            function nothingFound(error) {
                 link.innerHTML = `no ${type} data found`;
+                console.log(`${type} => ${error}`);
             }
 
             return function (response) {
                 const data = response[OLD_DATA_STORAGE_KEY];
 
                 if (!data) {
-                    nothingFound();
-                    return;
-                }
-                try {
-                    const data2 = JSON.parse(data);
-                    if (data2.snippets) {
-                        appendBlobToLink(link, data, `${type}-recovered data`);
-                        link.innerHTML = `${type} recovered data`;
-                    } else {
-                        nothingFound();
-                    }
-                } catch (e) {
-                    nothingFound();
+                    nothingFound(`${OLD_DATA_STORAGE_KEY} DNE`);
+                } else if (data.snippets) {
+                    appendBlobToLink(link, JSON.stringify(data), `${type}-recovered data`);
+                    link.innerHTML = `${type} recovered data`;
+                } else {
+                    nothingFound("recovered data has no snippets");
+                    console.log(data);
                 }
             };
         }
@@ -426,9 +441,11 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 const snippets = JSON.parse(localStorage.prokeys_revisions)[0].data,
                     data = SETTINGS_DEFAULTS;
                 data.snippets = snippets;
-                prepareAsFile(type)({ [OLD_DATA_STORAGE_KEY]: JSON.stringify(data) });
+                prepareAsFile(type)({ [OLD_DATA_STORAGE_KEY]: data });
             } catch (e) {
                 qClsSingle(`${type}-found`).innerHTML = `no ${type} data found`;
+                console.log(`Excetion (${e}) while parsing the following data`);
+                console.log(localStorage.prokeys_revisions);
             }
         }());
     }
@@ -731,9 +748,6 @@ Please wait at least five minutes and try again.`);
         sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
     function onDBLoad(DataResponse) {
-        if (!window[PRIMITIVES_EXT_KEY]) {
-            updateAllValuesPerWin(window);
-        }
         // needs to be set before database actions
         $panelSnippets = qClsSingle("panel_snippets");
         $containerSnippets = $panelSnippets.qClsSingle("panel_content");
