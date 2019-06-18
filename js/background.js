@@ -1,9 +1,5 @@
 /* global Data, listOfSnippetCtxIDs */
 
-// TODO:
-// 1. using global window for sharing the list of snippet ctx IDs;
-// fix that since we won't have sc.js with us in dist/
-
 import { chromeAPICallWrapper, isTabSafe, q } from "./pre";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";

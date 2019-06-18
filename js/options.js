@@ -749,6 +749,7 @@ Please wait at least five minutes and try again.`);
 
         window.Data = DataResponse;
 
+        prepareNoDataFoundPopup();
         if (!Data) {
             prepareNoDataFoundPopup();
             return;
