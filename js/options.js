@@ -8,6 +8,7 @@ import {
     saveOtherData,
     migrateData,
     LS_STORAGE_TYPE_PROP,
+    OLD_DATA_STORAGE_KEY,
 } from "./commonDataHandlers";
 import {
     SHOW_CLASS,
@@ -21,6 +22,7 @@ import {
     protoWWWReplaceRegex,
     debounce,
     PRIMITIVES_EXT_KEY,
+    appendBlobToLink,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippetClasses";
 import { ensureRobustCompat } from "./restoreFns";
@@ -392,8 +394,53 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
      * If Data didn't load as expected, show an error to the user
      * and suggest them options as to how they can recover the data
      */
-    function showNoDataLoadErrorMsg() {
+    function prepareNoDataFoundPopup() {
+        /**
+         * @param {"sync" | "local" | "localstorage"} type sync or local
+         */
+        function prepareAsFile(type) {
+            const link = qClsSingle(`${type}-found`);
+            function nothingFound() {
+                link.innerHTML = `no ${type} data found`;
+            }
+
+            return function (response) {
+                const data = response[OLD_DATA_STORAGE_KEY];
+
+                if (!data) {
+                    nothingFound();
+                    return;
+                }
+                try {
+                    const data2 = JSON.parse(data);
+                    if (data2.snippets) {
+                        appendBlobToLink(link, data, `${type}-recovered data`);
+                        link.innerHTML = `${type} recovered data`;
+                    } else {
+                        nothingFound();
+                    }
+                } catch (e) {
+                    nothingFound();
+                }
+            };
+        }
+
         qClsSingle("no-db-error").addClass("show");
+
+        // recover user data from all three stores
+        chrome.storage.sync.get(prepareAsFile("sync"));
+        chrome.storage.local.get(prepareAsFile("local"));
+        (function forlocalstorage() {
+            const type = "localstorage";
+            try {
+                const snippets = JSON.parse(localStorage.prokeys_revisions)[0].data,
+                    data = SETTINGS_DEFAULTS;
+                data.snippets = snippets;
+                prepareAsFile(type)({ [OLD_DATA_STORAGE_KEY]: JSON.stringify(data) });
+            } catch (e) {
+                qClsSingle(`${type}-found`).innerHTML = `no ${type} data found`;
+            }
+        }());
     }
 
     /**
@@ -703,7 +750,7 @@ Please wait at least five minutes and try again.`);
         window.Data = DataResponse;
 
         if (!Data) {
-            showNoDataLoadErrorMsg();
+            prepareNoDataFoundPopup();
             return;
         }
 

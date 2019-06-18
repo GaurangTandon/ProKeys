@@ -1,5 +1,7 @@
 /* global Data */
 
+import { getFormattedDate } from "./dateFns";
+
 // this file contains all common utility functions
 // this file should not contain any code that needs to be executed outisde an exported function as
 // it is not included in final dist
@@ -295,6 +297,20 @@ function isBlockedSite(url) {
     return false;
 }
 
+/**
+     * @param {Element} link the anchor element which initiates download
+     * @param {String} data to create file out of
+     * @param {String} filename name of downloadable file
+     */
+function appendBlobToLink(link, data, filename) {
+    const blob = new Blob([data], {
+        type: "text/js",
+    });
+
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename} ${getFormattedDate()}.txt`;
+}
+
 export {
     q,
     qCls,
@@ -318,4 +334,5 @@ export {
     debounce,
     OBJECT_NAME_LIMIT,
     PRIMITIVES_EXT_KEY,
+    appendBlobToLink,
 };
