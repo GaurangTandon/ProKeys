@@ -587,7 +587,7 @@ export function initSnippetWork() {
                             `Cannot move ${selObj.type} "${selObj.name}" to "${
                                 selectedFolder.name
                             }"`
-                                + "; as it is the same as (or a parent folder of) the destination folder",
+                            + "; as it is the same as (or a parent folder of) the destination folder",
                         );
                     }
                 });
@@ -616,7 +616,7 @@ export function initSnippetWork() {
             if (
                 window.confirm(
                     `Are you sure you want to delete these ${selectedObjects.length} items? `
-                        + "Remember that deleting a folder will also delete ALL its contents.",
+                    + "Remember that deleting a folder will also delete ALL its contents.",
                 )
             ) {
                 selectedObjects.forEach((selObj) => {
@@ -645,6 +645,7 @@ export function initSnippetWork() {
             $button.on("click", () => {
                 $changeLog.removeClass(SHOW_CLASS);
                 localStorage.extensionUpdated = "false";
+                chrome.browserAction.setBadgeText({ text: "" });
             });
         }
     }());
