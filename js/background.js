@@ -337,6 +337,7 @@ chrome.runtime.onInstalled.addListener((details) => {
             version,
             reason,
         };
+        chrome.browserAction.setBadgeText({ text: "NEW" });
         localStorage.extensionUpdated = "true";
         decideCorrectStorageType(() => handleExtUpdate(args));
     } else {
