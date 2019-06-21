@@ -499,7 +499,7 @@ export function initSnippetWork() {
 
             selectedObjects = selectedObjects.map((e) => {
                 const div = e.nextElementSibling.nextElementSibling,
-                    name = div.html(),
+                    { name } = div.dataset,
                     img = e.nextElementSibling,
                     type = img.src.match(/\w+(?=\.svg)/)[0];
 
