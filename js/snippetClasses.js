@@ -1382,7 +1382,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     function insertPathPartDivs(name) {
         const pathPart = q.new("div").addClass("path_part"),
             rightArrow = q.new("div").addClass("right_arrow");
-
+        pathPart.dataset.name = name;
         $containerFolderPath.appendChild(pathPart.html(gTranlateImmune(name)));
         $containerFolderPath.appendChild(rightArrow);
     }
@@ -1471,6 +1471,8 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             $folderName = q.new("p").html(gTranlateImmune(this.name)),
             childContainer,
             hasChildFolder = false;
+
+        $folderName.dataset.name = this.name;
 
         mainContainer.appendChild($folderName);
 
@@ -1715,7 +1717,7 @@ Folder.insertBulkActionDOM = function (listedFolder) {
                 .new("div")
                 .addClass("name")
                 .html(gTranlateImmune(listElm.name));
-
+        $div.dataset.name = listElm.name;
         $checkbox.type = "checkbox";
         $img.src = `../imgs/${listElm.type}.svg`;
 
@@ -1732,7 +1734,7 @@ Folder.insertBulkActionDOM = function (listedFolder) {
     return $container;
 };
 Folder.getSelectedFolderInSelectList = function (selectList) {
-    const selectFolderName = selectList.qClsSingle("selected").html();
+    const selectFolderName = selectList.qClsSingle("selected").dataset.name;
 
     return Data.snippets.getUniqueFolder(selectFolderName);
 };
@@ -1796,7 +1798,7 @@ Folder.implementChevronInFolderPath = function (notRemoveChevron) {
     }
 };
 Folder.getListedFolderName = function () {
-    return $containerFolderPath.q(":nth-last-child(2)").html();
+    return $containerFolderPath.q(":nth-last-child(2)").dataset.name;
 };
 Folder.getListedFolder = function () {
     let name = Folder.getListedFolderName(),
