@@ -1,5 +1,11 @@
 # Contributing guide
 
+## Development pattern
+
+1. For every new feature of the give milestone, branch from that milestone's branch.
+2. When done, merge that feature branch into the milestone branch.
+3. When milestone is complete, merge it into master.
+
 ## Making a PR for a feature/bug
 
 These PRs are more than welcome! However, it is recommended you open an issue before opening a PR so that others know you are working on that task, and you can get valuable insights from everyone about it.

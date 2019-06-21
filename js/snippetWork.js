@@ -634,11 +634,16 @@ export function initSnippetWork() {
         });
     }());
 
-    (function checkIfFirstTimeUser() {
+    (function displayChangelog() {
         const $changeLog = qClsSingle("change-log"),
             $button = $changeLog.q("button"),
             // ls set by background page
             isUpdate = localStorage.extensionUpdated === "true";
+
+        $button.on("click", () => {
+            $changeLog.removeClass(SHOW_CLASS);
+            localStorage.extensionUpdated = "false";
+        });
 
         if (isUpdate) {
             $changeLog.addClass(SHOW_CLASS);

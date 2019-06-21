@@ -90,7 +90,7 @@ label > input {
     margin-right: 2px;
 }
 
-input[type="file"] {
+.panel.import input[type="file"] {
     width: 0.1px;
     height: 0.1px;
     opacity: 0;
@@ -243,7 +243,7 @@ footer {
 }
 
 #about .box .heading,
-.box.change-log .heading {
+.box.large-box .heading {
     display: inline-block;
     width: 100%;
     background: #18c470;
@@ -255,12 +255,12 @@ footer {
 }
 
 #about .box .content,
-.box.change-log .content {
+.box.large-box .content {
     padding: 15px;
 }
 
-.box.change-log .appeal,
-.box.change-log .notice {
+.box.large-box .appeal,
+.box.large-box .notice {
     padding: 10px;
 }
 
@@ -288,7 +288,7 @@ footer {
     margin: 10px 20px;
 }
 
-.box.change-log {
+.box.large-box {
     position: fixed;
     top: 5%;
     left: 30%;
@@ -298,17 +298,17 @@ footer {
     padding: 0;
 }
 
-.box.change-log h2 {
+.box.large-box h2 {
     font-size: 20px;
     margin-top: 10px;
     color: #18c470;
 }
 
-.box.change-log .content p {
+.box.large-box .content p {
     margin-bottom: 10px;
 }
 
-.box.change-log p {
+.box.large-box p {
     font-size: 18px;
     font-weight: bold;
     color: #18c470;
@@ -318,15 +318,15 @@ footer {
     float: right;
 }
 
-.box.change-log {
+.box.large-box {
     display: none;
 }
 
-.box.change-log button {
+.box.large-box button {
     margin-top: 10px;
 }
 
-.box.change-log ul {
+.box.large-box ul {
     line-height: 20px;
     font-size: 18px;
     padding-top: 5px;
@@ -890,7 +890,7 @@ footer {
         width: 95%;
     }
 
-    .change-log.box {
+    .large-box.box {
         left: 20%;
     }
 }

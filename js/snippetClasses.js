@@ -1059,7 +1059,6 @@ Snip.defaultLinkSanitize = function (linkVal) {
     if (/^\w+:/.test(linkVal)) {
         // do nothing, since this implies user's already using a custom protocol
     } else if (!/^https?:/.test(linkVal)) {
-        // TODO: why's this semicolon unnecessary
         linkVal = `http:${linkVal}`;
     }
 

@@ -1,5 +1,7 @@
 /* global Data */
 
+import { getFormattedDate } from "./dateFns";
+
 // this file contains all common utility functions
 // this file should not contain any code that needs to be executed outisde an exported function as
 // it is not included in final dist
@@ -44,12 +46,6 @@ function chromeAPICallWrapper(callback) {
 
     return function checkRE(...args) {
         if (chrome.runtime.lastError) {
-            // TODO: remove
-            // alert(
-            // `An error occurred! Please press Ctrl+Shift+J/Cmd+Shift+J, copy whatever is
-            // shown in the 'Console' tab and report it at my email: prokeys.feedback@gmail.com
-            // .This will help me resolve your issue and improve my extension. Thanks!`
-            // );
             console.log(`CRLError: ${chrome.runtime.lastError.message}`);
             console.log(stackTrace);
         }
@@ -295,6 +291,18 @@ function isBlockedSite(url) {
     return false;
 }
 
+/**
+     * @param {Element} link the anchor element which initiates download
+     * @param {String} data to create file out of
+     * @param {String} filename name of downloadable file
+     */
+function appendBlobToLink(link, data, filename) {
+    const blob = new Blob([data], {
+        type: "text/js",
+    });
+
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename} ${getFormattedDate()}.txt`;
 function gTranlateImmune(text) {
     return `<span class=notranslate>${text}</span>`;
 }
@@ -322,5 +330,6 @@ export {
     debounce,
     OBJECT_NAME_LIMIT,
     PRIMITIVES_EXT_KEY,
+    appendBlobToLink,
     gTranlateImmune,
 };

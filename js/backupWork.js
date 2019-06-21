@@ -1,12 +1,11 @@
 /* global Data */
 
 import {
-    Q, q, copyTextToClipboard, SHOW_CLASS, qClsSingle,
+    Q, q, copyTextToClipboard, SHOW_CLASS, qClsSingle, appendBlobToLink,
 } from "./pre";
 import { Folder } from "./snippetClasses";
 import { initiateRestore, convertSnippetsToCSV, generateDataFromCSV } from "./restoreFns";
 import { LS_REVISIONS_PROP, saveSnippetData } from "./commonDataHandlers";
-import { getFormattedDate } from "./dateFns";
 
 export function initBackup() {
     let dataToExport;
@@ -41,20 +40,6 @@ export function initBackup() {
         q(`#snippets .panel_popup.${buttonClass}`).addClass(SHOW_CLASS);
         functionMap[buttonClass]();
     });
-
-    /**
-     * @param {Element} link the anchor element which initiates download
-     * @param {String} data to create file out of
-     * @param {String} filename name of downloadable file
-     */
-    function appendBlobToLink(link, data, filename) {
-        const blob = new Blob([data], {
-            type: "text/js",
-        });
-
-        link.href = URL.createObjectURL(blob);
-        link.download = `${filename} ${getFormattedDate()}.txt`;
-    }
 
     function showDataForExport() {
         const dataUse = q(".export .steps :first-child input:checked").value,
