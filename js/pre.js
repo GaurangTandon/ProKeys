@@ -295,6 +295,10 @@ function isBlockedSite(url) {
     return false;
 }
 
+function gTranlateImmune(text) {
+    return `<span class=notranslate>${text}</span>`;
+}
+
 export {
     q,
     qCls,
@@ -318,4 +322,5 @@ export {
     debounce,
     OBJECT_NAME_LIMIT,
     PRIMITIVES_EXT_KEY,
+    gTranlateImmune,
 };
