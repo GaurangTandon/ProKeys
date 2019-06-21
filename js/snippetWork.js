@@ -296,8 +296,9 @@ export function initSnippetWork() {
         if (node.matches(".chevron")) {
             folder = Folder.getListedFolder();
             folder.getParentFolder().listSnippets();
-        } else if (node.matches(".path_part")) {
-            folderName = node.innerHTML;
+        } else if (node.matches(".path_part") || node.parentElement.matches(".path_part")) {
+            // sometimes the click wil have target as the span.notranslate
+            folderName = node.innerText;
             folder = Data.snippets.getUniqueFolder(folderName);
             folder.listSnippets();
         }
