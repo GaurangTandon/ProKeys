@@ -212,12 +212,12 @@ function validateRestoreData(data, snippets) {
     return "true";
 }
 
-function initiateRestore(data) {
+function initiateRestore(data, parentFolder = null, shouldDeleteExistingSnippetsArg = null) {
     const importPopup = q(".panel.import"),
         selectList = importPopup.qClsSingle("selectList"),
-        selectedFolder = Folder.getSelectedFolderInSelectList(selectList),
+        selectedFolder = parentFolder || Folder.getSelectedFolderInSelectList(selectList),
         $deleteExistingSnippetsInput = importPopup.qClsSingle("delete_existing"),
-        shouldDeleteExistingSnippets = $deleteExistingSnippetsInput.checked,
+        shouldDeleteExistingSnippets = shouldDeleteExistingSnippetsArg || $deleteExistingSnippetsInput.checked,
         shouldMergeDuplicateFolderContents = importPopup.q("input[name=merge]").checked;
     let existingSnippets;
 

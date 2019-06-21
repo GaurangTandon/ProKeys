@@ -39,6 +39,10 @@ function notifySnippetDataChanges(snippetList) {
     chrome.runtime.sendMessage({ updateCtx: true }, chromeAPICallWrapper());
 }
 
+/**
+ *
+ * @param {String} dataString stringified latest data
+ */
 function saveRevision(dataString) {
     const MAX_REVISIONS_STORED = 20;
     let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
@@ -49,7 +53,17 @@ function saveRevision(dataString) {
 
     parsed.unshift(latestRevision);
     parsed = parsed.slice(0, MAX_REVISIONS_STORED);
-    localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+    let thereWasError = true;
+    while (thereWasError) {
+        try {
+            localStorage[LS_REVISIONS_PROP] = JSON.stringify(parsed);
+            thereWasError = false;
+        } catch (e) {
+            // it exceeded quota, because user has too many snippets
+            thereWasError = true;
+            parsed.pop();
+        }
+    }
 }
 
 const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(window.location.href);

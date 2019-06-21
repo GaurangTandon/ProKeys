@@ -90,7 +90,7 @@ label > input {
     margin-right: 2px;
 }
 
-input[type="file"] {
+.panel.import input[type="file"] {
     width: 0.1px;
     height: 0.1px;
     opacity: 0;

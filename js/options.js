@@ -25,7 +25,7 @@ import {
     appendBlobToLink,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippetClasses";
-import { ensureRobustCompat } from "./restoreFns";
+import { ensureRobustCompat, initiateRestore } from "./restoreFns";
 import { initBackup } from "./backupWork";
 import { initSnippetWork } from "./snippetWork";
 import { getHTML } from "./textmethods";
@@ -415,7 +415,7 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 if (!data) {
                     nothingFound(`${OLD_DATA_STORAGE_KEY} DNE`);
                 } else if (data.snippets) {
-                    appendBlobToLink(link, JSON.stringify(data), `${type}-recovered data`);
+                    appendBlobToLink(link, JSON.stringify(data, null, 4), `${type}-recovered data`);
                     link.innerHTML = `${type} recovered data`;
                 } else {
                     nothingFound("recovered data has no snippets");
@@ -442,6 +442,36 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
                 console.log(localStorage.prokeys_revisions);
             }
         }());
+
+        const $inputFile = qId("no-db-error-restore");
+        $inputFile.on("input", () => {
+            const file = $inputFile.files[0];
+
+            if (!file) {
+                return false;
+            }
+
+            const reader = new FileReader();
+
+            // don't use .on here as it is NOT
+            // an HTML element
+            reader.addEventListener("load", (event) => {
+                const importFileData = event.target.result;
+                console.log("Data got", importFileData);
+                initiateRestore(importFileData, Data.snippets, true);
+            });
+
+            reader.addEventListener("error", (event) => {
+                console.error(
+                    "File could not be read! Please send following error to prokeys.feedback@gmail.com "
+                    + ` so that I can fix it. Thanks! ERROR: ${event.target.error.code}`,
+                );
+            });
+
+            reader.readAsText(file);
+
+            return true;
+        });
     }
 
     /**
@@ -451,7 +481,6 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
         const changeHotkeyBtn = qClsSingle("change_hotkey"),
             hotkeyListener = qClsSingle("hotkey_listener"),
             url = window.location.href;
-
         if (/#\w+$/.test(url) && !/tryit|symbolsList/.test(url)) {
             // get the id and show divs based on that
             showHideMainPanels(url.match(/#(\w+)$/)[1]);
