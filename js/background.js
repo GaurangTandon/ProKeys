@@ -150,11 +150,7 @@ let toggleBlockSiteCtxItem;
     };
 }());
 
-function openSnippetsPage(version, reason) {
-    if (reason === "update") {
-        localStorage.extensionUpdated = true;
-    }
-
+function openSnippetsPage() {
     chrome.tabs.create({
         url: chrome.extension.getURL("html/options.html#snippets"),
     });
@@ -273,11 +269,11 @@ function decideCorrectStorageType(callback) {
 }
 
 function afterBGPageReload({
-    notifText, notifTitle, version, reason,
+    notifText, notifTitle, reason,
 }) {
     makeDataReady();
 
-    openSnippetsPage(version, reason);
+    if (reason === "install") { openSnippetsPage(); }
     injectScriptAllTabs();
 
     // the empty function and string is required < Chrome 42
@@ -337,6 +333,8 @@ chrome.runtime.onInstalled.addListener((details) => {
             version,
             reason,
         };
+        chrome.browserAction.setBadgeText({ text: "NEW" });
+        localStorage.extensionUpdated = "true";
         decideCorrectStorageType(() => handleExtUpdate(args));
     } else {
         // do not process anything other than install or update

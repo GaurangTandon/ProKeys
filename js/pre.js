@@ -303,6 +303,8 @@ function appendBlobToLink(link, data, filename) {
 
     link.href = URL.createObjectURL(blob);
     link.download = `${filename} ${getFormattedDate()}.txt`;
+function gTranlateImmune(text) {
+    return `<span class=notranslate>${text}</span>`;
 }
 
 export {
@@ -329,4 +331,5 @@ export {
     OBJECT_NAME_LIMIT,
     PRIMITIVES_EXT_KEY,
     appendBlobToLink,
+    gTranlateImmune,
 };

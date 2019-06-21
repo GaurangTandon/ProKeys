@@ -23,6 +23,7 @@ import {
     debounce,
     PRIMITIVES_EXT_KEY,
     appendBlobToLink,
+    gTranlateImmune,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippetClasses";
 import { ensureRobustCompat, initiateRestore } from "./restoreFns";
@@ -381,6 +382,16 @@ Think Notepad.`,
 These editors are generally found in your email client like Gmail, Outlook, etc.<br><br><i>This editor
 <u>supports</u></i><b> HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.`,
                 );
+
+            function fixMacroTable(table) {
+                const tableRows = table.children[1].children;
+                Array.prototype.forEach.call(tableRows, (tablerow) => {
+                    tablerow.firstElementChild.innerHTML = gTranlateImmune(tablerow.firstElementChild.innerHTML);
+                });
+            }
+
+            fixMacroTable(qClsSingle("date-macro-list"));
+            fixMacroTable(qClsSingle("browser-macro-list"));
         }());
 
         // snippetWork.js handles the change-log box
