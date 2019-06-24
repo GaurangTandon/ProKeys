@@ -91,7 +91,7 @@ function setupEditPanel(type) {
         let folderUsable = null;
 
         for (const folder of $folderNames) {
-            if (folder.html() === name) {
+            if (folder.dataset.name === name) {
                 folderUsable = folder;
                 folder.addClass("selected");
                 break;
@@ -110,7 +110,6 @@ function setupEditPanel(type) {
     return function (object, isSavingSnippet) {
         const headerSpan = $panel.q(".header span"),
             folderElm = $panel.q(".folderSelect .selectList"),
-            folderPathElm = $panelSnippets.q(".folder_path :nth-last-child(2)"),
             // boolean to tell if call is to edit existing snippet/folder
             // or create new snippet
             isEditing = !!object,
@@ -149,7 +148,7 @@ function setupEditPanel(type) {
             const parent = object.getParentFolder();
             highlightInFolderList(folderElm, parent.name);
         } else {
-            highlightInFolderList(folderElm, folderPathElm.html());
+            highlightInFolderList(folderElm, Folder.getListedFolderName());
         }
 
         headerSpan.html((isEditing ? "Edit " : "Create new ") + type);
@@ -446,8 +445,7 @@ export function initSnippetWork() {
         let sortDir = $sortPanel.q(".sort-dir :checked").parentNode.innerText,
             sortType = $sortPanel.q(".sort-type :checked").parentNode.innerText;
         const descendingFlag = (sortDir = sortDir === "Descending"),
-            lastFolderDOM = folderPath.lastChild.previousSibling,
-            folder = Data.snippets.getUniqueFolder(lastFolderDOM.html());
+            folder = Folder.getListedFolder();
 
         sortType = sortType === "Name" ? "alphabetic" : "date";
 
