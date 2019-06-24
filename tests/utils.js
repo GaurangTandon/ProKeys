@@ -8,6 +8,7 @@ const fs = require("fs"),
  */
 function sleep(milliseconds) {
     const start = new Date().getTime();
+    // eslint-disable-next-line no-magic-numbers
     for (let i = 0; i < 1e7; i++) {
         if (new Date().getTime() - start > milliseconds) {
             break;
@@ -38,8 +39,9 @@ function extSettings(opts) {
     + "\"charsToAutoInsertUserList\":"
     + "[[\"(\",\")\"],[\"{\",\"}\"],[\"\\\"\",\"\\\"\"],[\"[\",\"]\"]],"
     + "\"dataVersion\": 1,\"language\": \"English\",\"hotKey\": [\"shiftKey\",32],"
-    + "\"dataUpdateVariable\": false,\"matchDelimitedWord\":"
-    + `${opts.matchDelimitedWord},"tabKey": ${opts.tabKeyExpandSpace},`
+    + "\"dataUpdateVariable\": false,"
+    + `"matchDelimitedWord": ${opts.matchDelimitedWord},`
+    + `"tabKey": ${opts.tabKeyExpandSpace},`
     + "\"snipNameDelimiterList\":\"@#$%&*+-=(){}[]:\\\"'/_<>?!., \","
     + "\"omniboxSearchURL\":\"https://www.google.com/search?q=SEARCH\","
     + "\"wrapSelectionAutoInsert\":true,\"ctxEnabled\":true}"
@@ -137,6 +139,7 @@ async function getExpandedPlaceHolderSnippet(
     await page.keyboard.type(values[0]);
 
     /* eslint-disable no-await-in-loop */
+    /* eslint-disable no-magic-numbers */
     for (
         let placeHolderFillerIndex = 1;
         placeHolderFillerIndex < values.length;
@@ -145,6 +148,7 @@ async function getExpandedPlaceHolderSnippet(
         await page.keyboard.press("Tab");
         await page.keyboard.type(values[placeHolderFillerIndex]);
     }
+    /* eslint-enable no-magic-numbers */
     /* eslint-enable no-await-in-loop */
 
     // retrieve the expanded value
@@ -159,6 +163,7 @@ async function getTabToSpaceExpansion(page, textBoxQueryString) {
     await clearText(page, textBox);
 
     // click since focus and then tab would shift focus to next element
+    await page.bringToFront();
     await page.click(textBoxQueryString);
 
     await page.keyboard.press("Tab");

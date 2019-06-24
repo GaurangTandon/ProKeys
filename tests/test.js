@@ -8,7 +8,7 @@ const {
     testURLs = require("./testURLs");
 
 const usablePages = [],
-    JEST_TIMEOUT = 60000;
+    JEST_TIMEOUT = 30000;
 
 /*
  * add this since jest's default timeout is 5s only

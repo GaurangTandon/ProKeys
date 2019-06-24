@@ -79,7 +79,7 @@ function testSnippetExpansionDelimited(usablePages) {
             await usablePage.reload();
         });
 
-        describe(`Snipppet expands on ${
+        describe(`Delimited snipppet behaves correctly on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
             // for ext changes

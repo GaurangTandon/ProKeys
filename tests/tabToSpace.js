@@ -6,6 +6,18 @@ const {
     testURLs = require("./testURLs");
 
 function testTabToSpaceExpansion(usablePages) {
+    beforeAll(async () => {
+        await updateSettings(
+            extSettings({ matchDelimitedWord: false, tabKeyExpandSpace: true }),
+        );
+    });
+
+    afterAll(async () => {
+        await updateSettings(
+            extSettings({ matchDelimitedWord: false, tabKeyExpandSpace: false }),
+        );
+    });
+
     testURLs.forEach(({ url, textBoxQueryString }, index) => {
         let usablePage,
             loadedPromise;
@@ -15,17 +27,12 @@ function testTabToSpaceExpansion(usablePages) {
             await loadedPromise;
             // unless we bring it to front, it does not activate snippets
             await usablePage.bringToFront();
+            await usablePage.reload();
         });
 
         describe(`Tab -> space on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
-            beforeAll(async () => {
-                await updateSettings(
-                    extSettings({ matchDelimitedWord: false, tabKeyExpandSpace: true }),
-                );
-            });
-
             it("Should convert tab -> space", async () => {
                 const text = await getTabToSpaceExpansion(
                     usablePage,
