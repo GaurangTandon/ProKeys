@@ -269,9 +269,15 @@ Generic.isValidName = function (name, type) {
         return `Name cannot be greater than ${OBJECT_NAME_LIMIT} characters. Current name has ${name.length
             - OBJECT_NAME_LIMIT} more characters.`;
     }
-    return Data.snippets.getUniqueObject(name, type)
-        ? Generic.getDuplicateObjectsText(name, type)
-        : "true";
+
+    // error may occur during no-db-restore
+    try {
+        const dupeExists = Data.snippets.getUniqueObject(name, type);
+        if (dupeExists) { return Generic.getDuplicateObjectsText(name, type); }
+        return "true";
+    } catch (e) {
+        return "true";
+    }
 };
 
 /**

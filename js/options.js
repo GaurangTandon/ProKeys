@@ -468,7 +468,9 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
             // an HTML element
             reader.addEventListener("load", (event) => {
                 const importFileData = event.target.result;
-                console.log("Data got", importFileData);
+                console.log("Data got\n", importFileData);
+                window.Data = {};
+                Data.snippets = new Folder(Folder.MAIN_SNIPPETS_NAME);
                 initiateRestore(importFileData, Data.snippets, true);
             });
 
