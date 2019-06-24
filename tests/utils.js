@@ -70,10 +70,28 @@ async function positionCursor(page, change) {
     }
 }
 
-async function clearText(page, textBox) {
-    await page.evaluate((txtBox) => {
-        txtBox.value = "";
-    }, textBox);
+async function clearText(page, textBoxQueryString, handler) {
+    if (handler) {
+        await handler.clearText(page, textBoxQueryString);
+    } else {
+        const textBox = await page.$(textBoxQueryString);
+        await page.evaluate((txtBox) => {
+            txtBox.value = "";
+        }, textBox);
+    }
+}
+
+async function retrieveText(page, textBoxQueryString, handler) {
+    let expandedText = "";
+
+    if (handler) {
+        expandedText = await handler.retrieveText(page, textBoxQueryString);
+    } else {
+        const textBox = await page.$(textBoxQueryString);
+        expandedText = await page.evaluate(txt => txt.value, textBox);
+    }
+
+    return expandedText;
 }
 
 /*
@@ -84,12 +102,11 @@ async function getExpandedSnippet(
     textBoxQueryString,
     snipText,
     cursorChange,
+    handler = null,
 ) {
-    // find the textbox and focus it
-    const textBox = await page.$(textBoxQueryString);
     await page.focus(textBoxQueryString);
 
-    await clearText(page, textBox);
+    await clearText(page, textBoxQueryString, handler);
 
     // type the snip text [and some extra, if reqd]
     await page.keyboard.type(snipText);
@@ -104,8 +121,7 @@ async function getExpandedSnippet(
     // wait for some time
     await sleep(extensionDelay);
 
-    // retrieve the expanded value
-    const expandedText = await page.evaluate(txt => txt.value, textBox);
+    const expandedText = await retrieveText(page, textBoxQueryString, handler);
 
     return expandedText;
 }
@@ -115,12 +131,11 @@ async function getExpandedPlaceHolderSnippet(
     textBoxQueryString,
     snipText,
     values,
+    handler = null,
 ) {
-    // find the textbox and focus it
-    const textBox = await page.$(textBoxQueryString);
     await page.focus(textBoxQueryString);
 
-    await clearText(page, textBox);
+    await clearText(page, textBoxQueryString, handler);
 
     // type the snip text [and some extra, if reqd]
     await page.keyboard.type(snipText);
@@ -148,15 +163,17 @@ async function getExpandedPlaceHolderSnippet(
     /* eslint-enable no-await-in-loop */
 
     // retrieve the expanded value
-    const expandedText = await page.evaluate(txt => txt.value, textBox);
+    const expandedText = retrieveText(page, textBoxQueryString, handler);
 
     return expandedText;
 }
 
-async function getTabToSpaceExpansion(page, textBoxQueryString) {
-    const textBox = await page.$(textBoxQueryString);
-
-    await clearText(page, textBox);
+async function getTabToSpaceExpansion(
+    page,
+    textBoxQueryString,
+    handler = null,
+) {
+    await clearText(page, textBoxQueryString, handler);
 
     // click since focus and then tab would shift focus to next element
     await page.bringToFront();
@@ -164,7 +181,7 @@ async function getTabToSpaceExpansion(page, textBoxQueryString) {
 
     await page.keyboard.press("Tab");
 
-    const text = await page.evaluate(txt => txt.value, textBox);
+    const text = retrieveText(page, textBoxQueryString, handler);
 
     return text;
 }
