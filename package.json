@@ -35,14 +35,8 @@
         "webpack-cli": "^3.3.2"
     },
     "lint-staged": {
-        "*.js": [
-            "eslint --fix",
-            "git add"
-        ],
-        "ignore": [
-            "**/dist/*.js",
-            "**/editor.min.js"
-        ]
+        "*.js": ["eslint --fix", "git add"],
+        "ignore": ["**/dist/*.js", "**/editor.min.js"]
     },
     "husky": {
         "hooks": {
