@@ -70,9 +70,18 @@ async function positionCursor(page, change) {
     }
 }
 
+async function focusTextBox(page, textBoxQueryString, handler) {
+    if (handler) {
+        await handler.focusTextBox(page);
+    } else {
+        await page.focus(textBoxQueryString);
+        await page.click(textBoxQueryString);
+    }
+}
+
 async function clearText(page, textBoxQueryString, handler) {
     if (handler) {
-        await handler.clearText(page, textBoxQueryString);
+        await handler.clearText(page);
     } else {
         const textBox = await page.$(textBoxQueryString);
         await page.evaluate((txtBox) => {
@@ -85,7 +94,7 @@ async function retrieveText(page, textBoxQueryString, handler) {
     let expandedText = "";
 
     if (handler) {
-        expandedText = await handler.retrieveText(page, textBoxQueryString);
+        expandedText = await handler.retrieveText(page);
     } else {
         const textBox = await page.$(textBoxQueryString);
         expandedText = await page.evaluate(txt => txt.value, textBox);
@@ -104,8 +113,9 @@ async function getExpandedSnippet(
     cursorChange,
     handler = null,
 ) {
-    await page.focus(textBoxQueryString);
+    await page.bringToFront();
 
+    await focusTextBox(page, textBoxQueryString, handler);
     await clearText(page, textBoxQueryString, handler);
 
     // type the snip text [and some extra, if reqd]
@@ -133,8 +143,9 @@ async function getExpandedPlaceHolderSnippet(
     values,
     handler = null,
 ) {
-    await page.focus(textBoxQueryString);
+    await page.bringToFront();
 
+    await focusTextBox(page, textBoxQueryString, handler);
     await clearText(page, textBoxQueryString, handler);
 
     // type the snip text [and some extra, if reqd]
@@ -163,7 +174,7 @@ async function getExpandedPlaceHolderSnippet(
     /* eslint-enable no-await-in-loop */
 
     // retrieve the expanded value
-    const expandedText = retrieveText(page, textBoxQueryString, handler);
+    const expandedText = await retrieveText(page, textBoxQueryString, handler);
 
     return expandedText;
 }
@@ -173,15 +184,14 @@ async function getTabToSpaceExpansion(
     textBoxQueryString,
     handler = null,
 ) {
-    await clearText(page, textBoxQueryString, handler);
-
-    // click since focus and then tab would shift focus to next element
     await page.bringToFront();
-    await page.click(textBoxQueryString);
+
+    await focusTextBox(page, textBoxQueryString, handler);
+    await clearText(page, textBoxQueryString, handler);
 
     await page.keyboard.press("Tab");
 
-    const text = retrieveText(page, textBoxQueryString, handler);
+    const text = await retrieveText(page, textBoxQueryString, handler);
 
     return text;
 }
