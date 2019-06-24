@@ -299,9 +299,20 @@ primitiveExtender();
         }
     }
 
+    function triggerFakeInput($elm) {
+        $elm.dispatchEvent(
+            new Event("input", {
+                cancelable: true,
+                bubbles: true,
+            }),
+        );
+    }
+
     function checkPlaceholdersInContentEditableNode() {
         let pArr = Placeholder.array,
             currND;
+
+        triggerFakeInput(Placeholder.node);
         // debugLog(Placeholder);
         if (pArr && pArr.length > 0) {
             [currND] = pArr;
@@ -324,7 +335,10 @@ primitiveExtender();
         // might have been called from keyEventhandler
         if (Placeholder.isCENode) {
             checkPlaceholdersInContentEditableNode();
+            return;
         }
+
+        triggerFakeInput(node);
 
         // text area logic
         if (notCheckSelection) {
@@ -486,6 +500,7 @@ primitiveExtender();
             node.value = textBefore + characterStart + textMid + (characterEnd || "") + textAfter;
             node.selectionStart = startPos;
             node.selectionEnd = endPos;
+            triggerFakeInput(node);
         }
     }
 
@@ -498,7 +513,7 @@ primitiveExtender();
     ) {
         let textNode,
             positionIncrement = isStart ? 1 : 0;
-
+        triggerFakeInput(rangeNode);
         if (rangeNode.nodeType !== 3) {
             textNode = document.createTextNode(singleCharacter);
             rangeNode.insertBefore(textNode, rangeNode.childNodes[position]);
@@ -783,12 +798,14 @@ primitiveExtender();
             [valueToSet, caretPosToSet] = evaluatedValue;
 
             if (isCENode) {
+                triggerFakeInput(rangeNode);
                 rangeNode.textContent = valueToSet;
                 range.setStart(rangeNode, caretPosToSet);
                 range.setEnd(rangeNode, caretPosToSet);
                 sel.removeAllRanges();
                 sel.addRange(range);
             } else {
+                triggerFakeInput(node);
                 node.value = valueToSet;
                 node.selectionStart = node.selectionEnd = caretPosToSet;
             }
