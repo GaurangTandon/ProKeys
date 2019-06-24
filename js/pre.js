@@ -309,7 +309,6 @@ function gTranlateImmune(text) {
     return `<span class=notranslate>${text}</span>`;
 }
 
-
 /**
  * in certain web apps, like mailchimp
  * node refers to the editor inside iframe
