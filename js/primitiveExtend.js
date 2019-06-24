@@ -171,29 +171,6 @@ export function primitiveExtender() {
         return this.html(textToSet, "innerText");
     });
 
-    extendNodePrototype("unwrap", function () {
-        const children = this.childNodes,
-            parent = this.parentNode;
-        let { nextSibling } = this,
-            child,
-            len = children.length;
-
-        while (len > 0) {
-            child = children[len - 1];
-
-            if (nextSibling) {
-                parent.insertBefore(child, nextSibling);
-            } else {
-                parent.appendChild(child);
-            }
-
-            nextSibling = child;
-            len--;
-        }
-
-        parent.removeChild(this);
-    });
-
     for (const [funcName, func] of Object.entries(DOM_HELPERS)) {
         extendNodePrototype(funcName, func);
     }

@@ -9,6 +9,7 @@ import {
     OBJECT_NAME_LIMIT,
     isTextNode,
     SHOW_CLASS,
+    gTranlateImmune,
 } from "./pre";
 import { getText, genericFormatterCreator, formatOLULInListParentForCEnode } from "./textmethods";
 import {
@@ -211,9 +212,11 @@ Generic.getDOMElement = function (objectNamesToHighlight) {
     divMain.appendChild(img);
 
     // creating the short `div` element
-    const divName = q.new("div");
-    // text with newlines does not fit in one line
-    divName.text(this.name).addClass("name");
+    const divName = q.new("div")
+        // text with newlines does not fit in one line
+        .html(gTranlateImmune(this.name))
+        .addClass("name");
+    divName.dataset.name = this.name;
     divMain.appendChild(divName);
 
     divMain.appendChild(Generic.getButtonsDOMElm());
@@ -278,7 +281,7 @@ Generic.isValidName = function (name, type) {
 Generic.getObjectThroughDOMListElm = function (listElm) {
     const isSnip = listElm.classList.contains("snip"),
         type = isSnip ? Generic.SNIP_TYPE : Generic.FOLDER_TYPE,
-        name = listElm.qClsSingle("name").innerHTML;
+        { name } = listElm.qClsSingle("name").dataset;
 
     return Data.snippets.getUniqueObject(name, type);
 };
@@ -1056,7 +1059,6 @@ Snip.defaultLinkSanitize = function (linkVal) {
     if (/^\w+:/.test(linkVal)) {
         // do nothing, since this implies user's already using a custom protocol
     } else if (!/^https?:/.test(linkVal)) {
-        // TODO: why's this semicolon unnecessary
         linkVal = `http:${linkVal}`;
     }
 
@@ -1379,8 +1381,8 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     function insertPathPartDivs(name) {
         const pathPart = q.new("div").addClass("path_part"),
             rightArrow = q.new("div").addClass("right_arrow");
-
-        $containerFolderPath.appendChild(pathPart.html(name));
+        pathPart.dataset.name = name;
+        $containerFolderPath.appendChild(pathPart.html(gTranlateImmune(name)));
         $containerFolderPath.appendChild(rightArrow);
     }
 
@@ -1465,9 +1467,11 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
 
     this.getFolderSelectList = function (nameToNotShow) {
         let mainContainer = q.new("div"),
-            $folderName = q.new("p").html(this.name),
+            $folderName = q.new("p").html(gTranlateImmune(this.name)),
             childContainer,
             hasChildFolder = false;
+
+        $folderName.dataset.name = this.name;
 
         mainContainer.appendChild($folderName);
 
@@ -1711,8 +1715,8 @@ Folder.insertBulkActionDOM = function (listedFolder) {
             $div = q
                 .new("div")
                 .addClass("name")
-                .html(listElm.name);
-
+                .html(gTranlateImmune(listElm.name));
+        $div.dataset.name = listElm.name;
         $checkbox.type = "checkbox";
         $img.src = `../imgs/${listElm.type}.svg`;
 
@@ -1729,7 +1733,7 @@ Folder.insertBulkActionDOM = function (listedFolder) {
     return $container;
 };
 Folder.getSelectedFolderInSelectList = function (selectList) {
-    const selectFolderName = selectList.qClsSingle("selected").html();
+    const selectFolderName = selectList.qClsSingle("selected").dataset.name;
 
     return Data.snippets.getUniqueFolder(selectFolderName);
 };
@@ -1793,7 +1797,7 @@ Folder.implementChevronInFolderPath = function (notRemoveChevron) {
     }
 };
 Folder.getListedFolderName = function () {
-    return $containerFolderPath.q(":nth-last-child(2)").html();
+    return $containerFolderPath.q(":nth-last-child(2)").dataset.name;
 };
 Folder.getListedFolder = function () {
     let name = Folder.getListedFolderName(),

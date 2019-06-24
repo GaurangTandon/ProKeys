@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "ProKeys",
     "description": "Save time and effort in emails, etc. with ProKeys! Define snippets, do math in browser, auto complete braces, and much more.",
-    "version": "3.5.2",
+    "version": "3.6.0",
     "author": "Aquila Softworks",
     "browser_action": {
         "default_icon": "imgs/r16.png"

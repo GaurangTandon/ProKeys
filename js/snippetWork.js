@@ -296,8 +296,9 @@ export function initSnippetWork() {
         if (node.matches(".chevron")) {
             folder = Folder.getListedFolder();
             folder.getParentFolder().listSnippets();
-        } else if (node.matches(".path_part")) {
-            folderName = node.innerHTML;
+        } else if (node.matches(".path_part") || node.parentElement.matches(".path_part")) {
+            // sometimes the click wil have target as the span.notranslate
+            folderName = node.innerText;
             folder = Data.snippets.getUniqueFolder(folderName);
             folder.listSnippets();
         }
@@ -498,7 +499,7 @@ export function initSnippetWork() {
 
             selectedObjects = selectedObjects.map((e) => {
                 const div = e.nextElementSibling.nextElementSibling,
-                    name = div.html(),
+                    { name } = div.dataset,
                     img = e.nextElementSibling,
                     type = img.src.match(/\w+(?=\.svg)/)[0];
 
@@ -587,7 +588,7 @@ export function initSnippetWork() {
                             `Cannot move ${selObj.type} "${selObj.name}" to "${
                                 selectedFolder.name
                             }"`
-                                + "; as it is the same as (or a parent folder of) the destination folder",
+                            + "; as it is the same as (or a parent folder of) the destination folder",
                         );
                     }
                 });
@@ -616,7 +617,7 @@ export function initSnippetWork() {
             if (
                 window.confirm(
                     `Are you sure you want to delete these ${selectedObjects.length} items? `
-                        + "Remember that deleting a folder will also delete ALL its contents.",
+                    + "Remember that deleting a folder will also delete ALL its contents.",
                 )
             ) {
                 selectedObjects.forEach((selObj) => {
@@ -633,11 +634,16 @@ export function initSnippetWork() {
         });
     }());
 
-    (function checkIfFirstTimeUser() {
+    (function displayChangelog() {
         const $changeLog = qClsSingle("change-log"),
             $button = $changeLog.q("button"),
             // ls set by background page
             isUpdate = localStorage.extensionUpdated === "true";
+
+        $button.on("click", () => {
+            $changeLog.removeClass(SHOW_CLASS);
+            localStorage.extensionUpdated = "false";
+        });
 
         if (isUpdate) {
             $changeLog.addClass(SHOW_CLASS);
@@ -645,6 +651,7 @@ export function initSnippetWork() {
             $button.on("click", () => {
                 $changeLog.removeClass(SHOW_CLASS);
                 localStorage.extensionUpdated = "false";
+                chrome.browserAction.setBadgeText({ text: "" });
             });
         }
     }());

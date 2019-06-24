@@ -8,6 +8,7 @@ import {
     saveOtherData,
     migrateData,
     LS_STORAGE_TYPE_PROP,
+    OLD_DATA_STORAGE_KEY,
 } from "./commonDataHandlers";
 import {
     SHOW_CLASS,
@@ -21,9 +22,11 @@ import {
     protoWWWReplaceRegex,
     debounce,
     PRIMITIVES_EXT_KEY,
+    appendBlobToLink,
+    gTranlateImmune,
 } from "./pre";
 import { DualTextbox, Folder } from "./snippetClasses";
-import { ensureRobustCompat } from "./restoreFns";
+import { ensureRobustCompat, initiateRestore } from "./restoreFns";
 import { initBackup } from "./backupWork";
 import { initSnippetWork } from "./snippetWork";
 import { getHTML } from "./textmethods";
@@ -299,72 +302,66 @@ primitiveExtender();
         });
     }
 
-    function afterDBLoad() {
-        const changeHotkeyBtn = qClsSingle("change_hotkey"),
-            hotkeyListener = qClsSingle("hotkey_listener");
+    // used when buttons in navbar are clicked
+    // or when the url contains an id of a div
+    function showHideMainPanels(DIVName) {
+        const containerSel = "#content > ",
+            DIVSelector = `#${DIVName}`,
+            btnSelector = `.sidebar .buttons button[data-divid =${DIVName}]`,
+            selectedBtnClass = "selected",
+            selectedDIV = q(`${containerSel}.show`),
+            selectedBtn = q(`.sidebar .buttons .${selectedBtnClass}`);
+
+        if (DIVName === "snippets") {
+            Data.snippets.listSnippets();
+        }
+
+        if (selectedDIV) {
+            selectedDIV.removeClass("show");
+        }
+        q(containerSel + DIVSelector).addClass("show");
+
+        if (selectedBtn) {
+            selectedBtn.removeClass(selectedBtnClass);
+        }
+        q(btnSelector).addClass(selectedBtnClass);
+
+        let { href } = window.location,
+            selIndex = href.indexOf("#");
+
+        if (selIndex !== -1) {
+            href = href.substring(0, selIndex);
+        }
+
+        window.location.href = href + DIVSelector;
+
+        // the page shifts down a little
+        // for the exact location of the div;
+        // so move it back to the top
+        document.body.scrollTop = 0;
+    }
+
+    /**
+     * Setup those parts of the DOM first which can function decently even
+     * if Data isn't loaded
+     */
+    function domBeforeDBLoad() {
+        if (!window[PRIMITIVES_EXT_KEY]) {
+            updateAllValuesPerWin(window);
+        }
 
         chrome.storage.onChanged.addListener(updateStorageAmount);
-
         Q("span.version").forEach((span) => {
             span.innerHTML = VERSION;
         });
 
-        // panels are - #content div
-        (function panelWork() {
-            const url = window.location.href;
+        const sidebarButtons = Q(".sidebar .buttons button");
 
-            // used when buttons in navbar are clicked
-            // or when the url contains an id of a div
-            function showHideDIVs(DIVName) {
-                const containerSel = "#content > ",
-                    DIVSelector = `#${DIVName}`,
-                    btnSelector = `.sidebar .buttons button[data-divid =${DIVName}]`,
-                    selectedBtnClass = "selected",
-                    selectedDIV = q(`${containerSel}.show`),
-                    selectedBtn = q(`.sidebar .buttons .${selectedBtnClass}`);
-
-                if (DIVName === "snippets") {
-                    Data.snippets.listSnippets();
-                }
-
-                if (selectedDIV) {
-                    selectedDIV.removeClass("show");
-                }
-                q(containerSel + DIVSelector).addClass("show");
-
-                if (selectedBtn) {
-                    selectedBtn.removeClass(selectedBtnClass);
-                }
-                q(btnSelector).addClass(selectedBtnClass);
-
-                let { href } = window.location,
-                    selIndex = href.indexOf("#");
-
-                if (selIndex !== -1) {
-                    href = href.substring(0, selIndex);
-                }
-
-                window.location.href = href + DIVSelector;
-
-                // the page shifts down a little
-                // for the exact location of the div;
-                // so move it back to the top
-                document.body.scrollTop = 0;
-            }
-
-            if (/#\w+$/.test(url) && !/tryit|symbolsList/.test(url)) {
-                // get the id and show divs based on that
-                showHideDIVs(url.match(/#(\w+)$/)[1]);
-            } else {
-                showHideDIVs("settings");
-            } // default panel
-
-            // the left hand side nav buttons
-            // Help, Settings, Backup&Restore, About
-            Q(".sidebar .buttons button").on("click", function () {
-                showHideDIVs(this.dataset.divid);
-            });
-        }());
+        // the left hand side nav buttons
+        // Help, Settings, Backup&Restore, About
+        sidebarButtons.on("click", function () {
+            showHideMainPanels(this.dataset.divid);
+        });
 
         (function helpPageHandlers() {
             /* set up accordion in help page */
@@ -385,7 +382,122 @@ Think Notepad.`,
 These editors are generally found in your email client like Gmail, Outlook, etc.<br><br><i>This editor
 <u>supports</u></i><b> HTML formatting</b>. You can use the "my_sign" sample snippet here, and see the effect.`,
                 );
+
+            function fixMacroTable(table) {
+                const tableRows = table.children[1].children;
+                Array.prototype.forEach.call(tableRows, (tablerow) => {
+                    tablerow.firstElementChild.innerHTML = gTranlateImmune(tablerow.firstElementChild.innerHTML);
+                });
+            }
+
+            fixMacroTable(qClsSingle("date-macro-list"));
+            fixMacroTable(qClsSingle("browser-macro-list"));
         }());
+
+        // snippetWork.js handles the change-log box
+        (function setupPopupBoxHandlers() {
+            const noDBErrorBox = qClsSingle("no-db-error"),
+                $closeButton = noDBErrorBox.q("button");
+
+            $closeButton.on("click", () => {
+                noDBErrorBox.removeClass(SHOW_CLASS);
+            });
+        }());
+    }
+
+    /**
+     * If Data didn't load as expected, show an error to the user
+     * and suggest them options as to how they can recover the data
+     */
+    function prepareNoDataFoundPopup() {
+        /**
+         * @param {"sync" | "local" | "localstorage"} type sync or local
+         */
+        function prepareAsFile(type) {
+            const link = qClsSingle(`${type}-found`);
+            function nothingFound(error) {
+                link.innerHTML = `no ${type} data found`;
+                console.log(`${type} => ${error}`);
+            }
+
+            return function (response) {
+                const data = response[OLD_DATA_STORAGE_KEY];
+
+                if (!data) {
+                    nothingFound(`${OLD_DATA_STORAGE_KEY} DNE`);
+                } else if (data.snippets) {
+                    appendBlobToLink(link, JSON.stringify(data, null, 4), `${type}-recovered data`);
+                    link.innerHTML = `${type} recovered data`;
+                } else {
+                    nothingFound("recovered data has no snippets");
+                    console.log(data);
+                }
+            };
+        }
+
+        qClsSingle("no-db-error").addClass("show");
+
+        // recover user data from all three stores
+        chrome.storage.sync.get(prepareAsFile("sync"));
+        chrome.storage.local.get(prepareAsFile("local"));
+        (function forlocalstorage() {
+            const type = "localstorage";
+            try {
+                const snippets = JSON.parse(localStorage.prokeys_revisions)[0].data,
+                    data = SETTINGS_DEFAULTS;
+                data.snippets = snippets;
+                prepareAsFile(type)({ [OLD_DATA_STORAGE_KEY]: data });
+            } catch (e) {
+                qClsSingle(`${type}-found`).innerHTML = `no ${type} data found`;
+                console.log(`Excetion (${e}) while parsing the following data`);
+                console.log(localStorage.prokeys_revisions);
+            }
+        }());
+
+        const $inputFile = qId("no-db-error-restore");
+        $inputFile.on("input", () => {
+            const file = $inputFile.files[0];
+
+            if (!file) {
+                return false;
+            }
+
+            const reader = new FileReader();
+
+            // don't use .on here as it is NOT
+            // an HTML element
+            reader.addEventListener("load", (event) => {
+                const importFileData = event.target.result;
+                console.log("Data got", importFileData);
+                initiateRestore(importFileData, Data.snippets, true);
+            });
+
+            reader.addEventListener("error", (event) => {
+                console.error(
+                    "File could not be read! Please send following error to prokeys.feedback@gmail.com "
+                    + ` so that I can fix it. Thanks! ERROR: ${event.target.error.code}`,
+                );
+            });
+
+            reader.readAsText(file);
+
+            return true;
+        });
+    }
+
+    /**
+     * Called when Data is defined and has correctly loaded
+     */
+    function DOMafterDBLoad() {
+        const changeHotkeyBtn = qClsSingle("change_hotkey"),
+            hotkeyListener = qClsSingle("hotkey_listener"),
+            url = window.location.href;
+        if (/#\w+$/.test(url) && !/tryit|symbolsList/.test(url)) {
+            // get the id and show divs based on that
+            showHideMainPanels(url.match(/#(\w+)$/)[1]);
+        } else {
+            showHideMainPanels("settings");
+        } // default panel
 
         (function settingsPageHandlers() {
             const $delimiterCharsInput = q(".delimiter_list input"),
@@ -670,9 +782,6 @@ Please wait at least five minutes and try again.`);
         sync = "<b>Sync</b> - storage synced across all PCs. Offers less storage space compared to Local storage.";
 
     function onDBLoad(DataResponse) {
-        if (!window[PRIMITIVES_EXT_KEY]) {
-            updateAllValuesPerWin(window);
-        }
         // needs to be set before database actions
         $panelSnippets = qClsSingle("panel_snippets");
         $containerSnippets = $panelSnippets.qClsSingle("panel_content");
@@ -685,6 +794,12 @@ Please wait at least five minutes and try again.`);
         $snipNameDelimiterListDIV = qClsSingle("delimiter_list");
 
         window.Data = DataResponse;
+
+        if (!Data) {
+            prepareNoDataFoundPopup();
+            return;
+        }
+
         Folder.makeFolderIfList(Data);
         Folder.setIndices();
 
@@ -752,10 +867,11 @@ Please wait at least five minutes and try again.`);
             }, 300),
         );
 
-        afterDBLoad();
+        DOMafterDBLoad();
     }
 
     function onWindowLoad() {
+        domBeforeDBLoad();
         DBget(onDBLoad);
     }
 

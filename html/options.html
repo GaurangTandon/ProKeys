@@ -34,17 +34,14 @@
 
 		<div id="faded"></div>
 
-		<div class="change-log box">
+		<div class="change-log box large-box">
 			<p class="heading">ProKeys v<span class="version"></span>
 				<span>Changelog</span>
 			</p>
 			<div class="content">
-				<h2>&#x25cf; Regressions</h2>
+				<!-- <h2>&#x25cf; Regressions</h2>
 				<ul>
-					<li>Date time macros should now be behaving as usual.</li>
-					<li>Some users have had their delimiter settings accidentally reset (so the snippet "pet" expands when you write "carpet"). Please goto the Settings page and re-enable the "Snippet Delimiters".</li>
-					<li>Thanks for the bug reports! If you have any issues, feel free to contact prokeys.feedback@gmail.com</li>
-				</ul>
+				</ul> -->
 				<!--<h2>&#x25cf; UI changes</h2>
 				<ul>
 					<li>Help page has been redone.</li>
@@ -52,27 +49,22 @@
 				</ul>-->
 				<h2>&#x25cf; New features</h2>
 				<ul>
-					<li>Added ability to use Tab key as a snippet expansion hotkey!</li>
-					<li>Added option to disable the context menu integration</li>
-					<li>The ProKeys icon now greys out on sites where it cannot function (example: chrome:// tabs)</li>
-					<li>Snippet names can now have upto 100 characters! (up from previous 60 char limit)</li>
+					<li>Now you can export snippets to and from a CSV file!</li>
 				</ul>
 				<!-- <h2>&#x25cf; Content changes</h2>
 					<ul>
 						<li>Added new FAQ content (thanks lee-tts).</li>
 					</ul> -->
-					<!-- <h2>&#x25cf; Bugs squashed</h2>
-						<ul>
-							<li>Default snippet list on fresh install was empty.</li>
-							<li>Clicking about no longer crashes ProKeys on Linux (thanks ammarbinfaisal)</li>
-							<li>Broken import by file input.</li>
-							<li><b>Snippet insertion broke in iframe editors.</b></li>
-						</ul> -->
-				<h2>&#x25cf; What's coming up soon?</h2>
+				<h2>&#x25cf; Bugs squashed</h2>
+				<ul>
+					<li>Options page no longer crashes when detecting miconfigured data storage,
+						and instead, presents a helpful error message which allows you to recover your data easily.</li>
+				</ul>
+				<!-- <h2>&#x25cf; What's coming up soon?</h2>
 				<ul>
 					<li>Version 4.0.0 is in the works, and we are more than excited to showcase our brand new UI!
 					</li>
-				</ul>
+				</ul> -->
 			</div>
 			<!--<div class="notice">
 				<img src="../imgs/warn.png">
@@ -87,6 +79,33 @@
 					<a target="_blank" href="https://chrome.google.com/webstore/detail/prokeys/ekfnbpgmmeahnnlpjibofkobpdkifapn/reviews">Leave
 						a review!</a>
 					<a target="_blank" href="https://www.paypal.me/GaurangTandon">Donate money!</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="no-db-error box large-box">
+			<p class="heading">Oops, there's an error!</p>
+			<div class="content">
+				<h2>&#x25cf; Details</h2>
+				<ul>
+					<li>Apologies for the issue, but we couldn't find your data where it is supposed to be present.</li>
+					<li>This is usually caused by miconfigured sync or some other really specific problems.</li>
+					<li>Do not worry though, we store your data safely in two places so that, even if you don't have a backup, chances of your losing your data are almost nil.</li>
+				</ul>
+				<h2>&#x25cf; Restore data</h2>
+				<ul>
+					<li>We found some data in these locations, and have thus saved it as a text file which you can download.
+						<a class="local-found"></a> OR <a class="sync-found"></a> OR <a class="localstorage-found"></a></li>
+					<li>Now you may upload a backup file, from above or your own previously saved copy here, and we will load it for you.
+						<input type="file" name="no-db-error-restore" id="no-db-error-restore">
+					</li>
+					<li>If all the above options are unhelpful, please contact us at prokeys.feedback@gmail.com for further assisstance.</li>
+				</ul>
+
+			</div>
+			<div class="appeal">
+				<div class="btn-group buttons">
+					<button>Close</button>
 				</div>
 			</div>
 		</div>
@@ -234,7 +253,7 @@
 									<input type="radio" name="data_use" value="print">Print snippets</label>
 							</li>
 							<li>
-								<a href="" download="">Download your data as a text file</a>, or, <br><br>
+								Download your data as a <a href="" download="" class="text-download">text file</a>, <a href="" download="" class="csv-download">your snippets as a csv</a> or, <br><br>
 								<span class="copy-data-to-clipboard-btn fake-anchor">Copy your data to clipboard.</s>
 							</li>
 						</ol>
@@ -280,6 +299,9 @@
 								<label for="file_input_elm" class="file_input"></label>
 								<input id="file_input_elm" type="file" accept=".txt, .doc, .docx, .rtf">
 								or, <span class="import-data-clipboard-btn fake-anchor">just press Ctrl-V to paste data from your clipboard.</span>
+							</li>
+							<li>
+								<label><input type="checkbox" class="csv-check-import">This is a CSV snippets import</label>
 							</li>
 						</ol>
 						<button class="restore">Restore</button>
@@ -435,14 +457,6 @@
 							<dt>I deleted a snippet/made changes by mistake! What do I do?</dt>
 							<dd>Each of your edits/deletions/etc. are saved up carefully and listed in the "Past data versions" on the
 								<a target="_blank" href="options.html#snippets">Snippets</a> tab. You can restore your data from there :-)</dd>
-							<dt>Sync storage breaks. How to fix that?</dt>
-							<dd>This is a known issue. While we try to figure out the causes and fix it, currently a workaround is to:
-								<ol>
-									<li>Make changes to your data in the original sync device and save them.</li>
-									<li>Wait for a few minutes.</li>
-									<li>Watch as the child sync devices automatically catch the update and restore their normal operation.</li>
-								</ol>
-							</dd>
 							<dt>Synced data does not update in one PC when updating in another.</dt>
 							<dd> This is because the extension caches the last fetched sync data. To force get new data:
 								<ol>
@@ -467,8 +481,8 @@
 									(default:
 									Shift+Space), replaces it with the long text.</p>
 								<p>
-									<b>Example:</b> Snippet with snippet name - "brb". The snippet name is the abbreviation. It is
-									<b>case-insensitive</b>, so "brb", "BRB", and "bRb" are all same. Typing "brb" and pressing the hotkey, would
+									<b>Example:</b> Snippet with snippet name - <span class="notranslate">"brb"</span>. The snippet name is the abbreviation. It is
+									<b>case-insensitive</b>, so <span class="notranslate">"brb"</span>, "<span class="notranslate">BRB"</span>, and <span class="notranslate">"bRb"</span> are all same. Typing "brb" and pressing the hotkey, would
 									replace
 									it with the snippet body, which here is "be right back". Snippets can be created in the popup box.</p>
 								<a href="#tryit">Try snippets in editor</a> - you can view the snippets in the popup box
@@ -479,12 +493,12 @@
 								<p>Placeholders are fields in the snippet body which are populated with dynamic values provided by you while
 									using
 									the snippet.
-									<br>A placeholder has the format `%text%` such that the
+									<br>A placeholder has the format <span class="notranslate">`%text%`</span> such that the
 									<b>text can only contain alphabets, digits and the underscore symbol</b>.</p>
 								<p>
-									<b>Example:</b> snippet "wishBDay", which you can use to wish your friends Happy Birthday! Since the name of
+									<b>Example:</b> snippet <span class="notranslate">"wishBDay"</span>, which you can use to wish your friends Happy Birthday! Since the name of
 									the
-									friend keeps changing, so you can add a placeholder to the snippet body, as "%name%"(without quotes). It would
+									friend keeps changing, so you can add a placeholder to the snippet body, as <span class="notranslate">"%name%"</span>(without quotes). It would
 									be
 									auto-highlighted whenever you use the snippet and you can type your friend's name into it.</p>
 								<a href="#tryit">Try the "letter" sample snippet in editor</a>
@@ -511,11 +525,11 @@
 									<b>Usage:</b>
 								</p>
 								<ol class="steps">
-									<li>Press square bracket key twice, the other `]]` pair of braces would auto-complete.</li>
+									<li>Press square bracket key twice, the other <span class="notranslate">`]]`</span> pair of braces should auto-complete.</li>
 									<li>Type the math expression to be evalated inside the braces.</li>
-									<li>Press `=` (equals) key and the result of evaluation would replace the `[[...=]]`!</li>
+									<li>Press `=` (equals) key and the result of evaluation would replace the <span class="notranslate">`[[...=]]`</span>!</li>
 								</ol>
-								<a href="#tryit">Try math expressions in the editor</a> (like "[[5^3=]]")
+								<a href="#tryit">Try math expressions in the editor</a> (like <span class="notranslate">"[[5^3=]]"</span>)
 							</dd>
 
 							<dt>How to Embed one Snippet inside of another?</dt>
@@ -533,9 +547,9 @@
 									references.
 								</p>
 								<br>
-								<p>To embed a snippet "snp2" inside another snippet "snp1", you would simply type "[[%s(snp2)]]" (without
+								<p>To embed a snippet <span class="notranslate">"snp2"</span> inside another snippet <span class="notranslate">"snp1"</span>, you would simply type <span class="notranslate">"[[%s(snp2)]]"</span> (without
 									quotes)
-									inside the "snp1" snippet's body.</p>
+									inside the <span class="notranslate">"snp1"</span> snippet's body.</p>
 							</dd>
 
 							<dt>How to Embed HTML in a Snippet?</dt>
@@ -560,15 +574,15 @@
 									<em>
 										<strong>creating</strong> the snippet</em>.</p>
 								<ol class="steps">
-									<li>Place "[[%d()]]" (without quotes) inside the snippet body.</li>
+									<li>Place <span class="notranslate">"[[%d()]]"</span> (without quotes) inside the snippet body.</li>
 									<li>Place one or more of the symbols inside the parentheses, from the symbol list.</li>
-									<li>When you use the snippet, this entire string of `[[%d(...)]]` would be replaced by the current value of
+									<li>When you use the snippet, this entire string of <span class="notranslate">`[[%d(...)]]`</span> would be replaced by the current value of
 										the
 										symbols it contains.</li>
 								</ol>
 
 								<strong>Symbol list</strong>
-								<table>
+								<table class="date-macro-list">
 									<thead>
 										<td>Symbol to insert</td>
 										<td>Remarks</td>
@@ -714,25 +728,25 @@
 									or backward respectively), followed by a number, which would indicate the amount by which to move forward or
 									backward.
 									No white space or any other character should be used between the symbol, sign, and number. So,
-									<span class="code">[[%d(Do+5 M-10)]]</span> is valid, while
-									<span class="code">[[%d(Do - 5 M- 10)]]</span> is invalid.</p>
+									<span class="notranslate"><span class="code">[[%d(Do+5 M-10)]]</span></span> is valid, while
+									<span class="notranslate"><span class="code">[[%d(Do - 5 M- 10)]]</span></span> is invalid.</p>
 								<p>
 									<b>Evaluation</b> of these symbols is from left to right, and the symbol that appears first (at the top) in
 									the
 									symbols list, is evaluated first.</p>
 								<p>
 									<b>Example: </b>Consider this date/time macro:
-									<span class="code">[[%d(YYYY:MM:D)]]</span>. If you want to move 10 days forward and 5 months backward, you
+									<span class="notranslate"><span class="code">[[%d(YYYY:MM:D)]]</span></span>. If you want to move 10 days forward and 5 months backward, you
 									could
 									write:
-									<span class="code">[[%d(YYYY:MM-5:D+10)]]</span> This was independent calculation. If you want it to be
+									<span class="notranslate"><span class="code">[[%d(YYYY:MM-5:D+10)]]</span></span> This was independent calculation. If you want it to be
 									relative,
 									use
-									<span class="code">[[%d(!YYYY:MM-5:D+10)]]</span> (with that
+									<span class="notranslate"><span class="code">[[%d(!YYYY:MM-5:D+10)]]</span></span> (with that
 									<span class="code">!</span>)</p>
 								<a href="#tryit">Try date and time arithmetic in editor</a> (use dateArithmetic sample snippet)
 								<p>
-									<b>Limitation</b>: The "date" and "time" symbols do not support date and time arithmetic (I might fix this in
+									<b>Limitation</b>: The <span class="notranslate">"date"</span> and <span class="notranslate">"time"</span> symbols do not support date and time arithmetic (I might fix this in
 									future).</p>
 							</dd>
 
@@ -741,7 +755,7 @@
 								Clipboard Paste Macro is used to paste the contents of your clipboard (that data which you have earlier copied
 								or cut) into
 								the snippet body.
-								<br> To use it, you only have to place "[[%p]]" (without quotes) in the snippet body, at the location where you
+								<br> To use it, you only have to place <span class="notranslate">"[[%p]]"</span> (without quotes) in the snippet body, at the location where you
 								want
 								your clipboard data to be pasted.
 							</dd>
@@ -751,7 +765,7 @@
 								The Browser URL macro is used to insert the URL (or parts of the URL) of the current webpage into the snippet.
 								Assuming the
 								URL to be "https://www.website.com/path1/path2/path3#hash?a=b&c=d", these are the sample outputs:
-								<table>
+								<table class="browser-macro-list">
 									<thead>
 										<td>Macro code</td>
 										<td>Remarks</td>
@@ -833,17 +847,17 @@
 										<td>Sample output</td>
 									</tr>
 									<tr>
-										<td>date</td>
+										<td><span class="notranslate">date</span></td>
 										<td>current, complete date</td>
 										<td>March 05, 2015</td>
 									</tr>
 									<tr>
-										<td>time</td>
+										<td><span class="notranslate">time</span></td>
 										<td>current, complete time</td>
 										<td>01:29:55</td>
 									</tr>
 									<tr>
-										<td>version</td>
+										<td><span class="notranslate">version</span></td>
 										<td>current browser version</td>
 										<td>Chrome 43.0.2357.130</td>
 									</tr>
@@ -1015,7 +1029,7 @@
 
 		<footer>
 			Version:
-			<span class="version"></span> - Gaurang Tandon, Varun Singh &copy; 2018
+			<span class="version"></span> - Gaurang Tandon, Varun Singh &copy; 2019
 			<br> Check out the
 			<a href="https://github.com/GaurangTandon/ProKeys/blob/master/change_log.md">change log</a> and
 			<a href="https://github.com/GaurangTandon/ProKeys">source code on GitHub!</a>
