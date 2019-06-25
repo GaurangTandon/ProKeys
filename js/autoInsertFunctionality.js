@@ -24,7 +24,7 @@ function searchAutoInsertChars(character, searchCharIndex) {
 
 // non-breaking space is useful when inserting four concsecutive for tab character
 // HTML entities are for HTML nodes, so use \xA0 to insert &nbsp;
-function makeSpaceNonBreaking(string) {
+function makeSpaceNonBreakingTextnode(string) {
     return string.replace(/ /g, "\xA0");
 }
 
@@ -48,6 +48,11 @@ function moveBackwardForSpaces(range, textNode, position) {
     range.setEnd(textNode, position);
 }
 
+/**
+ * for content editable node, when selection is "| abc |"
+ * this moves the carets so that it becomes " |abc| "
+ * @param {Range} range
+ */
 function moveSelectionForSurroundingWhitespace(range) {
     if (isTextNode(range.startContainer)) {
         moveForwardForSpaces(range, range.startContainer, range.startOffset);
@@ -81,12 +86,6 @@ function modifySelection(sel, range) {
     sel.addRange(range);
 }
 
-// function setSamePosInTextNodeAndSave(sel, range, textNode, pos) {
-//     range.setStart(textNode, pos);
-//     range.setEnd(textNode, pos);
-//     modifySelection(sel, range);
-// }
-
 function insertTextInNode(textNode, text, atPos) {
     const valBefore = textNode.textContent.substr(0, atPos),
         valAfter = textNode.textContent.substr(atPos);
@@ -103,6 +102,7 @@ function insertTextInNode(textNode, text, atPos) {
 function insertSingleCharacterContentEditable(range, content, isStart = true, increment) {
     let textNode,
         startPos;
+
     if (isStart) {
         if (!isTextNode(range.startContainer)) {
             // range node is an element node when it is empty
@@ -112,23 +112,20 @@ function insertSingleCharacterContentEditable(range, content, isStart = true, in
             textNode = range.startContainer;
             startPos = range.startOffset;
         }
-
-        if (isTextNode(textNode)) {
-            insertTextInNode(textNode, content, startPos);
-            range.setStart(textNode, startPos + increment);
-        }
+    } else if (!isTextNode(range.endContainer)) {
+        // range node is an element node when it is empty
+        textNode = createNewTextNodeForAutoInsert(range, "", false);
+        startPos = 0;
     } else {
-        if (!isTextNode(range.endContainer)) {
-            // range node is an element node when it is empty
-            textNode = createNewTextNodeForAutoInsert(range, "", false);
-            startPos = 0;
-        } else {
-            textNode = range.endContainer;
-            startPos = range.endOffset;
-        }
+        textNode = range.endContainer;
+        startPos = range.endOffset;
+    }
 
-        if (isTextNode(textNode)) {
-            insertTextInNode(textNode, content, startPos);
+    if (isTextNode(textNode)) {
+        insertTextInNode(textNode, content, startPos);
+        if (isStart) {
+            range.setStart(textNode, startPos + increment);
+        } else {
             range.setEnd(textNode, startPos + increment);
         }
     }
@@ -149,9 +146,9 @@ function insertCharacterContentEditable(node, characterStart, characterEnd) {
         caretIncrement;
 
     // process the characters and their positioning
-    characterStart = makeSpaceNonBreaking(characterStart);
+    characterStart = makeSpaceNonBreakingTextnode(characterStart);
     if (characterEnd) {
-        characterEnd = makeSpaceNonBreaking(characterEnd);
+        characterEnd = makeSpaceNonBreakingTextnode(characterEnd);
         textnodeString = characterStart + characterEnd;
         caretIncrement = 1;
     } else {
@@ -166,7 +163,6 @@ function insertCharacterContentEditable(node, characterStart, characterEnd) {
         range.deleteContents();
 
         insertSingleCharacterContentEditable(range, textnodeString, true, caretIncrement);
-        modifySelection();
     } else {
         moveSelectionForSurroundingWhitespace(range);
         insertSingleCharacterContentEditable(range, characterStart, true, characterStart.length);
