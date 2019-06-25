@@ -2,6 +2,7 @@ const gulp = require("gulp"),
     csso = require("gulp-csso"),
     htmlmin = require("gulp-htmlmin"),
     jsonminify = require("gulp-jsonminify"),
+    babel = require("gulp-babel"),
     SRC = ".",
     DEST = "./dist";
 
@@ -10,7 +11,9 @@ gulp.task("styles", () => gulp
     .pipe(csso())
     .pipe(gulp.dest(`${DEST}/css`)));
 
-gulp.task("scripts", () => gulp.src([`${DEST}/js/*.js`, `${SRC}/js/editor.min.js`]).pipe(gulp.dest(`${DEST}/js`)));
+gulp.task("scripts", () => gulp.src([`${DEST}/js/*.js`, `${SRC}/js/editor.min.js`]).pipe(babel({
+    presets: ["@babel/env"],
+})).pipe(gulp.dest(`${DEST}/js`)));
 
 gulp.task("html", () => gulp
     .src(`${SRC}/html/*.html`)
