@@ -309,6 +309,16 @@ function gTranlateImmune(text) {
     return `<span class=notranslate>${text}</span>`;
 }
 
+
+// in certain web apps, like mailchimp
+// node refers to the editor inside iframe
+// while `window` refers to top level window
+// so selection and other methods do not work
+// hence the need to get the `node's window`
+function getNodeWindow(node) {
+    return node.ownerDocument.defaultView;
+}
+
 export {
     q,
     qCls,
@@ -334,4 +344,5 @@ export {
     PRIMITIVES_EXT_KEY,
     appendBlobToLink,
     gTranlateImmune,
+    getNodeWindow,
 };

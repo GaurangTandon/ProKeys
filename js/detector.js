@@ -8,6 +8,7 @@ import {
     isTextNode,
     isBlockedSite,
     PRIMITIVES_EXT_KEY,
+    getNodeWindow,
 } from "./pre";
 import { Folder, Snip } from "./snippetClasses";
 import { DBget } from "./commonDataHandlers";
@@ -16,6 +17,7 @@ import { updateAllValuesPerWin } from "./protoExtend";
 import { getHTML } from "./textmethods";
 import { showBlockSiteModal } from "./modalHandlers";
 import { getCurrentTimestamp, getFormattedDate } from "./dateFns";
+import { insertCharacter, searchAutoInsertChars } from "./autoInsertFunctionality";
 
 primitiveExtender();
 (function () {
@@ -67,7 +69,6 @@ primitiveExtender();
     /*
     Helper functions for iframe related work
         - initiateIframeCheckForSpecialWebpages
-        - getNodeWindow
     */
 
     function onIFrameLoad(iframe) {
@@ -103,15 +104,6 @@ primitiveExtender();
                 onIFrameLoad(iframe);
             }
         }
-    }
-
-    // in certain web apps, like mailchimp
-    // node refers to the editor inside iframe
-    // while `window` refers to top level window
-    // so selection and other methods do not work
-    // hence the need to get the `node's window`
-    function getNodeWindow(node) {
-        return node.ownerDocument.defaultView;
     }
 
     /*
@@ -444,167 +436,6 @@ primitiveExtender();
         insertSnippetInTextarea(caretPos, caretPos, snip, val, node);
     }
 
-    /*
-        Auto-Insert Character functions
-        - searchAutoInsertChars
-        - insertCharacter
-    */
-
-    /**
-     * @param {String} character to match
-     * @param {Number} searchCharIndex (0 or 1) denoting whether to match the
-        starting (`{`) or the closing (`}`) characters of an auto-insert combo
-        with the `character`
-     * @returns {String[]} the auto insert pair if found, else
-     */
-    function searchAutoInsertChars(character, searchCharIndex) {
-        const arr = Data.charsToAutoInsertUserList,
-            defaultReturn = ["", ""];
-
-        for (let i = 0, len = arr.length; i < len; i++) {
-            if (arr[i][searchCharIndex] === character) {
-                return arr[i];
-            }
-        }
-
-        return defaultReturn;
-    }
-
-    // auto-insert character functionality
-    function insertCharacter(node, characterStart, characterEnd) {
-        if (isContentEditable(node)) {
-            insertCharacterContentEditable(node, characterStart, characterEnd);
-        } else {
-            let text = node.value,
-                startPos = node.selectionStart,
-                endPos = node.selectionEnd,
-                textBefore = text.substring(0, startPos),
-                textMid = text.substring(startPos, endPos),
-                textAfter = text.substring(endPos),
-                // handle trailing spaces
-                trimmedSelection = textMid.match(/^(\s*)(\S?(?:.|\n|\r)*\S)(\s*)$/) || [
-                    "",
-                    "",
-                    "",
-                    "",
-                ];
-
-            textBefore += trimmedSelection[1];
-            textAfter = trimmedSelection[3] + textAfter;
-            textMid = trimmedSelection[2];
-
-            textMid = Data.wrapSelectionAutoInsert ? textMid : "";
-            startPos = textBefore.length + +!!characterEnd;
-            endPos = startPos + textMid.length;
-
-            node.value = textBefore + characterStart + textMid + (characterEnd || "") + textAfter;
-            node.selectionStart = startPos;
-            node.selectionEnd = endPos;
-            triggerFakeInput(node);
-        }
-    }
-
-    function insertSingleCharacterContentEditable(
-        rangeNode,
-        position,
-        singleCharacter,
-        isStart,
-        wasRangeCollapsed,
-    ) {
-        let textNode,
-            positionIncrement = isStart ? 1 : 0;
-        triggerFakeInput(rangeNode);
-        if (rangeNode.nodeType !== 3) {
-            textNode = document.createTextNode(singleCharacter);
-            rangeNode.insertBefore(textNode, rangeNode.childNodes[position]);
-            return [positionIncrement, textNode];
-        }
-
-        const value = rangeNode.textContent,
-            len = value.length;
-
-        // do not shift whitespaces if there actually was no selection
-        if (Data.wrapSelectionAutoInsert && !wasRangeCollapsed) {
-            if (isStart) {
-                while (/\s/.test(value[position]) && position < len) {
-                    position++;
-                }
-            } else {
-                // value[position] corresponds to one character out of the current selection
-                while (/\s/.test(value[position - 1]) && position >= 1) {
-                    position--;
-                }
-            }
-        }
-
-        // HTML entities are for HTML, so use \xA0 to insert &nbsp;
-        rangeNode.textContent = value.substring(0, position)
-            + singleCharacter.replace(/ /g, "\xA0")
-            + value.substring(position);
-
-        return [position + positionIncrement, rangeNode];
-    }
-
-    function insertCharacterContentEditable(node, characterStart, characterEnd) {
-        let win = getNodeWindow(node),
-            sel = win.getSelection(),
-            range = sel.getRangeAt(0),
-            startNode,
-            endNode,
-            startPosition,
-            endPosition,
-            newStartNode,
-            newEndNode,
-            rangeWasCollapsed = range.collapsed,
-            singleCharacterReturnValue;
-
-        if (!Data.wrapSelectionAutoInsert) {
-            range.deleteContents();
-        }
-
-        startNode = range.startContainer;
-        endNode = range.endContainer;
-        startPosition = range.startOffset;
-        endPosition = range.endOffset;
-
-        // the rangeNode is a textnode EXCEPT when the node has no text
-        // eg:https://stackoverflow.com/a/5258024
-        singleCharacterReturnValue = insertSingleCharacterContentEditable(
-            startNode,
-            startPosition,
-            characterStart,
-            true,
-            rangeWasCollapsed,
-        );
-        [startPosition, newStartNode] = singleCharacterReturnValue;
-
-        // because this method is also used for inserting single tabkey
-        if (characterEnd) {
-            // they just inserted a character above
-            if (startNode === endNode) {
-                endPosition++;
-            }
-
-            singleCharacterReturnValue = insertSingleCharacterContentEditable(
-                endNode,
-                endPosition,
-                characterEnd,
-                false,
-                rangeWasCollapsed,
-            );
-            [endPosition, newEndNode] = singleCharacterReturnValue;
-        } else {
-            startPosition--;
-        }
-
-        range.setStart(newStartNode, startPosition);
-        if (characterEnd) {
-            range.setEnd(newEndNode, endPosition);
-        }
-        sel.removeAllRanges();
-        sel.addRange(range);
-    }
-
     // returns user-selected text in content-editable element
     function getUserSelection(node) {
         let win,
@@ -767,16 +598,13 @@ primitiveExtender();
     // with their required value after `=` has been pressed
     // which has been detected by handleKeyPress
     function provideDoubleBracketFunctionality(node, win) {
-        let sel = win.getSelection(),
+        const sel = win.getSelection(),
             range = sel.getRangeAt(0),
             rangeNode = range.startContainer,
             isCENode = isContentEditable(node),
             caretPos = isCENode ? range.endOffset : node.selectionEnd,
-            value = isCENode ? rangeNode.textContent : node.value,
-            operate = true,
-            evaluatedValue,
-            valueToSet,
-            caretPosToSet,
+            value = isCENode ? rangeNode.textContent : node.value;
+        let operate = true,
             i = caretPos;
 
         // check closing brackets are present
@@ -794,8 +622,8 @@ primitiveExtender();
         }
 
         if (operate) {
-            evaluatedValue = evaluateDoubleBrackets(value, i + 1, caretPos);
-            [valueToSet, caretPosToSet] = evaluatedValue;
+            const evaluatedValue = evaluateDoubleBrackets(value, i + 1, caretPos),
+                [valueToSet, caretPosToSet] = evaluatedValue;
 
             if (isCENode) {
                 triggerFakeInput(rangeNode);
