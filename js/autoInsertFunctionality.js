@@ -74,12 +74,12 @@ function createNewTextNodeForAutoInsert(range, textnodeString, isStart) {
     const textNode = document.createTextNode(textnodeString);
     if (isStart) {
         range.startContainer.insertBefore(textNode, range.startContainer.childNodes[range.startOffset]);
+        range.setStart(textNode, 0);
     } else {
         range.endContainer.insertBefore(textNode, range.endContainer.childNodes[range.endOffset]);
+        range.setEnd(textNode, 0);
     }
 
-    range.setStart(textNode, 0);
-    range.setEnd(textNode, 0);
     return textNode;
 }
 
@@ -129,7 +129,7 @@ function insertSingleCharacterContentEditable(range, content, isStart = true, in
     if (isStart) {
         if (!isTextNode(range.startContainer)) {
             // range node is an element node when it is empty
-            textNode = createNewTextNodeForAutoInsert(range, "");
+            textNode = createNewTextNodeForAutoInsert(range, "", true);
             startPos = 0;
         } else {
             textNode = range.startContainer;
@@ -145,13 +145,11 @@ function insertSingleCharacterContentEditable(range, content, isStart = true, in
         startPos = range.endOffset + (range.startContainer === range.endContainer);
     }
 
-    if (isTextNode(textNode)) {
-        insertTextInNode(textNode, content, startPos, range);
-        if (isStart) {
-            range.setStart(textNode, startPos + increment);
-        } else {
-            range.setEnd(textNode, startPos + increment);
-        }
+    insertTextInNode(textNode, content, startPos, range);
+    if (isStart) {
+        range.setStart(textNode, startPos + increment);
+    } else {
+        range.setEnd(textNode, startPos + increment);
     }
 }
 
