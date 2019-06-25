@@ -1,6 +1,8 @@
 /* global Data */
 
-import { isContentEditable, isTextNode, getNodeWindow } from "./pre";
+import {
+    isContentEditable, isTextNode, getNodeWindow, triggerFakeInput,
+} from "./pre";
 
 /**
  * @param {String} character to match
@@ -86,11 +88,32 @@ function modifySelection(sel, range) {
     sel.addRange(range);
 }
 
-function insertTextInNode(textNode, text, atPos) {
+/**
+ * this inserts text into textnode at specified position
+ * however, this resets the node's range object
+ * pass in a range object if you want to preserve it
+ * @param {Text} textNode
+ * @param {String} text
+ * @param {Number} atPos
+ * @param {Range} [range]
+ */
+function insertTextInNode(textNode, text, atPos, range = false) {
     const valBefore = textNode.textContent.substr(0, atPos),
-        valAfter = textNode.textContent.substr(atPos);
+        valAfter = textNode.textContent.substr(atPos),
+        // sorry for hardcoding but Object.keys/etc. yielded no positives
+        // no need to use all props
+        propsToCopy = ["endContainer", "endOffset", "startContainer", "startOffset"],
+        oldRange = {};
 
+    if (range) { for (const prop of propsToCopy) { oldRange[prop] = range[prop]; } }
     textNode.textContent = valBefore + text + valAfter;
+
+    if (range) {
+        // trying to directly assign oldRange back into range results in error
+        // as properties are read-only
+        range.setStart(oldRange.startContainer, oldRange.startOffset);
+        range.setEnd(oldRange.endContainer, oldRange.endOffset);
+    }
 }
 
 /**
@@ -118,11 +141,12 @@ function insertSingleCharacterContentEditable(range, content, isStart = true, in
         startPos = 0;
     } else {
         textNode = range.endContainer;
-        startPos = range.endOffset;
+        // move one step ahead to accommodate the previously inserted character
+        startPos = range.endOffset + (range.startContainer === range.endContainer);
     }
 
     if (isTextNode(textNode)) {
-        insertTextInNode(textNode, content, startPos);
+        insertTextInNode(textNode, content, startPos, range);
         if (isStart) {
             range.setStart(textNode, startPos + increment);
         } else {
@@ -172,6 +196,8 @@ function insertCharacterContentEditable(node, characterStart, characterEnd) {
     }
 
     modifySelection(sel, range);
+    triggerFakeInput(range.startContainer);
+    triggerFakeInput(range.endContainer);
 }
 
 /**
@@ -209,6 +235,7 @@ function insertCharacter(node, characterStart, characterEnd) {
         node.value = textBefore + characterStart + textMid + (characterEnd || "") + textAfter;
         node.selectionStart = startPos;
         node.selectionEnd = endPos;
+        triggerFakeInput(node);
     }
 }
 

@@ -9,6 +9,7 @@ import {
     isBlockedSite,
     PRIMITIVES_EXT_KEY,
     getNodeWindow,
+    triggerFakeInput,
 } from "./pre";
 import { Folder, Snip } from "./snippetClasses";
 import { DBget } from "./commonDataHandlers";
@@ -289,15 +290,6 @@ primitiveExtender();
 
             resetPlaceholderVariables();
         }
-    }
-
-    function triggerFakeInput($elm) {
-        $elm.dispatchEvent(
-            new Event("input", {
-                cancelable: true,
-                bubbles: true,
-            }),
-        );
     }
 
     function checkPlaceholdersInContentEditableNode() {
@@ -626,16 +618,16 @@ primitiveExtender();
                 [valueToSet, caretPosToSet] = evaluatedValue;
 
             if (isCENode) {
-                triggerFakeInput(rangeNode);
                 rangeNode.textContent = valueToSet;
                 range.setStart(rangeNode, caretPosToSet);
                 range.setEnd(rangeNode, caretPosToSet);
                 sel.removeAllRanges();
                 sel.addRange(range);
+                triggerFakeInput(rangeNode);
             } else {
-                triggerFakeInput(node);
                 node.value = valueToSet;
                 node.selectionStart = node.selectionEnd = caretPosToSet;
+                triggerFakeInput(node);
             }
         }
     }
