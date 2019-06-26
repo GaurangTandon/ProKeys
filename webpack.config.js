@@ -3,6 +3,20 @@
 module.exports = {
     // development mode ensures terser (es6 minifier) is not run
     // see https://webpack.js.org/configuration/mode
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                exclude: /(node_modules|bower_components)/,
+                use: {
+                    loader: "babel-loader",
+                    options: {
+                        presets: ["@babel/preset-env"],
+                    },
+                },
+            },
+        ],
+    },
     mode: "development",
     entry: {
         background: `${__dirname}/js/background.js`,
