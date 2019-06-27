@@ -311,10 +311,6 @@ primitiveExtender();
             selectedDIV = q(`${containerSel}.show`),
             selectedBtn = q(`.sidebar .buttons .${selectedBtnClass}`);
 
-        if (DIVName === "snippets") {
-            Data.snippets.listSnippets();
-        }
-
         if (selectedDIV) {
             selectedDIV.removeClass("show");
         }
