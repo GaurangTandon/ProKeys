@@ -70,7 +70,7 @@ function testSnippetExpansionDelimited(usablePages) {
         );
     });
 
-    testURLs.forEach(({ url, textBoxQueryString }, index) => {
+    testURLs.forEach(({ url, textBoxQueryString, handler }, index) => {
         let usablePage;
 
         beforeAll(async () => {
@@ -91,6 +91,7 @@ function testSnippetExpansionDelimited(usablePages) {
                         textBoxQueryString,
                         snipText,
                         cursorChange,
+                        handler,
                     );
                     await expect(expandedText).toBe(delimitedExpansion);
                 });
