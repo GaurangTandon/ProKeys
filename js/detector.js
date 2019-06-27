@@ -15,7 +15,7 @@ import { Folder, Snip } from "./snippetClasses";
 import { DBget } from "./commonDataHandlers";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
-import { getHTML } from "./textmethods";
+import { getHTML, getText } from "./textmethods";
 import { showBlockSiteModal } from "./modalHandlers";
 import { getCurrentTimestamp, getFormattedDate } from "./dateFns";
 import { insertCharacter, searchAutoInsertChars } from "./autoInsertFunctionality";
@@ -189,16 +189,26 @@ primitiveExtender();
         });
     }
 
-    function isSnippetPresentCENode(node) {
+    function sendCheckSnippetMsg(node, caretPos, foundCallback, mainCallback) {
+        chrome.runtime.sendMessage({ task: "checkSnippetPresent", nodeText: getText(node), caretPos }, ({ snipFound, snipObject }) => {
+            // the 10 delay is just so that the character is typed in the textbox
+            if (snipFound) { setTimeout(foundCallback, 10, Snip.fromObject(snipObject)); }
+            mainCallback(snipFound);
+        });
+    }
+
+    function isSnippetPresentCENode(node, callback) {
         const win = getNodeWindow(node),
             sel = win.getSelection(),
             range = sel.getRangeAt(0),
             container = range.startContainer,
             // pos relative to container (not node)
             caretPos = range.startOffset;
-        let snip;
 
-        function onSnipFound() {
+        /**
+         * @param {Snip} snip
+         */
+        function onSnipFound(snip) {
             // remove snippet name from container
             range.setStart(container, caretPos - snip.name.length);
             range.setEnd(container, caretPos);
@@ -208,20 +218,11 @@ primitiveExtender();
         }
 
         if (!range.collapsed) {
-            return false;
+            callback({ snipFound: false });
+            return;
         }
 
-        snip = Data.snippets.getUniqueSnippetAtCaretPos(container, caretPos);
-
-        // snippet found
-        if (snip !== null) {
-            setTimeout(onSnipFound, 10);
-
-            // first prevent space from being inserted
-            return true;
-        }
-
-        return false;
+        sendCheckSnippetMsg(container, caretPos, onSnipFound, callback);
     }
 
     function insertSnippetInTextarea(start, caretPos, snip, nodeText, node) {
@@ -242,34 +243,28 @@ primitiveExtender();
 
     // check snippet's presence and intiate
     // another function to insert snippet body
-    function isSnippetPresent(node) {
+    function isSnippetPresent(node, callback) {
         debugLog("checking snippet presence", node);
         if (isContentEditable(node)) {
-            return isSnippetPresentCENode(node);
+            isSnippetPresentCENode(node, callback);
+            return;
         }
 
-        let caretPos = node.selectionStart,
-            // holds current snippet object
-            snip = Data.snippets.getUniqueSnippetAtCaretPos(node, caretPos),
-            start;
+        const caretPos = node.selectionStart;
 
         // if the start and end points are not the same
         // break and insert some character there
         if (caretPos !== node.selectionEnd) {
-            return false;
+            callback({ snipFound: false });
+            return;
         }
 
-        if (snip !== null) {
-            // start of snippet body
-            // for placeholder.fromIndex
-            start = caretPos - snip.name.length;
-
+        function onSnipFound(snip) {
+            const start = caretPos - snip.name.length;
             setTimeout(insertSnippetInTextarea, 10, start, caretPos, snip, node.value, node);
-
-            // first prevent space from being inserted
-            return true;
         }
-        return false;
+
+        sendCheckSnippetMsg(node, caretPos, onSnipFound, callback);
     }
 
     /**
@@ -826,12 +821,14 @@ primitiveExtender();
             }
 
             if (isSnippetSubstitutionKey(e, keyCode)) {
-                // snippet substitution hotkey
-                if (isSnippetPresent(node)) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
+                // better to cancel event by default,
+                // and if no snippet found, continue the logic given below
+                isSnippetPresent(node, (snipFound) => {
+                    if (snipFound) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                });
             }
             // since tab key functions as all of snippet expansion,
             // placeholder jumper as well as 4sp insert, we cannot

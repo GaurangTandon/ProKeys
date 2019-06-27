@@ -552,6 +552,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }),
         );
         return true;
+    } else if (request.task === "checkSnippetPresent") {
+        const snip = Data.snippets.getUniqueSnippetAtCaretPos(request),
+            snipFound = !!snip,
+            snipObject = snipFound ? snip.toArray() : {};
+        sendResponse({ snipFound, snipObject });
     }
 
     // indicates synced sendResponse
