@@ -1232,28 +1232,34 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             .on("click", Generic.preventButtonClickOverride(this.listSnippets.bind(this)));
     };
 
-    this.getDOMElementFull = function (objectNamesToHighlight) {
-        let div = q.new("div"),
-            listElm,
-            htmlElm,
-            emptyDiv,
-            len = this.list.length;
+    this.getDOMElementFull = function (objectNamesToHighlight, parentDIV) {
+        const len = this.list.length;
 
-        for (let i = 0; i < len; i++) {
-            listElm = this.list[i];
-            htmlElm = listElm.getDOMElement(objectNamesToHighlight);
-            div.appendChild(htmlElm);
+        function insertSnips(startIndex = 0) {
+            const limit = Math.min(100, len);
+            for (let i = startIndex; i < limit; i++) {
+                const listElm = this.list[i],
+                    htmlElm = listElm.getDOMElement(objectNamesToHighlight);
+                parentDIV.appendChild(htmlElm);
+            }
+            if (limit < len) {
+                const btn = q.new("button").text("Load more").addClass("load-more-btn").on("click", () => {
+                    btn.parentNode.removeChild(btn);
+                    insertSnips.call(this, limit);
+                });
+                parentDIV.appendChild(btn);
+            }
         }
 
         if (len === 0) {
-            emptyDiv = q.new("div");
+            const emptyDiv = q.new("div");
             emptyDiv
                 .addClass("empty_folder")
                 .html(this.isSearchResultFolder ? "No matches found" : "This folder is empty");
-            div.appendChild(emptyDiv);
+            parentDIV.appendChild(emptyDiv);
+        } else {
+            insertSnips.call(this);
         }
-
-        return div;
     };
 
     this.getUniqueObject = function (name, type) {
@@ -1380,7 +1386,8 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             : objectNamesToHighlight;
         $containerSnippets
             .empty()
-            .appendChild(this.getDOMElementFull(objectNamesToHighlight));
+            .appendChild(q.new("div"));
+        this.getDOMElementFull(objectNamesToHighlight, $containerSnippets.firstElementChild);
         this.insertFolderPathDOM();
     };
 
