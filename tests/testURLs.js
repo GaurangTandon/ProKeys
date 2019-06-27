@@ -6,11 +6,28 @@ const tinyCloudExpansionHandler = {
         h2: null,
 
         focusTextBox: async (page) => {
-            const h2 = await page.$("iframe[id^=\"tiny-react\"]", iframeArg => iframeArg.contentDocument.querySelector("h2"));
-            this.h2 = h2;
-            await h2.focus();
+        // const frames = await page.frames(),
+        //     myFrame = frames.find(
+        //         frame => frame.url().indexOf("NewRegistration") > 0,
+        //     ),
+        //     serialNumber = await myframe.$("#MainContent_SerNumText"),
+
+            //     h2 = await page.$eval("iframe[id^=\"tiny-react\"]", (iframeArg) => {
+            //         console.log("1", iframeArg);
+            //         return iframeArg.contentDocument.querySelector("h2");
+            //     });
+            const iframeElm = await page.$("iframe[id^=\"tiny-react\"]"),
+                iframe = await iframeElm.contentFrame();
+            this.h2 = await iframe.$("h2");
+            console.log(Object.keys(iframe));
+            console.log(this.h2);
+
+            if (this.h2) { await this.h2.focus(); }
         },
-        retrieveText: async page => page.evaluate(h2 => h2.innerHTML, this.h2),
+        retrieveText: async page => page.evaluate((h2) => {
+            console.log(h2);
+            return h2.innerHTML;
+        }, this.h2),
         clearText: async (page) => {
             await page.evaluate((h2) => { h2.innerHTML = ""; }, this.h2);
         },
