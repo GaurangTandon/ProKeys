@@ -995,8 +995,6 @@ primitiveExtender();
                         alert("Unsupported textbox! Snippet cannot be inserted.");
                     }
                 }
-            } else if (request.giveFreshData) {
-                sendResponse({ snippets: Data.snippets.toArray(), ctxEnabled: Data.ctxEnabled });
             } else if (request.showBlockSiteModal && !PAGE_IS_IFRAME) {
                 // when "Block this site" is called in iframe, iframe sends message
                 // to background.js to send msg to show dialog in parent window
