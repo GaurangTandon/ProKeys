@@ -11,7 +11,7 @@ import {
     SHOW_CLASS,
     gTranlateImmune,
 } from "./pre";
-import { getText, genericFormatterCreator, formatOLULInListParentForCEnode } from "./textmethods";
+import { genericFormatterCreator, formatOLULInListParentForCEnode } from "./textmethods";
 import {
     getTotalDeviationFrom30DaysMonth, getFormattedDate, MILLISECONDS_IN_A_DAY, DATE_MACROS,
 } from "./dateFns";
@@ -1530,35 +1530,37 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
         return new Folder(this.name, this.list, this.timestamp);
     };
 
-    this.getUniqueSnippetAtCaretPos = function (node, pos) {
-        let val = getText(node),
-            snip,
-            stringToCheck = "",
+    /**
+     * @param {String} nodeText result of calling getText on node
+     * @param {Number} caretPos
+     */
+    this.getUniqueSnippetAtCaretPos = function ({ nodeText, caretPos }) {
+        const lim = caretPos < OBJECT_NAME_LIMIT ? caretPos : OBJECT_NAME_LIMIT,
+            snipNameDelimiterListRegex = new RegExp(
+                `[${escapeRegExp(Data.snipNameDelimiterList)}]`,
+            );
+
+        let stringToCheck = "",
             foundSnip = null,
-            delimiterChar = val[pos - 1],
-            lim = pos < OBJECT_NAME_LIMIT ? pos : OBJECT_NAME_LIMIT;
+            delimiterChar = nodeText[caretPos - 1];
 
         for (let i = 1; i <= lim; i++) {
             // the previous delimiter char gets added to the
             // string to check as we move towards left
             stringToCheck = delimiterChar + stringToCheck;
-            delimiterChar = val[pos - 1 - i];
-            snip = this.getUniqueSnip(stringToCheck);
-
-            const snipNameDelimiterListRegex = new RegExp(
-                `[${escapeRegExp(Data.snipNameDelimiterList)}]`,
-            );
+            delimiterChar = nodeText[caretPos - 1 - i];
+            const snip = this.getUniqueSnip(stringToCheck);
 
             if (snip) {
                 if (Data.matchDelimitedWord && snipNameDelimiterListRegex) {
-                    // delimiter char may not exist if snip name
-                    // is at the beginning of the textbox
                     if (
+                        // delimiter char may not exist if snip name
+                        // is at the beginning of the textbox
                         !delimiterChar
                         || snipNameDelimiterListRegex.test(delimiterChar)
+                        // a new line character is always a delimiter
                         || delimiterChar === "\n"
                     ) {
-                        // a new line character is always a delimiter
                         foundSnip = snip;
                     }
                 } else {
