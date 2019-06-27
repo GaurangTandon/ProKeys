@@ -150,7 +150,7 @@ export function initBackup() {
     function setUpPastRevisions() {
         const revisions = JSON.parse(localStorage[LS_REVISIONS_PROP]);
 
-        $select.html("");
+        $select.empty();
 
         revisions.forEach((rev) => {
             $select.appendChild(q.new("option").html(rev.label));
@@ -207,10 +207,10 @@ export function initBackup() {
                     + "with the same name will be lost.",
                 );
             } else {
-                $caveatParagraph.html("");
+                $caveatParagraph.empty();
             }
         } else {
-            $caveatParagraph.html("");
+            $caveatParagraph.empty();
         }
     });
 }
