@@ -966,10 +966,7 @@ primitiveExtender();
             let timestamp;
 
             // when user updates snippet data, reloading page is not required
-            if (typeof request.snippetList !== "undefined" && !window.IN_OPTIONS_PAGE) {
-                Data.snippets = Folder.fromArray(request.snippetList);
-                Folder.setIndices();
-            } else if (request.checkBlockedYourself) {
+            if (request.checkBlockedYourself) {
                 sendResponse(isBlocked);
             } else if (request.task === "showModal" && ctxElm) {
                 // ctxElm condition just to make sure that
