@@ -134,8 +134,7 @@ function setupEditPanel(type) {
             return;
         }
 
-        // reset
-        folderElm.html("");
+        folderElm.empty();
 
         // cannot nest a folder under itself
         folderElm.appendChild(
@@ -464,7 +463,7 @@ export function initSnippetWork() {
 
     $searchBtn.on("click", () => {
         toggleBtnAndPanel($searchBtn, $searchPanel);
-        $searchField.html("").focus();
+        $searchField.text("").focus();
         // now hidden search panel, so re-list the snippets
         if (!$searchPanel.hasClass(SHOW_CLASS)) {
             Folder.getListedFolder().listSnippets();

@@ -1379,7 +1379,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             ? undefined
             : objectNamesToHighlight;
         $containerSnippets
-            .html("") // first remove previous content
+            .empty()
             .appendChild(this.getDOMElementFull(objectNamesToHighlight));
         this.insertFolderPathDOM();
     };
@@ -1393,7 +1393,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     }
 
     this.insertFolderPathDOM = function () {
-        $containerFolderPath.html(""); // clear previous data
+        $containerFolderPath.empty();
 
         if (this.isSearchResultFolder) {
             insertPathPartDivs(this.name);
@@ -1733,7 +1733,7 @@ Folder.insertBulkActionDOM = function (listedFolder) {
     });
 
     $containerSnippets
-        .html("") // first remove previous content
+        .empty()
         .appendChild($container);
 
     return $container;
@@ -1744,7 +1744,7 @@ Folder.getSelectedFolderInSelectList = function (selectList) {
     return Data.snippets.getUniqueFolder(selectFolderName);
 };
 Folder.refreshSelectList = function (selectList) {
-    selectList.html("").appendChild(Data.snippets.getFolderSelectList());
+    selectList.empty().appendChild(Data.snippets.getFolderSelectList());
 
     // select top-most "Snippets" folder; do not use fistChild as it may
     // count text nodes
