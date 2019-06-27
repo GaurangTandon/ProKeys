@@ -1405,7 +1405,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
         $containerSnippets
             .empty()
             .appendChild(q.new("div"));
-        this.getDOMElementFull(objectNamesToHighlight, $containerSnippets.firstElementChild);
+        this.getDOMElementFull(objectNamesToHighlight, $containerSnippets);
         this.insertFolderPathDOM();
     };
 
