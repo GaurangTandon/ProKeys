@@ -1239,21 +1239,34 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     this.getDOMElementFull = function (objectNamesToHighlight, parentDIV) {
         const len = this.list.length;
 
+        function removePrevLoadMoreBtns(parentNode, cls) {
+            let prevBtn = parentNode.qClsSingle(cls);
+            while (prevBtn != null) {
+                prevBtn.remove();
+                prevBtn = parentNode.qClsSingle(cls);
+            }
+        }
+
         function insertSnips(startIndex = 0) {
-            const limit = Math.min(100, len);
-            for (let i = startIndex; i < limit; i++) {
+            const limitIndex = Math.min(startIndex + 100, len);
+            for (let i = startIndex; i < limitIndex; i++) {
                 const listElm = this.list[i],
                     htmlElm = listElm.getDOMElement(objectNamesToHighlight);
                 parentDIV.appendChild(htmlElm);
             }
-            if (limit < len) {
-                const btn = q.new("button").text("Load more").addClass("load-more-btn").on("click", () => {
+
+            const nodeInWhichBtnInserted = parentDIV.parentNode,
+                btnClass = "load-more-btn",
+                btn = q.new("button").text("Load more snippets").addClass(btnClass).on("click", () => {
                     btn.parentNode.removeChild(btn);
-                    insertSnips.call(this, limit);
+                    insertSnips.call(this, limitIndex);
                 });
 
+            removePrevLoadMoreBtns(nodeInWhichBtnInserted, btnClass);
+
+            if (limitIndex < len) {
                 // keep it outside the container snippets
-                parentDIV.parentNode.appendChild(btn);
+                nodeInWhichBtnInserted.appendChild(btn);
             }
         }
 
