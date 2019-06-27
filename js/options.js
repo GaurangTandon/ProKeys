@@ -138,8 +138,7 @@ primitiveExtender();
             const thead = q.new("thead"),
                 tr = q.new("tr");
 
-            // clear the table initially
-            $autoInsertTable.html("");
+            $autoInsertTable.empty();
 
             tr.appendChild(q.new("th").html("Character"));
             tr.appendChild(q.new("th").html("Complement"));

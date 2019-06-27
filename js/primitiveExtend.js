@@ -171,6 +171,18 @@ export function primitiveExtender() {
         return this.html(textToSet, "innerText");
     });
 
+    /**
+     * Faster way to empty a node
+     * https://stackoverflow.com/questions/3955229/
+     */
+    extendNodePrototype("empty", function () {
+        while (this.lastChild) {
+            this.removeChild(this.lastChild);
+        }
+        return this;
+    });
+
+    /* PLACE ALL PRIMITIVE EXTENSIONS ABOVE THIS LINE */
     for (const [funcName, func] of Object.entries(DOM_HELPERS)) {
         extendNodePrototype(funcName, func);
     }
