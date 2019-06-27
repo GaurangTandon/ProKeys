@@ -18,7 +18,7 @@ function testTabToSpaceExpansion(usablePages) {
         );
     });
 
-    testURLs.forEach(({ url, textBoxQueryString }, index) => {
+    testURLs.forEach(({ url, textBoxQueryString, handler }, index) => {
         let usablePage,
             loadedPromise;
 
@@ -37,6 +37,7 @@ function testTabToSpaceExpansion(usablePages) {
                 const text = await getTabToSpaceExpansion(
                     usablePage,
                     textBoxQueryString,
+                    handler,
                 );
 
                 expect(text).toBe("    ");

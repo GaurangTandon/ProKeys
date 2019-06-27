@@ -29,18 +29,18 @@ async function expandSnippet(page) {
 function extSettings(opts) {
     return (
         "{\"snippets\":[\"Snippets\",1560477878650,"
-    + "{ \"name\": \"test\", \"body\": \"hello %world% %again%\", \"timestamp\": 1560747743398 }"
-    + "],"
-    + "\"blockedSites\":[],"
-    + "\"charsToAutoInsertUserList\":"
-    + "[[\"(\",\")\"],[\"{\",\"}\"],[\"\\\"\",\"\\\"\"],[\"[\",\"]\"]],"
-    + "\"dataVersion\": 1,\"language\": \"English\",\"hotKey\": [\"shiftKey\",32],"
-    + "\"dataUpdateVariable\": false,"
-    + `"matchDelimitedWord": ${opts.matchDelimitedWord},`
-    + `"tabKey": ${opts.tabKeyExpandSpace},`
-    + "\"snipNameDelimiterList\":\"@#$%&*+-=(){}[]:\\\"'/_<>?!., \","
-    + "\"omniboxSearchURL\":\"https://www.google.com/search?q=SEARCH\","
-    + "\"wrapSelectionAutoInsert\":true,\"ctxEnabled\":true}"
+        + "{ \"name\": \"test\", \"body\": \"hello %world% %again%\", \"timestamp\": 1560747743398 }"
+        + "],"
+        + "\"blockedSites\":[],"
+        + "\"charsToAutoInsertUserList\":"
+        + "[[\"(\",\")\"],[\"{\",\"}\"],[\"\\\"\",\"\\\"\"],[\"[\",\"]\"]],"
+        + "\"dataVersion\": 1,\"language\": \"English\",\"hotKey\": [\"shiftKey\",32],"
+        + "\"dataUpdateVariable\": false,"
+        + `"matchDelimitedWord": ${opts.matchDelimitedWord},`
+        + `"tabKey": ${opts.tabKeyExpandSpace},`
+        + "\"snipNameDelimiterList\":\"@#$%&*+-=(){}[]:\\\"'/_<>?!., \","
+        + "\"omniboxSearchURL\":\"https://www.google.com/search?q=SEARCH\","
+        + "\"wrapSelectionAutoInsert\":true,\"ctxEnabled\":true}"
     );
 }
 
@@ -205,7 +205,7 @@ async function dismissDialog(dialog) {
     try {
         await dialog.accept();
     } catch (e) {
-    // no error to catch since it is ok
+        // no error to catch since it is ok
     }
 }
 
@@ -216,7 +216,7 @@ async function getPageByTitle(pageList, pageTitle) {
     // so if it asynchronous fn argument, it probably acts weird
     // hence use for loop
     for (const pg of pageList) {
-    // eslint-disable-next-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop
         const title = await pg.title();
         if (title === pageTitle) {
             requiredPage = pg;

@@ -15,7 +15,7 @@ const testSnippets = [
  *  check if snippets are expanding normally
  */
 function testPlaceHolderSnippetExpansion(usablePages) {
-    testURLs.forEach(({ url, textBoxQueryString }, index) => {
+    testURLs.forEach(({ url, textBoxQueryString, handler }, index) => {
         let usablePage,
             loadedPromise;
 
@@ -36,6 +36,7 @@ function testPlaceHolderSnippetExpansion(usablePages) {
                         textBoxQueryString,
                         snipText,
                         ["yoogottam", "the great"],
+                        handler,
                     );
                     await expect(expandedText).toBe(expansion);
                 });
