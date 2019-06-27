@@ -718,7 +718,6 @@ primitiveExtender();
         return previousChars[1] === emojisChars[0] || previousChars === emojisChars[1];
     }
 
-<<<<<<< HEAD
     /**
      * still passing keycode for backward compatibility
      * @param {Event} event
@@ -732,12 +731,6 @@ primitiveExtender();
             actualKeyCorrect = Number.isInteger(actualKey) ? keyCode === actualKey : key.toLowerCase() === actualKey.toLowerCase();
 
         return modifierPressedIfReq && actualKeyCorrect;
-=======
-    function isSnippetSubstitutionKey(event, keyCode) {
-        const [modifierKey, actualKey] = Data.hotKey;
-
-        return actualKey ? event[modifierKey] && keyCode === actualKey : keyCode === modifierKey;
->>>>>>> add final remarks before postpone
     }
 
     let handleKeyPress,
