@@ -1,24 +1,18 @@
+// eslint-disable-next-line no-unused-vars
 const { sleep } = require("./utils");
 
-/* eslint-disable no-unused-vars */
 const tinyCloudExpansionHandler = {
         queryString: "document.querySelector(\"iframe\").contentDocument.querySelectorAll(\"p\")[1]",
         h2: null,
 
         focusTextBox: async (page) => {
-            const iframe = await page.evaluateHandle(() => document.querySelector("iframe[id^=\"tiny-react\"]")),
-                h2 = await page.evaluateHandle(iframeArg => iframeArg.contentDocument.querySelector("h2"), iframe);
+            const h2 = await page.$("iframe[id^=\"tiny-react\"]", iframeArg => iframeArg.contentDocument.querySelector("h2"));
             this.h2 = h2;
-            h2.focus();
-            await iframe.dispose();
-            await sleep(10000);
+            await h2.focus();
         },
-        retrieveText: async (page) => {
-        // await page.evaluateHandle(() => )
-        },
-        clearText: (page) => {
-        // clear the text present there
-            const indexOfUsableTag = 1;
+        retrieveText: async page => page.evaluate(h2 => h2.innerHTML, this.h2),
+        clearText: async (page) => {
+            await page.evaluate((h2) => { h2.innerHTML = ""; }, this.h2);
         },
     },
     testURLs = [
