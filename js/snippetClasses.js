@@ -1232,6 +1232,10 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             .on("click", Generic.preventButtonClickOverride(this.listSnippets.bind(this)));
     };
 
+    /**
+     * @param {Array<String>} objectNamesToHighlight
+     * @param {Element} parentDIV
+     */
     this.getDOMElementFull = function (objectNamesToHighlight, parentDIV) {
         const len = this.list.length;
 
@@ -1247,13 +1251,14 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                     btn.parentNode.removeChild(btn);
                     insertSnips.call(this, limit);
                 });
-                parentDIV.appendChild(btn);
+
+                // keep it outside the container snippets
+                parentDIV.parentNode.appendChild(btn);
             }
         }
 
         if (len === 0) {
-            const emptyDiv = q.new("div");
-            emptyDiv
+            const emptyDiv = q.new("div")
                 .addClass("empty_folder")
                 .html(this.isSearchResultFolder ? "No matches found" : "This folder is empty");
             parentDIV.appendChild(emptyDiv);
@@ -1387,7 +1392,7 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
         $containerSnippets
             .empty()
             .appendChild(q.new("div"));
-        this.getDOMElementFull(objectNamesToHighlight, $containerSnippets.firstElementChild);
+        this.getDOMElementFull(objectNamesToHighlight, $containerSnippets);
         this.insertFolderPathDOM();
     };
 
