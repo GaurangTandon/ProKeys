@@ -573,11 +573,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 code,
                 nativeVirtualKeyCode: keyCode,
                 windowsVirtualKeyCode: keyCode,
+                macCharCode: keyCode,
                 timestamp: Date.now(),
             };
 
         chrome.tabs.query({ active: true }, (tabs) => {
-            chrome.debugger.attach({ tabId: tabs[0].id }, "1.2", () => {
+            chrome.debugger.attach({ tabId: tabs[0].id }, "1.1", () => {
                 chrome.debugger.sendCommand({ tabId: tabs[0].id }, "Input.dispatchKeyEvent", {
                     type: "keyDown", ...commonArg,
                 }, () => {
