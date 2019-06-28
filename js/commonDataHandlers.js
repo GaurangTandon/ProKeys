@@ -1,6 +1,6 @@
 /* global Data */
 
-import { chromeAPICallWrapper, isTabSafe } from "./pre";
+import { chromeAPICallWrapper } from "./pre";
 import { Folder } from "./snippetClasses";
 import { getFormattedDate } from "./dateFns";
 
@@ -23,19 +23,7 @@ const SETTINGS_DEFAULTS = {
     LS_REVISIONS_PROP = "prokeys_revisions",
     LS_STORAGE_TYPE_PROP = "pkStorageType";
 
-function notifySnippetDataChanges(snippetList) {
-    const msg = {
-        snippetList,
-    };
-
-    chrome.tabs.query({}, (tabs) => {
-        for (const tab of tabs) {
-            if (isTabSafe(tab)) {
-                chrome.tabs.sendMessage(tab.id, msg, chromeAPICallWrapper());
-            }
-        }
-    });
-
+function notifySnippetDataChanges() {
     chrome.runtime.sendMessage({ updateCtx: true }, chromeAPICallWrapper());
 }
 
@@ -130,7 +118,7 @@ function saveSnippetData(callback, folderNameToList, objectNamesToHighlight) {
         if (IN_OPTIONS_PAGE) {
             const snippetList = Data.snippets.toArray();
             saveRevision(snippetList);
-            notifySnippetDataChanges(snippetList);
+            notifySnippetDataChanges();
         }
 
         Folder.setIndices();
