@@ -557,6 +557,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             snipFound = !!snip,
             snipObject = snipFound ? snip.toArray() : {};
         sendResponse({ snipFound, snipObject });
+    } else if (request.pressKeys) {
+        const keydownData = request.pressKeys,
+            modifier = keydownData.length === 1 ? undefined : keydownData[0],
+            actualKey = keydownData[keydownData.length - 1],
+            // bit fields given on https://chromedevtools.github.io/devtools-protocol/tot/Input
+            modifierList = ["altKey", "ctrlKey", "metaKey", "shiftKey"],
+            modifierBitField = modifier ? 2 ** modifierList.indexOf(modifier) : 0;
+
+        chrome.tabs.query({ active: true }, (tabs) => {
+            chrome.debugger.attach({ tabId: tabs[0].id }, "1.0");
+            chrome.debugger.sendCommand({ tabId: tabs[0].id }, "Input.dispatchKeyEvent", {
+                type: "keyDown", key: actualKey, modifiers: modifierBitField,
+            });
+            chrome.debugger.sendCommand({ tabId: tabs[0].id }, "Input.dispatchKeyEvent", {
+                type: "keyUp", key: actualKey, modifiers: modifierBitField,
+            });
+            chrome.debugger.detach({ tabId: tabs[0].id });
+        });
     }
 
     // indicates synced sendResponse
