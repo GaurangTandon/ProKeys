@@ -838,6 +838,9 @@ primitiveExtender();
             if (isSnippetSubstitutionKey(e, keyCode, key)) {
                 // better to cancel event by default,
                 // and if no snippet found, continue the logic given below
+                // AND, the only way to do this decently is use chrome's debugger protocol
+                // https://stackoverflow.com/questions/13987380/how-to-to-initialize-keyboard-event-with-given-char-keycode-in-a-chrome-extensio/34722970#34722970
+
                 isSnippetPresent(node, (snipFound) => {
                     if (snipFound) {
                         e.preventDefault();
