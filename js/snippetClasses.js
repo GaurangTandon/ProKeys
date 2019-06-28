@@ -339,7 +339,7 @@ function Snip(name, body, timestamp) {
                 // setting style.width
                 setTimeout(() => {
                     divBody.style.width = `calc(100% - 100px - ${divName.clientWidth}px)`;
-                }, 1);
+                }, 10);
             } else {
                 divBody.html(snip.body, "", true).style.width = "";
             }

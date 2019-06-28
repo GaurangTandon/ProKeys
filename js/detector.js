@@ -733,8 +733,8 @@ primitiveExtender();
         return modifierPressedIfReq && actualKeyCorrect;
     }
 
-    function dispatchProgrammaticKeystroke(keydownData) {
-        chrome.runtime.sendMessage({ pressKeys: keydownData });
+    function dispatchProgrammaticKeystroke(keydownData, eventCode) {
+        chrome.runtime.sendMessage({ pressKeys: keydownData, code: eventCode });
     }
 
     let handleKeyPress,
@@ -829,7 +829,7 @@ primitiveExtender();
 
         let snipWasJustNotFound = false;
         handleKeyDown = function (e) {
-            const { keyCode, key } = e,
+            const { keyCode, key, code } = e,
                 node = e.target,
                 // do not use `this` instead of node; `this` can be document iframe
                 tgN = node.tagName,
@@ -847,14 +847,13 @@ primitiveExtender();
                     // and if no snippet found, continue the logic given below
                     // AND, the only way to do this decently is use chrome's debugger protocol
                     // https://stackoverflow.com/questions/13987380/how-to-to-initialize-keyboard-event-with-given-char-keycode-in-a-chrome-extensio/34722970#34722970
+                    e.preventDefault();
+                    e.stopPropagation();
 
                     isSnippetPresent(node, (snipFound) => {
-                        if (snipFound) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        } else {
+                        if (!snipFound) {
                             snipWasJustNotFound = true;
-                            dispatchProgrammaticKeystroke(Data.hotKey);
+                            dispatchProgrammaticKeystroke(Data.hotKey, code);
                         }
                     });
                 }
