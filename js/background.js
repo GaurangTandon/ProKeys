@@ -566,7 +566,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             modifierBitField = modifier ? 2 ** modifierList.indexOf(modifier) : 0,
             unmodifiedText = actualKey === "Tab" ? "\t" : actualKey === "Enter" ? "\n" : actualKey,
             commonArg = {
-                key: actualKey, text: unmodifiedText, unmodifiedText, modifiers: modifierBitField, code, nativeVirtualKeyCode: keyCode, windowsVirtualKeyCode: keyCode,
+                key: actualKey,
+                text: unmodifiedText,
+                unmodifiedText,
+                modifiers: modifierBitField,
+                code,
+                nativeVirtualKeyCode: keyCode,
+                windowsVirtualKeyCode: keyCode,
+                timestamp: Date.now(),
             };
 
         chrome.tabs.query({ active: true }, (tabs) => {
