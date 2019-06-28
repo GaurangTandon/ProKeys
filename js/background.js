@@ -564,17 +564,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             // bit fields given on https://chromedevtools.github.io/devtools-protocol/tot/Input
             modifierList = ["altKey", "ctrlKey", "metaKey", "shiftKey"],
             modifierBitField = modifier ? 2 ** modifierList.indexOf(modifier) : 0,
+            unmodifiedText = actualKey === "Tab" ? "\t" : actualKey === "Enter" ? "\n" : actualKey,
             commonArg = {
-                key: actualKey, text: actualKey, unmodifiedText: actualKey, modifiers: modifierBitField, code, nativeVirtualKeyCode: keyCode, windowsVirtualKeyCode: keyCode,
+                key: actualKey, text: unmodifiedText, unmodifiedText, modifiers: modifierBitField, code, nativeVirtualKeyCode: keyCode, windowsVirtualKeyCode: keyCode,
             };
 
         chrome.tabs.query({ active: true }, (tabs) => {
             chrome.debugger.attach({ tabId: tabs[0].id }, "1.2", () => {
                 chrome.debugger.sendCommand({ tabId: tabs[0].id }, "Input.dispatchKeyEvent", {
-                    type: "char", ...commonArg,
+                    type: "keyDown", ...commonArg,
                 }, () => {
-                    console.log("finished everything");
-                    chrome.debugger.detach({ tabId: tabs[0].id });
+                    chrome.debugger.sendCommand({ tabId: tabs[0].id }, "Input.dispatchKeyEvent", {
+                        type: "keyUp", ...commonArg,
+                    }, () => {
+                        chrome.debugger.detach({ tabId: tabs[0].id });
+                    });
                 });
             });
         });
