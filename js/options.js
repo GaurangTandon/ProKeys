@@ -777,22 +777,21 @@ Please wait at least five minutes and try again.`);
                     if (event.target !== hotkeyListener) {
                         return;
                     }
-                    const { keyCode } = event,
-                        valid = isNonControlKey(keyCode);
+                    const { keyCode, key } = event,
+                        notControlKey = isNonControlKey(keyCode);
 
-                    if (keyCode === 9) {
+                    if (key === "Tab") {
                         event.preventDefault();
                         event.stopPropagation();
-                        setHotkey([9]);
-                    } else if (keyCode === 27) {
-                        // escape to exit
+                        setHotkey(["Tab"]);
+                    } else if (key === "Escape") {
                         resetHotkeyBtn();
-                    } else if (valid) {
-                        setHotkey(combo.concat([keyCode]).slice(0));
+                    } else if (notControlKey) {
+                        setHotkey(combo.concat([key]).slice(0));
                     } else {
-                        arrayOfControlKeys.forEach((key) => {
-                            if (event[key] && combo.indexOf(key) === -1) {
-                                combo.unshift(key);
+                        arrayOfControlKeys.forEach((keyArg) => {
+                            if (event[keyArg] && combo.indexOf(keyArg) === -1) {
+                                combo.unshift(keyArg);
                             }
                         });
                     }
