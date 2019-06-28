@@ -734,7 +734,13 @@ primitiveExtender();
     }
 
     function dispatchProgrammaticKeystroke(keydownData, eventCode, keyCode) {
-        chrome.runtime.sendMessage({ pressKeys: keydownData, code: eventCode, keyCode });
+        chrome.runtime.sendMessage({
+            pressKeys: true,
+            modifier: keydownData.length === 1 ? undefined : keydownData[0],
+            actualKey: keydownData[keydownData.length - 1],
+            code: eventCode,
+            keyCode,
+        });
     }
 
     let handleKeyPress,
