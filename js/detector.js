@@ -733,8 +733,8 @@ primitiveExtender();
         return modifierPressedIfReq && actualKeyCorrect;
     }
 
-    function dispatchProgrammaticKeystroke(keydownData, eventCode) {
-        chrome.runtime.sendMessage({ pressKeys: keydownData, code: eventCode });
+    function dispatchProgrammaticKeystroke(keydownData, eventCode, keyCode) {
+        chrome.runtime.sendMessage({ pressKeys: keydownData, code: eventCode, keyCode });
     }
 
     let handleKeyPress,
@@ -853,7 +853,7 @@ primitiveExtender();
                     isSnippetPresent(node, (snipFound) => {
                         if (!snipFound) {
                             snipWasJustNotFound = true;
-                            dispatchProgrammaticKeystroke(Data.hotKey, code);
+                            dispatchProgrammaticKeystroke(Data.hotKey, code, keyCode);
                         }
                     });
                 }

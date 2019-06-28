@@ -559,24 +559,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ snipFound, snipObject });
     } else if (request.pressKeys) {
         const keydownData = request.pressKeys,
-            { code } = request,
+            { code, keyCode } = request,
             modifier = keydownData.length === 1 ? undefined : keydownData[0],
             actualKey = keydownData[keydownData.length - 1],
             // bit fields given on https://chromedevtools.github.io/devtools-protocol/tot/Input
             modifierList = ["altKey", "ctrlKey", "metaKey", "shiftKey"],
-            modifierBitField = modifier ? 2 ** modifierList.indexOf(modifier) : 0;
+            modifierBitField = modifier ? 2 ** modifierList.indexOf(modifier) : 0,
+            commonArg = {
+                key: actualKey, text: actualKey, unmodifiedText: actualKey, modifiers: modifierBitField, code, nativeVirtualKeyCode: keyCode, windowsVirtualKeyCode: keyCode,
+            };
 
         chrome.tabs.query({ active: true }, (tabs) => {
             chrome.debugger.attach({ tabId: tabs[0].id }, "1.2", () => {
                 chrome.debugger.sendCommand({ tabId: tabs[0].id }, "Input.dispatchKeyEvent", {
-                    type: "keyDown", key: actualKey, modifiers: modifierBitField, code,
+                    type: "char", ...commonArg,
                 }, () => {
-                    chrome.debugger.sendCommand({ tabId: tabs[0].id }, "Input.dispatchKeyEvent", {
-                        type: "keyUp", key: actualKey, modifiers: modifierBitField, code,
-                    }, () => {
-                        console.log("finished everything");
-                        chrome.debugger.detach({ tabId: tabs[0].id });
-                    });
+                    console.log("finished everything");
+                    chrome.debugger.detach({ tabId: tabs[0].id });
                 });
             });
         });
