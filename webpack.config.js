@@ -22,7 +22,9 @@ module.exports = {
     // development mode ensures terser (es6 minifier) is not run
     // see https://webpack.js.org/configuration/mode
     module: moduleObject,
-    mode: MODE,
+    // this must always be development, since source files
+    // should not be minified, according Webstore policy
+    mode: "development",
     entry: {
         background: `${__dirname}/js/background.js`,
         detector: `${__dirname}/js/detector.js`,

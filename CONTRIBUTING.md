@@ -24,6 +24,7 @@ If you're using VS Code refer [here](https://stackoverflow.com/a/56554313) to se
 4. Make sure that the update fixes all the bugs listed for its milestone number.  
 5. Check for an [update](http://quilljs.com/docs/download/) to quill version, and replace the `min.js` and `snow.css` files in our codebase. Verify that this does not break any existing RTE logic.
 6. Run UI tests (Jest+Puppeteer).
+7. Update MODE to production in webpack config js before final build, and do build once.
 
 ## **After updating the extension**
 

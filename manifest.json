@@ -2,25 +2,40 @@
     "manifest_version": 2,
     "name": "ProKeys",
     "description": "Save time and effort in emails, etc. with ProKeys! Define snippets, do math in browser, auto complete braces, and much more.",
-    "version": "3.6.1",
+    "version": "3.6.2",
     "author": "Aquila Softworks",
     "browser_action": {
         "default_icon": "imgs/r16.png"
     },
     "background": {
-        "scripts": ["js/background.js"],
+        "scripts": [
+            "js/background.js"
+        ],
         "persistent": false
     },
     "content_scripts": [
         {
-            "js": ["js/detector.js"],
-            "css": ["css/blockSiteModal.css"],
-            "matches": ["<all_urls>"],
+            "js": [
+                "js/detector.js"
+            ],
+            "css": [
+                "css/blockSiteModal.css"
+            ],
+            "matches": [
+                "<all_urls>"
+            ],
             "run_at": "document_start",
             "all_frames": true
         }
     ],
-    "permissions": ["tabs", "storage", "notifications", "<all_urls>", "contextMenus", "clipboardRead"],
+    "permissions": [
+        "tabs",
+        "storage",
+        "notifications",
+        "<all_urls>",
+        "contextMenus",
+        "clipboardRead"
+    ],
     "omnibox": {
         "keyword": "pk"
     },

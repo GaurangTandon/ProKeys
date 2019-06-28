@@ -723,6 +723,21 @@ primitiveExtender();
         return previousChars[1] === emojisChars[0] || previousChars === emojisChars[1];
     }
 
+    /**
+     * still passing keycode for backward compatibility
+     * @param {Event} event
+     * @param {Number} keyCode
+     * @param {String} key
+     */
+    function isSnippetSubstitutionKey(event, keyCode, key) {
+        const modifierKey = Data.hotKey.length === 1 ? undefined : Data.hotKey[0],
+            actualKey = Data.hotKey[Data.hotKey.length - 1],
+            modifierPressedIfReq = (!modifierKey || event[modifierKey]),
+            actualKeyCorrect = Number.isInteger(actualKey) ? keyCode === actualKey : key === actualKey;
+
+        return modifierPressedIfReq && actualKeyCorrect;
+    }
+
     let handleKeyPress,
         handleKeyDown;
     (function () {
@@ -814,7 +829,7 @@ primitiveExtender();
         };
 
         handleKeyDown = function (e) {
-            const { keyCode } = e,
+            const { keyCode, key } = e,
                 node = e.target,
                 // do not use `this` instead of node; `this` can be document iframe
                 tgN = node.tagName,
@@ -825,7 +840,7 @@ primitiveExtender();
                 return;
             }
 
-            if (isSnippetSubstitutionKey(e, keyCode)) {
+            if (isSnippetSubstitutionKey(e, keyCode, key)) {
                 // snippet substitution hotkey
                 if (isSnippetPresent(node)) {
                     e.preventDefault();
@@ -898,12 +913,6 @@ primitiveExtender();
 
     const onKeyDownFunc = keyEventAttacher(handleKeyDown),
         onKeyPressFunc = keyEventAttacher(handleKeyPress);
-
-    function isSnippetSubstitutionKey(event, keyCode) {
-        const [modifierKey, actualKey] = Data.hotKey;
-
-        return actualKey ? event[modifierKey] && keyCode === actualKey : keyCode === modifierKey;
-    }
 
     function attachNecessaryHandlers(win, isBlocked) {
         win.addEventListener("contextmenu", (event) => {

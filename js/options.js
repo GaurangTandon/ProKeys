@@ -198,7 +198,7 @@ primitiveExtender();
         function isNumPadKey(keyCode) {
             return keyCode >= 96 && keyCode <= 105;
         }
-        const combo = Data.hotKey.slice(0),
+        const combo = Data.hotKey,
             specials = {
                 9: "Tab",
                 13: "Enter",
@@ -212,7 +212,7 @@ primitiveExtender();
                 altKey: "Alt",
                 metaKey: "Meta",
             };
-        let kC, // keyCode
+        let kC, // key (keyCode in older version)
             result = "";
 
         // dual-key combo
@@ -224,16 +224,16 @@ primitiveExtender();
             kC = combo[0];
         }
 
-        if (isNumPadKey(kC)) {
-            result += "NumPad";
-        }
+        if (Number.isInteger(kC)) {
+            if (isNumPadKey(kC)) {
+                result += "NumPad";
+                kC -= 48;
+            }
 
-        // numpad keys
-        if (kC >= 96 && kC <= 105) {
-            kC -= 48;
+            result += specials[kC] || String.fromCharCode(kC);
+        } else {
+            result += kC === " " ? "Space" : kC;
         }
-
-        result += specials[kC] || String.fromCharCode(kC);
 
         return result;
     }
@@ -680,6 +680,56 @@ Please wait at least five minutes and try again.`);
 
         // prevent exposure of locals
         (function hotKeyWork() {
+            // below code from https://stackoverflow.com/q/12467240
+            // User shmiddty https://stackoverflow.com/u/1585400
+            const nonControlKeyCodeRanges = [
+                    [48, 57], // number keys
+                    [65, 90], // letter keys
+                    [96, 111], // numpad keys
+                    [186, 192], // ;=,-./` (in order)
+                    [219, 222], // [\]' (in order)
+                    [32], // spacebar
+                    [13], // return
+                    [9], // tab
+                ],
+                arrayOfControlKeys = ["shiftKey", "altKey", "ctrlKey", "metaKey"];
+
+            /**
+             * convert given keyCode to a key, in prep for v3.6.2 upgrade
+             * @param {Number} keyCode
+            */
+            function convertKCtoKey(keyCode) {
+                if (keyCode === 9) {
+                    return "Tab";
+                }
+                if (keyCode === 13) {
+                    return "Enter";
+                }
+                if (keyCode === 32) {
+                    return " ";
+                }
+                if (keyCode >= 48 && keyCode <= 57) {
+                    return (keyCode - 48).toString();
+                }
+                if (keyCode >= 96 && keyCode <= 111) {
+                    return (keyCode - 96).toString();
+                }
+                if (keyCode >= 65 && keyCode <= 90) {
+                    return String.fromCharCode(keyCode);
+                }
+                // the first one starts from 186
+                const punctuationChars = ";=,-./`";
+                if (keyCode >= 186 && keyCode <= 192) {
+                    return punctuationChars[keyCode - 186];
+                }
+                const otherPuncChars = "[\\]'";
+                if (keyCode >= 219 && keyCode <= 222) {
+                    return otherPuncChars[keyCode - 219];
+                }
+                // control should never reach here
+                return undefined;
+            }
+
             // resets hotkey btn to normal state
             function resetHotkeyBtn() {
                 changeHotkeyBtn.html("Change hotkey").disabled = false;
@@ -695,26 +745,11 @@ Please wait at least five minutes and try again.`);
              * we originally used keyups because keydown event fired multiple times
              * if key was held. but tracking keyup is difficult because of the above problem
              * as well as the fact that the output would be different if the user lifted the
-             * shiftkey first or the space key first (when trying to set the hotkey to
-             * Shift+Space)
+             * shiftkey first or the space key first (when trying to set the hotkey to Shift+Space)
              * Hence, we finally use this new solution.
              */
 
             let combo;
-
-            // below code from https://stackoverflow.com/q/12467240
-            // User shmiddty https://stackoverflow.com/u/1585400
-            const nonControlKeyCodeRanges = [
-                    [48, 57], // number keys
-                    [65, 90], // letter keys
-                    [96, 111], // numpad keys
-                    [186, 192], // ;=,-./` (in order)
-                    [219, 222], // [\]' (in order)
-                    [32], // spacebar
-                    [13], // return
-                    [9], // tab
-                ],
-                arrayOfControlKeys = ["shiftKey", "altKey", "ctrlKey", "metaKey"];
 
             function isNonControlKey(keyCode) {
                 return nonControlKeyCodeRanges.some((range) => {
@@ -742,22 +777,21 @@ Please wait at least five minutes and try again.`);
                     if (event.target !== hotkeyListener) {
                         return;
                     }
-                    const { keyCode } = event,
-                        valid = isNonControlKey(keyCode);
+                    const { keyCode, key } = event,
+                        notControlKey = isNonControlKey(keyCode);
 
-                    // escape to exit
-                    if (keyCode === 9) {
+                    if (key === "Tab") {
                         event.preventDefault();
                         event.stopPropagation();
-                        setHotkey([9]);
-                    } else if (keyCode === 27) {
+                        setHotkey(["Tab"]);
+                    } else if (key === "Escape") {
                         resetHotkeyBtn();
-                    } else if (valid) {
-                        setHotkey(combo.concat([keyCode]).slice(0));
+                    } else if (notControlKey) {
+                        setHotkey(combo.concat([key]).slice(0));
                     } else {
-                        arrayOfControlKeys.forEach((key) => {
-                            if (event[key] && combo.indexOf(key) === -1) {
-                                combo.unshift(key);
+                        arrayOfControlKeys.forEach((keyArg) => {
+                            if (event[keyArg] && combo.indexOf(keyArg) === -1) {
+                                combo.unshift(keyArg);
                             }
                         });
                     }
@@ -774,6 +808,12 @@ Please wait at least five minutes and try again.`);
                 // after five seconds, automatically reset the button to default
                 setTimeout(resetHotkeyBtn, 5000);
             });
+
+            const nonControlKeyInHotkey = Data.hotKey[Data.hotKey.length - 1];
+            if (Number.isInteger(nonControlKeyInHotkey)) {
+                Data.hotKey[Data.hotKey.length - 1] = convertKCtoKey(nonControlKeyInHotkey);
+                saveOtherData(() => { });
+            }
         }());
     }
 
