@@ -34,7 +34,8 @@
         "notifications",
         "<all_urls>",
         "contextMenus",
-        "clipboardRead"
+        "clipboardRead",
+        "debugger"
     ],
     "omnibox": {
         "keyword": "pk"
