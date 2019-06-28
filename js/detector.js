@@ -733,7 +733,7 @@ primitiveExtender();
         const modifierKey = Data.hotKey.length === 1 ? undefined : Data.hotKey[0],
             actualKey = Data.hotKey[Data.hotKey.length - 1],
             modifierPressedIfReq = (!modifierKey || event[modifierKey]),
-            actualKeyCorrect = Number.isInteger(actualKey) ? keyCode === actualKey : key === actualKey;
+            actualKeyCorrect = Number.isInteger(actualKey) ? keyCode === actualKey : key.toLowerCase() === actualKey.toLowerCase();
 
         return modifierPressedIfReq && actualKeyCorrect;
     }
