@@ -558,10 +558,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             snipObject = snipFound ? snip.toArray() : {};
         sendResponse({ snipFound, snipObject });
     } else if (request.pressKeys) {
-        const keydownData = request.pressKeys,
-            { code, keyCode } = request,
-            modifier = keydownData.length === 1 ? undefined : keydownData[0],
-            actualKey = keydownData[keydownData.length - 1],
+        const {
+                modifier, actualKey, code, keyCode,
+            } = request,
             // bit fields given on https://chromedevtools.github.io/devtools-protocol/tot/Input
             modifierList = ["altKey", "ctrlKey", "metaKey", "shiftKey"],
             modifierBitField = modifier ? 2 ** modifierList.indexOf(modifier) : 0,
