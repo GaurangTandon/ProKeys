@@ -39,7 +39,6 @@ describe("Test snippet expansion", () => {
     testSnippetExpansion(usablePages);
 });
 
-/*
 describe("Test snipppet expansion delimited", () => {
     testSnippetExpansionDelimited(usablePages);
 });
@@ -51,4 +50,3 @@ describe("Test placeholder expansion", () => {
 describe("Test tab to space behaviour", () => {
     testTabToSpaceExpansion(usablePages);
 });
-*/
