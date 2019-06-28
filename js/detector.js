@@ -733,14 +733,9 @@ primitiveExtender();
         return modifierPressedIfReq && actualKeyCorrect;
     }
 
-    function dispatchProgrammaticKeystroke(keydownData, eventCode, keyCode) {
-        chrome.runtime.sendMessage({
-            pressKeys: true,
-            modifier: keydownData.length === 1 ? undefined : keydownData[0],
-            actualKey: keydownData[keydownData.length - 1],
-            code: eventCode,
-            keyCode,
-        });
+    function nodeHasSnippet(/* node */) {
+        // read node dataset to find out latest caretpos location and corresponding
+        // if snip name exists
     }
 
     let handleKeyPress,
@@ -833,9 +828,8 @@ primitiveExtender();
             }
         };
 
-        let snipWasJustNotFound = false;
         handleKeyDown = function (e) {
-            const { keyCode, key, code } = e,
+            const { keyCode, key } = e,
                 node = e.target,
                 // do not use `this` instead of node; `this` can be document iframe
                 tgN = node.tagName,
@@ -847,24 +841,12 @@ primitiveExtender();
             }
 
 
-            if (!snipWasJustNotFound) {
-                if (isSnippetSubstitutionKey(e, keyCode, key)) {
-                    // better to cancel event by default,
-                    // and if no snippet found, continue the logic given below
-                    // AND, the only way to do this decently is use chrome's debugger protocol
-                    // https://stackoverflow.com/questions/13987380/how-to-to-initialize-keyboard-event-with-given-char-keycode-in-a-chrome-extensio/34722970#34722970
+            if (isSnippetSubstitutionKey(e, keyCode, key)) {
+                if (nodeHasSnippet(node)) {
                     e.preventDefault();
                     e.stopPropagation();
-
-                    isSnippetPresent(node, (snipFound) => {
-                        if (!snipFound) {
-                            snipWasJustNotFound = true;
-                            dispatchProgrammaticKeystroke(Data.hotKey, code, keyCode);
-                        }
-                    });
+                    return;
                 }
-            } else {
-                snipWasJustNotFound = false;
             }
 
             // since tab key functions as all of snippet expansion,
@@ -917,6 +899,14 @@ primitiveExtender();
                 resetPlaceholderVariables();
             }
         };
+
+        document.on("selectionchange", (event) => {
+            const node = event.target;
+
+            isSnippetPresent(node, (/* snipFound */) => {
+
+            });
+        });
     }());
 
     // attaches event to document receives
