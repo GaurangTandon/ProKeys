@@ -198,7 +198,7 @@ primitiveExtender();
         function isNumPadKey(keyCode) {
             return keyCode >= 96 && keyCode <= 105;
         }
-        const combo = Data.hotKey.slice(0),
+        const combo = Data.hotKey,
             specials = {
                 9: "Tab",
                 13: "Enter",
@@ -212,7 +212,7 @@ primitiveExtender();
                 altKey: "Alt",
                 metaKey: "Meta",
             };
-        let kC, // keyCode
+        let kC, // key (keyCode in older version)
             result = "";
 
         // dual-key combo
@@ -224,16 +224,16 @@ primitiveExtender();
             kC = combo[0];
         }
 
-        if (isNumPadKey(kC)) {
-            result += "NumPad";
-        }
+        if (Number.isInteger(kC)) {
+            if (isNumPadKey(kC)) {
+                result += "NumPad";
+                kC -= 48;
+            }
 
-        // numpad keys
-        if (kC >= 96 && kC <= 105) {
-            kC -= 48;
+            result += specials[kC] || String.fromCharCode(kC);
+        } else {
+            result += kC === " " ? "Space" : kC;
         }
-
-        result += specials[kC] || String.fromCharCode(kC);
 
         return result;
     }
@@ -745,8 +745,7 @@ Please wait at least five minutes and try again.`);
              * we originally used keyups because keydown event fired multiple times
              * if key was held. but tracking keyup is difficult because of the above problem
              * as well as the fact that the output would be different if the user lifted the
-             * shiftkey first or the space key first (when trying to set the hotkey to
-             * Shift+Space)
+             * shiftkey first or the space key first (when trying to set the hotkey to Shift+Space)
              * Hence, we finally use this new solution.
              */
 
