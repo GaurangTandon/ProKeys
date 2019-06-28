@@ -491,15 +491,13 @@ These editors are generally found in your email client like Gmail, Outlook, etc.
      * Called when Data is defined and has correctly loaded
      */
     function DOMafterDBLoad() {
-        const changeHotkeyBtn = qClsSingle("change_hotkey"),
-            hotkeyListener = qClsSingle("hotkey_listener"),
-            url = window.location.href;
+        const url = window.location.href;
         if (/#\w+$/.test(url) && !/tryit|symbolsList/.test(url)) {
             // get the id and show divs based on that
             showHideMainPanels(url.match(/#(\w+)$/)[1]);
         } else {
             showHideMainPanels("settings");
-        } // default panel
+        }
 
         (function settingsPageHandlers() {
             const $delimiterCharsInput = q(".delimiter_list input"),
@@ -680,9 +678,11 @@ Please wait at least five minutes and try again.`);
 
         // prevent exposure of locals
         (function hotKeyWork() {
-            // below code from https://stackoverflow.com/q/12467240
-            // User shmiddty https://stackoverflow.com/u/1585400
-            const nonControlKeyCodeRanges = [
+            const changeHotkeyBtn = qClsSingle("change_hotkey"),
+                hotkeyListener = qClsSingle("hotkey_listener"),
+                // below code from https://stackoverflow.com/q/12467240
+                // User shmiddty https://stackoverflow.com/u/1585400
+                nonControlKeyCodeRanges = [
                     [48, 57], // number keys
                     [65, 90], // letter keys
                     [96, 111], // numpad keys
@@ -814,6 +814,9 @@ Please wait at least five minutes and try again.`);
                 Data.hotKey[Data.hotKey.length - 1] = convertKCtoKey(nonControlKeyInHotkey);
                 saveOtherData(() => { });
             }
+
+            // display current hotkey combo
+            qClsSingle("hotkey_display").html(getCurrentHotkey());
         }());
     }
 
@@ -892,9 +895,6 @@ Please wait at least five minutes and try again.`);
 
         q(".storageMode .current p").html(currArr[0]);
         q(".storageMode .transfer p").html(currArr[1]);
-
-        // display current hotkey combo
-        qClsSingle("hotkey_display").html(getCurrentHotkey());
 
         updateStorageAmount();
 
