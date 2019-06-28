@@ -18,7 +18,15 @@ const tinyCloudExpansionHandler = {
             await iframeElm.focus();
             await iframeElm.focus(this.p);
         },
-        retrieveText: () => this.frame.evaluate(p => p.innerHTML, this.p),
+        retrieveText: async () => {
+            const val = await this.frame.evaluateHandle(p => p.innerHTML, this.p);
+            // console.log(val);
+            console.log(await val.jsonValue());
+            console.log("got value");
+            await val.dispose();
+            await sleep(5000);
+            return "asd";
+        },
         clearText: async () => {
             await this.frame.evaluate((p) => { p.innerHTML = ""; }, this.p);
         },
