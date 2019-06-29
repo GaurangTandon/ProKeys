@@ -331,6 +331,32 @@ function triggerFakeInput($elm) {
     );
 }
 
+/**
+ * throttle given fn with some delay;
+ * executes tail end calls as well
+ * @param {Function} fn synchronous function (bind to retain context)
+ * @param {Number} delay in milliseconds
+ */
+function throttle(fn, delay) {
+    let lastcall = 0,
+        timeoutid;
+
+    function ret(...args) {
+        if (Date.now() - lastcall >= delay) {
+            lastcall = Date.now();
+            if (timeoutid) {
+                clearTimeout(timeoutid);
+                timeoutid = undefined;
+            }
+            fn(...args);
+        } else if (!timeoutid) {
+            timeoutid = setTimeout(ret, delay, ...args);
+        }
+    }
+
+    return ret;
+}
+
 export {
     q,
     qCls,
@@ -358,4 +384,5 @@ export {
     gTranlateImmune,
     getNodeWindow,
     triggerFakeInput,
+    throttle,
 };

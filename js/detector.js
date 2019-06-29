@@ -11,6 +11,7 @@ import {
     getNodeWindow,
     triggerFakeInput,
     OBJECT_NAME_LIMIT,
+    throttle,
 } from "./pre";
 import { Folder, Snip } from "./snippetClasses";
 import { DBget } from "./commonDataHandlers";
@@ -757,11 +758,14 @@ primitiveExtender();
     }
 
     /**
+     * do not use `this` in this function since
+     * its binding is lost on throttle;
+     * fired by both selectionchange and keyup
      * @param {Event} event
      */
-    function updateNodeSnippetPresenceOnSelChange(event) {
+    function updateNodeSnippetPresence(event) {
         const doc = event.target, // the doc may be inside iframe; hence, use event.target
-            node = doc.activeElement;
+            node = doc instanceof Document ? doc.activeElement : event.target;
         // handlekeydown/keyup are guaranteed to fire on usable nodes
         // but this function isn't
         if (!isUsableNode(node)) { return; }
@@ -771,6 +775,8 @@ primitiveExtender();
             node.dataset.snipName = snipObject.name;
         });
     }
+
+    const throttledUpdateNodeSnippetPresence = throttle(updateNodeSnippetPresence, 50);
 
     let handleKeyPress,
         handleKeyDown;
@@ -974,7 +980,11 @@ primitiveExtender();
         // doesn't work
         // event.target is always document, hence, no point
         // trying to capture it
-        win.document.on("selectionchange", updateNodeSnippetPresenceOnSelChange);
+        win.document.on("selectionchange", throttledUpdateNodeSnippetPresence);
+        // when user presses stuff like backspace, delete, ctrl-x
+        // tracking it during keydown is useless as they haven't updated
+        // the node text yet; hence, use keyup
+        win.document.on("keyup", throttledUpdateNodeSnippetPresence);
 
         debugLog("handlers attached on", win.document);
     }
