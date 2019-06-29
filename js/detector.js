@@ -1006,10 +1006,9 @@ primitiveExtender();
         }
 
         setInterval(initiateIframeCheck, IFRAME_CHECK_TIMER, document);
-        updateAllValuesPerWin(window);
-        debugLog("done initializing");
 
         window.isGmail = /mail\.google/.test(window.location.href);
+        debugLog("done initializing");
     }
 
     function afterDBget(DataResponse) {
