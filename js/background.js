@@ -394,6 +394,8 @@ function updateContextMenu(isRecalled = false) {
  * on ctxEnabled property
  */
 function initContextMenu() {
+    if (!Data) { return; }
+
     if (Data.ctxEnabled) {
         // let this call decide whether to show snippets or not
         // based on whether site is blocked or not
@@ -404,48 +406,44 @@ function initContextMenu() {
     toggleBlockSiteCtxItem();
 }
 
+function sendMessageToSafeActiveTab(msg, notSafeCallback) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        if (isTabSafe(tab)) {
+            chrome.tabs.sendMessage(
+                tab.id,
+                msg,
+                chromeAPICallWrapper(),
+            );
+        } else if (tab.url && notSafeCallback) {
+            notSafeCallback();
+        }
+    });
+}
+
 chrome.contextMenus.onClicked.addListener((info) => {
     const id = info.menuItemId,
         url = info.pageUrl;
-    let msg,
-        startIndex,
-        snip;
 
     if (id === BLOCK_SITE_ID) {
-        msg = {
+        const msg = {
             task: "showModal",
             action: contextMenuActionBlockSite,
             url: getDomain(url),
             modal: modalHTML,
         };
 
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (!isTabSafe(tabs[0])) {
-                return;
-            }
-            chrome.tabs.sendMessage(tabs[0].id, msg, chromeAPICallWrapper());
-        });
+        sendMessageToSafeActiveTab(msg);
     } else if (Generic.CTX_SNIP_REGEX.test(id)) {
-        startIndex = Generic.CTX_START[Generic.SNIP_TYPE].length;
-        snip = Data.snippets.getUniqueSnip(id.substring(startIndex));
+        const startIndex = Generic.CTX_START[Generic.SNIP_TYPE].length,
+            snip = Data.snippets.getUniqueSnip(id.substring(startIndex));
 
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const tab = tabs[0];
-            if (isTabSafe(tab)) {
-                chrome.tabs.sendMessage(
-                    tab.id,
-                    {
-                        clickedSnippet: snip.toArray(),
-                        ctxTimestamp: latestCtxTimestamp,
-                    },
-                    chromeAPICallWrapper(),
-                );
-            } else if (tab.url) {
-                alert(
-                    "Sorry, context menu insertion doesn't work in the chrome:// tabs or in the Webstore!",
-                );
-            }
-        });
+        sendMessageToSafeActiveTab({
+            clickedSnippet: snip.toArray(),
+            ctxTimestamp: latestCtxTimestamp,
+        }, () => alert(
+            "Sorry, context menu insertion doesn't work in the chrome:// tabs or in the Webstore!",
+        ));
     }
 });
 
@@ -487,16 +485,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (typeof request.updateCtx !== "undefined") {
         makeCtxSnippetList();
     } else if (request.openBlockSiteModalInParent === true) {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const tab = tabs[0];
-            if (isTabSafe(tab)) {
-                chrome.tabs.sendMessage(
-                    tab.id,
-                    { showBlockSiteModal: true, data: request.data },
-                    chromeAPICallWrapper(),
-                );
-            }
-        });
+        sendMessageToSafeActiveTab({ showBlockSiteModal: true, data: request.data });
     } else if (typeof request.ctxTimestamp !== "undefined") {
         latestCtxTimestamp = request.ctxTimestamp;
     } else if (request === "givePasteData") {
@@ -504,11 +493,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (typeof request.ctxEnabled !== "undefined") {
         Data.ctxEnabled = request.ctxEnabled;
         initContextMenu();
-    } else if (typeof request.giveData !== "undefined") {
-        const orgSnippets = Data.snippets;
-        Data.snippets = Data.snippets.toArray();
-        const resp = JSON.parse(JSON.stringify(Data));
-        Data.snippets = orgSnippets;
+    } else if (request.giveData) {
+        const resp = {};
+
+        for (const prop of request.props) {
+            let orgSnippets;
+            if (prop === "snippets") {
+                orgSnippets = Data.snippets;
+                Data.snippets = Data.snippets.toArray();
+            }
+            resp[prop] = Data[prop];
+            if (prop === "snippets") {
+                Data.snippets = orgSnippets;
+            }
+        }
 
         sendResponse(resp);
     } else if (typeof request.updateData !== "undefined") {

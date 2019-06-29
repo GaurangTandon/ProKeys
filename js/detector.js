@@ -14,7 +14,7 @@ import {
     throttle,
     isParent,
 } from "./pre";
-import { Folder, Snip } from "./snippetClasses";
+import { Snip } from "./snippetClasses";
 import { DBget } from "./commonDataHandlers";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
@@ -934,13 +934,6 @@ primitiveExtender();
         debugLog("handlers attached on", win.document);
     }
 
-    function afterDBget(DataResponse) {
-        window.Data = DataResponse;
-        Folder.makeFolderIfList(Data);
-        Folder.setIndices();
-        setPageDOM();
-    }
-
     function setPageDOM() {
         if (!window[PRIMITIVES_EXT_KEY]) {
             updateAllValuesPerWin(window);
@@ -1019,9 +1012,14 @@ primitiveExtender();
         window.isGmail = /mail\.google/.test(window.location.href);
     }
 
+    function afterDBget(DataResponse) {
+        window.Data = DataResponse;
+        setPageDOM();
+    }
+
     function onPageLoad() {
         if (!window.IN_OPTIONS_PAGE) {
-            DBget(afterDBget);
+            DBget(["hotKey", "tabKey"], afterDBget);
         } else {
             // load a second after the init
             // function in the options page has executed

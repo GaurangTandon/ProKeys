@@ -1728,11 +1728,15 @@ Folder.copyContents = function (fromFolder, toFolder) {
         Folder.insertObject(list[i].getDuplicatedObject(), toFolder);
     }
 };
-Folder.insertObject = function (object, folder) {
+/**
+ * @param {Generic} object
+ * @param {Folder} destFolder
+ */
+Folder.insertObject = function (object, destFolder) {
     if (Folder.isFolder(object)) {
-        folder.list.unshift(object);
+        destFolder.list.unshift(object);
     } else {
-        folder.list.splice(folder.getLastFolderIndex() + 1, 0, object);
+        destFolder.list.splice(destFolder.getLastFolderIndex() + 1, 0, object);
     }
 };
 Folder.insertBulkActionDOM = function (listedFolder) {

@@ -291,10 +291,10 @@ function isBlockedSite(url) {
 }
 
 /**
-     * @param {Element} link the anchor element which initiates download
-     * @param {String} data to create file out of
-     * @param {String} filename name of downloadable file
-     */
+ * @param {Element} link the anchor element which initiates download
+ * @param {String} data to create file out of
+ * @param {String} filename name of downloadable file
+ */
 function appendBlobToLink(link, data, filename) {
     const blob = new Blob([data], {
         type: "text/js",

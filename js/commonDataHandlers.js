@@ -60,8 +60,8 @@ const IN_OPTIONS_PAGE = window.location.href && /chrome-extension:\/\//.test(win
  * requests data from background page and
  * passes the Data to the callback
  */
-function DBget(callback) {
-    chrome.runtime.sendMessage({ giveData: true }, callback);
+function DBget(props, callback) {
+    chrome.runtime.sendMessage({ giveData: true, props }, callback);
 }
 
 /**
