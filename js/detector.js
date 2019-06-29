@@ -12,6 +12,7 @@ import {
     triggerFakeInput,
     OBJECT_NAME_LIMIT,
     throttle,
+    isParent,
 } from "./pre";
 import { Folder, Snip } from "./snippetClasses";
 import { DBget } from "./commonDataHandlers";
@@ -24,7 +25,7 @@ import { insertCharacter, searchAutoInsertChars } from "./autoInsertFunctionalit
 
 primitiveExtender();
 (function () {
-    let windowLoadChecker = setInterval(() => {
+    const windowLoadChecker = setInterval(() => {
             if (window.document.readyState === "complete") {
                 onPageLoad();
                 clearInterval(windowLoadChecker);
@@ -60,18 +61,19 @@ primitiveExtender();
         // the others don't support caret manipulation
         allowedInputElms = ["", "text", "search", "tel", "url"],
         CACHE_DATASET_STRING = "prokeyscachednode",
-        PAGE_IS_IFRAME = false,
         DOC_IS_IFRAME_KEY = "PROKEYS_ON_IFRAME",
         // unique key to tell content script running in document
         UNIQ_CS_KEY = "PROKEYS_RUNNING",
         IFRAME_CHECK_TIMER = 500,
-        ctxElm = null,
-        ctxTimestamp = 0,
         TAB_INSERTION_VALUE = "    ",
         /**
          * a collection of cached snippet names that are seen by the detector script
          */
         LAST_SEEN_SNIPPETS = {};
+
+    let ctxElm = null,
+        ctxTimestamp = 0,
+        PAGE_IS_IFRAME = false;
 
     /*
     Helper functions for iframe related work
@@ -100,12 +102,11 @@ primitiveExtender();
     }
 
     function initiateIframeCheck(parentDoc) {
-        let iframes = parentDoc.querySelectorAll("iframe"),
-            doc;
+        const iframes = parentDoc.querySelectorAll("iframe");
 
         for (const iframe of iframes) {
             iframe.on("load", onIFrameLoad);
-            doc = iframe.contentDocument;
+            const doc = iframe.contentDocument;
 
             if (doc && doc.readyState === "complete") {
                 onIFrameLoad(iframe);
@@ -135,11 +136,11 @@ primitiveExtender();
     }
 
     function setCaretAtEndOf(node, pos) {
-        const win = getNodeWindow(node),
-            sel = win.getSelection(),
-            range = sel.getRangeAt(0);
-
         if (isProKeysNode(node)) {
+            const win = getNodeWindow(node),
+                sel = win.getSelection(),
+                range = sel.getRangeAt(0);
+
             range.selectNodeContents(node);
             range.collapse(false);
             sel.removeAllRanges();
@@ -409,58 +410,17 @@ primitiveExtender();
         }
     }
 
-    // classArray for CodeMirror and ace editors
-    // parentSelector for others
-    // max search upto 10 parent nodes (searchLimit)
-    function isParent(node, parentSelector, classArray, searchLimit) {
-        function classMatch(classToMatch) {
-            // sometimes this is undefined, dk why
-            if (!node.classList) {
-                return false;
-            }
-            for (const cls of node.classList) {
-                if (cls.search(classToMatch) === 0) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        node = node.parentNode;
-
-        // tackle optionals
-        if (!classArray || classArray.length === 0) {
-            classArray = [];
-        }
-        searchLimit = searchLimit || 10;
-
-        let count = 1;
-
-        while (node && count++ <= searchLimit) {
-            // 'node.matches' is important condition for MailChimp
-            // it shows "BODY" as node but doesn't allow match :/
-            if (
-                (parentSelector && node.matches && node.matches(parentSelector))
-                || classArray.some(classMatch)
-            ) {
-                return true;
-            }
-
-            node = node.parentNode;
-        }
-
-        return false;
-    }
-
     function formatVariable(str) {
-        return /date/i.test(str)
-            ? getFormattedDate()
-            : /time/i.test(str)
-                ? getCurrentTimestamp()
-                : /version/i.test(str)
-                    ? navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ")
-                    : null;
+        if (/date/i.test(str)) {
+            return getFormattedDate();
+        }
+        if (/time/i.test(str)) {
+            return getCurrentTimestamp();
+        }
+        if (/version/i.test(str)) {
+            return navigator.userAgent.match(/Chrome\/[\d.]+/)[0].replace("/", " ");
+        }
+        return null;
     }
 
     /**
@@ -551,12 +511,12 @@ primitiveExtender();
             isCENode = isContentEditable(node),
             caretPos = isCENode ? range.endOffset : node.selectionEnd,
             value = isCENode ? rangeNode.textContent : node.value;
-        let operate = true,
+        let shouldOperate = true,
             i = caretPos;
 
         // check closing brackets are present
         if (value.substr(caretPos, 2) !== "]]") {
-            operate = false;
+            shouldOperate = false;
         } else {
             // check opening brackets are present
             while (i >= 0 && value[i] !== "[") {
@@ -564,11 +524,11 @@ primitiveExtender();
             }
 
             if (i <= 0 || value[i - 1] !== "[") {
-                operate = false;
+                shouldOperate = false;
             }
         }
 
-        if (operate) {
+        if (shouldOperate) {
             const evaluatedValue = evaluateDoubleBrackets(value, i + 1, caretPos),
                 [valueToSet, caretPosToSet] = evaluatedValue;
 
@@ -587,10 +547,6 @@ primitiveExtender();
         }
     }
 
-    /*
-        Keyboard handling functions
-    */
-
     function isNotMetaKey(event) {
         return !event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey;
     }
@@ -598,16 +554,14 @@ primitiveExtender();
     // that is, where we can perform
     // keypress, keydown functions
     function isUsableNode(node) {
-        let tgN = node.tagName,
-            inputNodeType,
-            data,
-            retVal;
+        let retVal;
 
         if (!node.dataset) {
             node.dataset = {};
         }
 
-        data = node.dataset;
+        const tgN = node.tagName,
+            data = node.dataset;
 
         if (data && typeof data[CACHE_DATASET_STRING] !== "undefined") {
             retVal = data[CACHE_DATASET_STRING] === "true";
@@ -616,7 +570,7 @@ primitiveExtender();
         } else if (tgN === "TEXTAREA" || isContentEditable(node)) {
             retVal = true;
         } else if (tgN === "INPUT") {
-            inputNodeType = node.attr("type");
+            const inputNodeType = node.attr("type");
             // "!inputNodeType" -> github issue #40
             retVal = !inputNodeType || allowedInputElms.indexOf(inputNodeType) > -1;
         } else {
@@ -694,7 +648,6 @@ primitiveExtender();
     }
 
     /**
-     *
      * @param {Element} node
      * @returns true if snippet was present, else false
      */

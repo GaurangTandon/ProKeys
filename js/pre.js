@@ -357,6 +357,50 @@ function throttle(fn, delay) {
     return ret;
 }
 
+// classArray for CodeMirror and ace editors
+// parentSelector for others
+// max search upto 10 parent nodes (searchLimit)
+function isParent(node, parentSelector, classArray, searchLimit) {
+    function classMatch(classToMatch) {
+        // sometimes this is undefined, dk why
+        if (!node.classList) {
+            return false;
+        }
+        for (const cls of node.classList) {
+            if (cls.search(classToMatch) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    node = node.parentNode;
+
+    // tackle optionals
+    if (!classArray || classArray.length === 0) {
+        classArray = [];
+    }
+    searchLimit = searchLimit || 10;
+
+    let count = 1;
+
+    while (node && count++ <= searchLimit) {
+        // 'node.matches' is important condition for MailChimp
+        // it shows "BODY" as node but doesn't allow match :/
+        if (
+            (parentSelector && node.matches && node.matches(parentSelector))
+            || classArray.some(classMatch)
+        ) {
+            return true;
+        }
+
+        node = node.parentNode;
+    }
+
+    return false;
+}
+
 export {
     q,
     qCls,
@@ -385,4 +429,5 @@ export {
     getNodeWindow,
     triggerFakeInput,
     throttle,
+    isParent,
 };
