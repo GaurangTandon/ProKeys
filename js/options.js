@@ -918,7 +918,7 @@ Please wait at least five minutes and try again.`);
 
     function onWindowLoad() {
         domBeforeDBLoad();
-        DBget("all", onDBLoad);
+        DBget(Object.keys(SETTINGS_DEFAULTS), onDBLoad);
     }
 
     window.addEventListener("load", onWindowLoad);

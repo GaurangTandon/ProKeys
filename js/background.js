@@ -496,11 +496,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.giveData) {
         const resp = {};
 
-        // options page
-        if (request.props === "all") {
-            request.props = Object.keys(SETTINGS_DEFAULTS);
-        }
-
         for (const prop of request.props) {
             let orgSnippets;
             if (prop === "snippets") {
