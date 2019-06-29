@@ -22,7 +22,7 @@ const tinyCloudExpansionHandler = {
             await iframeElm.focus(this.p);
         },
         retrieveText: async () => {
-            const txt = await this.frame.evaluate(p => p.innerText, this.p);
+            const txt = await this.frame.evaluate(p => p.textContent, this.p);
 
             return txt;
         },
