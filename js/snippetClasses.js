@@ -1531,25 +1531,24 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
     };
 
     /**
-     * @param {String} nodeText result of calling getText on node
-     * @param {Number} caretPos
+     * @param {String} text result of getText(node).slice(-OBJECT_NAME_LIMIT)
      */
-    this.getUniqueSnippetAtCaretPos = function ({ nodeText, caretPos }) {
-        const lim = caretPos < OBJECT_NAME_LIMIT ? caretPos : OBJECT_NAME_LIMIT,
-            snipNameDelimiterListRegex = new RegExp(
+    this.getUniqueSnippetFromText = function (text) {
+        const snipNameDelimiterListRegex = new RegExp(
                 `[${escapeRegExp(Data.snipNameDelimiterList)}]`,
-            );
+            ),
+            { length } = text,
+            startIndex = length > OBJECT_NAME_LIMIT ? 1 : 0;
 
-        let stringToCheck = "",
-            foundSnip = null,
-            delimiterChar = nodeText[caretPos - 1];
+        let foundSnip = null;
 
-        for (let i = 1; i <= lim; i++) {
+        // search for longest snippet first first
+        for (let i = startIndex; i < length; i++) {
             // the previous delimiter char gets added to the
             // string to check as we move towards left
-            stringToCheck = delimiterChar + stringToCheck;
-            delimiterChar = nodeText[caretPos - 1 - i];
-            const snip = this.getUniqueSnip(stringToCheck);
+            const delimiterChar = startIndex > 0 ? text[startIndex - 1] : "",
+                stringToCheck = text.substring(i),
+                snip = this.getUniqueSnip(stringToCheck);
 
             if (snip) {
                 if (Data.matchDelimitedWord && snipNameDelimiterListRegex) {

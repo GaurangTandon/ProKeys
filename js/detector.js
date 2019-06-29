@@ -10,6 +10,7 @@ import {
     PRIMITIVES_EXT_KEY,
     getNodeWindow,
     triggerFakeInput,
+    OBJECT_NAME_LIMIT,
 } from "./pre";
 import { Folder, Snip } from "./snippetClasses";
 import { DBget } from "./commonDataHandlers";
@@ -194,7 +195,11 @@ primitiveExtender();
     }
 
     function sendCheckSnippetMsg(node, caretPos, mainCallback) {
-        chrome.runtime.sendMessage({ task: "checkSnippetPresent", nodeText: getText(node), caretPos }, ({ snipFound, snipObject }) => {
+        // one extra subtraction for delimiter char
+        const textSliceStart = Math.max(0, caretPos - OBJECT_NAME_LIMIT - 1),
+            usableText = getText(node).slice(textSliceStart, caretPos);
+
+        chrome.runtime.sendMessage({ task: "checkSnippetPresent", text: usableText }, ({ snipFound, snipObject }) => {
             if (snipFound) { LAST_SEEN_SNIPPETS[snipObject.name] = snipObject.body; }
             mainCallback({ snipFound, snipObject });
         });

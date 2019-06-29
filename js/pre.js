@@ -132,7 +132,6 @@ const debugLog = debugLogTemp,
      * we need to keep this limit as it helps improve ProKeys
      * performance, for example, by telling how many characters
      * prior to the caret the snippet abbreviation maybe present
-     * see this.getUniqueSnippetAtCaretPos
      */
     OBJECT_NAME_LIMIT = 100;
 
