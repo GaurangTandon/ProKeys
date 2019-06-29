@@ -8,7 +8,6 @@ const SETTINGS_DEFAULTS = {
         snippets: Folder.getDefaultSnippetData(),
         blockedSites: [],
         charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
-        dataVersion: 1,
         language: "English",
         hotKey: ["shiftKey", " "],
         dataUpdateVariable: true,

@@ -394,7 +394,7 @@ function updateContextMenu(isRecalled = false) {
  * on ctxEnabled property
  */
 function initContextMenu() {
-    if (!Data) { return; }
+    if (!window.Data) { return; }
 
     if (Data.ctxEnabled) {
         // let this call decide whether to show snippets or not
@@ -495,6 +495,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         initContextMenu();
     } else if (request.giveData) {
         const resp = {};
+
+        // options page
+        if (request.props === "all") {
+            request.props = Object.keys(SETTINGS_DEFAULTS);
+        }
 
         for (const prop of request.props) {
             let orgSnippets;

@@ -1019,7 +1019,9 @@ primitiveExtender();
 
     function onPageLoad() {
         if (!window.IN_OPTIONS_PAGE) {
-            DBget(["hotKey", "tabKey"], afterDBget);
+            DBget(["hotKey", "tabKey", "blockedSites",
+                "charsToAutoInsertUserList", "dataUpdateVariable", "matchDelimitedWord",
+                "snipNameDelimiterList", "omniboxSearchURL", "wrapSelectionAutoInsert"], afterDBget);
         } else {
             // load a second after the init
             // function in the options page has executed
