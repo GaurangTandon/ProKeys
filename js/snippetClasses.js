@@ -1540,14 +1540,16 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
             { length } = text,
             startIndex = length > OBJECT_NAME_LIMIT ? 1 : 0;
 
-        let foundSnip = null;
+        let foundSnip = null,
+            stringToCheck = "";
 
         // search for longest snippet first first
-        for (let i = startIndex; i < length; i++) {
+        for (let i = length - 1; i >= startIndex; i--) {
             // the previous delimiter char gets added to the
             // string to check as we move towards left
-            const delimiterChar = startIndex > 0 ? text[startIndex - 1] : "",
-                stringToCheck = text.substring(i),
+            stringToCheck = text[i] + stringToCheck;
+
+            const delimiterChar = i > 0 ? text[i - 1] : "",
                 snip = this.getUniqueSnip(stringToCheck);
 
             if (snip) {
@@ -1565,10 +1567,6 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
                 } else {
                     foundSnip = snip;
                 }
-            }
-
-            if (foundSnip) {
-                break;
             }
         }
 
