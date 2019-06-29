@@ -75,6 +75,16 @@ primitiveExtender();
         ctxTimestamp = 0,
         PAGE_IS_IFRAME = false;
 
+    /**
+     * @param {Element} node
+     */
+    function getSelAndRange(node) {
+        const win = getNodeWindow(node),
+            sel = win.getSelection(),
+            range = sel.getRangeAt(0);
+        return { sel, range };
+    }
+
     /*
     Helper functions for iframe related work
         - initiateIframeCheckForSpecialWebpages
@@ -137,9 +147,7 @@ primitiveExtender();
 
     function setCaretAtEndOf(node, pos) {
         if (isProKeysNode(node)) {
-            const win = getNodeWindow(node),
-                sel = win.getSelection(),
-                range = sel.getRangeAt(0);
+            const { sel, range } = getSelAndRange(node);
 
             range.selectNodeContents(node);
             range.collapse(false);
@@ -307,9 +315,7 @@ primitiveExtender();
     // always content editable
     // used by span.prokeys-placeholder
     function selectEntireTextIn(node) {
-        const win = getNodeWindow(node),
-            sel = win.getSelection(),
-            range = sel.getRangeAt(0);
+        const { sel, range } = getSelAndRange(node);
 
         range.selectNodeContents(node);
         sel.removeAllRanges();
@@ -363,9 +369,7 @@ primitiveExtender();
      */
     function insertSnippetFromCtx(snip, node) {
         if (isContentEditable(node)) {
-            const win = getNodeWindow(node),
-                sel = win.getSelection(),
-                range = sel.getRangeAt(0);
+            const { range } = getSelAndRange(node);
 
             if (!range.collapsed) {
                 range.deleteContents();
@@ -429,9 +433,7 @@ primitiveExtender();
      */
     function shiftCaretByCount(node, shiftCount) {
         if (isContentEditable(node)) {
-            const win = getNodeWindow(node),
-                sel = win.getSelection(),
-                range = sel.getRangeAt(0),
+            const { sel, range } = getSelAndRange(node),
                 loc = range.startOffset + shiftCount;
             // debugDir(node);debugDir(range);
             range.setStart(range.startContainer, loc);
@@ -504,9 +506,8 @@ primitiveExtender();
     // replacement of text of mathomania/variable
     // with their required value after `=` has been pressed
     // which has been detected by handleKeyPress
-    function provideDoubleBracketFunctionality(node, win) {
-        const sel = win.getSelection(),
-            range = sel.getRangeAt(0),
+    function provideDoubleBracketFunctionality(node) {
+        const { sel, range } = getSelAndRange(node),
             rangeNode = range.startContainer,
             isCENode = isContentEditable(node),
             caretPos = isCENode ? range.endOffset : node.selectionEnd,
@@ -584,9 +585,7 @@ primitiveExtender();
 
     function getCharFollowingCaret(node) {
         if (isContentEditable(node)) {
-            const win = getNodeWindow(node),
-                sel = win.getSelection(),
-                range = sel.getRangeAt(0),
+            const { range } = getSelAndRange(node),
                 caretPos = range.startOffset;
             let container = range.startContainer,
                 text = getHTML(container); // no .html() as can be text node
@@ -616,9 +615,7 @@ primitiveExtender();
             nodeValue;
 
         if (isContentEditable(node)) {
-            const win = getNodeWindow(node),
-                sel = win.getSelection(),
-                range = sel.getRangeAt(0),
+            const { range } = getSelAndRange(node),
                 rangeNode = range.startContainer;
             position = range.startOffset;
             nodeValue = rangeNode.textContent;
@@ -656,9 +653,7 @@ primitiveExtender();
 
         const name = node.dataset.snipName,
             snip = Snip.fromObject({ name, body: LAST_SEEN_SNIPPETS[name], timestamp: 1 }),
-            win = getNodeWindow(node),
-            sel = win.getSelection(),
-            range = sel.getRangeAt(0),
+            { range } = getSelAndRange(node),
             container = range.startContainer;
 
         if (isContentEditable(node)) {
@@ -668,7 +663,7 @@ primitiveExtender();
             range.setEnd(container, caretPos);
             range.deleteContents();
 
-            insertSnippetInContentEditableNode(range, snip, node);
+            setTimeout(insertSnippetInContentEditableNode, 10, range, snip, node);
         } else {
             const caretPos = node.selectionStart,
                 start = caretPos - name.length;
@@ -683,9 +678,7 @@ primitiveExtender();
     function isSnippetPresent(node, callback) {
         const notFoundRet = { snipFound: false, snipObject: {} };
         if (isContentEditable(node)) {
-            const win = getNodeWindow(node),
-                sel = win.getSelection(),
-                range = sel.getRangeAt(0),
+            const { range } = getSelAndRange(node),
                 container = range.startContainer,
                 // pos relative to container (not node)
                 caretPos = range.startOffset;
@@ -795,8 +788,7 @@ primitiveExtender();
             // so check for that
             if (charTyped === "=") {
                 // wait till the = sign actually appears in node value
-                const win = getNodeWindow(node);
-                setTimeout(provideDoubleBracketFunctionality, 10, node, win);
+                setTimeout(provideDoubleBracketFunctionality, 10, node);
             }
 
             // this logic of Placeholder only for textarea
