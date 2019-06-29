@@ -25,6 +25,7 @@
         "gulp-terser": "*",
         "gulp-uglify": "^3.0.2",
         "husky": "^2.4.0",
+        "jsinspect": "^0.12.7",
         "lint-staged": "^8.2.0",
         "prettier": "1.17.1",
         "pretty-quick": "^1.10.0",
@@ -33,6 +34,7 @@
     },
     "lint-staged": {
         "js/*.js": [
+            "jsinspect -I -L -t 40",
             "eslint --fix",
             "git add"
         ]
