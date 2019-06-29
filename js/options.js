@@ -711,12 +711,21 @@ Please wait at least five minutes and try again.`);
                 if (keyCode >= 48 && keyCode <= 57) {
                     return (keyCode - 48).toString();
                 }
-                if (keyCode >= 96 && keyCode <= 111) {
+                if (keyCode >= 96 && keyCode <= 105) {
                     return (keyCode - 96).toString();
                 }
+
                 if (keyCode >= 65 && keyCode <= 90) {
                     return String.fromCharCode(keyCode);
                 }
+
+                // numpad symbols - 106 to 111 (108 does not exist)
+                // http://www.foreui.com/articles/Key_Code_Table.htm
+                const numPadPunctuation = "*+U-./";
+                if (keyCode >= 106 && keyCode <= 111) {
+                    return numPadPunctuation[keyCode - 106];
+                }
+
                 // the first one starts from 186
                 const punctuationChars = ";=,-./`";
                 if (keyCode >= 186 && keyCode <= 192) {

@@ -10,7 +10,7 @@ const SETTINGS_DEFAULTS = {
         charsToAutoInsertUserList: [["(", ")"], ["{", "}"], ["\"", "\""], ["[", "]"]],
         dataVersion: 1,
         language: "English",
-        hotKey: ["shiftKey", 32],
+        hotKey: ["shiftKey", " "],
         dataUpdateVariable: true,
         matchDelimitedWord: true,
         tabKey: false,
