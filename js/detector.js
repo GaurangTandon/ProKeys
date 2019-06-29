@@ -65,7 +65,11 @@ primitiveExtender();
         IFRAME_CHECK_TIMER = 500,
         ctxElm = null,
         ctxTimestamp = 0,
-        TAB_INSERTION_VALUE = "    ";
+        TAB_INSERTION_VALUE = "    ",
+        /**
+         * a collection of cached snippet names that are seen by the detector script
+         */
+        LAST_SEEN_SNIPPETS = {};
 
     /*
     Helper functions for iframe related work
@@ -189,42 +193,20 @@ primitiveExtender();
         });
     }
 
-    function sendCheckSnippetMsg(node, caretPos, foundCallback, mainCallback) {
+    function sendCheckSnippetMsg(node, caretPos, mainCallback) {
         chrome.runtime.sendMessage({ task: "checkSnippetPresent", nodeText: getText(node), caretPos }, ({ snipFound, snipObject }) => {
-            // the 10 delay is just so that the character is typed in the textbox
-            if (snipFound) { setTimeout(foundCallback, 10, Snip.fromObject(snipObject)); }
-            mainCallback(snipFound);
+            if (snipFound) { LAST_SEEN_SNIPPETS[snipObject.name] = snipObject.body; }
+            mainCallback({ snipFound, snipObject });
         });
     }
 
-    function isSnippetPresentCENode(node, callback) {
-        const win = getNodeWindow(node),
-            sel = win.getSelection(),
-            range = sel.getRangeAt(0),
-            container = range.startContainer,
-            // pos relative to container (not node)
-            caretPos = range.startOffset;
-
-        /**
-         * @param {Snip} snip
-         */
-        function onSnipFound(snip) {
-            // remove snippet name from container
-            range.setStart(container, caretPos - snip.name.length);
-            range.setEnd(container, caretPos);
-            range.deleteContents();
-
-            insertSnippetInContentEditableNode(range, snip, node);
-        }
-
-        if (!range.collapsed) {
-            callback({ snipFound: false });
-            return;
-        }
-
-        sendCheckSnippetMsg(container, caretPos, onSnipFound, callback);
-    }
-
+    /**
+     * @param {Number} start
+     * @param {Number} caretPos
+     * @param {Snip} snip
+     * @param {String} nodeText
+     * @param {Element} node
+     */
     function insertSnippetInTextarea(start, caretPos, snip, nodeText, node) {
         const textBeforeSnipName = nodeText.substring(0, start),
             textAfterSnipName = nodeText.substring(caretPos);
@@ -239,32 +221,6 @@ primitiveExtender();
 
             testPlaceholderPresence(node, snipBody, start);
         });
-    }
-
-    // check snippet's presence and intiate
-    // another function to insert snippet body
-    function isSnippetPresent(node, callback) {
-        debugLog("checking snippet presence", node);
-        if (isContentEditable(node)) {
-            isSnippetPresentCENode(node, callback);
-            return;
-        }
-
-        const caretPos = node.selectionStart;
-
-        // if the start and end points are not the same
-        // break and insert some character there
-        if (caretPos !== node.selectionEnd) {
-            callback({ snipFound: false });
-            return;
-        }
-
-        function onSnipFound(snip) {
-            const start = caretPos - snip.name.length;
-            setTimeout(insertSnippetInTextarea, 10, start, caretPos, snip, node.value, node);
-        }
-
-        sendCheckSnippetMsg(node, caretPos, onSnipFound, callback);
     }
 
     /**
@@ -393,34 +349,32 @@ primitiveExtender();
         return foundPlaceholder;
     }
 
-    // fired by insertSnippetFromCtx
-    function insertSnippetFromCtxContentEditable(snip, node) {
-        const win = getNodeWindow(node),
-            sel = win.getSelection(),
-            range = sel.getRangeAt(0);
-
-        if (!range.collapsed) {
-            range.deleteContents();
-        }
-
-        insertSnippetInContentEditableNode(range, snip, node);
-    }
-
-    // fired by the window.contextmenu event
+    /**
+     * fired by the window.contextmenu event
+     * @param {Snip} snip
+     * @param {Element} node
+     */
     function insertSnippetFromCtx(snip, node) {
         if (isContentEditable(node)) {
-            insertSnippetFromCtxContentEditable(snip, node);
-            return;
+            const win = getNodeWindow(node),
+                sel = win.getSelection(),
+                range = sel.getRangeAt(0);
+
+            if (!range.collapsed) {
+                range.deleteContents();
+            }
+
+            insertSnippetInContentEditableNode(range, snip, node);
+        } else {
+            const caretPos = node.selectionStart;
+            let val = node.value;
+
+            if (caretPos !== node.selectionEnd) {
+                val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
+            }
+
+            insertSnippetInTextarea(caretPos, caretPos, snip, val, node);
         }
-
-        const caretPos = node.selectionStart;
-        let val = node.value;
-
-        if (caretPos !== node.selectionEnd) {
-            val = val.substring(0, caretPos) + val.substring(node.selectionEnd);
-        }
-
-        insertSnippetInTextarea(caretPos, caretPos, snip, val, node);
     }
 
     // returns user-selected text in content-editable element
@@ -733,9 +687,80 @@ primitiveExtender();
         return modifierPressedIfReq && actualKeyCorrect;
     }
 
-    function nodeHasSnippet(/* node */) {
-        // read node dataset to find out latest caretpos location and corresponding
-        // if snip name exists
+    /**
+     *
+     * @param {Element} node
+     * @returns true if snippet was present, else false
+     */
+    function executeSnippetIfPresent(node) {
+        if (!node.dataset || node.dataset.snipFound === "false") { return false; }
+
+        const name = node.dataset.snipName,
+            snip = Snip.fromObject({ name, body: LAST_SEEN_SNIPPETS[name], timestamp: 1 }),
+            win = getNodeWindow(node),
+            sel = win.getSelection(),
+            range = sel.getRangeAt(0),
+            container = range.startContainer;
+
+        if (isContentEditable(node)) {
+            // pos relative to container (not node)
+            const caretPos = range.startOffset;
+            range.setStart(container, caretPos - name.length);
+            range.setEnd(container, caretPos);
+            range.deleteContents();
+
+            insertSnippetInContentEditableNode(range, snip, node);
+        } else {
+            const caretPos = node.selectionStart,
+                start = caretPos - name.length;
+            setTimeout(insertSnippetInTextarea, 10, start, caretPos, snip, node.value, node);
+        }
+
+        return true;
+    }
+
+    // check snippet's presence and intiate
+    // another function to insert snippet body
+    function isSnippetPresent(node, callback) {
+        const notFoundRet = { snipFound: false, snipObject: {} };
+        if (isContentEditable(node)) {
+            const win = getNodeWindow(node),
+                sel = win.getSelection(),
+                range = sel.getRangeAt(0),
+                container = range.startContainer,
+                // pos relative to container (not node)
+                caretPos = range.startOffset;
+
+            if (!range.collapsed) {
+                callback(notFoundRet);
+                return;
+            }
+
+            sendCheckSnippetMsg(container, caretPos, callback);
+        } else {
+            const caretPos = node.selectionStart;
+
+            // if the start and end points are not the same
+            // break and insert some character there
+            if (caretPos !== node.selectionEnd) {
+                callback(notFoundRet);
+                return;
+            }
+
+            sendCheckSnippetMsg(node, caretPos, callback);
+        }
+    }
+
+    function updateNodeSnippetPresenceOnSelChange() {
+        const node = document.activeElement;
+        // handlekeydown/keyup are guaranteed to fire on usable nodes
+        // but this function isn't
+        if (!isUsableNode(node)) { return; }
+
+        isSnippetPresent(node, ({ snipFound, snipObject }) => {
+            node.dataset.snipFound = snipFound;
+            node.dataset.snipName = snipObject.name;
+        });
     }
 
     let handleKeyPress,
@@ -748,25 +773,25 @@ primitiveExtender();
         let autoInsertTyped = false;
 
         handleKeyPress = function (e) {
-            let node = e.target,
-                // holds integer on how much to increase
-                // Placeholder.toIndex by during Placeholder.mode
-                toIndexIncrease = 1,
-                // //////
-                // Why use `toIndexIncrease`?  Because of following bug:
-                // Suppose, text is "%A% one two three %B%"
-                // Placeholder.fromIndex is 0 and Placeholder.toIndex is 21 (length of string)
-                // when user goes on %A% and types in text suppose 5 chars long
-                // then the %B% moves 5 chars right, and thus the text that comes
-                // within the range of Placeholder.fromIndex/Placeholder.toIndex becomes "12345 one two thre" -- missing "e %B%" ///
-                // and thus this eliminated the placeholders
-                // ///////
-
+            const node = e.target,
                 // //////////////////////////////
                 // Char insertion technique start
                 charTyped = String.fromCharCode(e.keyCode),
                 autoInsertPairFirstChar = searchAutoInsertChars(charTyped, 0),
                 autoInsertPairSecondChar = searchAutoInsertChars(charTyped, 1);
+
+            // holds integer on how much to increase
+            // Placeholder.toIndex by during Placeholder.mode
+            // //////
+            // Why use `toIndexIncrease`?  Because of following bug:
+            // Suppose, text is "%A% one two three %B%"
+            // Placeholder.fromIndex is 0 and Placeholder.toIndex is 21 (length of string)
+            // when user goes on %A% and types in text suppose 5 chars long
+            // then the %B% moves 5 chars right, and thus the text that comes
+            // within the range of Placeholder.fromIndex/Placeholder.toIndex becomes "12345 one two thre" -- missing "e %B%" ///
+            // and thus this eliminated the placeholders
+            // ///////
+            let toIndexIncrease = 1;
 
             if (
                 autoInsertTyped
@@ -840,9 +865,8 @@ primitiveExtender();
                 return;
             }
 
-
             if (isSnippetSubstitutionKey(e, keyCode, key)) {
-                if (nodeHasSnippet(node)) {
+                if (executeSnippetIfPresent(node)) {
                     e.preventDefault();
                     e.stopPropagation();
                     return;
@@ -900,13 +924,11 @@ primitiveExtender();
             }
         };
 
-        document.on("selectionchange", (event) => {
-            const node = event.target;
-
-            isSnippetPresent(node, (/* snipFound */) => {
-
-            });
-        });
+        // attaching selectionchange on individual textareas
+        // doesn't work
+        // event.target is always document, hence, no point
+        // trying to capture it
+        document.addEventListener("selectionchange", updateNodeSnippetPresenceOnSelChange);
     }());
 
     // attaches event to document receives
