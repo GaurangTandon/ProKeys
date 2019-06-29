@@ -698,7 +698,7 @@ primitiveExtender();
      * @returns true if snippet was present, else false
      */
     function executeSnippetIfPresent(node) {
-        if (!node.dataset || node.dataset.snipFound === "false") { return false; }
+        if (!node.dataset || node.dataset.snipFound !== "true") { return false; }
 
         const name = node.dataset.snipName,
             snip = Snip.fromObject({ name, body: LAST_SEEN_SNIPPETS[name], timestamp: 1 }),
@@ -756,8 +756,12 @@ primitiveExtender();
         }
     }
 
-    function updateNodeSnippetPresenceOnSelChange() {
-        const node = document.activeElement;
+    /**
+     * @param {Event} event
+     */
+    function updateNodeSnippetPresenceOnSelChange(event) {
+        const doc = event.target, // the doc may be inside iframe; hence, use event.target
+            node = doc.activeElement;
         // handlekeydown/keyup are guaranteed to fire on usable nodes
         // but this function isn't
         if (!isUsableNode(node)) { return; }
@@ -928,12 +932,6 @@ primitiveExtender();
                 resetPlaceholderVariables();
             }
         };
-
-        // attaching selectionchange on individual textareas
-        // doesn't work
-        // event.target is always document, hence, no point
-        // trying to capture it
-        document.addEventListener("selectionchange", updateNodeSnippetPresenceOnSelChange);
     }());
 
     // attaches event to document receives
@@ -971,6 +969,13 @@ primitiveExtender();
 
         win.document.on("keydown", onKeyDownFunc, true);
         win.document.on("keypress", onKeyPressFunc, true);
+
+        // attaching selectionchange on individual textareas
+        // doesn't work
+        // event.target is always document, hence, no point
+        // trying to capture it
+        win.document.on("selectionchange", updateNodeSnippetPresenceOnSelChange);
+
         debugLog("handlers attached on", win.document);
     }
 
