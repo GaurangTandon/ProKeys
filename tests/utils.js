@@ -112,6 +112,7 @@ async function getExpandedSnippet(
     snipText,
     cursorChange,
     handler = null,
+    hotkeyRequired = true,
 ) {
     await page.bringToFront();
 
@@ -126,7 +127,9 @@ async function getExpandedSnippet(
     }
 
     // expand the snippet
-    await expandSnippet(page);
+    if (hotkeyRequired) {
+        await expandSnippet(page);
+    }
 
     // wait for some time
     await sleep(extensionDelay);

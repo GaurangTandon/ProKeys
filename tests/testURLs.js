@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 const { sleep } = require("./utils");
 
+/*
 const tinyCloudExpansionHandler = {
         p: null,
         frame: null,
@@ -31,24 +32,27 @@ const tinyCloudExpansionHandler = {
                 p.innerHTML = "<br>";
             }, this.p);
         },
+    };
+*/
+const testURLs = [
+    {
+        url:
+      "https://stackoverflow.com/questions/50990292/"
+      + "using-octal-character-gives-warning-multi-character-character-constant",
+        textBoxQueryString: "#wmd-input",
     },
-    testURLs = [
-        {
-            url:
-        "https://stackoverflow.com/questions/50990292/"
-        + "using-octal-character-gives-warning-multi-character-character-constant",
-            textBoxQueryString: "#wmd-input",
-        },
-        {
-            url:
-        "https://serverfault.com/questions/971011/"
-        + "how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
-            textBoxQueryString: "#wmd-input",
-        },
+    {
+        url:
+      "https://serverfault.com/questions/971011/"
+      + "how-to-check-if-an-active-directory-server-is-reachable-from-an-ubuntu-apache-ph",
+        textBoxQueryString: "#wmd-input",
+    },
+    /*
         {
             url: "https://www.tiny.cloud/",
             handler: tinyCloudExpansionHandler,
         },
-    ];
+        */
+];
 
 module.exports = testURLs;
