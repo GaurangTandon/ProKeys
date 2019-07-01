@@ -1,5 +1,5 @@
 const {
-        extSettings, getExpandedSnippet, updateSettings, sleep,
+        extSettings, getExpandedSnippet, updateSettings,
     } = require("./utils"),
     testURLs = require("./testURLs");
 
@@ -67,7 +67,6 @@ function commonSnippetTest(usablePages, isDelimited = false) {
                         cursorChange,
                         handler,
                     );
-                    if (snipText === "embed") { await sleep(10000); }
                     await expect(expandedText).toBe(usableExpansion);
                 });
             });
