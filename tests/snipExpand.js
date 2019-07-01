@@ -20,6 +20,12 @@ const testSnippets = [
         cursorChange: "",
         delimitedExpansion: "be right back",
     },
+    {
+        snipText: "url",
+        expansion: "%url%",
+        cursorChange: "",
+        delimitedExpansion: "%url%",
+    },
 ];
 
 /*
@@ -42,6 +48,10 @@ function testSnippetExpansion(usablePages) {
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
             testSnippets.forEach(({ snipText, expansion, cursorChange }) => {
+                if (expansion === "%url%") {
+                    expansion = url;
+                }
+
                 it(`${snipText} should expand`, async () => {
                     const expandedText = await getExpandedSnippet(
                         usablePage,
@@ -89,9 +99,12 @@ function testSnippetExpansionDelimited(usablePages) {
         describe(`Delimited snipppet behaves correctly on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
-            // for ext changes
             testSnippets.forEach(({ snipText, cursorChange, delimitedExpansion }) => {
                 it(`${snipText} should become ${delimitedExpansion}`, async () => {
+                    if (delimitedExpansion === "%url%") {
+                        delimitedExpansion = url;
+                    }
+
                     const expandedText = await getExpandedSnippet(
                         usablePage,
                         textBoxQueryString,

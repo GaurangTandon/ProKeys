@@ -30,7 +30,8 @@ function extSettings(opts) {
     return (
         "{\"snippets\":[\"Snippets\",1560477878650,"
     + "{ \"name\": \"placeholder\", \"body\": \"hello %world% %again%\", \"timestamp\": 0 },"
-    + "{ \"name\": \"embed\", \"body\": \"[[%s(brb)]]\", \"timestamp\": 1 }"
+    + "{ \"name\": \"embed\", \"body\": \"[[%s(brb)]]\", \"timestamp\": 1 },"
+    + "{ \"name\": \"url\", \"body\": \"[[%u(p)]]\", \"timestamp\": 2 }"
     + "],"
     + "\"blockedSites\":[],"
     + "\"charsToAutoInsertUserList\":"
