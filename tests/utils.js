@@ -59,8 +59,8 @@ function extSettings(opts) {
                 "}"
             ],
             [
-                """,
-                """
+                "\\"",
+                "\\""
             ],
             [
                 "[",
@@ -76,7 +76,7 @@ function extSettings(opts) {
         "dataUpdateVariable": false,
         "matchDelimitedWord": ${opts.matchDelimitedWord},
         "tabKey": ${opts.tabKeyExpandSpace},
-        "snipNameDelimiterList": "@#$%&*+-=(){}[]:"'/_<>?!., ",
+        "snipNameDelimiterList": "@#$%&*+-=(){}[]:\\"'/_<>?!., ",
         "omniboxSearchURL": "https://www.google.com/search?q=SEARCH",
         "wrapSelectionAutoInsert": true,
         "ctxEnabled": true

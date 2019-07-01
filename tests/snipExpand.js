@@ -1,4 +1,6 @@
-const { extSettings, getExpandedSnippet, updateSettings } = require("./utils"),
+const {
+        extSettings, getExpandedSnippet, updateSettings,
+    } = require("./utils"),
     testURLs = require("./testURLs");
 
 const testSnippets = [
