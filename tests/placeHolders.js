@@ -3,7 +3,7 @@ const { getExpandedPlaceHolderSnippet } = require("./utils"),
 
 const testSnippets = [
     {
-        snipText: "test",
+        snipText: "placeholder",
         expansion: "hello yoogottam the great",
         cursorChange: "",
         delimitedExpansion: "hello yoogottam the great",

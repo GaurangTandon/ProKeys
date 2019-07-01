@@ -5,7 +5,7 @@ const {
     { testPlaceHolderSnippetExpansion } = require("./placeHolders"),
     { testMathomania } = require("./mathomania"),
     { testTabToSpaceExpansion } = require("./tabToSpace"),
-    { dismissDialog } = require("./utils"),
+    { dismissDialog, extSettings, updateSettings } = require("./utils"),
     testURLs = require("./testURLs");
 
 const usablePages = [],
@@ -31,6 +31,11 @@ beforeAll(async () => {
         });
     }
     /* eslint-enable no-await-in-loop */
+
+    // to init the list of snippets used for testing
+    await updateSettings(
+        extSettings({ matchDelimitedWord: false, tabKeyExpandSpace: false }),
+    );
 });
 
 /*

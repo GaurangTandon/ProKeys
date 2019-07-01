@@ -14,6 +14,12 @@ const testSnippets = [
         cursorChange: "",
         delimitedExpansion: "be right back",
     },
+    {
+        snipText: "embed",
+        expansion: "be right back",
+        cursorChange: "",
+        delimitedExpansion: "be right back",
+    },
 ];
 
 /*

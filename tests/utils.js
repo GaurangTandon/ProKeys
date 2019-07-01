@@ -29,8 +29,8 @@ async function expandSnippet(page) {
 function extSettings(opts) {
     return (
         "{\"snippets\":[\"Snippets\",1560477878650,"
-    + "{ \"name\": \"test\","
-    + " \"body\": \"hello %world% %again%\", \"timestamp\": 1560747743398 }"
+    + "{ \"name\": \"placeholder\", \"body\": \"hello %world% %again%\", \"timestamp\": 0 },"
+    + "{ \"name\": \"embed\", \"body\": \"[[%s(brb)]]\", \"timestamp\": 1 }"
     + "],"
     + "\"blockedSites\":[],"
     + "\"charsToAutoInsertUserList\":"
@@ -247,6 +247,7 @@ async function updateSettings(newSettings) {
         extUploadFileFormID = "#file_input_elm",
         importButtonQuerySelector = "button[class='import']",
         restoreButtonQuerySelector = "button[class='restore']",
+        dontImportDupeQuerySelector = "input[name='duplicate'][value='existing']",
         settingsPath = path.join(__dirname, settingsFile),
         extWelcomePage = await getExtOptionsPage();
 
@@ -261,6 +262,9 @@ async function updateSettings(newSettings) {
     // click the import button
     const importButton = await extWelcomePage.$(importButtonQuerySelector);
     await importButton.click();
+
+    const dupeRemover = await extWelcomePage.$(dontImportDupeQuerySelector);
+    await dupeRemover.click();
 
     // upload the file
     const uploadFileForm = await extWelcomePage.$(extUploadFileFormID);
