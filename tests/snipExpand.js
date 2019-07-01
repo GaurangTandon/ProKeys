@@ -35,13 +35,14 @@ const testSnippets = [
  */
 function commonSnippetTest(usablePages, isDelimited = false) {
     testURLs.forEach(({ url, textBoxQueryString, handler }, index) => {
-        let usablePage;
+        let usablePage,
+            loadedPromise;
 
         beforeAll(async () => {
-            ({ usablePage } = usablePages[index]);
+            ({ usablePage, loadedPromise } = usablePages[index]);
             // unless we bring it to front, it does not activate snippets
             await usablePage.bringToFront();
-            await usablePage.reload();
+            if (isDelimited) { await usablePage.reload(); } else { await loadedPromise; }
         });
 
         describe(`${isDelimited ? "Delimited " : ""}snipppet expands on ${
