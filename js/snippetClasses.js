@@ -1573,45 +1573,45 @@ function Folder(orgName, list, orgTimestamp, isSearchResultFolder) {
         return foundSnip;
     };
 
-    // parentID (optional) - if undefined, defaults to top-level
-    this.createCtxMenuEntry = function (parentId) {
-        let id,
-            emptyFolderText = "Empty folder ";
+    /**
+     * parentID (optional) - if undefined, defaults to top-level
+     * limit is the limit on number of context menu entries we can have
+     * see issues#296
+     */
+    this.createCtxMenuEntry = function (parentId = undefined, limit = 800) {
+        const emptyFolderText = "Empty folder ";
 
-        this.list.forEach((object) => {
-            id = Generic.CTX_START[object.type] + object.name;
-
+        function createEntry(id, text) {
             chrome.contextMenus.create(
                 {
                     contexts: ["editable"],
                     id, // unique id
-                    title: object.name,
+                    title: text,
                     parentId,
                 },
                 chromeAPICallWrapper(),
             );
-
             listOfSnippetCtxIDs.push(id);
+            limit--;
+        }
+
+        for (const object of this.list) {
+            if (limit === 0) { break; }
+
+            const id = Generic.CTX_START[object.type] + object.name;
+
+            createEntry(id, object.name);
 
             if (Folder.isFolder(object)) {
-                object.createCtxMenuEntry(id);
+                limit = object.createCtxMenuEntry(id, limit);
             }
-        });
+        }
 
         if (this.list.length === 0) {
-            id = emptyFolderText + this.name;
-
-            chrome.contextMenus.create(
-                {
-                    contexts: ["editable"],
-                    id, // unique id
-                    title: emptyFolderText,
-                    parentId,
-                },
-                chromeAPICallWrapper(),
-            );
-            listOfSnippetCtxIDs.push(id);
+            const id = emptyFolderText + this.name;
+            createEntry(id, emptyFolderText);
         }
+        return limit;
     };
 
     function genericLooper(type) {
