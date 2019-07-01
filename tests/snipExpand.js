@@ -28,31 +28,35 @@ const testSnippets = [
     },
 ];
 
-/*
- * TEST:
- *  check if snippets are expanding normally
+/**
+ *
+ * @param {Boolean} isDelimited
+ * @param {Array} usablePages
  */
-function testSnippetExpansion(usablePages) {
+function commonSnippetTest(usablePages, isDelimited = false) {
     testURLs.forEach(({ url, textBoxQueryString, handler }, index) => {
-        let usablePage,
-            loadedPromise;
+        let usablePage;
 
         beforeAll(async () => {
-            ({ usablePage, loadedPromise } = usablePages[index]);
-            await loadedPromise;
+            ({ usablePage } = usablePages[index]);
             // unless we bring it to front, it does not activate snippets
             await usablePage.bringToFront();
+            await usablePage.reload();
         });
 
-        describe(`Snipppet expands on ${
+        describe(`${isDelimited ? "Delimited " : ""}snipppet expands on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
-            testSnippets.forEach(({ snipText, expansion, cursorChange }) => {
-                if (expansion === "%url%") {
-                    expansion = url;
-                }
+            testSnippets.forEach(({
+                snipText, cursorChange, expansion, delimitedExpansion,
+            }) => {
+                let usableExpansion = isDelimited ? delimitedExpansion : expansion;
 
-                it(`${snipText} should expand`, async () => {
+                it(`${snipText} expands to ${usableExpansion}`, async () => {
+                    if (usableExpansion === "%url%") {
+                        usableExpansion = url;
+                    }
+
                     const expandedText = await getExpandedSnippet(
                         usablePage,
                         textBoxQueryString,
@@ -60,11 +64,19 @@ function testSnippetExpansion(usablePages) {
                         cursorChange,
                         handler,
                     );
-                    await expect(expandedText).toBe(expansion);
+                    await expect(expandedText).toBe(usableExpansion);
                 });
             });
         });
     });
+}
+
+/*
+ * TEST:
+ *  check if snippets are expanding normally
+ */
+function testSnippetExpansion(usablePages) {
+    commonSnippetTest(usablePages);
 }
 
 /*
@@ -86,37 +98,7 @@ function testSnippetExpansionDelimited(usablePages) {
         );
     });
 
-    testURLs.forEach(({ url, textBoxQueryString, handler }, index) => {
-        let usablePage;
-
-        beforeAll(async () => {
-            ({ usablePage } = usablePages[index]);
-            // unless we bring it to front, it does not activate snippets
-            await usablePage.bringToFront();
-            await usablePage.reload();
-        });
-
-        describe(`Delimited snipppet behaves correctly on ${
-            url.match(/https?:\/\/(\w+\.)+\w+/)[0]
-        }`, () => {
-            testSnippets.forEach(({ snipText, cursorChange, delimitedExpansion }) => {
-                it(`${snipText} should become ${delimitedExpansion}`, async () => {
-                    if (delimitedExpansion === "%url%") {
-                        delimitedExpansion = url;
-                    }
-
-                    const expandedText = await getExpandedSnippet(
-                        usablePage,
-                        textBoxQueryString,
-                        snipText,
-                        cursorChange,
-                        handler,
-                    );
-                    await expect(expandedText).toBe(delimitedExpansion);
-                });
-            });
-        });
-    });
+    commonSnippetTest(usablePages, true);
 }
 
 module.exports = {

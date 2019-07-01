@@ -36,9 +36,15 @@
     },
     "lint-staged": {
         "linters": {
-            "*.js": ["eslint --fix", "git add"]
+            "*.js": [
+                "eslint --fix",
+                "git add"
+            ]
         },
-        "ignore": ["**/dist/*.js", "**/editor.min.js"]
+        "ignore": [
+            "**/dist/*.js",
+            "**/editor.min.js"
+        ]
     },
     "husky": {
         "hooks": {
