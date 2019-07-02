@@ -46,6 +46,11 @@ function extSettings(opts) {
                 "name": "url",
                 "body": "[[%u(p)]]",
                 "timestamp": 2
+            },
+            {
+                "name": "clipboard",
+                "body": "[[%p]]",
+                "timestamp": 3
             }
         ],
         "blockedSites": [],
@@ -319,7 +324,19 @@ async function updateSettings(newSettings) {
     });
 }
 
+async function copyTextToClipboard(page, textToCopy) {
+    await page.evaluate((text) => {
+        const input = document.createElement("input");
+        input.setAttribute("value", text);
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+    }, textToCopy);
+}
+
 module.exports = {
+    copyTextToClipboard,
     dismissDialog,
     expandSnippet,
     extSettings,

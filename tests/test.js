@@ -5,6 +5,7 @@ const {
     { testPlaceHolderSnippetExpansion } = require("./placeHolders"),
     { testMathomania } = require("./mathomania"),
     { testTabToSpaceExpansion } = require("./tabToSpace"),
+    { testClipboard } = require("./clipboard"),
     { dismissDialog, extSettings, updateSettings } = require("./utils"),
     testURLs = require("./testURLs");
 
@@ -59,4 +60,8 @@ describe("Test tab to space behaviour", () => {
 
 describe("Test mathomania", () => {
     testMathomania(usablePages);
+});
+
+describe("Test clipboard content extraction in snippet", () => {
+    testClipboard(usablePages);
 });
