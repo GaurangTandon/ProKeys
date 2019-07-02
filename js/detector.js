@@ -39,7 +39,7 @@ primitiveExtender();
             problems for that rich editor */
         TAGNAME_SNIPPET_HOLDER_ELM = "SPAN",
         // class of span element holding entire snippet
-        SPAN_CLASS = "prokeys-snippet-text",
+        PROKEYS_ELM_CLASS = "prokeys-snippet-text",
         // class of span element holding placeholders
         PLACE_CLASS = "prokeys-placeholder",
         // contains all Placeholder related variables
@@ -142,7 +142,7 @@ primitiveExtender();
      * @param {Element} node to check
      */
     function isProKeysNode(node) {
-        return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM && (node && node.hasClass(SPAN_CLASS));
+        return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM && (node && node.hasClass(PROKEYS_ELM_CLASS));
     }
 
     function setCaretAtEndOf(node, pos) {
@@ -159,11 +159,15 @@ primitiveExtender();
         }
     }
 
-    function prepareSnippetBodyForCENode(snip, node, callback) {
+    /**
+     * @param {Snip} snip
+     * @param {Element} node
+     * @param {Function} callback
+     */
+    function prepareSnippetBodyForCENode(snip, callback) {
         // on disqus thread the line break
         // is represented by </p>
-        const isDisqusThread = isParent(node, "#disqus_thread"),
-            lineSeparator = `<br>${isDisqusThread ? "</p>" : ""}`;
+        const lineSeparator = "<br>";
 
         snip.formatMacros((snipBody) => {
             snipBody = Snip.makeHTMLValidForExternalEmbed(snipBody)
@@ -179,10 +183,11 @@ primitiveExtender();
 
             debugLog("prepared snippet body for CE node\n", snipBody);
 
-            callback(snipBody);
+            callback(snipBody.split(lineSeparator));
         });
     }
 
+    // eslint-disable-next-line no-unused-vars
     function populatePlaceholderObject(snipElmNode) {
         Placeholder.mode = true;
         Placeholder.node = snipElmNode;
@@ -191,16 +196,85 @@ primitiveExtender();
         Placeholder.array = [].slice.call(snipElmNode.qCls(PLACE_CLASS) || [], 0);
     }
 
+    /**
+     * https://github.com/GaurangTandon/ProKeys/issues/295#issuecomment-507561596
+     * it's either a P or a DIV
+     * @param {Element|Text} container
+     * @returns {Element} either P or DIV, whichever the parent is
+     */
+    function determineCEParent(container) {
+        while (!container.matches || !container.matches("P,DIV")) { container = container.parentElement; }
+        return container;
+    }
+
+    /**
+     * @param {String} parentTagName
+     * @param {Range} range
+     * @param {Array<String>}
+     */
+    function insertSnippetCE(parentTagName, range, snipBodyLines) {
+        function getSpan(htmlContent) {
+            return q.new("span").html(htmlContent).addClass(PROKEYS_ELM_CLASS);
+        }
+
+        function getParentType(htmlContent) {
+            return q.new(parentTagName).html(htmlContent).addClass(PROKEYS_ELM_CLASS);
+        }
+
+        // it might be an element node too?
+        const { startContainer } = range;
+        let startLineIndex = 0,
+            extraText = "",
+            firstElm = null,
+            insertAfterMe = startContainer;
+
+        if (isTextNode(startContainer)) {
+            const pos = range.startOffset;
+            extraText = startContainer.textContent.substr(pos);
+            startContainer.textContent = startContainer.textContent.substr(0, pos);
+            const span = firstElm = getSpan(snipBodyLines[0]);
+            startContainer.insertAfter(span);
+            insertAfterMe = span;
+
+            startLineIndex++;
+        }
+
+        for (let i = startLineIndex; i < snipBodyLines.length; i++) {
+            // if there was no content, it's
+            const parentElm = getParentType(snipBodyLines[i] || "<br>");
+            if (i === startLineIndex && firstElm === null) { firstElm = parentElm; }
+
+            insertAfterMe.insertAfter(parentElm);
+            insertAfterMe = parentElm;
+        }
+
+        if (isTextNode(insertAfterMe)) {
+            insertAfterMe.textContent += extraText;
+        } else {
+            insertAfterMe.innerHTML += extraText;
+        }
+    }
+
     function insertSnippetInContentEditableNode(range, snip, node) {
-        prepareSnippetBodyForCENode(snip, node, (snipBody) => {
-            const snipElmNode = q.new(TAGNAME_SNIPPET_HOLDER_ELM);
-            snipElmNode.html(snipBody).addClass(SPAN_CLASS); // identification
+        prepareSnippetBodyForCENode(snip, (snipBodyLines) => {
+            // old way - too simplistic
+            // const snipElmNode = q.new(TAGNAME_SNIPPET_HOLDER_ELM);
+            // snipElmNode.html(snipBody).addClass(SPAN_CLASS); // identification
+            // range.insertNode(snipElmNode);
+            const mainParent = determineCEParent(range.startContainer);
+            let { tagName } = mainParent;
 
-            range.insertNode(snipElmNode);
+            // the div.contenteditable is the most primitive it can be (with textnodes only)
+            // insert paragraphs by default
+            if (mainParent === node) {
+                tagName = "p";
+            }
 
-            populatePlaceholderObject(snipElmNode);
+            insertSnippetCE(tagName, range, snipBodyLines);
 
-            checkPlaceholdersInContentEditableNode();
+            // populatePlaceholderObject(snipElmNode); - temp
+
+            // checkPlaceholdersInContentEditableNode();
         });
     }
 
