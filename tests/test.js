@@ -5,7 +5,7 @@ const {
     { testPlaceHolderSnippetExpansion } = require("./placeHolders"),
     { testMathomania } = require("./mathomania"),
     { testTabToSpaceExpansion } = require("./tabToSpace"),
-    { testClipboard } = require("./clipboard"),
+    { testClipboardSnippet, testEmbeddedSnippet, testURLSnippet } = require("./macros"),
     { dismissDialog, extSettings, updateSettings } = require("./utils"),
     testURLs = require("./testURLs");
 
@@ -46,7 +46,7 @@ describe("Test snippet expansion", () => {
     testSnippetExpansion(usablePages);
 });
 
-describe("Test snipppet expansion delimited", () => {
+describe("Test delimited snippet expansion", () => {
     testSnippetExpansionDelimited(usablePages);
 });
 
@@ -62,6 +62,8 @@ describe("Test mathomania", () => {
     testMathomania(usablePages);
 });
 
-describe("Test clipboard content extraction in snippet", () => {
-    testClipboard(usablePages);
+describe("Test macros", () => {
+    testClipboardSnippet(usablePages);
+    testEmbeddedSnippet(usablePages);
+    testURLSnippet(usablePages);
 });

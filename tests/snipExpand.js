@@ -16,18 +16,6 @@ const testSnippets = [
         cursorChange: "",
         delimitedExpansion: "be right back",
     },
-    {
-        snipText: "embed",
-        expansion: "be right back",
-        cursorChange: "",
-        delimitedExpansion: "be right back",
-    },
-    {
-        snipText: "url",
-        expansion: "%url%",
-        cursorChange: "",
-        delimitedExpansion: "%url%",
-    },
 ];
 
 /**
@@ -87,20 +75,17 @@ function testSnippetExpansion(usablePages) {
  *  check if snippets obey delimited settings
  */
 function testSnippetExpansionDelimited(usablePages) {
-    // enable delimited in settings
     beforeAll(async () => {
         await updateSettings(
             extSettings({ matchDelimitedWord: true, tabKeyExpandSpace: false }),
         );
     });
 
-    // disable delimited in settings
     afterAll(async () => {
         await updateSettings(
             extSettings({ matchDelimitedWord: false, tabKeyExpandSpace: false }),
         );
     });
-
     commonSnippetTest(usablePages, true);
 }
 
