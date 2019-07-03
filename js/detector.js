@@ -183,6 +183,8 @@ primitiveExtender();
 
             debugLog("prepared snippet body for CE node\n", snipBody);
 
+            snipBody = snipBody.split("<br>").map(value => (value ? `<p>${value}</p>` : "<p><br></p>")).join("");
+
             callback(snipBody);
         });
     }
@@ -253,7 +255,7 @@ primitiveExtender();
                     triggerFakeInput(node);
                     populatePlaceholderObject(node, lastNode);
                     checkPlaceholdersInContentEditableNode();
-                }, 10);
+                }, 0);
             });
         });
     }

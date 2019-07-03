@@ -112,7 +112,7 @@ function isTextNode(node) {
     return node.nodeType === 3;
 }
 
-const DEBUGGING = false;
+const DEBUGGING = true;
 let debugDirTemp,
     debugLogTemp;
 // see https://stackoverflow.com/q/13815640
