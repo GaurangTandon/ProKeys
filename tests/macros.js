@@ -19,10 +19,20 @@ function testSnippetMacroBase(usablePages, testName, testSnippets) {
             testSnippets.forEach(({
                 snipText, cursorChange, expansion, preExpand,
             }) => {
-                beforeAll(async () => {
+                beforeEach(async () => {
+                    const random = Math.random().toString(36).split(".")[1];
+
+                    if (expansion === "%random%") {
+                        expansion = random;
+                    }
+
                     if (preExpand.length) {
                         const func = preExpand[0],
                             args = preExpand.slice(1);
+
+                        args.forEach((el, i) => {
+                            if (el === "%random%") { args[i] = random; }
+                        });
 
                         await func(usablePage, ...args);
                     }
@@ -67,13 +77,12 @@ function testURLSnippet(usablePages) {
 }
 
 function testClipboardSnippet(usablePages) {
-    const randomText = Math.random().toString(36).split(".")[1],
-        clipboardSnippets = [{
-            snipText: "clipboard",
-            expansion: randomText,
-            cursorChange: "",
-            preExpand: [copyTextToClipboard, randomText],
-        }];
+    const clipboardSnippets = [{
+        snipText: "clipboard",
+        expansion: "%random%",
+        cursorChange: "",
+        preExpand: [copyTextToClipboard, "%random%"],
+    }];
 
     testSnippetMacroBase(usablePages, "clipboard snippets", clipboardSnippets);
 }
