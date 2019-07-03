@@ -1,6 +1,8 @@
 /* global Data, listOfSnippetCtxIDs */
 
-import { chromeAPICallWrapper, isTabSafe, q } from "./pre";
+import {
+    chromeAPICallWrapper, isTabSafe, q, debugLog,
+} from "./pre";
 import { primitiveExtender } from "./primitiveExtend";
 import { updateAllValuesPerWin } from "./protoExtend";
 import { Folder, Generic } from "./snippetClasses";
@@ -88,17 +90,60 @@ function getCurrentStorageType() {
     return storage.MAX_ITEMS ? "sync" : "local";
 }
 
-function getPasteData() {
-    const $elm = q.new("textarea"),
+function getClipboard(type) {
+    debugLog("getting ", type);
+
+    if (type === "text") {
+        const $elm = q.new("textarea"),
+            $actElm = document.activeElement.appendChild($elm).parentNode;
+
+        $elm.focus();
+        document.execCommand("paste", null, null);
+
+        const data = $elm.value;
+        $actElm.removeChild($elm);
+        debugLog("get done");
+        return data;
+    }
+
+    const $elm = q.new("div"),
         $actElm = document.activeElement.appendChild($elm).parentNode;
-
+    $elm.setAttribute("contenteditable", "true");
     $elm.focus();
-    document.execCommand("Paste", null, null);
-
-    const data = $elm.value;
+    document.execCommand("paste", null, null);
+    const data = $elm.innerHTML;
     $actElm.removeChild($elm);
-
+    debugLog("get done");
     return data;
+}
+
+/**
+ * @param {String} type
+ * @param {String} value
+ */
+function setClipboard(type, value) {
+    debugLog("setting ", type, value);
+    if (type === "text") {
+        const $elm = q.new("textarea");
+        document.activeElement.appendChild($elm);
+
+        $elm.value = value;
+        $elm.selectionStart = $elm.selectionEnd = 0;
+        $elm.focus();
+        document.execCommand("copy", null, null);
+    } else {
+        const $elm = q.new("div");
+        document.activeElement.appendChild($elm);
+        $elm.setAttribute("contenteditable", "true");
+        $elm.innerHTML = value;
+        $elm.focus();
+
+        const range = window.getSelection().getRangeAt(0);
+        range.selectNodeContents($elm);
+
+        document.execCommand("copy", null, null);
+    }
+    debugLog("set done");
 }
 
 function injectScript(tab) {
@@ -489,7 +534,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (typeof request.ctxTimestamp !== "undefined") {
         latestCtxTimestamp = request.ctxTimestamp;
     } else if (request === "givePasteData") {
-        sendResponse(getPasteData());
+        sendResponse(getClipboard());
     } else if (typeof request.ctxEnabled !== "undefined") {
         Data.ctxEnabled = request.ctxEnabled;
         initContextMenu();
@@ -555,6 +600,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             snipFound = !!snip,
             snipObject = snipFound ? snip.toArray() : {};
         sendResponse({ snipFound, snipObject });
+    } else if (request.task === "clipboard") {
+        let value = "";
+        if (request.pop) {
+            value = getClipboard(request.pop.type);
+        }
+        if (request.push) {
+            setClipboard(request.push.type, request.push.value);
+        }
+        sendResponse(value);
     }
 
     // indicates synced sendResponse

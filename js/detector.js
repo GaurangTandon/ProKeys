@@ -183,7 +183,7 @@ primitiveExtender();
 
             debugLog("prepared snippet body for CE node\n", snipBody);
 
-            callback(snipBody.split(lineSeparator));
+            callback(snipBody);
         });
     }
 
@@ -215,129 +215,46 @@ primitiveExtender();
     }
 
     /**
-     * https://github.com/GaurangTandon/ProKeys/issues/295#issuecomment-507561596
-     * it's either a P or a DIV
-     * @param {Element|Text} container
-     * @returns {Element} either P or DIV, whichever the parent is
-     */
-    function determineCEParent(container) {
-        while (!container.matches || !container.matches("P,DIV")) { container = container.parentElement; }
-        return container;
-    }
-
-    /**
-         * @param {String} tagname
-         * @param {String} htmlContent
-         * @returns {Element}
-         */
-    function getPKElm(tagname, htmlContent) {
-        const elm = q.new(tagname).html(htmlContent).addClass(PROKEYS_ELM_CLASS);
-        elm.setAttribute("style", "color: rgb(0, 0, 0); margin: 0px; padding: 0px;");
-        return elm;
-    }
-
-    /**
-     * This inserts snippets line by line into html elements
-     * the first line might be a part of a span, while all other lines
-     * are of the same type parentTagName. This ensures compat with whatever editor
-     * we are using. Also, using html elements ensures we can format placeholders
-     * correctly.
-
-     * @param {String} parentTagName
-     * @param {Range} range
-     * @param {Array<String>} snipBodyLines
-     * @returns {Element} the first element that was inserted
-     */
-    function insertSnippetCE(parentTagName, range, snipBodyLines) {
-        function getSpan(htmlContent) {
-            return getPKElm("span", htmlContent);
-        }
-
-        // startContainer is guaranteed to be sitting in a textnode
-        // which is within a element node, which is within a main div node
-        const { startContainer } = range;
-        let extraText = "",
-            insertAfterMe = startContainer;
-
-        const pos = range.startOffset;
-        extraText = startContainer.textContent.substr(pos);
-        startContainer.textContent = startContainer.textContent.substr(0, pos);
-        const span = getSpan(snipBodyLines[0]);
-        startContainer.insertAfter(span);
-        insertAfterMe = determineCEParent(span);
-
-        for (let i = 1; i < snipBodyLines.length; i++) {
-            // if there was no content, it's a linebreak
-            const parentElm = getPKElm(parentTagName, snipBodyLines[i] || "<br>");
-
-            insertAfterMe.insertAfter(parentElm);
-            insertAfterMe = parentElm;
-        }
-
-        let lastElm;
-        // insertAfterMe is guaranteed to be a <p> element
-        if (extraText) {
-            const spanElm = getSpan(insertAfterMe.innerHTML);
-
-            insertAfterMe.innerHTML = "";
-            insertAfterMe.appendChild(spanElm);
-            insertAfterMe.removeClass(PROKEYS_ELM_CLASS);
-            insertAfterMe.innerHTML += extraText;
-
-            lastElm = insertAfterMe.qClsSingle(PROKEYS_ELM_CLASS);
-        } else {
-            lastElm = insertAfterMe;
-        }
-
-        return lastElm;
-    }
-
-    /**
      * @param {Range} range
      * @param {Snip} snip
      * @param {Element} node
      */
     function insertSnippetInContentEditableNode(range, snip, node) {
-        prepareSnippetBodyForCENode(snip, (snipBodyLines) => {
-            const mainParent = determineCEParent(range.startContainer);
-            let { tagName } = mainParent;
+        prepareSnippetBodyForCENode(snip, (snipBody) => {
+            // snipBody is html based
+            chrome.runtime.sendMessage({
+                task: "clipboard",
+                push: {
+                    type: "html",
+                    value: snipBody,
+                },
+                pop: {
+                    type: "html",
+                },
+            }, (response) => {
+                const prevClipboardData = response;
 
-            // the div.contenteditable is the most primitive it can be (with textnodes only)
-            // insert paragraphs by default
-            if (mainParent === node) {
-                tagName = "p";
-            }
+                // wait for paste to finish
+                setTimeout(() => {
+                    document.execCommand("paste");
 
-            /**
-            * The three cases that we need to handle are (pipe is caret):
-            * 1. <div ce="true">|</div>
-            * 2. <div ce="true"><p>|</p></div>
-            * 3. <div ce="true"><p>abc|d</p></div>
-            * our end goal is to obtain this structure in all three cases:
-            * - <div ce="true"><p>abc<span class="pk">text</span></p><p class="pk">text|d</p></div>
-             */
+                    chrome.runtime.sendMessage({
+                        task: "clipboard",
+                        push: {
+                            type: "html",
+                            value: prevClipboardData,
+                        },
+                    });
 
-            // insert dummy node for prokeys; this handles case 1
-            if (range.startContainer === node) {
-                const nodeInsert = getPKElm("p", "");
-                range.insertNode(nodeInsert);
-                range.selectNode(nodeInsert);
-            }
+                    const lastNode = q.new("span");
+                    lastNode.appendChild(document.createTextNode(""));
+                    range.insertNode(lastNode);
 
-            // enforce range startContainer to be a textnode (case 2)
-            if (!isTextNode(range.startContainer)) {
-                const textholder = document.createTextNode("");
-                range.insertNode(textholder);
-                range.setStart(textholder, 0);
-                range.setEnd(textholder, 0);
-            }
-
-            const lastNode = insertSnippetCE(tagName, range, snipBodyLines);
-
-            triggerFakeInput(node);
-            populatePlaceholderObject(node, lastNode);
-
-            checkPlaceholdersInContentEditableNode();
+                    triggerFakeInput(node);
+                    populatePlaceholderObject(node, lastNode);
+                    checkPlaceholdersInContentEditableNode();
+                }, 10);
+            });
         });
     }
 
