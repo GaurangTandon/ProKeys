@@ -34,10 +34,6 @@ primitiveExtender();
         // //////////////////////
         // Global variables
         // //////////////////////
-        /* should be "span"; if "p" is used, then it gets appended inside
-            another "p" which the webpage was using. this can cause styling
-            problems for that rich editor */
-        TAGNAME_SNIPPET_HOLDER_ELM = "SPAN",
         // class of span element holding entire snippet
         PROKEYS_ELM_CLASS = "prokeys-snippet-text",
         // class of span element holding placeholders
@@ -149,7 +145,7 @@ primitiveExtender();
      * @param {Element} node to check
      */
     function isProKeysNode(node) {
-        return node.tagName === TAGNAME_SNIPPET_HOLDER_ELM && (node && node.hasClass(PROKEYS_ELM_CLASS));
+        return (node && node.hasClass(PROKEYS_ELM_CLASS));
     }
 
     function setCaretAtEndOf(node, pos) {
@@ -161,7 +157,6 @@ primitiveExtender();
             sel.removeAllRanges();
             sel.addRange(range);
         } else {
-            // textarea
             node.selectionEnd = node.selectionStart = pos || Placeholder.toIndex;
         }
     }
@@ -252,26 +247,19 @@ primitiveExtender();
 
         // it might be an element node too?
         const { startContainer } = range;
-        let startLineIndex = 0,
-            extraText = "",
-            firstElm = null,
+        let extraText = "",
             insertAfterMe = startContainer;
 
-        if (isTextNode(startContainer)) {
-            const pos = range.startOffset;
-            extraText = startContainer.textContent.substr(pos);
-            startContainer.textContent = startContainer.textContent.substr(0, pos);
-            const span = firstElm = getSpan(snipBodyLines[0]);
-            startContainer.insertAfter(span);
-            insertAfterMe = span;
+        const pos = range.startOffset;
+        extraText = startContainer.textContent.substr(pos);
+        startContainer.textContent = startContainer.textContent.substr(0, pos);
+        const span = getSpan(snipBodyLines[0]);
+        startContainer.insertAfter(span);
+        insertAfterMe = span;
 
-            startLineIndex++;
-        }
-
-        for (let i = startLineIndex; i < snipBodyLines.length; i++) {
+        for (let i = 1; i < snipBodyLines.length; i++) {
             // if there was no content, it's
             const parentElm = getParentType(snipBodyLines[i] || "<br>");
-            if (i === startLineIndex && firstElm === null) { firstElm = parentElm; }
 
             insertAfterMe.insertAfter(parentElm);
             insertAfterMe = parentElm;
@@ -315,10 +303,12 @@ primitiveExtender();
             // insert paragraphs by default
             if (mainParent === node) {
                 tagName = "p";
-                const holder = document.createElement("P"),
-                    textholder = document.createTextNode("");
-                holder.appendChild(textholder);
-                range.insertNode(holder);
+            }
+
+            // range startContainer is guaranteed to be textnode
+            if (!isTextNode(range.startContainer)) {
+                const textholder = document.createTextNode("");
+                range.insertNode(textholder);
                 range.setStart(textholder, 0);
                 range.setEnd(textholder, 0);
             }
