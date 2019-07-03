@@ -226,26 +226,35 @@ primitiveExtender();
     }
 
     /**
+         * @param {String} tagname
+         * @param {String} htmlContent
+         * @returns {Element}
+         */
+    function getPKElm(tagname, htmlContent) {
+        const elm = q.new(tagname).html(htmlContent).addClass(PROKEYS_ELM_CLASS);
+        elm.setAttribute("style", "color: rgb(0, 0, 0); margin: 0px; padding: 0px;");
+        return elm;
+    }
+
+    /**
      * This inserts snippets line by line into html elements
      * the first line might be a part of a span, while all other lines
      * are of the same type parentTagName. This ensures compat with whatever editor
      * we are using. Also, using html elements ensures we can format placeholders
      * correctly.
+
      * @param {String} parentTagName
      * @param {Range} range
-     * @param {Array<String>}
+     * @param {Array<String>} snipBodyLines
      * @returns {Element} the first element that was inserted
      */
     function insertSnippetCE(parentTagName, range, snipBodyLines) {
         function getSpan(htmlContent) {
-            return q.new("span").html(htmlContent).addClass(PROKEYS_ELM_CLASS);
+            return getPKElm("span", htmlContent);
         }
 
-        function getParentType(htmlContent) {
-            return q.new(parentTagName).html(htmlContent).addClass(PROKEYS_ELM_CLASS);
-        }
-
-        // it might be an element node too?
+        // startContainer is guaranteed to be sitting in a textnode
+        // which is within a element node, which is within a main div node
         const { startContainer } = range;
         let extraText = "",
             insertAfterMe = startContainer;
@@ -255,21 +264,19 @@ primitiveExtender();
         startContainer.textContent = startContainer.textContent.substr(0, pos);
         const span = getSpan(snipBodyLines[0]);
         startContainer.insertAfter(span);
-        insertAfterMe = span;
+        insertAfterMe = determineCEParent(span);
 
         for (let i = 1; i < snipBodyLines.length; i++) {
-            // if there was no content, it's
-            const parentElm = getParentType(snipBodyLines[i] || "<br>");
+            // if there was no content, it's a linebreak
+            const parentElm = getPKElm(parentTagName, snipBodyLines[i] || "<br>");
 
             insertAfterMe.insertAfter(parentElm);
             insertAfterMe = parentElm;
         }
 
         let lastElm;
-        if (insertAfterMe.matches("span")) {
-            if (extraText) { insertAfterMe.insertAfter(document.createTextNode(extraText)); }
-            lastElm = insertAfterMe;
-        } else if (extraText) {
+        // insertAfterMe is guaranteed to be a <p> element
+        if (extraText) {
             const spanElm = getSpan(insertAfterMe.innerHTML);
 
             insertAfterMe.innerHTML = "";
@@ -292,10 +299,6 @@ primitiveExtender();
      */
     function insertSnippetInContentEditableNode(range, snip, node) {
         prepareSnippetBodyForCENode(snip, (snipBodyLines) => {
-            // old way - too simplistic
-            // const snipElmNode = q.new(TAGNAME_SNIPPET_HOLDER_ELM);
-            // snipElmNode.html(snipBody).addClass(SPAN_CLASS); // identification
-            // range.insertNode(snipElmNode);
             const mainParent = determineCEParent(range.startContainer);
             let { tagName } = mainParent;
 
@@ -305,7 +308,23 @@ primitiveExtender();
                 tagName = "p";
             }
 
-            // range startContainer is guaranteed to be textnode
+            /**
+            * The three cases that we need to handle are (pipe is caret):
+            * 1. <div ce="true">|</div>
+            * 2. <div ce="true"><p>|</p></div>
+            * 3. <div ce="true"><p>abc|d</p></div>
+            * our end goal is to obtain this structure in all three cases:
+            * - <div ce="true"><p>abc<span class="pk">text</span></p><p class="pk">text|d</p></div>
+             */
+
+            // insert dummy node for prokeys; this handles case 1
+            if (range.startContainer === node) {
+                const nodeInsert = getPKElm("p", "");
+                range.insertNode(nodeInsert);
+                range.selectNode(nodeInsert);
+            }
+
+            // enforce range startContainer to be a textnode (case 2)
             if (!isTextNode(range.startContainer)) {
                 const textholder = document.createTextNode("");
                 range.insertNode(textholder);
