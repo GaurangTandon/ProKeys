@@ -278,20 +278,20 @@ primitiveExtender();
         }
 
         let lastElm;
-        if (extraText) {
-            if (insertAfterMe.matches("span")) {
-                insertAfterMe.insertAfter(document.createTextNode(extraText));
-                lastElm = insertAfterMe;
-            } else {
-                const spanElm = getSpan(insertAfterMe.innerHTML);
+        if (insertAfterMe.matches("span")) {
+            if (extraText) { insertAfterMe.insertAfter(document.createTextNode(extraText)); }
+            lastElm = insertAfterMe;
+        } else if (extraText) {
+            const spanElm = getSpan(insertAfterMe.innerHTML);
 
-                insertAfterMe.innerHTML = "";
-                insertAfterMe.appendChild(spanElm);
-                insertAfterMe.removeClass(PROKEYS_ELM_CLASS);
-                insertAfterMe.innerHTML += extraText;
+            insertAfterMe.innerHTML = "";
+            insertAfterMe.appendChild(spanElm);
+            insertAfterMe.removeClass(PROKEYS_ELM_CLASS);
+            insertAfterMe.innerHTML += extraText;
 
-                lastElm = insertAfterMe.qClsSingle(PROKEYS_ELM_CLASS);
-            }
+            lastElm = insertAfterMe.qClsSingle(PROKEYS_ELM_CLASS);
+        } else {
+            lastElm = insertAfterMe;
         }
 
         return lastElm;
@@ -314,6 +314,7 @@ primitiveExtender();
 
             const lastNode = insertSnippetCE(tagName, range, snipBodyLines);
 
+            triggerFakeInput(node);
             populatePlaceholderObject(node, lastNode);
 
             checkPlaceholdersInContentEditableNode();
