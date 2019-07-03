@@ -85,11 +85,6 @@ primitiveExtender();
         return { sel, range };
     }
 
-    /*
-    Helper functions for iframe related work
-        - initiateIframeCheckForSpecialWebpages
-    */
-
     function onIFrameLoad(iframe) {
         let doc,
             win;
@@ -132,8 +127,20 @@ primitiveExtender();
         Placeholder.mode = false;
         Placeholder.fromIndex = Placeholder.toIndex = 0;
         Placeholder.isCENode = false;
-        Placeholder.node = null;
+        Placeholder.lastNode = null;
         Placeholder.array = null;
+    }
+
+    // always content editable
+    // used by span.prokeys-placeholder
+    function selectEntireTextIn(node) {
+        const win = getNodeWindow(node),
+            sel = win.getSelection(),
+            range = sel.getRangeAt(0);
+
+        range.selectNodeContents(node);
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
 
     /**
@@ -165,8 +172,6 @@ primitiveExtender();
      * @param {Function} callback
      */
     function prepareSnippetBodyForCENode(snip, callback) {
-        // on disqus thread the line break
-        // is represented by </p>
         const lineSeparator = "<br>";
 
         snip.formatMacros((snipBody) => {
@@ -187,13 +192,31 @@ primitiveExtender();
         });
     }
 
-    // eslint-disable-next-line no-unused-vars
-    function populatePlaceholderObject(snipElmNode) {
+    /**
+     * @param {Element} mainNode
+     * @param {Element} lastNode
+     */
+    function populatePlaceholderObject(mainNode, lastNode) {
         Placeholder.mode = true;
-        Placeholder.node = snipElmNode;
+        Placeholder.lastNode = lastNode;
         Placeholder.isCENode = true;
         // convert the NodeList of <span.prokeys-placeholder> to array and store
-        Placeholder.array = [].slice.call(snipElmNode.qCls(PLACE_CLASS) || [], 0);
+        Placeholder.array = [].slice.call(mainNode.qCls(PLACE_CLASS) || [], 0);
+    }
+
+    function checkPlaceholdersInContentEditableNode() {
+        const pArr = Placeholder.array;
+
+        if (pArr && pArr.length > 0) {
+            const [currND] = pArr;
+
+            selectEntireTextIn(currND);
+            pArr.shift();
+            return true;
+        }
+        setCaretAtEndOf(Placeholder.lastNode);
+        resetPlaceholderVariables();
+        return false;
     }
 
     /**
@@ -208,9 +231,15 @@ primitiveExtender();
     }
 
     /**
+     * This inserts snippets line by line into html elements
+     * the first line might be a part of a span, while all other lines
+     * are of the same type parentTagName. This ensures compat with whatever editor
+     * we are using. Also, using html elements ensures we can format placeholders
+     * correctly.
      * @param {String} parentTagName
      * @param {Range} range
      * @param {Array<String>}
+     * @returns {Element} the first element that was inserted
      */
     function insertSnippetCE(parentTagName, range, snipBodyLines) {
         function getSpan(htmlContent) {
@@ -248,11 +277,24 @@ primitiveExtender();
             insertAfterMe = parentElm;
         }
 
-        if (isTextNode(insertAfterMe)) {
-            insertAfterMe.textContent += extraText;
-        } else {
-            insertAfterMe.innerHTML += extraText;
+        let lastElm;
+        if (extraText) {
+            if (insertAfterMe.matches("span")) {
+                insertAfterMe.insertAfter(document.createTextNode(extraText));
+                lastElm = insertAfterMe;
+            } else {
+                const spanElm = getSpan(insertAfterMe.innerHTML);
+
+                insertAfterMe.innerHTML = "";
+                insertAfterMe.appendChild(spanElm);
+                insertAfterMe.removeClass(PROKEYS_ELM_CLASS);
+                insertAfterMe.innerHTML += extraText;
+
+                lastElm = insertAfterMe.qClsSingle(PROKEYS_ELM_CLASS);
+            }
         }
+
+        return lastElm;
     }
 
     function insertSnippetInContentEditableNode(range, snip, node) {
@@ -270,11 +312,11 @@ primitiveExtender();
                 tagName = "p";
             }
 
-            insertSnippetCE(tagName, range, snipBodyLines);
+            const lastNode = insertSnippetCE(tagName, range, snipBodyLines);
 
-            // populatePlaceholderObject(snipElmNode); - temp
+            populatePlaceholderObject(node, lastNode);
 
-            // checkPlaceholdersInContentEditableNode();
+            checkPlaceholdersInContentEditableNode();
         });
     }
 
@@ -295,24 +337,6 @@ primitiveExtender();
      * @param {Snip} snip
      * @param {String} nodeText
      * @param {Element} node
-     */
-    function insertSnippetInTextarea(start, caretPos, snip, nodeText, node) {
-        const textBeforeSnipName = nodeText.substring(0, start),
-            textAfterSnipName = nodeText.substring(caretPos);
-
-        snip.formatMacros((snipBody) => {
-            // snipBody can be both textarea-saved or rte-saved
-            // if it is textarea-saved => nothing needs to be done
-            // else callt his method
-            // it is textarea-saved IF it does not have any quill classes
-            snipBody = Snip.makeHTMLSuitableForTextareaThroughString(snipBody);
-            Placeholder.node = node.html(textBeforeSnipName + snipBody + textAfterSnipName);
-
-            testPlaceholderPresence(node, snipBody, start);
-        });
-    }
-
-    /**
      * @param {Element} node a textarea
      * @param {String} snipBody text
      * @param {Integer} start index of snippet
@@ -332,22 +356,20 @@ primitiveExtender();
         }
     }
 
-    function checkPlaceholdersInContentEditableNode() {
-        let pArr = Placeholder.array,
-            currND;
+    function insertSnippetInTextarea(start, caretPos, snip, nodeText, node) {
+        const textBeforeSnipName = nodeText.substring(0, start),
+            textAfterSnipName = nodeText.substring(caretPos);
 
-        triggerFakeInput(Placeholder.node);
-        // debugLog(Placeholder);
-        if (pArr && pArr.length > 0) {
-            [currND] = pArr;
+        snip.formatMacros((snipBody) => {
+            // snipBody can be both textarea-saved or rte-saved
+            // if it is textarea-saved => nothing needs to be done
+            // else callt his method
+            // it is textarea-saved IF it does not have any quill classes
+            snipBody = Snip.makeHTMLSuitableForTextareaThroughString(snipBody);
+            node.html(textBeforeSnipName + snipBody + textAfterSnipName);
 
-            selectEntireTextIn(currND);
-            pArr.shift();
-            return true;
-        }
-        setCaretAtEndOf(Placeholder.node);
-        resetPlaceholderVariables();
-        return false;
+            testPlaceholderPresence(node, snipBody, start);
+        });
     }
 
     // jumps from one `%asd%` to another (does not warp from last to first placeholder)
@@ -384,16 +406,6 @@ primitiveExtender();
             setCaretAtEndOf(node, to);
             resetPlaceholderVariables();
         }
-    }
-
-    // always content editable
-    // used by span.prokeys-placeholder
-    function selectEntireTextIn(node) {
-        const { sel, range } = getSelAndRange(node);
-
-        range.selectNodeContents(node);
-        sel.removeAllRanges();
-        sel.addRange(range);
     }
 
     // set selection of next placeholder
