@@ -22,6 +22,17 @@ function testSnippetMacroBase(usablePages, testName, testSnippets) {
                 beforeEach(async () => {
                     const random = Math.random().toString(36).split(".")[1];
 
+                    switch (expansion) {
+                    case "%random%":
+                        expansion = random;
+                        break;
+                    case "%url%":
+                        expansion = url;
+                        break;
+                    default:
+                        break;
+                    }
+
                     if (expansion === "%random%") {
                         expansion = random;
                     }
@@ -39,8 +50,6 @@ function testSnippetMacroBase(usablePages, testName, testSnippets) {
                 });
 
                 it(`Testing ${testName}`, async () => {
-                    if (expansion === "%url%") { expansion = url; }
-
                     const expandedText = await getExpandedSnippet(
                         usablePage,
                         textBoxQueryString,
