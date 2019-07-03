@@ -297,6 +297,11 @@ primitiveExtender();
         return lastElm;
     }
 
+    /**
+     * @param {Range} range
+     * @param {Snip} snip
+     * @param {Element} node
+     */
     function insertSnippetInContentEditableNode(range, snip, node) {
         prepareSnippetBodyForCENode(snip, (snipBodyLines) => {
             // old way - too simplistic
@@ -310,6 +315,12 @@ primitiveExtender();
             // insert paragraphs by default
             if (mainParent === node) {
                 tagName = "p";
+                const holder = document.createElement("P"),
+                    textholder = document.createTextNode("");
+                holder.appendChild(textholder);
+                range.insertNode(holder);
+                range.setStart(textholder, 0);
+                range.setEnd(textholder, 0);
             }
 
             const lastNode = insertSnippetCE(tagName, range, snipBodyLines);
