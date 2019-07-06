@@ -6,6 +6,7 @@ const {
     { testMathomania } = require("./mathomania"),
     { testTabToSpaceExpansion } = require("./tabToSpace"),
     { testClipboardSnippet, testEmbeddedSnippet, testURLSnippet } = require("./macros"),
+    { testContextMenuInsertion } = require("./contextMenu"),
     { dismissDialog, extSettings, updateSettings } = require("./utils"),
     testURLs = require("./testURLs");
 
@@ -42,6 +43,7 @@ beforeAll(async () => {
 /*
  * TESTS
  */
+/*
 describe("Test snippet expansion", () => {
     testSnippetExpansion(usablePages);
 });
@@ -66,4 +68,9 @@ describe("Test macros", () => {
     testClipboardSnippet(usablePages);
     testEmbeddedSnippet(usablePages);
     testURLSnippet(usablePages);
+});
+*/
+
+describe("Test context menu insertion", () => {
+    testContextMenuInsertion(usablePages);
 });

@@ -26,6 +26,18 @@ async function expandSnippet(page) {
     await page.keyboard.up("Shift");
 }
 
+async function clickElement(page, textBoxQueryString, handler = null, button = "left") {
+    if (handler) {
+        await handler.clickElement(page, button);
+    } else {
+        // since not using handler, it's ok
+        //  to simpy use page.focus [no need to use focusTextBox]
+
+        await page.focus(textBoxQueryString);
+        await page.click(textBoxQueryString, { button });
+    }
+}
+
 function extSettings(opts) {
     return `
     {
@@ -335,11 +347,47 @@ async function copyTextToClipboard(page, textToCopy) {
     }, textToCopy);
 }
 
+/*
+ * This function is so werid that this is needed
+ *  @param {Page} page The page on which this is to be done
+ *  @param {String} textBoxQueryString The query string for textbox in which text is to be inserted
+ *  @param {String} keyToHighlightMenu The context menu doesn't get automatically highlighted,
+ *                                      pressing a key highlights the menu after which we position
+ *  @param {String} cursorChange The keypresses reqd to select desired menu
+ *  @param {Object} handler For RTEs, where things are handled differently
+ */
+async function getContextMenuInsertion(page, textBoxQueryString, keyToHighlightMenu, cursorChange, handler = null) {
+    await page.bringToFront();
+    console.log("bringtofront");
+    await focusTextBox(page, textBoxQueryString, handler);
+    console.log("focus");
+    await clearText(page, textBoxQueryString, handler);
+    console.log("cleared");
+
+    await clickElement(page, textBoxQueryString, handler, "right");
+    console.log("clicked!");
+
+    await sleep(5000);
+
+    await page.keyboard.press(keyToHighlightMenu);
+    console.log("PLEASE GET HIGHLIGHTED");
+
+    await positionCursor(page, cursorChange);
+    console.log("inposition");
+    await sleep(5000);
+
+    await page.keyboard.press("Enter");
+    console.log("fired");
+
+    await sleep(10000);
+}
+
 module.exports = {
     copyTextToClipboard,
     dismissDialog,
     expandSnippet,
     extSettings,
+    getContextMenuInsertion,
     getExpandedPlaceHolderSnippet,
     getExpandedSnippet,
     getExtOptionsPage,
