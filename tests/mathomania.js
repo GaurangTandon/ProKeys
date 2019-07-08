@@ -21,7 +21,6 @@ function testMathomania(usablePages) {
         beforeAll(async () => {
             ({ usablePage, loadedPromise } = usablePages[index]);
             await loadedPromise;
-            // unless we bring it to front, it does not activate snippets
             await usablePage.bringToFront();
         });
 

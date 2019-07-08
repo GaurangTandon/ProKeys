@@ -9,8 +9,8 @@ function testSnippetMacroBase(usablePages, testName, testSnippets) {
         beforeAll(async () => {
             ({ usablePage, loadedPromise } = usablePages[index]);
             // unless we bring it to front, it does not activate snippets
-            await usablePage.bringToFront();
             await loadedPromise;
+            await usablePage.bringToFront();
         });
 
         describe(`Testing snippet macro on ${
