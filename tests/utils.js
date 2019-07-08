@@ -63,6 +63,16 @@ function extSettings(opts) {
                 "name": "clipboard",
                 "body": "[[%p]]",
                 "timestamp": 3
+            },
+            {
+                "name": "date",
+                "body": "[[%d(ddd MMM D YYYY z)]]",
+                "timestamp": 4
+            },
+            {
+                "name": "date_dm5",
+                "body": "[[%d(!ddd MMM D-5 YYYY z)]]",
+                "timestamp": 5
             }
         ],
         "blockedSites": [],
@@ -382,12 +392,25 @@ async function getContextMenuInsertion(page, textBoxQueryString, keyToHighlightM
     await sleep(10000);
 }
 
+async function getDateTestParams(dateParts = null) {
+    if (!dateParts) { dateParts = Date().toString().split(" "); }
+    // the names are the same as given in snippet docs
+    const ddd = dateParts[0],
+        MMM = dateParts[1],
+        D = dateParts[2],
+        YYYY = dateParts[3],
+        z = dateParts[5].match(/\+\d+/)[0];
+
+    return [ddd, MMM, D, YYYY, z];
+}
+
 module.exports = {
     copyTextToClipboard,
     dismissDialog,
     expandSnippet,
     extSettings,
     getContextMenuInsertion,
+    getDateTestParams,
     getExpandedPlaceHolderSnippet,
     getExpandedSnippet,
     getExtOptionsPage,

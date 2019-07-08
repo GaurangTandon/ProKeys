@@ -7,6 +7,7 @@ const {
     { testTabToSpaceExpansion } = require("./tabToSpace"),
     { testClipboardSnippet, testEmbeddedSnippet, testURLSnippet } = require("./macros"),
     { testContextMenuInsertion } = require("./contextMenu"),
+    { testDateSnippets } = require("./dateSnips"),
     { dismissDialog, extSettings, updateSettings } = require("./utils"),
     testURLs = require("./testURLs");
 
@@ -43,7 +44,6 @@ beforeAll(async () => {
 /*
  * TESTS
  */
-/*
 describe("Test snippet expansion", () => {
     testSnippetExpansion(usablePages);
 });
@@ -69,8 +69,11 @@ describe("Test macros", () => {
     testEmbeddedSnippet(usablePages);
     testURLSnippet(usablePages);
 });
-*/
 
 describe("Test context menu insertion", () => {
     testContextMenuInsertion(usablePages);
+});
+
+describe("Test date snippets", () => {
+    testDateSnippets(usablePages);
 });
