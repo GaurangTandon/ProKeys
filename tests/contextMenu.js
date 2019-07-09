@@ -4,8 +4,7 @@ const testURLs = require("./testURLs"),
 const testSnippets = [
     // sorry, could find no other way
     {
-        keyToHighlightMenu: "w",
-        cursorChange: "hjljjjj",
+        cursorChange: "jjjjjjljjjjjj",
         expansion: "be right back",
     },
 ];
@@ -25,12 +24,11 @@ function testContextMenuInsertion(usablePages) {
         describe(`Test context menu insertion on ${
             url.match(/https?:\/\/(\w+\.)+\w+/)[0]
         }`, () => {
-            testSnippets.forEach(({ keyToHighlightMenu, cursorChange, expansion }) => {
+            testSnippets.forEach(({ cursorChange, expansion }) => {
                 it(`should insert ${expansion}`, async () => {
                     const insertedText = await getContextMenuInsertion(
                         usablePage,
                         textBoxQueryString,
-                        keyToHighlightMenu,
                         cursorChange,
                         handler,
                     );

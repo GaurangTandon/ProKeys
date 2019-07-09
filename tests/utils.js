@@ -1,5 +1,7 @@
 const fs = require("fs"),
     path = require("path"),
+    util = require("util"),
+    exec = util.promisify(require("child_process").exec),
     extensionDelay = 300;
 
 /**
@@ -41,9 +43,7 @@ async function clickElement(page, textBoxQueryString, handler = null, button = "
 function extSettings(opts) {
     return `
     {
-        "snippets": [
-            "Snippets",
-            1560477878650,
+        "snippets": [ "Snippets", 1560477878650,
             {
                 "name": "placeholder",
                 "body": "hello %world% %again%",
@@ -77,29 +77,14 @@ function extSettings(opts) {
         ],
         "blockedSites": [],
         "charsToAutoInsertUserList": [
-            [
-                "(",
-                ")"
-            ],
-            [
-                "{",
-                "}"
-            ],
-            [
-                "\\"",
-                "\\""
-            ],
-            [
-                "[",
-                "]"
-            ]
+            [ "(", ")" ],
+            [ "{", "}" ],
+            [ "\\"", "\\"" ],
+            [ "[", "]" ]
         ],
         "dataVersion": 1,
         "language": "English",
-        "hotKey": [
-            "shiftKey",
-            32
-        ],
+        "hotKey": [ "shiftKey", 32 ],
         "dataUpdateVariable": false,
         "matchDelimitedWord": ${opts.matchDelimitedWord},
         "tabKey": ${opts.tabKeyExpandSpace},
@@ -120,7 +105,7 @@ function extSettings(opts) {
  *
  * eg: to move cursor 3 left, change = "hhh"
  */
-async function positionCursor(page, change) {
+async function positionCursor(page, change, system = false) {
     const changeMap = {
         h: "ArrowLeft",
         j: "ArrowDown",
@@ -128,12 +113,17 @@ async function positionCursor(page, change) {
         l: "ArrowRight",
     };
 
+    /* eslint-disable no-await-in-loop */
     for (const delta of change) {
         if (delta in changeMap) {
-            // eslint-disable-next-line no-await-in-loop
-            await page.keyboard.press(changeMap[delta]);
+            if (!system) {
+                await page.keyboard.press(changeMap[delta]);
+            } else {
+                await exec(`xdotool key ${changeMap[delta].match(/Arrow(\w+)/)[1]}`);
+            }
         }
     }
+    /* eslint-enable no-await-in-loop */
 }
 
 async function focusTextBox(page, textBoxQueryString, handler) {
@@ -358,38 +348,27 @@ async function copyTextToClipboard(page, textToCopy) {
 }
 
 /*
- * This function is so werid that this is needed
+ * This function is so weird that this is needed
  *  @param {Page} page The page on which this is to be done
  *  @param {String} textBoxQueryString The query string for textbox in which text is to be inserted
- *  @param {String} keyToHighlightMenu The context menu doesn't get automatically highlighted,
- *                                      pressing a key highlights the menu after which we position
  *  @param {String} cursorChange The keypresses reqd to select desired menu
  *  @param {Object} handler For RTEs, where things are handled differently
  */
-async function getContextMenuInsertion(page, textBoxQueryString, keyToHighlightMenu, cursorChange, handler = null) {
+async function getContextMenuInsertion(page, textBoxQueryString, cursorChange, handler = null) {
     await page.bringToFront();
-    console.log("bringtofront");
+
     await focusTextBox(page, textBoxQueryString, handler);
-    console.log("focus");
+
     await clearText(page, textBoxQueryString, handler);
-    console.log("cleared");
 
     await clickElement(page, textBoxQueryString, handler, "right");
-    console.log("clicked!");
 
-    await sleep(5000);
+    await positionCursor(page, cursorChange, true);
 
-    await page.keyboard.press(keyToHighlightMenu);
-    console.log("PLEASE GET HIGHLIGHTED");
+    await exec("xdotool key KP_Enter");
 
-    await positionCursor(page, cursorChange);
-    console.log("inposition");
-    await sleep(5000);
-
-    await page.keyboard.press("Enter");
-    console.log("fired");
-
-    await sleep(10000);
+    const text = await retrieveText(page, textBoxQueryString, handler);
+    return text;
 }
 
 async function getDateTestParams(dateParts = null) {
