@@ -45,7 +45,7 @@ function notifySnippetDataChanges(snippetList) {
  */
 function saveRevision(dataString) {
     const MAX_REVISIONS_STORED = 20;
-    let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP]);
+    let parsed = JSON.parse(localStorage[LS_REVISIONS_PROP] || "[]");
     const latestRevision = {
         label: `${getFormattedDate()} - ${window.latestRevisionLabel}`,
         data: dataString || Data.snippets,
