@@ -102,18 +102,22 @@ function getClipboard(type) {
 
         const data = $elm.value;
         $actElm.removeChild($elm);
-        debugLog("get done");
+        debugLog("get done", data);
         return data;
     }
 
-    const $elm = q.new("div"),
-        $actElm = document.activeElement.appendChild($elm).parentNode;
-    $elm.setAttribute("contenteditable", "true");
-    $elm.focus();
-    document.execCommand("paste", null, null);
-    const data = $elm.innerHTML;
-    $actElm.removeChild($elm);
-    debugLog("get done");
+    const $actElm = q.new("div"),
+        $actElmParent = document.activeElement.appendChild($actElm).parentNode;
+    $actElm.setAttribute("contenteditable", "true");
+    const range = document.createRange();
+    range.selectNode($actElm);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    $actElm.focus();
+    document.execCommand("paste");
+    const data = $actElm.innerHTML;
+    $actElmParent.removeChild($actElm);
+    debugLog("get done", data);
     return data;
 }
 
@@ -122,7 +126,7 @@ function getClipboard(type) {
  * @param {String} value
  */
 function setClipboard(type, value) {
-    debugLog("setting ", type, value);
+    debugLog("setting", type, value);
     if (type === "text") {
         const $elm = q.new("textarea");
         document.activeElement.appendChild($elm);
@@ -143,7 +147,7 @@ function setClipboard(type, value) {
 
         document.execCommand("copy", null, null);
     }
-    debugLog("set done");
+    debugLog("set done\n------");
 }
 
 function injectScript(tab) {
