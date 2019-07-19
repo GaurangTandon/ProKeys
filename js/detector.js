@@ -222,6 +222,16 @@ primitiveExtender();
      * @param {Element} node
      */
     function insertSnippetInContentEditableNode(range, snip, node) {
+        function getFontStyleAtCaret() {
+            let elm = range.startContainer;
+            while (elm.nodeType !== 1) {
+                elm = elm.parentElement;
+            }
+            const styles = window.getComputedStyle(elm),
+                fontStyle = styles && styles.font ? styles.font : "";
+            return fontStyle;
+        }
+
         prepareSnippetBodyForCENode(snip, (snipBody) => {
             // snipBody is html based
             chrome.runtime.sendMessage({
@@ -229,6 +239,7 @@ primitiveExtender();
                 push: {
                     type: "html",
                     value: snipBody,
+                    styles: getFontStyleAtCaret(),
                 },
                 pop: {
                     type: "html",
@@ -236,26 +247,23 @@ primitiveExtender();
             }, (response) => {
                 const prevClipboardData = response;
 
-                // wait for paste to finish
-                setTimeout(() => {
-                    document.execCommand("paste");
+                document.execCommand("paste");
 
-                    chrome.runtime.sendMessage({
-                        task: "clipboard",
-                        push: {
-                            type: "html",
-                            value: prevClipboardData,
-                        },
-                    });
+                chrome.runtime.sendMessage({
+                    task: "clipboard",
+                    push: {
+                        type: "html",
+                        value: prevClipboardData,
+                    },
+                });
 
-                    const lastNode = q.new("span");
-                    lastNode.appendChild(document.createTextNode(""));
-                    range.insertNode(lastNode);
+                const lastNode = q.new("span");
+                lastNode.appendChild(document.createTextNode(""));
+                range.insertNode(lastNode);
 
-                    triggerFakeInput(node);
-                    populatePlaceholderObject(node, lastNode);
-                    checkPlaceholdersInContentEditableNode();
-                }, 0);
+                triggerFakeInput(node);
+                populatePlaceholderObject(node, lastNode);
+                checkPlaceholdersInContentEditableNode();
             });
         });
     }

@@ -125,10 +125,12 @@ function getClipboard(type) {
  * @param {String} type
  * @param {String} value
  */
-function setClipboard(type, value) {
+function setClipboard({ type, value, styles }) {
     debugLog("setting", type, value);
+
+    let $elm;
     if (type === "text") {
-        const $elm = q.new("textarea");
+        $elm = q.new("textarea");
         document.activeElement.appendChild($elm);
 
         $elm.value = value;
@@ -136,10 +138,11 @@ function setClipboard(type, value) {
         $elm.focus();
         document.execCommand("copy", null, null);
     } else {
-        const $elm = q.new("div");
+        $elm = q.new("div");
         document.activeElement.appendChild($elm);
         $elm.setAttribute("contenteditable", "true");
         $elm.innerHTML = value;
+        $elm.style.font = styles;
         $elm.focus();
 
         const range = window.getSelection().getRangeAt(0);
@@ -147,6 +150,7 @@ function setClipboard(type, value) {
 
         document.execCommand("copy", null, null);
     }
+    $elm.parentNode.removeChild($elm);
     debugLog("set done\n------");
 }
 
@@ -610,7 +614,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             value = getClipboard(request.pop.type);
         }
         if (request.push) {
-            setClipboard(request.push.type, request.push.value);
+            setClipboard(request.push);
         }
         sendResponse(value);
     }
