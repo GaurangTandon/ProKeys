@@ -25,16 +25,25 @@
         "gulp-terser": "*",
         "gulp-uglify": "^3.0.2",
         "husky": "^2.4.0",
+        "jest": "^24.8.0",
+        "jest-puppeteer": "^4.2.0",
         "lint-staged": "^8.2.0",
         "prettier": "1.17.1",
         "pretty-quick": "^1.10.0",
+        "puppeteer": "^1.17.0",
         "webpack": "^4.33.0",
         "webpack-cli": "^3.3.2"
     },
     "lint-staged": {
-        "js/*.js": [
-            "eslint --fix",
-            "git add"
+        "linters": {
+            "*.js": [
+                "eslint --fix",
+                "git add"
+            ]
+        },
+        "ignore": [
+            "**/dist/*.js",
+            "**/editor.min.js"
         ]
     },
     "husky": {
@@ -43,8 +52,12 @@
             "post-commit": "git update-index -g"
         }
     },
+    "jest": {
+        "preset": "jest-puppeteer"
+    },
     "scripts": {
-        "build": "webpack && gulp"
+        "build": "webpack && gulp",
+        "test": "CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox jest"
     },
     "repository": {
         "type": "git",

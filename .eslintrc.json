@@ -2,12 +2,17 @@
     "env": {
         "browser": true,
         "es6": true,
-        "webextensions": true
+        "webextensions": true,
+        "jest": true
     },
     "extends": "airbnb-base",
     "globals": {
         "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
+        "SharedArrayBuffer": "readonly",
+        "page": true,
+        "browser": true,
+        "context": true,
+        "jestPuppeteer": true
     },
     "parserOptions": {
         "ecmaVersion": 2018,
